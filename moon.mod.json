@@ -11,7 +11,9 @@
   "keywords": [],
   "description": "",
   "exclude": [
-    "thetawave/assets/**"
+    "thetawave/_embedded_assets.pack",
+    "thetawave/embedded_assets_index.mbt",
+    "thetawave/embedded_assets_blob.mbt"
   ],
   "preferred-target": "native"
 }
