@@ -12,12 +12,9 @@ fn startup_system(_delta : Double) -> Unit {
 
 ///|
 let game_background_textures : Array[String] = [
-  "thetawave/assets/texture/backgrounds/background_1.png", "thetawave/assets/texture/backgrounds/background_2.png",
-  "thetawave/assets/texture/backgrounds/background_3.png", "thetawave/assets/texture/backgrounds/background_4.png",
-  "thetawave/assets/texture/backgrounds/background_5.png", "thetawave/assets/texture/backgrounds/background_6.png",
-  "thetawave/assets/texture/backgrounds/background_7.png", "thetawave/assets/texture/backgrounds/background_8.png",
-  "thetawave/assets/texture/backgrounds/background_9.png", "thetawave/assets/texture/backgrounds/background_10.png",
-  "thetawave/assets/texture/backgrounds/background_11.png", "thetawave/assets/texture/backgrounds/background_12.png",
+  "thetawave/assets/texture/backgrounds/background_1.png",
+  "thetawave/assets/texture/backgrounds/background_2.png",
+  "thetawave/assets/texture/backgrounds/background_3.png",
 ]
 
 ///|
