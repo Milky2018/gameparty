@@ -20,6 +20,12 @@ const CAPTAIN_TEXTURE : String = "thetawave/assets/texture/captain_character.png
 const JUGGERNAUT_TEXTURE : String = "thetawave/assets/texture/juggernaut_character.png"
 
 ///|
+const CAPTAIN_OUTLINE_TEXTURE : String = "thetawave/assets/texture/captain_character_outline.png"
+
+///|
+const JUGGERNAUT_OUTLINE_TEXTURE : String = "thetawave/assets/texture/juggernaut_character_outline.png"
+
+///|
 const CAPTAIN_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/captain_description.png"
 
 ///|
@@ -62,16 +68,88 @@ const MONEY_ASTEROID_TEXTURE : String = "thetawave/assets/texture/money_asteroid
 const HAULER_TEXTURE : String = "thetawave/assets/texture/hauler_front.png"
 
 ///|
+const HAULER_MIDDLE_TEXTURE : String = "thetawave/assets/texture/hauler_middle.png"
+
+///|
+const HAULER_BACK_TEXTURE : String = "thetawave/assets/texture/hauler_back.png"
+
+///|
+const HAULER_THRUSTERS_TEXTURE : String = "thetawave/assets/texture/hauler_thrusters_spritesheet.png"
+
+///|
 const CRUSTLING_TEXTURE : String = "thetawave/assets/texture/crustling_spritesheet.png"
 
 ///|
 const FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/repeater_head_spritesheet.png"
 
 ///|
+const FERRITHARAX_BODY_TEXTURE : String = "thetawave/assets/texture/repeater_body_spritesheet.png"
+
+///|
+const FERRITHARAX_LEFT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/repeater_left_shoulder_spritesheet.png"
+
+///|
+const FERRITHARAX_RIGHT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/repeater_right_shoulder_spritesheet.png"
+
+///|
+const FERRITHARAX_LEFT_ARM_TEXTURE : String = "thetawave/assets/texture/repeater_left_arm_spritesheet.png"
+
+///|
+const FERRITHARAX_RIGHT_ARM_TEXTURE : String = "thetawave/assets/texture/repeater_right_arm_spritesheet.png"
+
+///|
+const FERRITHARAX_LEFT_CLAW_TEXTURE : String = "thetawave/assets/texture/repeater_left_claw_spritesheet.png"
+
+///|
+const FERRITHARAX_RIGHT_CLAW_TEXTURE : String = "thetawave/assets/texture/repeater_right_claw_spritesheet.png"
+
+///|
 const MECHA_FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_head.png"
 
 ///|
+const MECHA_FERRITHARAX_BODY_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_body.png"
+
+///|
+const MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_left_shoulder.png"
+
+///|
+const MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_right_shoulder.png"
+
+///|
+const MECHA_FERRITHARAX_LEFT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_left_arm.png"
+
+///|
+const MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_right_arm.png"
+
+///|
+const MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_left_claw.png"
+
+///|
+const MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_right_claw.png"
+
+///|
 const MECHA_SAUCETRON_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_head.png"
+
+///|
+const MECHA_SAUCETRON_BODY_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_body.png"
+
+///|
+const MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_left_shoulder.png"
+
+///|
+const MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_right_shoulder.png"
+
+///|
+const MECHA_SAUCETRON_LEFT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_left_arm.png"
+
+///|
+const MECHA_SAUCETRON_RIGHT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_right_arm.png"
+
+///|
+const MECHA_SAUCETRON_LEFT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_left_claw.png"
+
+///|
+const MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_right_claw.png"
 
 ///|
 const PLAYER_BULLET_TEXTURE : String = "thetawave/assets/texture/ally_bullet.png"
@@ -129,6 +207,24 @@ const MEGABLAST_ABILITY_TEXTURE : String = "thetawave/assets/texture/megablast_a
 
 ///|
 const CHARGE_ABILITY_TEXTURE : String = "thetawave/assets/texture/charge_ability.png"
+
+///|
+const DAMAGE_ICON_TEXTURE : String = "thetawave/assets/texture/damage_icon.png"
+
+///|
+const HEALTH_ICON_TEXTURE : String = "thetawave/assets/texture/health_icon.png"
+
+///|
+const RANGE_ICON_TEXTURE : String = "thetawave/assets/texture/range_icon.png"
+
+///|
+const FIRE_RATE_ICON_TEXTURE : String = "thetawave/assets/texture/fire_rate_icon.png"
+
+///|
+const SIZE_ICON_TEXTURE : String = "thetawave/assets/texture/size_icon.png"
+
+///|
+const SPEED_ICON_TEXTURE : String = "thetawave/assets/texture/speed_icon.png"
 
 ///|
 const FONT_LUNCHDS_ALIAS : String = "Lunchds"
@@ -245,6 +341,33 @@ fn character_portrait_sprite(character : CharacterType) -> @sprite.Sprite {
 }
 
 ///|
+fn character_carousel_portrait_sprite(
+  character : CharacterType,
+  center : Bool,
+) -> @sprite.Sprite {
+  let (texture, width, height) = match character {
+    Captain =>
+      if center {
+        (CAPTAIN_TEXTURE, 18.0, 18.0)
+      } else {
+        (CAPTAIN_OUTLINE_TEXTURE, 18.0, 18.0)
+      }
+    Juggernaut =>
+      if center {
+        (JUGGERNAUT_TEXTURE, 20.0, 24.0)
+      } else {
+        (JUGGERNAUT_OUTLINE_TEXTURE, 20.0, 24.0)
+      }
+  }
+  let scale = if center { 4.0 } else { 3.0 }
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(width * scale, height * scale), texture),
+    90,
+    offset=@math.Vec2D(-width * scale / 2.0, -height * scale / 2.0),
+  )
+}
+
+///|
 fn character_description_sprite(character : CharacterType) -> @sprite.Sprite {
   let texture = match character {
     Captain => CAPTAIN_DESCRIPTION_TEXTURE
@@ -254,6 +377,55 @@ fn character_description_sprite(character : CharacterType) -> @sprite.Sprite {
     @sprite.Picture::new(@math.Vec2D(200.0, 150.0), texture),
     90,
     offset=@math.Vec2D(-100.0, -75.0),
+  )
+}
+
+///|
+fn character_ability_slot_sprite() -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(32.0, 32.0), ABILITY_SQUARE_LEFT_TEXTURE),
+    90,
+    offset=@math.Vec2D(-16.0, -16.0),
+  )
+}
+
+///|
+fn character_ability_icon_sprite(
+  character : CharacterType,
+  slot : Int,
+) -> @sprite.Sprite {
+  let texture = if slot == 1 {
+    match character {
+      Captain => BLAST_ABILITY_TEXTURE
+      Juggernaut => BULLET_ABILITY_TEXTURE
+    }
+  } else {
+    match character {
+      Captain => MEGABLAST_ABILITY_TEXTURE
+      Juggernaut => CHARGE_ABILITY_TEXTURE
+    }
+  }
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(32.0, 32.0), texture),
+    91,
+    offset=@math.Vec2D(-16.0, -16.0),
+  )
+}
+
+///|
+fn character_stat_icon_sprite(stat : CharacterStatType) -> @sprite.Sprite {
+  let texture = match stat {
+    Damage => DAMAGE_ICON_TEXTURE
+    Health => HEALTH_ICON_TEXTURE
+    Range => RANGE_ICON_TEXTURE
+    FireRate => FIRE_RATE_ICON_TEXTURE
+    Size => SIZE_ICON_TEXTURE
+    Speed => SPEED_ICON_TEXTURE
+  }
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(16.0, 16.0), texture),
+    90,
+    offset=@math.Vec2D(-8.0, -8.0),
   )
 }
 

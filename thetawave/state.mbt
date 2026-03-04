@@ -71,6 +71,16 @@ enum CharacterType {
 } derive(Eq)
 
 ///|
+priv enum CharacterStatType {
+  Damage
+  Health
+  Range
+  FireRate
+  Size
+  Speed
+}
+
+///|
 enum ProjectileKind {
   Blast
   Bullet
@@ -141,6 +151,17 @@ enum EnemyShooterKind {
 } derive(Eq)
 
 ///|
+priv enum EnemyPartRole {
+  PartGeneric
+  PartShoulderLeft
+  PartShoulderRight
+  PartArmLeft
+  PartArmRight
+  PartClawLeft
+  PartClawRight
+}
+
+///|
 priv struct Enemy {
   kind : EnemyKind
   mut hp : Int
@@ -153,6 +174,16 @@ priv struct Enemy {
   shooter : EnemyShooterKind
   shoot_interval : Double
   mut shoot_cooldown : Double
+  mut boss_phase : Int
+  mut boss_phase_elapsed : Double
+  mut boss_left_pawn_timer : Double
+  mut boss_left_drone_timer : Double
+  mut boss_right_pawn_timer : Double
+  mut boss_right_drone_timer : Double
+  mut boss_left_missile_timer : Double
+  mut boss_right_missile_timer : Double
+  mut boss_left_weapon_timer : Double
+  mut boss_right_weapon_timer : Double
 }
 
 ///|
@@ -174,6 +205,16 @@ priv struct Consumable {
 priv struct ItemDrop {
   kind : ItemKind
   speed : Double
+}
+
+///|
+priv struct EnemyVisualPart {
+  entity : @entity.Entity
+  role : EnemyPartRole
+  offset : @math.Vec2D
+  bob_amp : Double
+  bob_speed : Double
+  bob_phase : Double
 }
 
 ///|
@@ -252,6 +293,50 @@ fn character_config(character : CharacterType) -> CharacterConfig {
 }
 
 ///|
+fn character_stat_percent(
+  character : CharacterType,
+  stat : CharacterStatType,
+) -> Double {
+  let percent = match character {
+    Captain =>
+      match stat {
+        Damage => (10.0 + 10.0 * 1.0) / 50.0
+        Health => (80.0 + 5.0) / 160.0
+        Range => 1.0 / 1.0
+        FireRate => (5.0 - 2.0) / 5.0
+        Size => 2.0 * 4.0 / 30.0
+        Speed => (25.0 + 25.0 + 10.0 + 10.0 + 300.0 + 300.0) / 800.0
+      }
+    Juggernaut =>
+      match stat {
+        Damage => (15.0 + 10.0 * 3.0) / 50.0
+        Health => (140.0 + 10.0) / 160.0
+        Range => 0.4 / 1.0
+        FireRate => (5.0 - 2.7) / 5.0
+        Size => 4.0 * 5.5 / 30.0
+        Speed => (25.0 + 25.0 + 10.0 + 10.0 + 250.0 + 250.0) / 800.0
+      }
+  }
+  if percent < 0.0 {
+    0.0
+  } else if percent > 1.0 {
+    1.0
+  } else {
+    percent
+  }
+}
+
+///|
+fn character_carousel_neighbors(
+  character : CharacterType,
+) -> (CharacterType, CharacterType, CharacterType) {
+  match character {
+    Captain => (Juggernaut, Captain, Juggernaut)
+    Juggernaut => (Captain, Juggernaut, Captain)
+  }
+}
+
+///|
 priv struct GameState {
   player : @entity.Entity
   background : @entity.Entity
@@ -297,6 +382,12 @@ priv struct GameState {
   mut background_kind : BackgroundKind
   mut phase : RunPhase
   mut selected_character : CharacterType
+  mut cs_p1_joined : Bool
+  mut cs_p1_ready : Bool
+  mut cs_p1_character : CharacterType
+  mut cs_p2_joined : Bool
+  mut cs_p2_ready : Bool
+  mut cs_p2_character : CharacterType
   mut score : Int
   mut shots_fired : Int
   mut shots_hit : Int
@@ -449,6 +540,12 @@ let game_state : GameState = {
   background_kind: Menu,
   phase: Playing,
   selected_character: Captain,
+  cs_p1_joined: false,
+  cs_p1_ready: false,
+  cs_p1_character: Captain,
+  cs_p2_joined: false,
+  cs_p2_ready: false,
+  cs_p2_character: Juggernaut,
   score: 0,
   shots_fired: 0,
   shots_hit: 0,
@@ -520,6 +617,9 @@ let ui_initialized : Ref[Bool] = { val: false }
 let enemies : Map[@entity.Entity, Enemy] = Map::new()
 
 ///|
+let enemy_visual_parts : Map[@entity.Entity, Array[EnemyVisualPart]] = Map::new()
+
+///|
 let bullets : Map[@entity.Entity, Bullet] = Map::new()
 
 ///|
@@ -531,6 +631,36 @@ let items : Map[@entity.Entity, ItemDrop] = Map::new()
 ///|
 fn initial_player_position() -> @math.Vec2D {
   @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT - 34.0)
+}
+
+///|
+fn is_ferritharax_family(kind : EnemyKind) -> Bool {
+  kind is Ferritharax || kind is MechaFerritharax || kind is MechaSaucetron
+}
+
+///|
+fn ferritharax_attack_duration(kind : EnemyKind) -> Double {
+  match kind {
+    Ferritharax => 10.0
+    MechaFerritharax => 8.0
+    MechaSaucetron => 7.0
+    _ => 10.0
+  }
+}
+
+///|
+fn ferritharax_missile_period(kind : EnemyKind) -> Double {
+  match kind {
+    Ferritharax => 5.0
+    MechaFerritharax => 7.0
+    MechaSaucetron => 5.5
+    _ => 5.0
+  }
+}
+
+///|
+fn has_ferritharax_arm_weapons(kind : EnemyKind) -> Bool {
+  kind is MechaFerritharax || kind is MechaSaucetron
 }
 
 ///|

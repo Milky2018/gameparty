@@ -21,6 +21,508 @@ let game_background_textures : Array[String] = [
 ]
 
 ///|
+const BG3D_BACKGROUND_ALPHA : Double = 0.06
+
+///|
+const BG3D_QUAD_Z : Double = -300.0
+
+///|
+const BG3D_QUAD_SCALE_X : Double = 1.5
+
+///|
+const BG3D_QUAD_SCALE_Y : Double = 1.5
+
+///|
+const BG3D_QUAD_WIDTH : Double = 375.0
+
+///|
+const BG3D_QUAD_HEIGHT : Double = 375.0
+
+///|
+const BG3D_PLANET_RADIUS : Double = 10.0
+
+///|
+const BG3D_STAR_RADIUS : Double = 10.0
+
+///|
+const BG3D_PLANET_X : Double = 8.0
+
+///|
+const BG3D_PLANET_Y : Double = -8.0
+
+///|
+const BG3D_PLANET_Z : Double = 30.0
+
+///|
+const BG3D_STAR_X_MIN : Double = -90.0
+
+///|
+const BG3D_STAR_X_MAX : Double = -30.0
+
+///|
+const BG3D_STAR_Z_MIN : Double = -250.0
+
+///|
+const BG3D_STAR_Z_MAX : Double = -150.0
+
+///|
+const BG3D_ROTATE_SPEED_MIN : Double = 0.01
+
+///|
+const BG3D_ROTATE_SPEED_MAX : Double = 0.05
+
+///|
+const BG3D_STAR_LIGHT_INTENSITY : Double = 100000000.0
+
+///|
+const BG3D_STAR_LIGHT_RANGE : Double = 10000.0
+
+///|
+let background3d_initialized : Ref[Bool] = { val: false }
+
+///|
+let background3d_active : Ref[Bool] = { val: false }
+
+///|
+let background3d_camera_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let background3d_quad_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let background3d_planet_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let background3d_star_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let background3d_star_light_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let background3d_quad_mesh : Ref[@render3d.MeshHandle?] = { val: None }
+
+///|
+let background3d_planet_mesh : Ref[@render3d.MeshHandle?] = { val: None }
+
+///|
+let background3d_star_mesh : Ref[@render3d.MeshHandle?] = { val: None }
+
+///|
+let background3d_quad_image : Ref[@render3d.ImageHandle?] = { val: None }
+
+///|
+let background3d_quad_material : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let background3d_planet_material : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let background3d_star_material : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let background3d_planet_rotation_speed : Ref[Double] = {
+  val: BG3D_ROTATE_SPEED_MIN,
+}
+
+///|
+let character_left_portrait_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_right_portrait_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_name_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ability_slot1_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ability_slot1_icon_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ability_slot1_text_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ability_slot2_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ability_slot2_icon_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ability_slot2_text_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_join_prompt_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_ready_text_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_stats_order : Array[CharacterStatType] = [
+  Damage,
+  Health,
+  Range,
+  FireRate,
+  Size,
+  Speed,
+]
+
+///|
+let character_stat_icon_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let character_stat_bg_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let character_stat_fill_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let character_p2_center_portrait_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_left_portrait_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_right_portrait_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_name_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ability_slot1_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ability_slot1_icon_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ability_slot1_text_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ability_slot2_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ability_slot2_icon_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ability_slot2_text_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_join_prompt_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_ready_text_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let character_p2_stat_icon_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let character_p2_stat_bg_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let character_p2_stat_fill_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
+  if !entity.is_alive() {
+    entity.respawn()
+  }
+}
+
+///|
+fn color_u8(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
+  @render.Color::{ r, g, b, a }
+}
+
+///|
+fn random_range(min : Double, max : Double) -> Double {
+  min + (max - min) * game_state.rand.double()
+}
+
+///|
+fn random_channel(min : Int, max : Int) -> UInt {
+  let span = @cmp.maximum(1, max - min + 1)
+  let raw = min + (game_state.rand.double() * span.to_double()).to_int()
+  clamp_int(raw, min, max).reinterpret_as_uint()
+}
+
+///|
+fn uses_3d_background(kind : BackgroundKind) -> Bool {
+  kind is Menu || kind is CharacterSelection || kind is Game
+}
+
+///|
+fn set_background_sprite_visible(visible : Bool) -> Unit {
+  if @sprite.sprites.get(game_state.background) is Some(sprite) {
+    sprite.visible = visible
+  }
+}
+
+///|
+fn set_mesh3d_visible(entity : @entity.Entity, visible : Bool) -> Unit {
+  if @render3d.mesh3d_renderers.get(entity) is Some(renderer) {
+    renderer.visible = visible
+  }
+}
+
+///|
+fn set_background3d_active(active : Bool) -> Unit {
+  background3d_active.val = active
+  if !background3d_initialized.val {
+    return
+  }
+  if @camera3d.cameras3d.get(background3d_camera_entity) is Some(camera) {
+    camera.enabled = active
+  }
+  set_mesh3d_visible(background3d_quad_entity, active)
+  set_mesh3d_visible(background3d_planet_entity, active)
+  set_mesh3d_visible(background3d_star_entity, active)
+}
+
+///|
+fn background3d_quad_mesh_asset() -> @render3d.MeshAsset {
+  let half_w = BG3D_QUAD_WIDTH / 2.0
+  let half_h = BG3D_QUAD_HEIGHT / 2.0
+  let positions = [
+    @math.Vec3::new(-half_w, -half_h, 0.0),
+    @math.Vec3::new(half_w, -half_h, 0.0),
+    @math.Vec3::new(half_w, half_h, 0.0),
+    @math.Vec3::new(-half_w, -half_h, 0.0),
+    @math.Vec3::new(half_w, half_h, 0.0),
+    @math.Vec3::new(-half_w, half_h, 0.0),
+  ]
+  let uvs = [
+    @math.Vec2D(0.0, 1.0),
+    @math.Vec2D(1.0, 1.0),
+    @math.Vec2D(1.0, 0.0),
+    @math.Vec2D(0.0, 1.0),
+    @math.Vec2D(1.0, 0.0),
+    @math.Vec2D(0.0, 0.0),
+  ]
+  @render3d.triangle_mesh(positions, uvs=Some(uvs))
+}
+
+///|
+fn refresh_background3d_assets() -> Unit {
+  guard background3d_quad_mesh.val is Some(quad_mesh) else { return }
+  guard background3d_planet_mesh.val is Some(planet_mesh) else { return }
+  guard background3d_star_mesh.val is Some(star_mesh) else { return }
+
+  ensure_entity_alive(background3d_quad_entity)
+  ensure_entity_alive(background3d_planet_entity)
+  ensure_entity_alive(background3d_star_entity)
+  ensure_entity_alive(background3d_star_light_entity)
+
+  let old_quad_image = background3d_quad_image.val
+  let old_quad_material = background3d_quad_material.val
+  let old_planet_material = background3d_planet_material.val
+  let old_star_material = background3d_star_material.val
+
+  let quad_image = @render3d.register_image_asset({
+    path: random_game_background_texture(),
+  })
+  let quad_material = @render3d.default_standard_material3d()
+  let quad_material = {
+    ..quad_material,
+    base_color_texture: Some(quad_image),
+    base_color: color_u8(255U, 255U, 255U, BG3D_BACKGROUND_ALPHA),
+    alpha_mode: Blend,
+  }
+  let quad_material = @render3d.register_material_asset(quad_material)
+
+  let star_color = color_u8(
+    random_channel(220, 255),
+    random_channel(220, 255),
+    random_channel(180, 255),
+    1.0,
+  )
+  let star_material = @render3d.default_standard_material3d()
+  let star_material = { ..star_material, base_color: star_color }
+  let star_material = @render3d.register_material_asset(star_material)
+
+  let planet_material = @render3d.default_standard_material3d()
+  let planet_material = {
+    ..planet_material,
+    base_color: color_u8(
+      random_channel(90, 180),
+      random_channel(90, 180),
+      random_channel(90, 180),
+      1.0,
+    ),
+  }
+  let planet_material = @render3d.register_material_asset(planet_material)
+
+  @render3d.mesh3d_renderers.set(background3d_quad_entity, {
+    mesh: quad_mesh,
+    material: quad_material,
+    visible: background3d_active.val,
+  })
+  @transform3d.transforms3d.set(background3d_quad_entity, {
+    translation: @math.Vec3::new(0.0, 0.0, BG3D_QUAD_Z),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::new(BG3D_QUAD_SCALE_X, BG3D_QUAD_SCALE_Y, 1.0),
+  })
+
+  @render3d.mesh3d_renderers.set(background3d_planet_entity, {
+    mesh: planet_mesh,
+    material: planet_material,
+    visible: background3d_active.val,
+  })
+  @transform3d.transforms3d.set(background3d_planet_entity, {
+    translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
+    rotation: @math.Quat::from_axis_angle(
+      @math.Vec3::new(0.0, 1.0, 0.0),
+      random_range(0.0, @cmath.PI * 2.0),
+    ),
+    scale: @math.Vec3::one(),
+  })
+
+  let star_x = random_range(BG3D_STAR_X_MIN, BG3D_STAR_X_MAX)
+  let star_z = random_range(BG3D_STAR_Z_MIN, BG3D_STAR_Z_MAX)
+  let star_translation = @math.Vec3::new(star_x, 0.0, star_z)
+  @render3d.mesh3d_renderers.set(background3d_star_entity, {
+    mesh: star_mesh,
+    material: star_material,
+    visible: background3d_active.val,
+  })
+  @transform3d.transforms3d.set(background3d_star_entity, {
+    translation: star_translation,
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
+  @render3d.point_lights3d.set(background3d_star_light_entity, {
+    color: star_color,
+    intensity: BG3D_STAR_LIGHT_INTENSITY,
+    range: BG3D_STAR_LIGHT_RANGE,
+  })
+  @transform3d.transforms3d.set(background3d_star_light_entity, {
+    translation: star_translation,
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
+
+  background3d_quad_image.val = Some(quad_image)
+  background3d_quad_material.val = Some(quad_material)
+  background3d_planet_material.val = Some(planet_material)
+  background3d_star_material.val = Some(star_material)
+  background3d_planet_rotation_speed.val = random_range(
+    BG3D_ROTATE_SPEED_MIN,
+    BG3D_ROTATE_SPEED_MAX,
+  )
+
+  if old_quad_material is Some(handle) {
+    @render3d.release_material_asset(handle)
+  }
+  if old_quad_image is Some(handle) {
+    @render3d.release_image_asset(handle)
+  }
+  if old_planet_material is Some(handle) {
+    @render3d.release_material_asset(handle)
+  }
+  if old_star_material is Some(handle) {
+    @render3d.release_material_asset(handle)
+  }
+}
+
+///|
+fn ensure_background3d_initialized() -> Unit {
+  if background3d_initialized.val {
+    return
+  }
+
+  ensure_entity_alive(background3d_camera_entity)
+  ensure_entity_alive(background3d_quad_entity)
+  ensure_entity_alive(background3d_planet_entity)
+  ensure_entity_alive(background3d_star_entity)
+  ensure_entity_alive(background3d_star_light_entity)
+
+  @camera3d.cameras3d.set(
+    background3d_camera_entity,
+    @camera3d.Camera3DComponent::default(),
+  )
+  @transform3d.transforms3d.set(background3d_camera_entity, {
+    translation: @math.Vec3::new(0.0, 0.0, 60.0),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
+
+  background3d_quad_mesh.val = Some(
+    @render3d.register_mesh_asset(background3d_quad_mesh_asset()),
+  )
+  background3d_planet_mesh.val = Some(
+    @render3d.register_mesh_asset(@render3d.sphere_mesh(BG3D_PLANET_RADIUS)),
+  )
+  background3d_star_mesh.val = Some(
+    @render3d.register_mesh_asset(@render3d.sphere_mesh(BG3D_STAR_RADIUS)),
+  )
+
+  background3d_initialized.val = true
+  refresh_background3d_assets()
+  set_background3d_active(false)
+}
+
+///|
+fn background3d_system(delta : Double) -> Unit {
+  if !background3d_active.val || !uses_3d_background(game_state.background_kind) {
+    return
+  }
+  if @transform3d.transforms3d.get(background3d_planet_entity)
+    is Some(transform) {
+    let step = @math.Quat::from_axis_angle(
+      @math.Vec3::new(0.0, 1.0, 0.0),
+      delta * background3d_planet_rotation_speed.val,
+    )
+    @transform3d.transforms3d.set(background3d_planet_entity, {
+      ..transform,
+      rotation: (transform.rotation * step).normalize(),
+    })
+  }
+}
+
+///|
 fn preload_assets() -> Unit {
   @backend.preload_img(MENU_BG_TEXTURE)
   @backend.preload_img(CHARACTER_SELECT_BG_TEXTURE)
@@ -31,6 +533,8 @@ fn preload_assets() -> Unit {
   @backend.preload_img(MENU_BUTTON_SPRITESHEET_TEXTURE)
   @backend.preload_img(CAPTAIN_TEXTURE)
   @backend.preload_img(JUGGERNAUT_TEXTURE)
+  @backend.preload_img(CAPTAIN_OUTLINE_TEXTURE)
+  @backend.preload_img(JUGGERNAUT_OUTLINE_TEXTURE)
   @backend.preload_img(CAPTAIN_DESCRIPTION_TEXTURE)
   @backend.preload_img(JUGGERNAUT_DESCRIPTION_TEXTURE)
   @backend.preload_img(RESTART_GAME_PROMPT_TEXTURE)
@@ -43,10 +547,34 @@ fn preload_assets() -> Unit {
   @backend.preload_img(MISSILE_TEXTURE)
   @backend.preload_img(MONEY_ASTEROID_TEXTURE)
   @backend.preload_img(HAULER_TEXTURE)
+  @backend.preload_img(HAULER_MIDDLE_TEXTURE)
+  @backend.preload_img(HAULER_BACK_TEXTURE)
+  @backend.preload_img(HAULER_THRUSTERS_TEXTURE)
   @backend.preload_img(CRUSTLING_TEXTURE)
   @backend.preload_img(FERRITHARAX_TEXTURE)
+  @backend.preload_img(FERRITHARAX_BODY_TEXTURE)
+  @backend.preload_img(FERRITHARAX_LEFT_SHOULDER_TEXTURE)
+  @backend.preload_img(FERRITHARAX_RIGHT_SHOULDER_TEXTURE)
+  @backend.preload_img(FERRITHARAX_LEFT_ARM_TEXTURE)
+  @backend.preload_img(FERRITHARAX_RIGHT_ARM_TEXTURE)
+  @backend.preload_img(FERRITHARAX_LEFT_CLAW_TEXTURE)
+  @backend.preload_img(FERRITHARAX_RIGHT_CLAW_TEXTURE)
   @backend.preload_img(MECHA_FERRITHARAX_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_BODY_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_LEFT_ARM_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE)
   @backend.preload_img(MECHA_SAUCETRON_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_BODY_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_LEFT_ARM_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_RIGHT_ARM_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_LEFT_CLAW_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE)
   @backend.preload_img(PLAYER_BULLET_TEXTURE)
   @backend.preload_img(PLAYER_BLAST_TEXTURE)
   @backend.preload_img(ENEMY_BULLET_TEXTURE)
@@ -66,6 +594,12 @@ fn preload_assets() -> Unit {
   @backend.preload_img(BULLET_ABILITY_TEXTURE)
   @backend.preload_img(MEGABLAST_ABILITY_TEXTURE)
   @backend.preload_img(CHARGE_ABILITY_TEXTURE)
+  @backend.preload_img(DAMAGE_ICON_TEXTURE)
+  @backend.preload_img(HEALTH_ICON_TEXTURE)
+  @backend.preload_img(RANGE_ICON_TEXTURE)
+  @backend.preload_img(FIRE_RATE_ICON_TEXTURE)
+  @backend.preload_img(SIZE_ICON_TEXTURE)
+  @backend.preload_img(SPEED_ICON_TEXTURE)
   for texture in game_background_textures {
     @backend.preload_img(texture)
   }
@@ -89,23 +623,28 @@ fn initialize_scene() -> Unit {
   if !entity.is_alive() {
     entity.respawn()
   }
+  ensure_background3d_initialized()
   set_background(Menu)
 }
 
 ///|
 fn set_background(kind : BackgroundKind) -> Unit {
-  if game_state.background_kind == kind &&
-    @sprite.sprites.get(game_state.background) is Some(_) {
+  game_state.background_kind = kind
+  if uses_3d_background(kind) {
+    ensure_background3d_initialized()
+    if kind is Menu || kind is Game {
+      refresh_background3d_assets()
+    }
+    set_background3d_active(true)
+    set_background_sprite_visible(false)
     return
   }
-  game_state.background_kind = kind
-  let sprite = if kind is Game {
-    background_sprite_by_texture(random_game_background_texture())
-  } else {
-    background_sprite(kind)
-  }
+
+  set_background3d_active(false)
+  let sprite = background_sprite(kind)
   @sprite.sprites.set(game_state.background, sprite)
   @transform.positions.set(game_state.background, @math.Vec2D(0.0, 0.0))
+  set_background_sprite_visible(true)
 }
 
 ///|
@@ -200,6 +739,228 @@ fn initialize_ui() -> Unit {
     game_state.character_description_ui,
     character_description_sprite(Captain),
     @math.Vec2D(240.0, 242.0),
+  )
+  setup_picture_entity(
+    character_left_portrait_ui,
+    character_carousel_portrait_sprite(Juggernaut, false),
+    @math.Vec2D(172.0, 132.0),
+  )
+  setup_picture_entity(
+    character_right_portrait_ui,
+    character_carousel_portrait_sprite(Juggernaut, false),
+    @math.Vec2D(308.0, 132.0),
+  )
+  setup_text_entity(
+    character_name_ui,
+    @sprite.Text::new(
+      "Captain",
+      color="rgb(255, 215, 0)",
+      font=UI_FONT_MEDIUM,
+      baseline=Top,
+      align=Center,
+    ),
+    @math.Vec2D(240.0, 178.0),
+  )
+  setup_picture_entity(
+    character_ability_slot1_ui,
+    character_ability_slot_sprite(),
+    @math.Vec2D(130.0, 210.0),
+  )
+  setup_picture_entity(
+    character_ability_slot1_icon_ui,
+    character_ability_icon_sprite(Captain, 1),
+    @math.Vec2D(130.0, 210.0),
+  )
+  setup_text_entity(
+    character_ability_slot1_text_ui,
+    @sprite.Text::new(
+      "Fires energy blasts.",
+      color="white",
+      font="14px Lunchds",
+      baseline=Top,
+      align=Left,
+    ),
+    @math.Vec2D(162.0, 202.0),
+  )
+  setup_picture_entity(
+    character_ability_slot2_ui,
+    character_ability_slot_sprite(),
+    @math.Vec2D(130.0, 244.0),
+  )
+  setup_picture_entity(
+    character_ability_slot2_icon_ui,
+    character_ability_icon_sprite(Captain, 2),
+    @math.Vec2D(130.0, 244.0),
+  )
+  setup_text_entity(
+    character_ability_slot2_text_ui,
+    @sprite.Text::new(
+      "Fires large, high damage, blasts.",
+      color="white",
+      font="14px Lunchds",
+      baseline=Top,
+      align=Left,
+    ),
+    @math.Vec2D(162.0, 236.0),
+  )
+  for i in 0..<character_stats_order.length() {
+    setup_picture_entity(
+      character_stat_icon_uis[i],
+      character_stat_icon_sprite(character_stats_order[i]),
+      @math.Vec2D(346.0, 202.0 + i.to_double() * 18.0),
+    )
+    setup_picture_entity(
+      character_stat_bg_uis[i],
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(72.0, 7.0), "rgba(255,255,255,0.15)"),
+        89,
+      ),
+      @math.Vec2D(388.0, 202.0 + i.to_double() * 18.0),
+    )
+    setup_picture_entity(
+      character_stat_fill_uis[i],
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)"),
+        90,
+      ),
+      @math.Vec2D(353.0, 203.0 + i.to_double() * 18.0),
+    )
+  }
+  setup_text_entity(
+    character_join_prompt_ui,
+    @sprite.Text::new(
+      "P1 Press Enter to Join",
+      color="white",
+      font=UI_FONT_SMALL,
+      baseline=Top,
+      align=Center,
+    ),
+    @math.Vec2D(120.0, 188.0),
+  )
+  setup_text_entity(
+    character_ready_text_ui,
+    @sprite.Text::new(
+      "Not Ready",
+      color="rgb(220,220,220)",
+      font=UI_FONT_SMALL,
+      baseline=Top,
+      align=Center,
+    ),
+    @math.Vec2D(120.0, 282.0),
+  )
+
+  setup_picture_entity(
+    character_p2_center_portrait_ui,
+    character_carousel_portrait_sprite(Juggernaut, true),
+    @math.Vec2D(360.0, 130.0),
+  )
+  setup_picture_entity(
+    character_p2_left_portrait_ui,
+    character_carousel_portrait_sprite(Captain, false),
+    @math.Vec2D(316.0, 132.0),
+  )
+  setup_picture_entity(
+    character_p2_right_portrait_ui,
+    character_carousel_portrait_sprite(Captain, false),
+    @math.Vec2D(404.0, 132.0),
+  )
+  setup_text_entity(
+    character_p2_name_ui,
+    @sprite.Text::new(
+      "Juggernaut",
+      color="rgb(255, 215, 0)",
+      font=UI_FONT_MEDIUM,
+      baseline=Top,
+      align=Center,
+    ),
+    @math.Vec2D(360.0, 176.0),
+  )
+  setup_picture_entity(
+    character_p2_ability_slot1_ui,
+    character_ability_slot_sprite(),
+    @math.Vec2D(302.0, 210.0),
+  )
+  setup_picture_entity(
+    character_p2_ability_slot1_icon_ui,
+    character_ability_icon_sprite(Juggernaut, 1),
+    @math.Vec2D(302.0, 210.0),
+  )
+  setup_text_entity(
+    character_p2_ability_slot1_text_ui,
+    @sprite.Text::new(
+      "Fires lead bullets.",
+      color="white",
+      font="14px Lunchds",
+      baseline=Top,
+      align=Left,
+    ),
+    @math.Vec2D(334.0, 202.0),
+  )
+  setup_picture_entity(
+    character_p2_ability_slot2_ui,
+    character_ability_slot_sprite(),
+    @math.Vec2D(302.0, 244.0),
+  )
+  setup_picture_entity(
+    character_p2_ability_slot2_icon_ui,
+    character_ability_icon_sprite(Juggernaut, 2),
+    @math.Vec2D(302.0, 244.0),
+  )
+  setup_text_entity(
+    character_p2_ability_slot2_text_ui,
+    @sprite.Text::new(
+      "Charge in a direction.",
+      color="white",
+      font="14px Lunchds",
+      baseline=Top,
+      align=Left,
+    ),
+    @math.Vec2D(334.0, 236.0),
+  )
+  for i in 0..<character_stats_order.length() {
+    setup_picture_entity(
+      character_p2_stat_icon_uis[i],
+      character_stat_icon_sprite(character_stats_order[i]),
+      @math.Vec2D(410.0, 202.0 + i.to_double() * 18.0),
+    )
+    setup_picture_entity(
+      character_p2_stat_bg_uis[i],
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(56.0, 7.0), "rgba(255,255,255,0.15)"),
+        89,
+      ),
+      @math.Vec2D(442.0, 202.0 + i.to_double() * 18.0),
+    )
+    setup_picture_entity(
+      character_p2_stat_fill_uis[i],
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)"),
+        90,
+      ),
+      @math.Vec2D(414.0, 203.0 + i.to_double() * 18.0),
+    )
+  }
+  setup_text_entity(
+    character_p2_join_prompt_ui,
+    @sprite.Text::new(
+      "P2 Press A/Start to Join",
+      color="white",
+      font=UI_FONT_SMALL,
+      baseline=Top,
+      align=Center,
+    ),
+    @math.Vec2D(360.0, 188.0),
+  )
+  setup_text_entity(
+    character_p2_ready_text_ui,
+    @sprite.Text::new(
+      "Not Ready",
+      color="rgb(220,220,220)",
+      font=UI_FONT_SMALL,
+      baseline=Top,
+      align=Center,
+    ),
+    @math.Vec2D(360.0, 282.0),
   )
   setup_picture_entity(
     game_state.phase_prompt_ui,
@@ -325,6 +1086,105 @@ fn initialize_ui() -> Unit {
   if @sprite.sprites.get(game_state.character_description_ui) is Some(sprite) {
     sprite.visible = false
   }
+  if @sprite.sprites.get(character_left_portrait_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_right_portrait_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_name_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ability_slot1_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ability_slot1_icon_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ability_slot1_text_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ability_slot2_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ability_slot2_icon_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ability_slot2_text_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_join_prompt_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_ready_text_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  for entity in character_stat_icon_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+  for entity in character_stat_bg_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+  for entity in character_stat_fill_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+  if @sprite.sprites.get(character_p2_center_portrait_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_left_portrait_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_right_portrait_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_name_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ability_slot1_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ability_slot1_icon_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ability_slot1_text_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ability_slot2_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ability_slot2_icon_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ability_slot2_text_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_join_prompt_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(character_p2_ready_text_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  for entity in character_p2_stat_icon_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+  for entity in character_p2_stat_bg_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+  for entity in character_p2_stat_fill_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
   if @sprite.sprites.get(game_state.phase_prompt_ui) is Some(sprite) {
     sprite.visible = false
   }
@@ -430,6 +1290,12 @@ fn enter_character_selection() -> Unit {
   clear_dynamic_entities()
   game_state.screen = CharacterSelection
   game_state.phase = Playing
+  game_state.cs_p1_joined = false
+  game_state.cs_p1_ready = false
+  game_state.cs_p1_character = Captain
+  game_state.cs_p2_joined = false
+  game_state.cs_p2_ready = false
+  game_state.cs_p2_character = Juggernaut
   set_background(CharacterSelection)
 }
 
@@ -457,6 +1323,13 @@ fn clear_dynamic_entities() -> Unit {
   }
   for enemy_entity in enemies_to_clear {
     despawn_enemy(enemy_entity)
+  }
+  let part_hosts_to_clear = []
+  for host_entity, _ in enemy_visual_parts {
+    part_hosts_to_clear.push(host_entity)
+  }
+  for host_entity in part_hosts_to_clear {
+    despawn_enemy_visual_parts(host_entity)
   }
 
   let bullets_to_clear = []
@@ -565,6 +1438,512 @@ fn spawn_player() -> Unit {
 }
 
 ///|
+priv struct EnemyPartTemplate {
+  sprite : @sprite.Sprite
+  offset : @math.Vec2D
+  bob_amp : Double
+  bob_speed : Double
+  bob_phase : Double
+}
+
+///|
+fn enemy_part_picture(
+  texture : String,
+  size : @math.Vec2D,
+  zindex : Int,
+) -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(size, texture),
+    zindex,
+    offset=@math.Vec2D(-size[X] / 2.0, -size[Y] / 2.0),
+  )
+}
+
+///|
+fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
+  match kind {
+    Hauler =>
+      [
+        {
+          sprite: enemy_part_picture(
+            HAULER_MIDDLE_TEXTURE,
+            @math.Vec2D(18.0, 26.0),
+            10,
+          ),
+          offset: @math.Vec2D(0.0, 18.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: enemy_part_picture(
+            HAULER_BACK_TEXTURE,
+            @math.Vec2D(18.0, 24.0),
+            9,
+          ),
+          offset: @math.Vec2D(0.0, 35.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            HAULER_THRUSTERS_TEXTURE,
+            20.0,
+            9.0,
+            3,
+            8.0,
+            8,
+          ),
+          offset: @math.Vec2D(0.0, 51.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+      ]
+    Ferritharax =>
+      [
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_BODY_TEXTURE,
+            70.0,
+            43.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(0.0, 34.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_LEFT_SHOULDER_TEXTURE,
+            58.0,
+            64.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(-34.0, 8.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_RIGHT_SHOULDER_TEXTURE,
+            58.0,
+            64.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(34.0, 8.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_LEFT_ARM_TEXTURE,
+            41.0,
+            62.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(-50.0, 14.0),
+          bob_amp: 2.0,
+          bob_speed: 2.1,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_RIGHT_ARM_TEXTURE,
+            41.0,
+            62.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(50.0, 14.0),
+          bob_amp: 2.0,
+          bob_speed: 2.1,
+          bob_phase: 3.141592653589793,
+        },
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_LEFT_CLAW_TEXTURE,
+            36.0,
+            35.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(-62.0, 24.0),
+          bob_amp: 2.5,
+          bob_speed: 2.7,
+          bob_phase: 1.2,
+        },
+        {
+          sprite: animated_sprite(
+            FERRITHARAX_RIGHT_CLAW_TEXTURE,
+            36.0,
+            35.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(62.0, 24.0),
+          bob_amp: 2.5,
+          bob_speed: 2.7,
+          bob_phase: 4.3,
+        },
+      ]
+    MechaFerritharax =>
+      [
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_BODY_TEXTURE,
+            80.0,
+            43.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(0.0, 34.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE,
+            62.0,
+            66.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(-36.0, 9.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE,
+            62.0,
+            66.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(36.0, 9.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_LEFT_ARM_TEXTURE,
+            40.0,
+            57.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(-52.0, 16.0),
+          bob_amp: 1.8,
+          bob_speed: 2.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE,
+            40.0,
+            57.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(52.0, 16.0),
+          bob_amp: 1.8,
+          bob_speed: 2.0,
+          bob_phase: 3.141592653589793,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE,
+            44.0,
+            39.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(-66.0, 25.0),
+          bob_amp: 2.3,
+          bob_speed: 2.8,
+          bob_phase: 0.8,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE,
+            44.0,
+            39.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(66.0, 25.0),
+          bob_amp: 2.3,
+          bob_speed: 2.8,
+          bob_phase: 3.9,
+        },
+      ]
+    MechaSaucetron =>
+      [
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_BODY_TEXTURE,
+            80.0,
+            43.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(0.0, 34.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE,
+            62.0,
+            66.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(-36.0, 10.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE,
+            62.0,
+            66.0,
+            3,
+            4.0,
+            11,
+          ),
+          offset: @math.Vec2D(36.0, 10.0),
+          bob_amp: 0.0,
+          bob_speed: 0.0,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_LEFT_ARM_TEXTURE,
+            40.0,
+            57.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(-52.0, 18.0),
+          bob_amp: 1.8,
+          bob_speed: 2.2,
+          bob_phase: 0.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_RIGHT_ARM_TEXTURE,
+            40.0,
+            57.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(52.0, 18.0),
+          bob_amp: 1.8,
+          bob_speed: 2.2,
+          bob_phase: 3.141592653589793,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_LEFT_CLAW_TEXTURE,
+            44.0,
+            39.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(-66.0, 27.0),
+          bob_amp: 2.3,
+          bob_speed: 2.9,
+          bob_phase: 1.0,
+        },
+        {
+          sprite: animated_sprite(
+            MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE,
+            44.0,
+            39.0,
+            3,
+            4.0,
+            10,
+          ),
+          offset: @math.Vec2D(66.0, 27.0),
+          bob_amp: 2.3,
+          bob_speed: 2.9,
+          bob_phase: 4.1,
+        },
+      ]
+    _ => []
+  }
+}
+
+///|
+fn enemy_part_role(kind : EnemyKind, index : Int) -> EnemyPartRole {
+  match kind {
+    Ferritharax =>
+      match index {
+        1 => PartShoulderLeft
+        2 => PartShoulderRight
+        3 => PartArmLeft
+        4 => PartArmRight
+        5 => PartClawLeft
+        6 => PartClawRight
+        _ => PartGeneric
+      }
+    MechaFerritharax =>
+      match index {
+        1 => PartShoulderLeft
+        2 => PartShoulderRight
+        3 => PartArmLeft
+        4 => PartArmRight
+        5 => PartClawLeft
+        6 => PartClawRight
+        _ => PartGeneric
+      }
+    MechaSaucetron =>
+      match index {
+        1 => PartShoulderLeft
+        2 => PartShoulderRight
+        3 => PartArmLeft
+        4 => PartArmRight
+        5 => PartClawLeft
+        6 => PartClawRight
+        _ => PartGeneric
+      }
+    _ => PartGeneric
+  }
+}
+
+///|
+fn ferritharax_protect_pose_offset(role : EnemyPartRole) -> @math.Vec2D {
+  let angle = match role {
+    PartShoulderLeft => 0.15
+    PartShoulderRight => 0.15
+    PartArmLeft => 0.5
+    PartArmRight => 0.5
+    PartClawLeft => 1.0
+    PartClawRight => 1.0
+    PartGeneric => 0.0
+  }
+  let dir_x = match role {
+    PartShoulderLeft => 1.0
+    PartArmLeft => 1.0
+    PartClawLeft => 1.0
+    PartShoulderRight => -1.0
+    PartArmRight => -1.0
+    PartClawRight => -1.0
+    PartGeneric => 0.0
+  }
+  @math.Vec2D(dir_x * angle * 18.0, -angle * 24.0)
+}
+
+///|
+fn spawn_enemy_visual_parts(
+  enemy_entity : @entity.Entity,
+  kind : EnemyKind,
+  origin : @math.Vec2D,
+) -> Unit {
+  let templates = enemy_part_templates(kind)
+  if templates.length() <= 0 {
+    enemy_visual_parts.remove(enemy_entity)
+    return
+  }
+  let links = []
+  for i in 0..<templates.length() {
+    let template = templates[i]
+    let part_entity = @entity.Entity::new()
+    @sprite.sprites.set(part_entity, template.sprite)
+    @transform.positions.set(part_entity, origin + template.offset)
+    links.push({
+      entity: part_entity,
+      role: enemy_part_role(kind, i),
+      offset: template.offset,
+      bob_amp: template.bob_amp,
+      bob_speed: template.bob_speed,
+      bob_phase: template.bob_phase,
+    })
+  }
+  enemy_visual_parts.set(enemy_entity, links)
+}
+
+///|
+fn sync_enemy_visual_parts(
+  enemy_entity : @entity.Entity,
+  origin : @math.Vec2D,
+) -> Unit {
+  if enemy_visual_parts.get(enemy_entity) is Some(parts) {
+    let protect_mode = if enemies.get(enemy_entity) is Some(enemy) {
+      is_ferritharax_family(enemy.kind) &&
+      (enemy.boss_phase == 1 || enemy.boss_phase == 3)
+    } else {
+      false
+    }
+    for part in parts {
+      let bob_y = if part.bob_amp > 0.0 {
+        @cmath.sin(game_state.elapsed * part.bob_speed + part.bob_phase) *
+        part.bob_amp
+      } else {
+        0.0
+      }
+      let pose_offset = if protect_mode {
+        ferritharax_protect_pose_offset(part.role)
+      } else {
+        @math.Vec2D(0.0, 0.0)
+      }
+      @transform.positions.set(
+        part.entity,
+        origin + part.offset + pose_offset + @math.Vec2D(0.0, bob_y),
+      )
+    }
+  }
+}
+
+///|
+fn despawn_enemy_visual_parts(enemy_entity : @entity.Entity) -> Unit {
+  if enemy_visual_parts.get(enemy_entity) is Some(parts) {
+    for part in parts {
+      @sprite.sprites.remove(part.entity)
+      @transform.positions.remove(part.entity)
+      if part.entity.is_alive() {
+        part.entity.destroy()
+      }
+    }
+  }
+  enemy_visual_parts.remove(enemy_entity)
+}
+
+///|
 fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
   let enemy_entity = @entity.Entity::new()
   let archetype = enemy_archetype(kind)
@@ -596,6 +1975,7 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
   }
   @sprite.sprites.set(enemy_entity, enemy_sprite(kind))
   @transform.positions.set(enemy_entity, spawn_pos)
+  spawn_enemy_visual_parts(enemy_entity, kind, spawn_pos)
   enemies.set(enemy_entity, {
     kind,
     hp: archetype.hp + hp_bonus,
@@ -608,6 +1988,24 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
     shooter: archetype.shooter,
     shoot_interval: archetype.shoot_interval,
     shoot_cooldown: archetype.initial_shoot_delay,
+    boss_phase: 0,
+    boss_phase_elapsed: 0.0,
+    boss_left_pawn_timer: 7.0,
+    boss_left_drone_timer: 5.0,
+    boss_right_pawn_timer: 7.0,
+    boss_right_drone_timer: 5.0,
+    boss_left_missile_timer: ferritharax_missile_period(kind),
+    boss_right_missile_timer: ferritharax_missile_period(kind),
+    boss_left_weapon_timer: if has_ferritharax_arm_weapons(kind) {
+      3.0
+    } else {
+      9999.0
+    },
+    boss_right_weapon_timer: if has_ferritharax_arm_weapons(kind) {
+      3.0
+    } else {
+      9999.0
+    },
   })
 }
 
@@ -722,6 +2120,7 @@ fn spawn_item(kind : ItemKind, position : @math.Vec2D) -> Unit {
 
 ///|
 fn despawn_enemy(enemy_entity : @entity.Entity) -> Unit {
+  despawn_enemy_visual_parts(enemy_entity)
   enemies.remove(enemy_entity)
   @sprite.sprites.remove(enemy_entity)
   @transform.positions.remove(enemy_entity)

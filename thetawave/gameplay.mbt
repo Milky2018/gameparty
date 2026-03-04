@@ -31,19 +31,102 @@ fn menu_state_system(_delta : Double) -> Unit {
       }
     }
     CharacterSelection => {
-      if @inputs.is_just_pressed(KeyA) ||
-        @inputs.is_just_pressed(ArrowLeft) ||
-        gamepad_left_just_pressed() {
-        game_state.selected_character = Captain
+      let mut changed = false
+
+      if !game_state.cs_p1_joined {
+        if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+          game_state.cs_p1_joined = true
+          game_state.cs_p1_ready = false
+          changed = true
+        }
+      } else {
+        if !game_state.cs_p1_ready {
+          if @inputs.is_just_pressed(KeyA) || @inputs.is_just_pressed(ArrowLeft) {
+            game_state.cs_p1_character = Captain
+            changed = true
+          }
+          if @inputs.is_just_pressed(KeyD) ||
+            @inputs.is_just_pressed(ArrowRight) {
+            game_state.cs_p1_character = Juggernaut
+            changed = true
+          }
+        }
+        if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+          game_state.cs_p1_ready = !game_state.cs_p1_ready
+          changed = true
+        }
       }
-      if @inputs.is_just_pressed(KeyD) ||
-        @inputs.is_just_pressed(ArrowRight) ||
-        gamepad_right_just_pressed() {
-        game_state.selected_character = Juggernaut
+
+      if active_gamepad() is Some(_) {
+        if !game_state.cs_p2_joined {
+          if gamepad_confirm_just_pressed() {
+            game_state.cs_p2_joined = true
+            game_state.cs_p2_ready = false
+            changed = true
+          }
+        } else {
+          if !game_state.cs_p2_ready {
+            if gamepad_left_just_pressed() {
+              game_state.cs_p2_character = Captain
+              changed = true
+            }
+            if gamepad_right_just_pressed() {
+              game_state.cs_p2_character = Juggernaut
+              changed = true
+            }
+          }
+          if gamepad_confirm_just_pressed() {
+            game_state.cs_p2_ready = !game_state.cs_p2_ready
+            changed = true
+          } else if gamepad_back_just_pressed() {
+            if game_state.cs_p2_ready {
+              game_state.cs_p2_ready = false
+            } else {
+              game_state.cs_p2_joined = false
+            }
+            changed = true
+          }
+        }
+      } else if game_state.cs_p2_joined {
+        game_state.cs_p2_joined = false
+        game_state.cs_p2_ready = false
+        changed = true
       }
-      if @inputs.is_just_pressed(Escape) || gamepad_back_just_pressed() {
-        enter_main_menu()
-      } else if @inputs.is_just_pressed(Enter) || gamepad_confirm_just_pressed() {
+
+      if @inputs.is_just_pressed(Escape) {
+        if game_state.cs_p1_joined {
+          if game_state.cs_p1_ready {
+            game_state.cs_p1_ready = false
+          } else {
+            game_state.cs_p1_joined = false
+          }
+          changed = true
+        } else if game_state.cs_p2_joined {
+          if game_state.cs_p2_ready {
+            game_state.cs_p2_ready = false
+          } else {
+            game_state.cs_p2_joined = false
+          }
+          changed = true
+        } else {
+          enter_main_menu()
+          return
+        }
+      }
+
+      if changed {
+        @audio.play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.20)
+      }
+
+      let any_joined = game_state.cs_p1_joined || game_state.cs_p2_joined
+      let p1_ok = !game_state.cs_p1_joined || game_state.cs_p1_ready
+      let p2_ok = !game_state.cs_p2_joined || game_state.cs_p2_ready
+      if any_joined && p1_ok && p2_ok {
+        game_state.selected_character = if game_state.cs_p1_joined {
+          game_state.cs_p1_character
+        } else {
+          game_state.cs_p2_character
+        }
         start_game_with_selected_character()
       }
     }
@@ -262,7 +345,8 @@ fn player_special_system(delta : Double) -> Unit {
   if game_state.special_cooldown > 0.0 {
     game_state.special_cooldown -= delta
   }
-  let special_pressed = @inputs.is_mouse_just_pressed(Right) ||
+  let special_pressed = @inputs.is_just_pressed(ShiftLeft) ||
+    @inputs.is_mouse_just_pressed(Right) ||
     gamepad_button_just_pressed(LeftTrigger) ||
     gamepad_button_just_pressed(East)
   if game_state.special_cooldown <= 0.0 && special_pressed {
@@ -819,6 +903,116 @@ fn move_bullets(delta : Double) -> Unit {
 }
 
 ///|
+const FERRITHARAX_PROTECT_DURATION : Double = 20.0
+
+///|
+fn ferritharax_phase_is_protect(phase : Int) -> Bool {
+  phase == 1 || phase == 3
+}
+
+///|
+fn ferritharax_phase_duration(kind : EnemyKind, phase : Int) -> Double {
+  if ferritharax_phase_is_protect(phase) {
+    FERRITHARAX_PROTECT_DURATION
+  } else {
+    ferritharax_attack_duration(kind)
+  }
+}
+
+///|
+fn ferritharax_phase_target(kind : EnemyKind, phase : Int) -> @math.Vec2D {
+  let world_pos = match phase {
+    0 => @math.Vec2D(0.0, 175.0)
+    1 => @math.Vec2D(175.0, 150.0)
+    2 => @math.Vec2D(0.0, 175.0)
+    _ => @math.Vec2D(-175.0, 150.0)
+  }
+  spawn_from_world_for(kind, world_pos)
+}
+
+///|
+fn move_towards_axis(
+  current : Double,
+  target : Double,
+  max_step : Double,
+) -> Double {
+  let delta = target - current
+  if delta > max_step {
+    current + max_step
+  } else if delta < -max_step {
+    current - max_step
+  } else {
+    target
+  }
+}
+
+///|
+fn move_towards(
+  current : @math.Vec2D,
+  target : @math.Vec2D,
+  max_step_x : Double,
+  max_step_y : Double,
+) -> @math.Vec2D {
+  @math.Vec2D(
+    move_towards_axis(current[X], target[X], max_step_x),
+    move_towards_axis(current[Y], target[Y], max_step_y),
+  )
+}
+
+///|
+fn advance_periodic_timer(
+  timer : Double,
+  period : Double,
+  delta : Double,
+) -> (Double, Int) {
+  let mut next_timer = timer - delta
+  let mut trigger_count = 0
+  while next_timer <= 0.0 {
+    trigger_count += 1
+    next_timer += period
+  }
+  (next_timer, trigger_count)
+}
+
+///|
+fn ferritharax_arm_missile_offset(
+  kind : EnemyKind,
+  left_arm : Bool,
+) -> @math.Vec2D {
+  let x = if kind is Ferritharax { 80.0 } else { 82.0 }
+  let y = match kind {
+    Ferritharax => -76.0
+    MechaFerritharax => -74.0
+    MechaSaucetron => -72.0
+    _ => -76.0
+  }
+  @math.Vec2D(if left_arm { -x } else { x }, y)
+}
+
+///|
+fn ferritharax_arm_weapon_offset(
+  kind : EnemyKind,
+  left_arm : Bool,
+) -> @math.Vec2D {
+  let x = if left_arm { -77.0 } else { 77.0 }
+  let y = match kind {
+    MechaFerritharax => -54.0
+    MechaSaucetron => -52.0
+    _ => -54.0
+  }
+  @math.Vec2D(x, y)
+}
+
+///|
+fn side_spawn_world_positions(phase : Int) -> (@math.Vec2D, @math.Vec2D) {
+  if phase == 1 {
+    (@math.Vec2D(-400.0, 500.0), @math.Vec2D(-200.0, 500.0))
+  } else {
+    (@math.Vec2D(400.0, 500.0), @math.Vec2D(200.0, 500.0))
+  }
+}
+
+///|
 fn move_enemies(delta : Double) -> Unit {
   let to_remove = []
   let player_pos = @transform.positions.get(game_state.player)
@@ -830,53 +1024,77 @@ fn move_enemies(delta : Double) -> Unit {
 
     let radius = enemy_radius(enemy.kind)
     let mut next = position.0
-    match enemy.movement {
-      DownBrake => next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
-      DownOnly => next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
-      DownHorizontal => {
-        let mut next_x = next[X] + enemy.speed_x * enemy.horizontal_dir * delta
-        if next_x < radius {
-          next_x = radius
-          enemy.horizontal_dir = 1.0
-        } else if next_x > VIEWPORT_WIDTH - radius {
-          next_x = VIEWPORT_WIDTH - radius
-          enemy.horizontal_dir = -1.0
-        }
-        next = @math.Vec2D(next_x, next[Y] + enemy.speed_y * delta)
+    if is_ferritharax_family(enemy.kind) {
+      enemy.boss_phase_elapsed += delta
+      let mut step_duration = ferritharax_phase_duration(
+        enemy.kind,
+        enemy.boss_phase,
+      )
+      while enemy.boss_phase_elapsed >= step_duration {
+        enemy.boss_phase_elapsed -= step_duration
+        enemy.boss_phase = (enemy.boss_phase + 1) % 4
+        step_duration = ferritharax_phase_duration(enemy.kind, enemy.boss_phase)
       }
-      Homing =>
-        if player_pos is Some(pp) {
-          let dir = (pp.0 - next).normalize()
-          let speed = @math.Vec2D(
-            enemy.speed_x * dir[X],
-            enemy.speed_y * dir[Y],
-          )
-          next = next + speed.scalar_mul(delta)
-        } else {
+      let target = ferritharax_phase_target(enemy.kind, enemy.boss_phase)
+      next = move_towards(
+        next,
+        target,
+        enemy.speed_x * delta,
+        enemy.speed_y * delta,
+      )
+    } else {
+      match enemy.movement {
+        DownBrake =>
           next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
+        DownOnly => next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
+        DownHorizontal => {
+          let mut next_x = next[X] +
+            enemy.speed_x * enemy.horizontal_dir * delta
+          if next_x < radius {
+            next_x = radius
+            enemy.horizontal_dir = 1.0
+          } else if next_x > VIEWPORT_WIDTH - radius {
+            next_x = VIEWPORT_WIDTH - radius
+            enemy.horizontal_dir = -1.0
+          }
+          next = @math.Vec2D(next_x, next[Y] + enemy.speed_y * delta)
         }
-      BossHover => {
-        let hover_y = 72.0
-        let mut next_y = next[Y]
-        if next_y < hover_y {
-          next_y = @cmp.minimum(hover_y, next_y + enemy.speed_y * delta)
-        } else {
-          next_y = hover_y
+        Homing =>
+          if player_pos is Some(pp) {
+            let dir = (pp.0 - next).normalize()
+            let speed = @math.Vec2D(
+              enemy.speed_x * dir[X],
+              enemy.speed_y * dir[Y],
+            )
+            next = next + speed.scalar_mul(delta)
+          } else {
+            next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
+          }
+        BossHover => {
+          let hover_y = 72.0
+          let mut next_y = next[Y]
+          if next_y < hover_y {
+            next_y = @cmp.minimum(hover_y, next_y + enemy.speed_y * delta)
+          } else {
+            next_y = hover_y
+          }
+          let mut next_x = next[X] +
+            enemy.speed_x * enemy.horizontal_dir * delta
+          let left = radius + 30.0
+          let right = VIEWPORT_WIDTH - radius - 30.0
+          if next_x < left {
+            next_x = left
+            enemy.horizontal_dir = 1.0
+          } else if next_x > right {
+            next_x = right
+            enemy.horizontal_dir = -1.0
+          }
+          next = @math.Vec2D(next_x, next_y)
         }
-        let mut next_x = next[X] + enemy.speed_x * enemy.horizontal_dir * delta
-        let left = radius + 30.0
-        let right = VIEWPORT_WIDTH - radius - 30.0
-        if next_x < left {
-          next_x = left
-          enemy.horizontal_dir = 1.0
-        } else if next_x > right {
-          next_x = right
-          enemy.horizontal_dir = -1.0
-        }
-        next = @math.Vec2D(next_x, next_y)
       }
     }
     @transform.positions.set(enemy_entity, next)
+    sync_enemy_visual_parts(enemy_entity, next)
     if next[Y] > VIEWPORT_HEIGHT + radius ||
       next[X] < -80.0 ||
       next[X] > VIEWPORT_WIDTH + 80.0 {
@@ -906,15 +1124,164 @@ fn enemy_attack_system(delta : Double) -> Unit {
   let enemy_spawns = []
 
   for enemy_entity, enemy in enemies {
+    guard @transform.positions.get(enemy_entity) is Some(position) else {
+      if enemy.shoot_interval > 0.0 {
+        enemy.shoot_cooldown = enemy.shoot_interval
+      }
+      continue
+    }
+
+    if is_ferritharax_family(enemy.kind) {
+      if ferritharax_phase_is_protect(enemy.boss_phase) {
+        let (pawn_world, drone_world) = side_spawn_world_positions(
+          enemy.boss_phase,
+        )
+        if enemy.boss_phase == 1 {
+          let (next_pawn_timer, pawn_count) = advance_periodic_timer(
+            enemy.boss_left_pawn_timer,
+            7.0,
+            delta,
+          )
+          enemy.boss_left_pawn_timer = next_pawn_timer
+          for _ in 0..<pawn_count {
+            enemy_spawns.push((Pawn, spawn_from_world_for(Pawn, pawn_world)))
+          }
+
+          let (next_drone_timer, drone_count) = advance_periodic_timer(
+            enemy.boss_left_drone_timer,
+            5.0,
+            delta,
+          )
+          enemy.boss_left_drone_timer = next_drone_timer
+          for _ in 0..<drone_count {
+            enemy_spawns.push((Drone, spawn_from_world_for(Drone, drone_world)))
+          }
+        } else {
+          let (next_pawn_timer, pawn_count) = advance_periodic_timer(
+            enemy.boss_right_pawn_timer,
+            7.0,
+            delta,
+          )
+          enemy.boss_right_pawn_timer = next_pawn_timer
+          for _ in 0..<pawn_count {
+            enemy_spawns.push((Pawn, spawn_from_world_for(Pawn, pawn_world)))
+          }
+
+          let (next_drone_timer, drone_count) = advance_periodic_timer(
+            enemy.boss_right_drone_timer,
+            5.0,
+            delta,
+          )
+          enemy.boss_right_drone_timer = next_drone_timer
+          for _ in 0..<drone_count {
+            enemy_spawns.push((Drone, spawn_from_world_for(Drone, drone_world)))
+          }
+        }
+
+        let missile_period = ferritharax_missile_period(enemy.kind)
+        let (next_left_missile_timer, left_missile_count) = advance_periodic_timer(
+          enemy.boss_left_missile_timer,
+          missile_period,
+          delta,
+        )
+        enemy.boss_left_missile_timer = next_left_missile_timer
+        for _ in 0..<left_missile_count {
+          enemy_spawns.push(
+            (
+              Missile,
+              position.0 + ferritharax_arm_missile_offset(enemy.kind, true),
+            ),
+          )
+        }
+
+        let (next_right_missile_timer, right_missile_count) = advance_periodic_timer(
+          enemy.boss_right_missile_timer,
+          missile_period,
+          delta,
+        )
+        enemy.boss_right_missile_timer = next_right_missile_timer
+        for _ in 0..<right_missile_count {
+          enemy_spawns.push(
+            (
+              Missile,
+              position.0 + ferritharax_arm_missile_offset(enemy.kind, false),
+            ),
+          )
+        }
+      }
+
+      if has_ferritharax_arm_weapons(enemy.kind) {
+        let (next_left_weapon_timer, left_weapon_count) = advance_periodic_timer(
+          enemy.boss_left_weapon_timer,
+          1.0,
+          delta,
+        )
+        enemy.boss_left_weapon_timer = next_left_weapon_timer
+        let (next_right_weapon_timer, right_weapon_count) = advance_periodic_timer(
+          enemy.boss_right_weapon_timer,
+          1.0,
+          delta,
+        )
+        enemy.boss_right_weapon_timer = next_right_weapon_timer
+
+        for _ in 0..<left_weapon_count {
+          let origin = position.0 +
+            ferritharax_arm_weapon_offset(enemy.kind, true)
+          match enemy.kind {
+            MechaFerritharax =>
+              for spread in [-0.30, 0.0, 0.30] {
+                let dir = @math.Vec2D(0.26 + spread, 1.0).normalize()
+                projectile_spawns.push(
+                  (origin, dir.scalar_mul(300.0), 5, Bullet, 0.8),
+                )
+              }
+            MechaSaucetron =>
+              for _ in 0..<6 {
+                let speed_scale = 0.75 + game_state.rand.double() * 0.5
+                let angle_scale = 0.9 + game_state.rand.double() * 0.2
+                let jitter = (game_state.rand.double() - 0.5) * 0.35
+                let dir = @math.Vec2D(0.26 * angle_scale + jitter, 1.0).normalize()
+                projectile_spawns.push(
+                  (origin, dir.scalar_mul(300.0 * speed_scale), 5, Blast, 0.8),
+                )
+              }
+            _ => ()
+          }
+        }
+
+        for _ in 0..<right_weapon_count {
+          let origin = position.0 +
+            ferritharax_arm_weapon_offset(enemy.kind, false)
+          match enemy.kind {
+            MechaFerritharax =>
+              for spread in [-0.30, 0.0, 0.30] {
+                let dir = @math.Vec2D(-0.26 + spread, 1.0).normalize()
+                projectile_spawns.push(
+                  (origin, dir.scalar_mul(300.0), 5, Bullet, 0.8),
+                )
+              }
+            MechaSaucetron =>
+              for _ in 0..<6 {
+                let speed_scale = 0.75 + game_state.rand.double() * 0.5
+                let angle_scale = 0.9 + game_state.rand.double() * 0.2
+                let jitter = (game_state.rand.double() - 0.5) * 0.35
+                let dir = @math.Vec2D(-0.26 * angle_scale + jitter, 1.0).normalize()
+                projectile_spawns.push(
+                  (origin, dir.scalar_mul(300.0 * speed_scale), 5, Blast, 0.8),
+                )
+              }
+            _ => ()
+          }
+        }
+      }
+      continue
+    }
+
     if enemy.shooter is NoShooter {
       continue
     }
     enemy.shoot_cooldown -= delta
     if enemy.shoot_cooldown > 0.0 {
-      continue
-    }
-    guard @transform.positions.get(enemy_entity) is Some(position) else {
-      enemy.shoot_cooldown = enemy.shoot_interval
       continue
     }
 
@@ -1526,7 +1893,48 @@ fn set_menu_widgets_visible(visible : Bool) -> Unit {
 ///|
 fn set_character_selection_widgets_visible(visible : Bool) -> Unit {
   set_ui_visible(game_state.character_portrait_ui, visible)
-  set_ui_visible(game_state.character_description_ui, visible)
+  set_ui_visible(game_state.character_description_ui, false)
+  set_ui_visible(character_left_portrait_ui, visible)
+  set_ui_visible(character_right_portrait_ui, visible)
+  set_ui_visible(character_name_ui, visible)
+  set_ui_visible(character_ability_slot1_ui, visible)
+  set_ui_visible(character_ability_slot1_icon_ui, visible)
+  set_ui_visible(character_ability_slot1_text_ui, visible)
+  set_ui_visible(character_ability_slot2_ui, visible)
+  set_ui_visible(character_ability_slot2_icon_ui, visible)
+  set_ui_visible(character_ability_slot2_text_ui, visible)
+  set_ui_visible(character_join_prompt_ui, visible)
+  set_ui_visible(character_ready_text_ui, visible)
+  for entity in character_stat_icon_uis {
+    set_ui_visible(entity, visible)
+  }
+  for entity in character_stat_bg_uis {
+    set_ui_visible(entity, visible)
+  }
+  for entity in character_stat_fill_uis {
+    set_ui_visible(entity, visible)
+  }
+  set_ui_visible(character_p2_center_portrait_ui, visible)
+  set_ui_visible(character_p2_left_portrait_ui, visible)
+  set_ui_visible(character_p2_right_portrait_ui, visible)
+  set_ui_visible(character_p2_name_ui, visible)
+  set_ui_visible(character_p2_ability_slot1_ui, visible)
+  set_ui_visible(character_p2_ability_slot1_icon_ui, visible)
+  set_ui_visible(character_p2_ability_slot1_text_ui, visible)
+  set_ui_visible(character_p2_ability_slot2_ui, visible)
+  set_ui_visible(character_p2_ability_slot2_icon_ui, visible)
+  set_ui_visible(character_p2_ability_slot2_text_ui, visible)
+  set_ui_visible(character_p2_join_prompt_ui, visible)
+  set_ui_visible(character_p2_ready_text_ui, visible)
+  for entity in character_p2_stat_icon_uis {
+    set_ui_visible(entity, visible)
+  }
+  for entity in character_p2_stat_bg_uis {
+    set_ui_visible(entity, visible)
+  }
+  for entity in character_p2_stat_fill_uis {
+    set_ui_visible(entity, visible)
+  }
 }
 
 ///|
@@ -1869,6 +2277,256 @@ fn end_screen_accuracy_percent() -> Int {
 }
 
 ///|
+fn character_slot_ability_description(
+  character : CharacterType,
+  slot : Int,
+) -> String {
+  if slot == 1 {
+    match character {
+      Captain => "Fires energy blasts."
+      Juggernaut => "Fires lead bullets."
+    }
+  } else {
+    match character {
+      Captain => "Fires large, high damage, blasts."
+      Juggernaut => "Charge in a direction."
+    }
+  }
+}
+
+///|
+fn set_character_slot_joined_visibility(
+  joined : Bool,
+  center_portrait_ui : @entity.Entity,
+  left_portrait_ui : @entity.Entity,
+  right_portrait_ui : @entity.Entity,
+  name_ui : @entity.Entity,
+  ability_slot1_ui : @entity.Entity,
+  ability_slot1_icon_ui : @entity.Entity,
+  ability_slot1_text_ui : @entity.Entity,
+  ability_slot2_ui : @entity.Entity,
+  ability_slot2_icon_ui : @entity.Entity,
+  ability_slot2_text_ui : @entity.Entity,
+  stat_icon_uis : Array[@entity.Entity],
+  stat_bg_uis : Array[@entity.Entity],
+  stat_fill_uis : Array[@entity.Entity],
+  join_prompt_ui : @entity.Entity,
+  ready_text_ui : @entity.Entity,
+) -> Unit {
+  set_ui_visible(join_prompt_ui, !joined)
+  set_ui_visible(ready_text_ui, joined)
+  set_ui_visible(center_portrait_ui, joined)
+  set_ui_visible(left_portrait_ui, joined)
+  set_ui_visible(right_portrait_ui, joined)
+  set_ui_visible(name_ui, joined)
+  set_ui_visible(ability_slot1_ui, joined)
+  set_ui_visible(ability_slot1_icon_ui, joined)
+  set_ui_visible(ability_slot1_text_ui, joined)
+  set_ui_visible(ability_slot2_ui, joined)
+  set_ui_visible(ability_slot2_icon_ui, joined)
+  set_ui_visible(ability_slot2_text_ui, joined)
+  for entity in stat_icon_uis {
+    set_ui_visible(entity, joined)
+  }
+  for entity in stat_bg_uis {
+    set_ui_visible(entity, joined)
+  }
+  for entity in stat_fill_uis {
+    set_ui_visible(entity, joined)
+  }
+}
+
+///|
+fn update_character_selection_widgets_for_slot(
+  character : CharacterType,
+  joined : Bool,
+  ready : Bool,
+  center_portrait_ui : @entity.Entity,
+  left_portrait_ui : @entity.Entity,
+  right_portrait_ui : @entity.Entity,
+  name_ui : @entity.Entity,
+  ability_slot1_ui : @entity.Entity,
+  ability_slot1_icon_ui : @entity.Entity,
+  ability_slot1_text_ui : @entity.Entity,
+  ability_slot2_ui : @entity.Entity,
+  ability_slot2_icon_ui : @entity.Entity,
+  ability_slot2_text_ui : @entity.Entity,
+  stat_icon_uis : Array[@entity.Entity],
+  stat_bg_uis : Array[@entity.Entity],
+  stat_fill_uis : Array[@entity.Entity],
+  stat_fill_max_width : Double,
+  join_prompt_ui : @entity.Entity,
+  join_prompt_content : String,
+  ready_text_ui : @entity.Entity,
+) -> Unit {
+  let join_prompt_text = @sprite.Text::new(
+    join_prompt_content,
+    color="white",
+    font=UI_FONT_SMALL,
+    baseline=Top,
+    align=Center,
+  )
+  @sprite.sprites.set(
+    join_prompt_ui,
+    @sprite.Sprite::from_text(join_prompt_text, 100),
+  )
+
+  set_character_slot_joined_visibility(
+    joined, center_portrait_ui, left_portrait_ui, right_portrait_ui, name_ui, ability_slot1_ui,
+    ability_slot1_icon_ui, ability_slot1_text_ui, ability_slot2_ui, ability_slot2_icon_ui,
+    ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
+    ready_text_ui,
+  )
+
+  if !joined {
+    return
+  }
+
+  let (left, center, right) = character_carousel_neighbors(character)
+  @sprite.sprites.set(
+    left_portrait_ui,
+    character_carousel_portrait_sprite(left, false),
+  )
+  @sprite.sprites.set(
+    center_portrait_ui,
+    character_carousel_portrait_sprite(center, true),
+  )
+  @sprite.sprites.set(
+    right_portrait_ui,
+    character_carousel_portrait_sprite(right, false),
+  )
+  @sprite.sprites.set(ability_slot1_ui, character_ability_slot_sprite())
+  @sprite.sprites.set(ability_slot2_ui, character_ability_slot_sprite())
+  @sprite.sprites.set(
+    ability_slot1_icon_ui,
+    character_ability_icon_sprite(character, 1),
+  )
+  @sprite.sprites.set(
+    ability_slot2_icon_ui,
+    character_ability_icon_sprite(character, 2),
+  )
+
+  let character_name_text = @sprite.Text::new(
+    character_config(character).name,
+    color="rgb(255, 215, 0)",
+    font=UI_FONT_MEDIUM,
+    baseline=Top,
+    align=Center,
+  )
+  @sprite.sprites.set(
+    name_ui,
+    @sprite.Sprite::from_text(character_name_text, 100),
+  )
+
+  let slot1_text = @sprite.Text::new(
+    character_slot_ability_description(character, 1),
+    color="white",
+    font="14px Lunchds",
+    baseline=Top,
+    align=Left,
+  )
+  @sprite.sprites.set(
+    ability_slot1_text_ui,
+    @sprite.Sprite::from_text(slot1_text, 100),
+  )
+
+  let slot2_text = @sprite.Text::new(
+    character_slot_ability_description(character, 2),
+    color="white",
+    font="14px Lunchds",
+    baseline=Top,
+    align=Left,
+  )
+  @sprite.sprites.set(
+    ability_slot2_text_ui,
+    @sprite.Sprite::from_text(slot2_text, 100),
+  )
+
+  for i in 0..<character_stats_order.length() {
+    let stat = character_stats_order[i]
+    @sprite.sprites.set(stat_icon_uis[i], character_stat_icon_sprite(stat))
+    let fill_width = stat_fill_max_width *
+      character_stat_percent(character, stat)
+    @sprite.sprites.set(
+      stat_fill_uis[i],
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(
+          @math.Vec2D(fill_width, 5.0),
+          "rgba(255,255,255,0.95)",
+        ),
+        90,
+      ),
+    )
+  }
+
+  let ready_text = @sprite.Text::new(
+    if ready {
+      "Ready"
+    } else {
+      "Not Ready"
+    },
+    color=if ready { "rgb(80, 255, 120)" } else { "rgb(220,220,220)" },
+    font=UI_FONT_SMALL,
+    baseline=Top,
+    align=Center,
+  )
+  @sprite.sprites.set(ready_text_ui, @sprite.Sprite::from_text(ready_text, 100))
+}
+
+///|
+fn update_character_selection_widgets() -> Unit {
+  let p2_join_prompt = if active_gamepad() is Some(_) {
+    "P2 Press A/Start to Join"
+  } else {
+    "Connect gamepad for P2"
+  }
+  update_character_selection_widgets_for_slot(
+    game_state.cs_p1_character,
+    game_state.cs_p1_joined,
+    game_state.cs_p1_ready,
+    game_state.character_portrait_ui,
+    character_left_portrait_ui,
+    character_right_portrait_ui,
+    character_name_ui,
+    character_ability_slot1_ui,
+    character_ability_slot1_icon_ui,
+    character_ability_slot1_text_ui,
+    character_ability_slot2_ui,
+    character_ability_slot2_icon_ui,
+    character_ability_slot2_text_ui,
+    character_stat_icon_uis,
+    character_stat_bg_uis,
+    character_stat_fill_uis,
+    56.0,
+    character_join_prompt_ui,
+    "P1 Press Enter/Space to Join",
+    character_ready_text_ui,
+  )
+  update_character_selection_widgets_for_slot(
+    game_state.cs_p2_character,
+    game_state.cs_p2_joined,
+    game_state.cs_p2_ready,
+    character_p2_center_portrait_ui,
+    character_p2_left_portrait_ui,
+    character_p2_right_portrait_ui,
+    character_p2_name_ui,
+    character_p2_ability_slot1_ui,
+    character_p2_ability_slot1_icon_ui,
+    character_p2_ability_slot1_text_ui,
+    character_p2_ability_slot2_ui,
+    character_p2_ability_slot2_icon_ui,
+    character_p2_ability_slot2_text_ui,
+    character_p2_stat_icon_uis,
+    character_p2_stat_bg_uis,
+    character_p2_stat_fill_uis,
+    56.0,
+    character_p2_join_prompt_ui,
+    p2_join_prompt,
+    character_p2_ready_text_ui,
+  )
+}
+
+///|
 fn apply_main_menu_layout() -> Unit {
   @transform.positions.set(game_state.score_ui, @math.Vec2D(240.0, 187.0))
   @transform.positions.set(game_state.hull_ui, @math.Vec2D(240.0, 209.0))
@@ -1890,7 +2548,100 @@ fn apply_character_selection_layout() -> Unit {
   @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
   @transform.positions.set(
     game_state.character_portrait_ui,
-    @math.Vec2D(240.0, 120.0),
+    @math.Vec2D(120.0, 108.0),
+  )
+  @transform.positions.set(character_left_portrait_ui, @math.Vec2D(82.0, 110.0))
+  @transform.positions.set(
+    character_right_portrait_ui,
+    @math.Vec2D(158.0, 110.0),
+  )
+  @transform.positions.set(character_name_ui, @math.Vec2D(120.0, 154.0))
+  @transform.positions.set(character_ability_slot1_ui, @math.Vec2D(62.0, 191.0))
+  @transform.positions.set(
+    character_ability_slot1_icon_ui,
+    @math.Vec2D(62.0, 191.0),
+  )
+  @transform.positions.set(
+    character_ability_slot1_text_ui,
+    @math.Vec2D(94.0, 183.0),
+  )
+  @transform.positions.set(character_ability_slot2_ui, @math.Vec2D(62.0, 225.0))
+  @transform.positions.set(
+    character_ability_slot2_icon_ui,
+    @math.Vec2D(62.0, 225.0),
+  )
+  @transform.positions.set(
+    character_ability_slot2_text_ui,
+    @math.Vec2D(94.0, 217.0),
+  )
+  for i in 0..<character_stats_order.length() {
+    let y = 183.0 + i.to_double() * 16.0
+    @transform.positions.set(character_stat_icon_uis[i], @math.Vec2D(170.0, y))
+    @transform.positions.set(character_stat_bg_uis[i], @math.Vec2D(202.0, y))
+    @transform.positions.set(
+      character_stat_fill_uis[i],
+      @math.Vec2D(173.0, y + 1.0),
+    )
+  }
+  @transform.positions.set(character_join_prompt_ui, @math.Vec2D(120.0, 130.0))
+  @transform.positions.set(character_ready_text_ui, @math.Vec2D(120.0, 282.0))
+
+  @transform.positions.set(
+    character_p2_center_portrait_ui,
+    @math.Vec2D(360.0, 108.0),
+  )
+  @transform.positions.set(
+    character_p2_left_portrait_ui,
+    @math.Vec2D(322.0, 110.0),
+  )
+  @transform.positions.set(
+    character_p2_right_portrait_ui,
+    @math.Vec2D(398.0, 110.0),
+  )
+  @transform.positions.set(character_p2_name_ui, @math.Vec2D(360.0, 154.0))
+  @transform.positions.set(
+    character_p2_ability_slot1_ui,
+    @math.Vec2D(302.0, 191.0),
+  )
+  @transform.positions.set(
+    character_p2_ability_slot1_icon_ui,
+    @math.Vec2D(302.0, 191.0),
+  )
+  @transform.positions.set(
+    character_p2_ability_slot1_text_ui,
+    @math.Vec2D(334.0, 183.0),
+  )
+  @transform.positions.set(
+    character_p2_ability_slot2_ui,
+    @math.Vec2D(302.0, 225.0),
+  )
+  @transform.positions.set(
+    character_p2_ability_slot2_icon_ui,
+    @math.Vec2D(302.0, 225.0),
+  )
+  @transform.positions.set(
+    character_p2_ability_slot2_text_ui,
+    @math.Vec2D(334.0, 217.0),
+  )
+  for i in 0..<character_stats_order.length() {
+    let y = 183.0 + i.to_double() * 16.0
+    @transform.positions.set(
+      character_p2_stat_icon_uis[i],
+      @math.Vec2D(410.0, y),
+    )
+    @transform.positions.set(character_p2_stat_bg_uis[i], @math.Vec2D(442.0, y))
+    @transform.positions.set(
+      character_p2_stat_fill_uis[i],
+      @math.Vec2D(414.0, y + 1.0),
+    )
+  }
+  @transform.positions.set(
+    character_p2_join_prompt_ui,
+    @math.Vec2D(360.0, 130.0),
+  )
+  @transform.positions.set(
+    character_p2_ready_text_ui,
+    @math.Vec2D(360.0, 282.0),
   )
   @transform.positions.set(
     game_state.character_description_ui,
@@ -1992,29 +2743,30 @@ fn ui_character_selection() -> Unit {
   set_ui_visible(game_state.phase_prompt_ui, false)
   set_ui_visible(game_state.warning_gradient_ui, false)
   set_ui_visible(game_state.defense_gradient_ui, false)
-  set_ui_visible(game_state.score_ui, true)
-  set_ui_visible(game_state.hull_ui, true)
-  set_ui_visible(game_state.shield_ui, true)
-  set_ui_visible(game_state.defense_ui, true)
-  set_ui_visible(game_state.stage_ui, true)
-  set_ui_visible(game_state.timer_ui, true)
-  set_ui_visible(game_state.banner_ui, true)
-  @sprite.sprites.set(
-    game_state.character_portrait_ui,
-    character_portrait_sprite(game_state.selected_character),
-  )
-  @sprite.sprites.set(
-    game_state.character_description_ui,
-    character_description_sprite(game_state.selected_character),
-  )
+  set_ui_visible(game_state.score_ui, false)
+  set_ui_visible(game_state.hull_ui, false)
+  set_ui_visible(game_state.shield_ui, false)
+  set_ui_visible(game_state.defense_ui, false)
+  set_ui_visible(game_state.stage_ui, false)
+  set_ui_visible(game_state.timer_ui, false)
+  set_ui_visible(game_state.banner_ui, false)
+
+  let preview_character = if game_state.cs_p1_joined {
+    game_state.cs_p1_character
+  } else if game_state.cs_p2_joined {
+    game_state.cs_p2_character
+  } else {
+    Captain
+  }
+  update_character_selection_widgets()
 
   game_state.score_text.font = "22px Lunchds"
   game_state.hull_text.font = UI_FONT_SMALL
   game_state.shield_text.font = UI_FONT_SMALL
   game_state.defense_text.font = UI_FONT_SMALL
-  game_state.stage_text.font = "28px SpaceMadness"
+  game_state.stage_text.font = "20px Lunchds"
   game_state.timer_text.font = UI_FONT_SMALL
-  game_state.banner_text.font = "18px Lunchds"
+  game_state.banner_text.font = UI_FONT_SMALL
   game_state.score_text.color = "white"
   game_state.hull_text.color = "white"
   game_state.shield_text.color = "white"
@@ -2026,9 +2778,9 @@ fn ui_character_selection() -> Unit {
   game_state.hull_text.align = Left
   game_state.shield_text.align = Left
   game_state.defense_text.align = Left
-  game_state.stage_text.align = Center
-  game_state.timer_text.align = Right
-  game_state.banner_text.align = Center
+  game_state.stage_text.align = Left
+  game_state.timer_text.align = Left
+  game_state.banner_text.align = Left
   game_state.score_text.baseline = Top
   game_state.hull_text.baseline = Top
   game_state.shield_text.baseline = Top
@@ -2036,18 +2788,31 @@ fn ui_character_selection() -> Unit {
   game_state.stage_text.baseline = Top
   game_state.timer_text.baseline = Top
   game_state.banner_text.baseline = Top
-  let config = character_config(game_state.selected_character)
   game_state.score_text.content = "Select Character"
-  game_state.hull_text.content = "Name: \{config.name}"
-  game_state.shield_text.content = "Hull \{config.max_hull}   Shield \{config.max_shield}"
-  game_state.defense_text.content = "Speed \{config.speed.to_int()}"
-  game_state.stage_text.content = ""
-  game_state.timer_text.content = "Enter: Start   Esc: Back"
-  game_state.banner_text.content = if game_state.selected_character is Captain {
-    "A/Left: Captain    D/Right: Juggernaut    Captain: Blast + MegaBlast"
+  game_state.hull_text.content = if game_state.cs_p1_joined {
+    let ready = if game_state.cs_p1_ready { "Ready" } else { "Not Ready" }
+    "P1 Keyboard: \{character_config(game_state.cs_p1_character).name} [\{ready}]"
   } else {
-    "A/Left: Captain    D/Right: Juggernaut    Juggernaut: Bullet + Charge"
+    "P1 Keyboard: Press Enter/Space to Join"
   }
+  game_state.shield_text.content = if game_state.cs_p2_joined {
+    let ready = if game_state.cs_p2_ready { "Ready" } else { "Not Ready" }
+    "P2 Gamepad: \{character_config(game_state.cs_p2_character).name} [\{ready}]"
+  } else {
+    "P2 Gamepad: Press A/Start to Join"
+  }
+  game_state.defense_text.content = "A/D or DPad L/R: Select Character"
+  game_state.stage_text.content = "Enter/A: Ready Toggle    Esc/B: Leave/Back"
+  game_state.timer_text.content = if (
+      game_state.cs_p1_joined || game_state.cs_p2_joined
+    ) &&
+    (!game_state.cs_p1_joined || game_state.cs_p1_ready) &&
+    (!game_state.cs_p2_joined || game_state.cs_p2_ready) {
+    "All joined players ready. Starting..."
+  } else {
+    "Game starts automatically when all joined players are ready."
+  }
+  game_state.banner_text.content = "Current Preview: \{character_config(preview_character).name}"
 }
 
 ///|
