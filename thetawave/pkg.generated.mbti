@@ -1,0 +1,55 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/gameparty/thetawave"
+
+// Values
+pub fn run() -> Unit
+
+// Errors
+
+// Types and methods
+type BackgroundKind
+pub impl Eq for BackgroundKind
+
+type BulletFaction
+pub impl Eq for BulletFaction
+
+type CharacterType
+pub impl Eq for CharacterType
+
+type ConsumableKind
+pub impl Eq for ConsumableKind
+
+type DropListType
+pub impl Eq for DropListType
+
+type EnemyKind
+pub impl Eq for EnemyKind
+
+type EnemyMovementKind
+pub impl Eq for EnemyMovementKind
+
+type EnemyShooterKind
+pub impl Eq for EnemyShooterKind
+
+type ItemKind
+pub impl Eq for ItemKind
+
+type ProjectileKind
+pub impl Eq for ProjectileKind
+
+type RunPhase
+pub impl Eq for RunPhase
+
+type ScreenState
+pub impl Eq for ScreenState
+
+type SpecialAbility
+pub impl Eq for SpecialAbility
+
+type StageKind
+pub impl Eq for StageKind
+
+// Type aliases
+
+// Traits
+

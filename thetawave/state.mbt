@@ -1,0 +1,648 @@
+///|
+const VIEWPORT_WIDTH : Double = 480.0
+
+///|
+const VIEWPORT_HEIGHT : Double = 320.0
+
+///|
+const ZOOM : Double = 2.0
+
+///|
+const FPS : UInt = 60
+
+///|
+const WORLD_X_SCALE : Double = 0.35
+
+///|
+const WORLD_Y_SCALE : Double = 0.30
+
+///|
+const PLAYER_HALF_SIZE : Double = 14.0
+
+///|
+const ENEMY_HALF_SIZE : Double = 12.0
+
+///|
+const CONSUMABLE_HALF_SIZE : Double = 8.0
+
+///|
+const ITEM_HALF_SIZE : Double = 9.0
+
+///|
+const PLAYER_INVULNERABLE_SECONDS : Double = 0.8
+
+///|
+const SHIELD_RECHARGE_DELAY_SECONDS : Double = 2.0
+
+///|
+const MAX_PROJECTILE_COUNT : Int = 8
+
+///|
+const SCORE_PER_KILL : Int = 10
+
+///|
+enum ScreenState {
+  MainMenu
+  CharacterSelection
+  InGame
+} derive(Eq)
+
+///|
+enum BackgroundKind {
+  Menu
+  CharacterSelection
+  Game
+} derive(Eq)
+
+///|
+enum RunPhase {
+  Playing
+  Paused
+  GameOver
+  Victory
+} derive(Eq)
+
+///|
+enum CharacterType {
+  Captain
+  Juggernaut
+} derive(Eq)
+
+///|
+enum ProjectileKind {
+  Blast
+  Bullet
+} derive(Eq)
+
+///|
+enum BulletFaction {
+  Ally
+  Enemy
+} derive(Eq)
+
+///|
+enum SpecialAbility {
+  MegaBlast
+  Charge
+} derive(Eq)
+
+///|
+enum EnemyKind {
+  Pawn
+  Drone
+  Shelly
+  StraferRight
+  StraferLeft
+  MissileLauncher
+  Missile
+  MoneyAsteroid
+  CrustlingRight
+  CrustlingLeft
+  Ferritharax
+  MechaFerritharax
+  MechaSaucetron
+  Hauler
+} derive(Eq)
+
+///|
+enum ConsumableKind {
+  Money1
+  Money3
+  HealthWrench
+  Armor
+  GainProjectiles
+} derive(Eq)
+
+///|
+enum ItemKind {
+  EnhancedPlating
+} derive(Eq)
+
+///|
+enum EnemyMovementKind {
+  DownBrake
+  DownHorizontal
+  Homing
+  DownOnly
+  BossHover
+} derive(Eq)
+
+///|
+enum EnemyShooterKind {
+  NoShooter
+  PawnBlaster
+  StraferBlaster
+  ShellyRing
+  MissileLauncherSpawner
+  BossSpawner
+} derive(Eq)
+
+///|
+priv struct Enemy {
+  kind : EnemyKind
+  mut hp : Int
+  speed_x : Double
+  speed_y : Double
+  collision_damage : Int
+  escape_defense_delta : Int
+  movement : EnemyMovementKind
+  mut horizontal_dir : Double
+  shooter : EnemyShooterKind
+  shoot_interval : Double
+  mut shoot_cooldown : Double
+}
+
+///|
+priv struct Bullet {
+  mut ttl : Double
+  velocity : @math.Vec2D
+  damage : Int
+  faction : BulletFaction
+  radius : Double
+}
+
+///|
+priv struct Consumable {
+  kind : ConsumableKind
+  speed : Double
+}
+
+///|
+priv struct ItemDrop {
+  kind : ItemKind
+  speed : Double
+}
+
+///|
+priv struct CharacterConfig {
+  name : String
+  speed : Double
+  max_hull : Int
+  max_shield : Int
+  shield_recharge_rate : Double
+  attraction_distance : Double
+  attraction_acceleration : Double
+  base_cooldown_multiplier : Double
+  shoot_interval : Double
+  special_cooldown : Double
+  projectile_kind : ProjectileKind
+  projectile_speed : Double
+  projectile_damage : Int
+  projectile_ttl : Double
+  special_ability : SpecialAbility
+}
+
+///|
+priv struct EnemyArchetype {
+  hp : Int
+  speed_x : Double
+  speed_y : Double
+  collision_damage : Int
+  escape_defense_delta : Int
+  movement : EnemyMovementKind
+  horizontal_dir : Double
+  shooter : EnemyShooterKind
+  shoot_interval : Double
+  initial_shoot_delay : Double
+}
+
+///|
+fn character_config(character : CharacterType) -> CharacterConfig {
+  match character {
+    Captain =>
+      {
+        name: "Captain",
+        speed: 300.0,
+        max_hull: 80,
+        max_shield: 5,
+        shield_recharge_rate: 1.0,
+        attraction_distance: 150.0,
+        attraction_acceleration: 15.0,
+        base_cooldown_multiplier: 2.0,
+        shoot_interval: 0.25,
+        special_cooldown: 2.5,
+        projectile_kind: Blast,
+        projectile_speed: 800.0,
+        projectile_damage: 10,
+        projectile_ttl: 1.0,
+        special_ability: MegaBlast,
+      }
+    Juggernaut =>
+      {
+        name: "Juggernaut",
+        speed: 250.0,
+        max_hull: 140,
+        max_shield: 10,
+        shield_recharge_rate: 0.75,
+        attraction_distance: 150.0,
+        attraction_acceleration: 15.0,
+        base_cooldown_multiplier: 2.7,
+        shoot_interval: 0.30,
+        special_cooldown: 3.0,
+        projectile_kind: Bullet,
+        projectile_speed: 650.0,
+        projectile_damage: 8,
+        projectile_ttl: 0.4,
+        special_ability: Charge,
+      }
+  }
+}
+
+///|
+priv struct GameState {
+  player : @entity.Entity
+  background : @entity.Entity
+  score_ui : @entity.Entity
+  hull_ui : @entity.Entity
+  shield_ui : @entity.Entity
+  defense_ui : @entity.Entity
+  stage_ui : @entity.Entity
+  timer_ui : @entity.Entity
+  banner_ui : @entity.Entity
+  score_text : @sprite.Text
+  hull_text : @sprite.Text
+  shield_text : @sprite.Text
+  defense_text : @sprite.Text
+  stage_text : @sprite.Text
+  timer_text : @sprite.Text
+  banner_text : @sprite.Text
+  mut screen : ScreenState
+  mut background_kind : BackgroundKind
+  mut phase : RunPhase
+  mut selected_character : CharacterType
+  mut score : Int
+  mut money : Int
+  mut armor : Int
+  mut hull : Int
+  mut max_hull : Int
+  mut shield : Int
+  mut max_shield : Int
+  mut shield_recharge_rate : Double
+  mut shield_recharge_delay : Double
+  mut shield_recharge_progress : Double
+  mut defense : Int
+  mut elapsed : Double
+  mut stage_index : Int
+  mut stage_elapsed : Double
+  mut stage_spawn_timer : Double
+  mut stage_label : String
+  mut boss_spawned : Bool
+  mut plating_count : Int
+  mut allow_move : Bool
+  mut allow_main_attack : Bool
+  mut allow_special : Bool
+  mut tutorial_lesson : Int
+  mut tutorial_up_progress : Double
+  mut tutorial_down_progress : Double
+  mut tutorial_left_progress : Double
+  mut tutorial_right_progress : Double
+  mut tutorial_up_left_progress : Double
+  mut tutorial_up_right_progress : Double
+  mut tutorial_down_left_progress : Double
+  mut tutorial_down_right_progress : Double
+  mut tutorial_slot1_destroy : Int
+  mut tutorial_slot1_protect : Int
+  mut tutorial_slot2_destroy : Int
+  mut tutorial_spawn_timer : Double
+  mut shoot_cooldown : Double
+  mut special_cooldown : Double
+  mut player_invulnerable : Double
+  mut charge_time_left : Double
+  mut charge_velocity : @math.Vec2D
+  mut attraction_distance : Double
+  mut attraction_acceleration : Double
+  mut base_cooldown_multiplier : Double
+  mut cooldown_multiplier : Double
+  mut player_speed : Double
+  mut shoot_interval : Double
+  mut special_cooldown_base : Double
+  mut projectile_count : Int
+  mut projectile_kind : ProjectileKind
+  mut projectile_speed : Double
+  mut projectile_damage : Int
+  mut projectile_ttl : Double
+  mut special_ability : SpecialAbility
+  mut music_started : Bool
+  rand : @random.Rand
+}
+
+///|
+let game_state : GameState = {
+  player: @entity.Entity::new(),
+  background: @entity.Entity::new(),
+  score_ui: @entity.Entity::new(),
+  hull_ui: @entity.Entity::new(),
+  shield_ui: @entity.Entity::new(),
+  defense_ui: @entity.Entity::new(),
+  stage_ui: @entity.Entity::new(),
+  timer_ui: @entity.Entity::new(),
+  banner_ui: @entity.Entity::new(),
+  score_text: @sprite.Text::new(
+    "Score: 0",
+    color="white",
+    baseline=Top,
+    align=Left,
+  ),
+  hull_text: @sprite.Text::new(
+    "Hull: 0",
+    color="white",
+    baseline=Top,
+    align=Left,
+  ),
+  shield_text: @sprite.Text::new(
+    "Shield: 0",
+    color="white",
+    baseline=Top,
+    align=Left,
+  ),
+  defense_text: @sprite.Text::new(
+    "Defense: 0",
+    color="white",
+    baseline=Top,
+    align=Left,
+  ),
+  stage_text: @sprite.Text::new(
+    "Stage",
+    color="white",
+    baseline=Top,
+    align=Left,
+  ),
+  timer_text: @sprite.Text::new(
+    "Time: 0",
+    color="white",
+    baseline=Top,
+    align=Left,
+  ),
+  banner_text: @sprite.Text::new(
+    "Press Enter",
+    color="skyblue",
+    baseline=Top,
+    align=Left,
+  ),
+  screen: MainMenu,
+  background_kind: Menu,
+  phase: Playing,
+  selected_character: Captain,
+  score: 0,
+  money: 0,
+  armor: 0,
+  hull: 80,
+  max_hull: 80,
+  shield: 5,
+  max_shield: 5,
+  shield_recharge_rate: 1.0,
+  shield_recharge_delay: 0.0,
+  shield_recharge_progress: 0.0,
+  defense: 100,
+  elapsed: 0.0,
+  stage_index: 0,
+  stage_elapsed: 0.0,
+  stage_spawn_timer: 0.0,
+  stage_label: "",
+  boss_spawned: false,
+  plating_count: 0,
+  allow_move: true,
+  allow_main_attack: true,
+  allow_special: true,
+  tutorial_lesson: 0,
+  tutorial_up_progress: 0.0,
+  tutorial_down_progress: 0.0,
+  tutorial_left_progress: 0.0,
+  tutorial_right_progress: 0.0,
+  tutorial_up_left_progress: 0.0,
+  tutorial_up_right_progress: 0.0,
+  tutorial_down_left_progress: 0.0,
+  tutorial_down_right_progress: 0.0,
+  tutorial_slot1_destroy: 0,
+  tutorial_slot1_protect: 0,
+  tutorial_slot2_destroy: 0,
+  tutorial_spawn_timer: 0.0,
+  shoot_cooldown: 0.0,
+  special_cooldown: 0.0,
+  player_invulnerable: 0.0,
+  charge_time_left: 0.0,
+  charge_velocity: @math.Vec2D(0.0, 0.0),
+  attraction_distance: 150.0,
+  attraction_acceleration: 15.0,
+  base_cooldown_multiplier: 2.0,
+  cooldown_multiplier: 2.0,
+  player_speed: 300.0,
+  shoot_interval: 0.25,
+  special_cooldown_base: 2.5,
+  projectile_count: 1,
+  projectile_kind: Blast,
+  projectile_speed: 800.0,
+  projectile_damage: 10,
+  projectile_ttl: 1.0,
+  special_ability: MegaBlast,
+  music_started: false,
+  rand: @random.Rand::new(),
+}
+
+///|
+let ui_initialized : Ref[Bool] = { val: false }
+
+///|
+let enemies : Map[@entity.Entity, Enemy] = Map::new()
+
+///|
+let bullets : Map[@entity.Entity, Bullet] = Map::new()
+
+///|
+let consumables : Map[@entity.Entity, Consumable] = Map::new()
+
+///|
+let items : Map[@entity.Entity, ItemDrop] = Map::new()
+
+///|
+fn initial_player_position() -> @math.Vec2D {
+  @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT - 34.0)
+}
+
+///|
+fn enemy_archetype(kind : EnemyKind) -> EnemyArchetype {
+  match kind {
+    Pawn =>
+      {
+        hp: 20,
+        speed_x: 0.0,
+        speed_y: 85.0,
+        collision_damage: 8,
+        escape_defense_delta: -8,
+        movement: DownBrake,
+        horizontal_dir: 0.0,
+        shooter: PawnBlaster,
+        shoot_interval: 3.0,
+        initial_shoot_delay: 1.0,
+      }
+    Drone =>
+      {
+        hp: 30,
+        speed_x: 0.0,
+        speed_y: 100.0,
+        collision_damage: 12,
+        escape_defense_delta: -8,
+        movement: DownBrake,
+        horizontal_dir: 0.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+    Shelly =>
+      {
+        hp: 50,
+        speed_x: 0.0,
+        speed_y: 75.0,
+        collision_damage: 8,
+        escape_defense_delta: -8,
+        movement: DownBrake,
+        horizontal_dir: 0.0,
+        shooter: ShellyRing,
+        shoot_interval: 1.6,
+        initial_shoot_delay: 1.0,
+      }
+    StraferRight =>
+      {
+        hp: 20,
+        speed_x: 75.0,
+        speed_y: 75.0,
+        collision_damage: 10,
+        escape_defense_delta: -12,
+        movement: DownHorizontal,
+        horizontal_dir: 1.0,
+        shooter: StraferBlaster,
+        shoot_interval: 3.0,
+        initial_shoot_delay: 1.0,
+      }
+    StraferLeft =>
+      {
+        hp: 20,
+        speed_x: 75.0,
+        speed_y: 75.0,
+        collision_damage: 10,
+        escape_defense_delta: -12,
+        movement: DownHorizontal,
+        horizontal_dir: -1.0,
+        shooter: StraferBlaster,
+        shoot_interval: 3.0,
+        initial_shoot_delay: 1.0,
+      }
+    MissileLauncher =>
+      {
+        hp: 50,
+        speed_x: 0.0,
+        speed_y: 75.0,
+        collision_damage: 6,
+        escape_defense_delta: -15,
+        movement: DownBrake,
+        horizontal_dir: 0.0,
+        shooter: MissileLauncherSpawner,
+        shoot_interval: 4.0,
+        initial_shoot_delay: 1.0,
+      }
+    Missile =>
+      {
+        hp: 15,
+        speed_x: 150.0,
+        speed_y: 150.0,
+        collision_damage: 30,
+        escape_defense_delta: 0,
+        movement: Homing,
+        horizontal_dir: 0.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+    MoneyAsteroid =>
+      {
+        hp: 50,
+        speed_x: 0.0,
+        speed_y: 75.0,
+        collision_damage: 7,
+        escape_defense_delta: 0,
+        movement: DownOnly,
+        horizontal_dir: 0.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+    CrustlingRight =>
+      {
+        hp: 40,
+        speed_x: 80.0,
+        speed_y: 45.0,
+        collision_damage: 20,
+        escape_defense_delta: -15,
+        movement: DownHorizontal,
+        horizontal_dir: 1.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+    CrustlingLeft =>
+      {
+        hp: 40,
+        speed_x: 80.0,
+        speed_y: 45.0,
+        collision_damage: 20,
+        escape_defense_delta: -15,
+        movement: DownHorizontal,
+        horizontal_dir: -1.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+    Ferritharax =>
+      {
+        hp: 1200,
+        speed_x: 48.0,
+        speed_y: 52.0,
+        collision_damage: 24,
+        escape_defense_delta: -30,
+        movement: BossHover,
+        horizontal_dir: 1.0,
+        shooter: ShellyRing,
+        shoot_interval: 1.2,
+        initial_shoot_delay: 2.5,
+      }
+    MechaFerritharax =>
+      {
+        hp: 1800,
+        speed_x: 62.0,
+        speed_y: 58.0,
+        collision_damage: 26,
+        escape_defense_delta: -35,
+        movement: BossHover,
+        horizontal_dir: 1.0,
+        shooter: MissileLauncherSpawner,
+        shoot_interval: 3.2,
+        initial_shoot_delay: 2.0,
+      }
+    MechaSaucetron =>
+      {
+        hp: 2400,
+        speed_x: 70.0,
+        speed_y: 60.0,
+        collision_damage: 30,
+        escape_defense_delta: -40,
+        movement: BossHover,
+        horizontal_dir: 1.0,
+        shooter: BossSpawner,
+        shoot_interval: 4.6,
+        initial_shoot_delay: 2.0,
+      }
+    Hauler =>
+      {
+        hp: 80,
+        speed_x: 0.0,
+        speed_y: 70.0,
+        collision_damage: 0,
+        escape_defense_delta: 5,
+        movement: DownBrake,
+        horizontal_dir: 0.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+  }
+}

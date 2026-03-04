@@ -1,0 +1,7 @@
+import {
+  "username/gameparty/thetawave" @game,
+}
+
+options(
+  "is-main": true,
+)
