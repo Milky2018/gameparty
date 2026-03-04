@@ -212,7 +212,15 @@ fn spawn_random_formation(stage : RunStage) -> Double {
 
   let formation = selected
   for mob in formation.members {
-    spawn_enemy(mob.kind, spawn_from_world_for(mob.kind, mob.world_pos))
+    match mob.kind {
+      Enemy(kind) =>
+        spawn_enemy(kind, spawn_from_world_for(kind, mob.world_pos))
+      Consumable(kind) =>
+        spawn_consumable(
+          kind,
+          spawn_from_world(mob.world_pos, CONSUMABLE_HALF_SIZE),
+        )
+    }
   }
   formation.period
 }
@@ -246,10 +254,19 @@ fn update_stage_progress(delta : Double) -> Unit {
 }
 
 ///|
-const TUTORIAL_DIRECTION_SECONDS : Double = 0.35
+const TUTORIAL_DIRECTION_SECONDS : Double = 0.5
 
 ///|
-const TUTORIAL_SPAWN_DELAY_SECONDS : Double = 0.45
+const TUTORIAL_SPAWN_DELAY_SECONDS : Double = 2.0
+
+///|
+const TUTORIAL_SPAWN_WORLD_X_MIN : Double = -300.0
+
+///|
+const TUTORIAL_SPAWN_WORLD_X_MAX : Double = 300.0
+
+///|
+const TUTORIAL_SPAWN_WORLD_Y : Double = 500.0
 
 ///|
 fn refresh_cooldown_multiplier() -> Unit {
@@ -270,12 +287,13 @@ fn reset_tutorial_lesson() -> Unit {
   game_state.tutorial_down_left_progress = 0.0
   game_state.tutorial_down_right_progress = 0.0
   game_state.tutorial_slot1_destroy = 3
-  game_state.tutorial_slot1_protect = 2
-  game_state.tutorial_slot2_destroy = 2
+  game_state.tutorial_slot1_protect = 1
+  game_state.tutorial_slot2_destroy = 3
   game_state.tutorial_spawn_timer = 0.0
   game_state.allow_move = true
   game_state.allow_main_attack = false
   game_state.allow_special = false
+  game_state.stage_label = "Move in every direction"
 }
 
 ///|
@@ -294,15 +312,17 @@ fn begin_tutorial_lesson(lesson : Int) -> Unit {
       game_state.allow_main_attack = true
       game_state.allow_special = false
       game_state.tutorial_slot1_destroy = 3
-      game_state.tutorial_slot1_protect = 2
+      game_state.tutorial_slot1_protect = 1
       game_state.tutorial_spawn_timer = TUTORIAL_SPAWN_DELAY_SECONDS
+      game_state.stage_label = "Destroy enemies and protect your ally using your basic attack"
     }
     2 => {
       game_state.allow_move = true
       game_state.allow_main_attack = false
       game_state.allow_special = true
-      game_state.tutorial_slot2_destroy = 2
+      game_state.tutorial_slot2_destroy = 3
       game_state.tutorial_spawn_timer = TUTORIAL_SPAWN_DELAY_SECONDS
+      game_state.stage_label = "Destroy enemies using your special ability"
     }
     _ => {
       game_state.allow_move = true
@@ -314,9 +334,11 @@ fn begin_tutorial_lesson(lesson : Int) -> Unit {
 
 ///|
 fn spawn_tutorial_enemy(kind : EnemyKind) -> Unit {
-  let radius = enemy_radius(kind)
-  let x = game_state.rand.double() * (VIEWPORT_WIDTH - 2.0 * radius) + radius
-  spawn_enemy(kind, @math.Vec2D(x, -radius - 6.0))
+  let world_x = TUTORIAL_SPAWN_WORLD_X_MIN +
+    game_state.rand.double() *
+    (TUTORIAL_SPAWN_WORLD_X_MAX - TUTORIAL_SPAWN_WORLD_X_MIN)
+  let world_pos = @math.Vec2D(world_x, TUTORIAL_SPAWN_WORLD_Y)
+  spawn_enemy(kind, spawn_from_world_for(kind, world_pos))
 }
 
 ///|
@@ -1281,8 +1303,8 @@ fn is_tutorial_stage() -> Bool {
 fn tutorial_lesson_name() -> String {
   match game_state.tutorial_lesson {
     0 => "Movement"
-    1 => "Main Weapon"
-    2 => "Special Ability"
+    1 => "Ability Slot One"
+    2 => "Ability Slot Two"
     _ => "Complete"
   }
 }

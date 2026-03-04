@@ -58,6 +58,23 @@ test "campaign includes asteroid and hard phases before final boss" {
 }
 
 ///|
+test "medium formations include money3 consumable ambush" {
+  let mut found_money3 = false
+  for formation in medium_formations {
+    for spawn in formation.members {
+      if spawn.kind is Consumable(Money3) {
+        found_money3 = true
+        break
+      }
+    }
+    if found_money3 {
+      break
+    }
+  }
+  assert_true(found_money3)
+}
+
+///|
 test "boss enemies use larger collision radius" {
   assert_eq(enemy_radius(Pawn), ENEMY_HALF_SIZE)
   assert_eq(enemy_radius(Hauler), 10.0)
@@ -107,4 +124,23 @@ test "cooldown multiplier decays as money increases" {
   game_state.money = old_money
   game_state.base_cooldown_multiplier = old_base
   game_state.cooldown_multiplier = old_cooldown
+}
+
+///|
+test "tutorial parameters match upstream baseline" {
+  assert_eq(TUTORIAL_DIRECTION_SECONDS, 0.5)
+  assert_eq(TUTORIAL_SPAWN_DELAY_SECONDS, 2.0)
+
+  let old_slot1_destroy = game_state.tutorial_slot1_destroy
+  let old_slot1_protect = game_state.tutorial_slot1_protect
+  let old_slot2_destroy = game_state.tutorial_slot2_destroy
+
+  reset_tutorial_lesson()
+  assert_eq(game_state.tutorial_slot1_destroy, 3)
+  assert_eq(game_state.tutorial_slot1_protect, 1)
+  assert_eq(game_state.tutorial_slot2_destroy, 3)
+
+  game_state.tutorial_slot1_destroy = old_slot1_destroy
+  game_state.tutorial_slot1_protect = old_slot1_protect
+  game_state.tutorial_slot2_destroy = old_slot2_destroy
 }

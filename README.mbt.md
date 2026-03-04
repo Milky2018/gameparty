@@ -1,4 +1,4 @@
-# username/gameparty
+# Milky2018/gameparty
 
 MoonBit game collection module.
 

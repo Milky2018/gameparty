@@ -1,5 +1,5 @@
 {
-  "name": "username/gameparty",
+  "name": "Milky2018/gameparty",
   "version": "0.1.0",
   "preferred-target": "native",
   "deps": {
@@ -7,7 +7,7 @@
     "Milky2018/selene_raylib": "0.21.2"
   },
   "readme": "README.mbt.md",
-  "repository": "",
+  "repository": "https://github.com/Milky2018/gameparty.git",
   "license": "Apache-2.0",
   "keywords": [],
   "description": ""

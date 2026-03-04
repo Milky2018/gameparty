@@ -1,5 +1,5 @@
 import {
-  "username/gameparty/thetawave" @game,
+  "Milky2018/gameparty/thetawave" @game,
 }
 
 options(

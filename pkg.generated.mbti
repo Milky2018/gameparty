@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/gameparty"
+package "Milky2018/gameparty"
 
 // Values
 pub fn run_thetawave() -> Unit

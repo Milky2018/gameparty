@@ -309,22 +309,52 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
 fn spawn_player_burst() -> Unit {
   guard @transform.positions.get(game_state.player) is Some(player_position)
   let projectile_count = @cmp.maximum(1, game_state.projectile_count)
-  let spread = if game_state.projectile_kind is Blast { 170.0 } else { 110.0 }
-  let mid = (projectile_count - 1).to_double() / 2.0
-  for i in 0..<projectile_count {
-    let offset_factor = i.to_double() - mid
-    let vx = offset_factor * spread
-    let vy = -game_state.projectile_speed
-    spawn_player_projectile(
-      @math.Vec2D(
-        player_position.0[X] + offset_factor * 4.0,
-        player_position.0[Y] - PLAYER_HALF_SIZE - 2.0,
-      ),
-      @math.Vec2D(vx, vy),
-      game_state.projectile_damage,
-      game_state.projectile_kind,
-      game_state.projectile_ttl,
-    )
+  let base = @math.Vec2D(
+    player_position.0[X],
+    player_position.0[Y] - PLAYER_HALF_SIZE - 2.0,
+  )
+  match game_state.projectile_kind {
+    Blast => {
+      let spread = 1.5708
+      for i in 0..<projectile_count {
+        let t = if projectile_count <= 1 {
+          0.5
+        } else {
+          i.to_double() / (projectile_count - 1).to_double()
+        }
+        let angle = -1.5708 + (t - 0.5) * spread
+        let velocity = @math.Vec2D(
+          @cmath.cos(angle) * game_state.projectile_speed,
+          @cmath.sin(angle) * game_state.projectile_speed,
+        )
+        spawn_player_projectile(
+          base + @math.Vec2D((t - 0.5) * 8.0, 0.0),
+          velocity,
+          game_state.projectile_damage,
+          Blast,
+          game_state.projectile_ttl,
+        )
+      }
+    }
+    Bullet =>
+      for i in 0..<projectile_count {
+        let offset = (i.to_double() - (projectile_count - 1).to_double() / 2.0) *
+          1.5
+        let angle = -1.5708 + (game_state.rand.double() - 0.5) * 0.1884
+        let speed = game_state.projectile_speed *
+          (0.75 + game_state.rand.double() * 0.5)
+        let velocity = @math.Vec2D(
+          @cmath.cos(angle) * speed,
+          @cmath.sin(angle) * speed,
+        )
+        spawn_player_projectile(
+          base + @math.Vec2D(offset, 0.0),
+          velocity,
+          game_state.projectile_damage,
+          Bullet,
+          game_state.projectile_ttl,
+        )
+      }
   }
   @audio.play_audio(SFX_PLAYER_FIRE, volume=0.18)
 }

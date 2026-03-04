@@ -1,7 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "username/gameparty/thetawave"
+package "Milky2018/gameparty/thetawave"
 
 // Values
+pub fn get_embedded_asset(String) -> Bytes?
+
 pub fn run() -> Unit
 
 // Errors

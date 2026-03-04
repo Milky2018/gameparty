@@ -7,8 +7,14 @@ enum StageKind {
 } derive(Eq)
 
 ///|
+priv enum FormationSpawnKind {
+  Enemy(EnemyKind)
+  Consumable(ConsumableKind)
+}
+
+///|
 priv struct FormationSpawn {
-  kind : EnemyKind
+  kind : FormationSpawnKind
   world_pos : @math.Vec2D
 }
 
@@ -32,7 +38,12 @@ priv struct RunStage {
 
 ///|
 fn spawn(kind : EnemyKind, x : Double, y : Double) -> FormationSpawn {
-  { kind, world_pos: @math.Vec2D(x, y) }
+  { kind: Enemy(kind), world_pos: @math.Vec2D(x, y) }
+}
+
+///|
+fn spawn_loot(kind : ConsumableKind, x : Double, y : Double) -> FormationSpawn {
+  { kind: Consumable(kind), world_pos: @math.Vec2D(x, y) }
 }
 
 ///|
@@ -175,6 +186,18 @@ let medium_formations : Array[Formation] = [
       spawn(Hauler, 200.0, 500.0),
     ],
     6.5,
+    0.5,
+  ),
+  formation(
+    [
+      spawn_loot(Money3, 0.0, 400.0),
+      spawn(Missile, 0.0, 500.0),
+      spawn(Missile, 200.0, 600.0),
+      spawn(Missile, -200.0, 600.0),
+      spawn(Missile, 400.0, 700.0),
+      spawn(Missile, -400.0, 700.0),
+    ],
+    5.5,
     0.5,
   ),
   formation(
@@ -571,14 +594,18 @@ fn current_stage() -> RunStage? {
 }
 
 ///|
+fn spawn_from_world(world_pos : @math.Vec2D, radius : Double) -> @math.Vec2D {
+  let x = VIEWPORT_WIDTH / 2.0 + world_pos[X] * WORLD_X_SCALE
+  let y = -40.0 - (world_pos[Y] - 500.0) * WORLD_Y_SCALE
+  @math.Vec2D(clamp(x, radius, VIEWPORT_WIDTH - radius), y)
+}
+
+///|
 fn spawn_from_world_for(
   kind : EnemyKind,
   world_pos : @math.Vec2D,
 ) -> @math.Vec2D {
-  let radius = enemy_radius(kind)
-  let x = VIEWPORT_WIDTH / 2.0 + world_pos[X] * WORLD_X_SCALE
-  let y = -40.0 - (world_pos[Y] - 500.0) * WORLD_Y_SCALE
-  @math.Vec2D(clamp(x, radius, VIEWPORT_WIDTH - radius), y)
+  spawn_from_world(world_pos, enemy_radius(kind))
 }
 
 ///|
