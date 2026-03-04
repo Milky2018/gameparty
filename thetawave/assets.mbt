@@ -32,7 +32,7 @@ const CAPTAIN_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/captain_d
 const JUGGERNAUT_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/juggernaut_description.png"
 
 ///|
-const THETAWAVE_LOGO_TEXTURE : String = "thetawave/assets/texture/thetawave_logo_spritesheet.png"
+const THETAWAVE_LOGO_TEXTURE : String = "thetawave/assets/texture/logo.png"
 
 ///|
 const MENU_BUTTON_SPRITESHEET_TEXTURE : String = "thetawave/assets/texture/menu_button_spritesheet.png"
@@ -301,19 +301,13 @@ fn animated_sprite(
 
 ///|
 fn menu_logo_sprite() -> @sprite.Sprite {
-  let frames = @sprite.frames_from_atlas(
-    THETAWAVE_LOGO_TEXTURE,
-    48,
-    width=1920.0,
-    height=1080.0,
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(
+      @math.Vec2D(364.0, 152.0),
+      THETAWAVE_LOGO_TEXTURE,
+    ),
+    90,
   )
-  let animation = @sprite.Animation::new(
-    frames,
-    loop_=true,
-    fps=10.0,
-    transform=@math.Transform::from_scale(0.19, 0.19),
-  )
-  @sprite.Sprite::from_animation(animation, 90)
 }
 
 ///|

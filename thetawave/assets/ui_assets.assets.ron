@@ -1,12 +1,12 @@
 ({
     "font.lunchds": File( path: "fonts/Lunchds.ttf"),
     "thetawave_logo.layout": TextureAtlasLayout (
-        tile_size_x: 1920,
-        tile_size_y: 1080,
-        columns: 4,
-        rows: 12,
+        tile_size_x: 3368,
+        tile_size_y: 1410,
+        columns: 1,
+        rows: 1,
     ),
-    "thetawave_logo.image": File( path: "texture/thetawave_logo_spritesheet.png"),
+    "thetawave_logo.image": File( path: "texture/logo.png"),
     "thetawave_menu_button.layout": TextureAtlasLayout (
         tile_size_x: 160,
         tile_size_y: 34,
