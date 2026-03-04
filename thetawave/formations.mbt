@@ -29,6 +29,7 @@ priv struct Formation {
 priv struct RunStage {
   kind : StageKind
   label : String
+  intro_text : String?
   duration : Double
   spawn_start_delay : Double
   formations : Array[Formation]
@@ -510,6 +511,26 @@ fn formation_stage(
   {
     kind: Formation,
     label,
+    intro_text: None,
+    duration,
+    spawn_start_delay: 1.0,
+    formations,
+    boss_kind: None,
+    boss_world_pos: None,
+  }
+}
+
+///|
+fn formation_stage_intro(
+  label : String,
+  intro_text : String,
+  duration : Double,
+  formations : Array[Formation],
+) -> RunStage {
+  {
+    kind: Formation,
+    label,
+    intro_text: Some(intro_text),
     duration,
     spawn_start_delay: 1.0,
     formations,
@@ -523,6 +544,7 @@ fn break_stage(label : String, duration : Double) -> RunStage {
   {
     kind: Break,
     label,
+    intro_text: None,
     duration,
     spawn_start_delay: 0.0,
     formations: [],
@@ -536,6 +558,7 @@ fn boss_stage(kind : EnemyKind) -> RunStage {
   {
     kind: Boss,
     label: "Destroy the command ship!",
+    intro_text: Some("Destroy the command ship!"),
     duration: 180.0,
     spawn_start_delay: 5.0,
     formations: [],
@@ -549,6 +572,7 @@ fn tutorial_stage(label : String) -> RunStage {
   {
     kind: Tutorial,
     label,
+    intro_text: None,
     duration: 0.0,
     spawn_start_delay: 0.0,
     formations: [],
@@ -561,7 +585,9 @@ fn tutorial_stage(label : String) -> RunStage {
 let run_stages : Array[RunStage] = [
   tutorial_stage("Tutorial"),
   // test_level_1
-  formation_stage("Destroy the invaders!", 20.0, easy_formations),
+  formation_stage_intro(
+    "Destroy the invaders!", "Destroy the invaders!", 20.0, easy_formations,
+  ),
   break_stage("Break", 9.0),
   formation_stage("Formation Invasion", 40.0, easy_formations),
   break_stage("Break", 9.0),
@@ -569,7 +595,9 @@ let run_stages : Array[RunStage] = [
   break_stage("Prepare for command ship", 5.0),
   boss_stage(Ferritharax),
   // test_level_2
-  formation_stage("Destroy the invaders!", 20.0, medium_formations),
+  formation_stage_intro(
+    "Destroy the invaders!", "Destroy the invaders!", 20.0, medium_formations,
+  ),
   break_stage("Break", 9.0),
   formation_stage("Formation Invasion", 40.0, medium_formations),
   break_stage("Break", 9.0),
@@ -577,7 +605,9 @@ let run_stages : Array[RunStage] = [
   break_stage("Prepare for command ship", 5.0),
   boss_stage(MechaFerritharax),
   // test_level_3
-  formation_stage("Harvest the Asteroids!", 20.0, asteroid_formations),
+  formation_stage_intro(
+    "Harvest the Asteroids!", "Harvest the Asteroids!", 20.0, asteroid_formations,
+  ),
   break_stage("Break", 9.0),
   formation_stage("Destroy the invaders!", 20.0, hard_formations),
   break_stage("Break", 9.0),
@@ -615,6 +645,13 @@ fn enter_stage() -> Unit {
     game_state.stage_spawn_timer = stage.spawn_start_delay
     game_state.stage_label = stage.label
     game_state.boss_spawned = false
+    if stage.intro_text is Some(intro_text) {
+      game_state.center_intro_text = intro_text
+      game_state.center_intro_timer = 5.0
+    } else {
+      game_state.center_intro_text = ""
+      game_state.center_intro_timer = 0.0
+    }
     if stage.kind is Tutorial {
       reset_tutorial_lesson()
     } else {
@@ -627,5 +664,7 @@ fn enter_stage() -> Unit {
     game_state.stage_spawn_timer = 0.0
     game_state.stage_label = "Run Clear"
     game_state.boss_spawned = false
+    game_state.center_intro_text = ""
+    game_state.center_intro_timer = 0.0
   }
 }

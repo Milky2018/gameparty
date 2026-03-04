@@ -8,16 +8,40 @@ const CHARACTER_SELECT_BG_TEXTURE : String = "thetawave/assets/texture/character
 const GAME_BG_TEXTURE : String = "thetawave/assets/texture/main_menu_background_54.png"
 
 ///|
+const GAME_OVER_BG_TEXTURE : String = "thetawave/assets/texture/game_over_background.png"
+
+///|
+const VICTORY_BG_TEXTURE : String = "thetawave/assets/texture/victory_background.png"
+
+///|
 const CAPTAIN_TEXTURE : String = "thetawave/assets/texture/captain_character.png"
 
 ///|
-const JUGGERNAUT_TEXTURE : String = "thetawave/assets/texture/captain_character_outline.png"
+const JUGGERNAUT_TEXTURE : String = "thetawave/assets/texture/juggernaut_character.png"
+
+///|
+const CAPTAIN_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/captain_description.png"
+
+///|
+const JUGGERNAUT_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/juggernaut_description.png"
+
+///|
+const THETAWAVE_LOGO_TEXTURE : String = "thetawave/assets/texture/thetawave_logo_spritesheet.png"
+
+///|
+const MENU_BUTTON_SPRITESHEET_TEXTURE : String = "thetawave/assets/texture/menu_button_spritesheet.png"
+
+///|
+const RESTART_GAME_PROMPT_TEXTURE : String = "thetawave/assets/texture/restart_game_prompt_keyboard.png"
 
 ///|
 const PAWN_TEXTURE : String = "thetawave/assets/texture/pawn_spritesheet.png"
 
 ///|
 const DRONE_TEXTURE : String = "thetawave/assets/texture/drone_spritesheet.png"
+
+///|
+const TUTORIAL_DRONE_TEXTURE : String = "thetawave/assets/texture/tutorial_drone_spritesheet.png"
 
 ///|
 const SHELLY_TEXTURE : String = "thetawave/assets/texture/shelly_spritesheet.png"
@@ -38,13 +62,16 @@ const MONEY_ASTEROID_TEXTURE : String = "thetawave/assets/texture/money_asteroid
 const HAULER_TEXTURE : String = "thetawave/assets/texture/hauler_front.png"
 
 ///|
-const FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/hauler_middle.png"
+const CRUSTLING_TEXTURE : String = "thetawave/assets/texture/crustling_spritesheet.png"
 
 ///|
-const MECHA_FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/hauler_back.png"
+const FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/repeater_head_spritesheet.png"
 
 ///|
-const MECHA_SAUCETRON_TEXTURE : String = "thetawave/assets/texture/hauler_front.png"
+const MECHA_FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_head.png"
+
+///|
+const MECHA_SAUCETRON_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_head.png"
 
 ///|
 const PLAYER_BULLET_TEXTURE : String = "thetawave/assets/texture/ally_bullet.png"
@@ -77,6 +104,57 @@ const CONSUMABLE_GAIN_PROJECTILES_TEXTURE : String = "thetawave/assets/texture/p
 const ITEM_ENHANCED_PLATING_TEXTURE : String = "thetawave/assets/texture/power_label.png"
 
 ///|
+const HEALTH_BAR_LABEL_TEXTURE : String = "thetawave/assets/texture/health_bar_label.png"
+
+///|
+const DEFENSE_BAR_LABEL_TEXTURE : String = "thetawave/assets/texture/defense_bar_label.png"
+
+///|
+const WARNING_GRADIENT_TEXTURE : String = "thetawave/assets/texture/warning_gradient.png"
+
+///|
+const DEFENSE_GRADIENT_TEXTURE : String = "thetawave/assets/texture/defense_gradient.png"
+
+///|
+const ABILITY_SQUARE_LEFT_TEXTURE : String = "thetawave/assets/texture/ability_square_left.png"
+
+///|
+const BLAST_ABILITY_TEXTURE : String = "thetawave/assets/texture/blast_ability.png"
+
+///|
+const BULLET_ABILITY_TEXTURE : String = "thetawave/assets/texture/bullet_ability.png"
+
+///|
+const MEGABLAST_ABILITY_TEXTURE : String = "thetawave/assets/texture/megablast_ability.png"
+
+///|
+const CHARGE_ABILITY_TEXTURE : String = "thetawave/assets/texture/charge_ability.png"
+
+///|
+const FONT_LUNCHDS_ALIAS : String = "Lunchds"
+
+///|
+const FONT_SPACE_MADNESS_ALIAS : String = "SpaceMadness"
+
+///|
+const FONT_WIBLETOWN_ALIAS : String = "Wibletown"
+
+///|
+const FONT_LUNCHDS_PATH : String = "thetawave/assets/fonts/Lunchds.ttf"
+
+///|
+const FONT_SPACE_MADNESS_PATH : String = "thetawave/assets/fonts/SpaceMadness.ttf"
+
+///|
+const FONT_WIBLETOWN_PATH : String = "thetawave/assets/fonts/wibletown-regular.otf"
+
+///|
+const UI_FONT_SMALL : String = "16px Lunchds"
+
+///|
+const UI_FONT_MEDIUM : String = "18px Lunchds"
+
+///|
 const SFX_PLAYER_FIRE : String = "thetawave/assets/sounds/player_fire_blast.wav"
 
 ///|
@@ -98,102 +176,193 @@ const SFX_MEGABLAST : String = "thetawave/assets/sounds/megablast_ability.wav"
 const SFX_CONSUMABLE_PICKUP : String = "thetawave/assets/sounds/consumable_pickup.wav"
 
 ///|
+const SFX_MENU_INPUT_SUCCESS : String = "thetawave/assets/sounds/menu_input_success.wav"
+
+///|
 const MUSIC_GAME_LOOP : String = "thetawave/assets/sounds/deflector_soundtrack.mp3"
 
 ///|
-fn player_sprite(character : CharacterType) -> @sprite.Sprite {
-  let texture = match character {
-    Captain => CAPTAIN_TEXTURE
-    Juggernaut => JUGGERNAUT_TEXTURE
+fn animated_sprite(
+  texture : String,
+  frame_width : Double,
+  frame_height : Double,
+  frame_count : Int,
+  fps : Double,
+  zindex : Int,
+) -> @sprite.Sprite {
+  let frames = @sprite.frames_from_atlas(
+    texture,
+    frame_count,
+    width=frame_width,
+    height=frame_height,
+  )
+  @sprite.Sprite::from_animation(
+    @sprite.Animation::new(frames, loop_=true, fps~),
+    zindex,
+    offset=@math.Vec2D(-frame_width / 2.0, -frame_height / 2.0),
+  )
+}
+
+///|
+fn menu_logo_sprite() -> @sprite.Sprite {
+  let frames = @sprite.frames_from_atlas(
+    THETAWAVE_LOGO_TEXTURE,
+    48,
+    width=1920.0,
+    height=1080.0,
+  )
+  let animation = @sprite.Animation::new(
+    frames,
+    loop_=true,
+    fps=10.0,
+    transform=@math.Transform::from_scale(0.19, 0.19),
+  )
+  @sprite.Sprite::from_animation(animation, 90)
+}
+
+///|
+fn menu_button_background_sprite(selected : Bool) -> @sprite.Sprite {
+  let y_offset = if selected { 34.0 } else { 0.0 }
+  let animation = @sprite.Animation::single_frame(
+    MENU_BUTTON_SPRITESHEET_TEXTURE,
+    @math.Vec2D(160.0, 34.0),
+    offset=@math.Vec2D(0.0, y_offset),
+  )
+  @sprite.Sprite::from_animation(animation, 89)
+}
+
+///|
+fn character_portrait_sprite(character : CharacterType) -> @sprite.Sprite {
+  let (texture, width, height) = match character {
+    Captain => (CAPTAIN_TEXTURE, 18.0, 18.0)
+    Juggernaut => (JUGGERNAUT_TEXTURE, 20.0, 24.0)
   }
   @sprite.Sprite::from_picture(
-    @sprite.Picture::new(@math.Vec2D(32.0, 32.0), texture),
+    @sprite.Picture::new(@math.Vec2D(width * 4.0, height * 4.0), texture),
+    90,
+    offset=@math.Vec2D(-width * 2.0, -height * 2.0),
+  )
+}
+
+///|
+fn character_description_sprite(character : CharacterType) -> @sprite.Sprite {
+  let texture = match character {
+    Captain => CAPTAIN_DESCRIPTION_TEXTURE
+    Juggernaut => JUGGERNAUT_DESCRIPTION_TEXTURE
+  }
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(200.0, 150.0), texture),
+    90,
+    offset=@math.Vec2D(-100.0, -75.0),
+  )
+}
+
+///|
+fn restart_prompt_sprite() -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(200.0, 50.0), RESTART_GAME_PROMPT_TEXTURE),
+    95,
+    offset=@math.Vec2D(-100.0, -25.0),
+  )
+}
+
+///|
+fn hud_health_label_sprite() -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(30.0, 266.0), HEALTH_BAR_LABEL_TEXTURE),
+    92,
+    offset=@math.Vec2D(-15.0, -133.0),
+  )
+}
+
+///|
+fn hud_defense_label_sprite() -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(200.0, 40.0), DEFENSE_BAR_LABEL_TEXTURE),
+    92,
+    offset=@math.Vec2D(-100.0, -20.0),
+  )
+}
+
+///|
+fn border_gradient_sprite(texture : String, height : Double) -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(VIEWPORT_WIDTH, height), texture),
+    96,
+  )
+}
+
+///|
+fn hud_ability_slot_sprite() -> @sprite.Sprite {
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(64.0, 64.0), ABILITY_SQUARE_LEFT_TEXTURE),
+    92,
+    offset=@math.Vec2D(-32.0, -32.0),
+  )
+}
+
+///|
+fn hud_ability_icon_sprite(
+  character : CharacterType,
+  slot : Int,
+) -> @sprite.Sprite {
+  let texture = if slot == 1 {
+    match character {
+      Captain => BLAST_ABILITY_TEXTURE
+      Juggernaut => BULLET_ABILITY_TEXTURE
+    }
+  } else {
+    match character {
+      Captain => MEGABLAST_ABILITY_TEXTURE
+      Juggernaut => CHARGE_ABILITY_TEXTURE
+    }
+  }
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(64.0, 64.0), texture),
+    93,
+    offset=@math.Vec2D(-32.0, -32.0),
+  )
+}
+
+///|
+fn player_sprite(character : CharacterType) -> @sprite.Sprite {
+  let (texture, width, height) = match character {
+    Captain => (CAPTAIN_TEXTURE, 54.0, 54.0)
+    Juggernaut => (JUGGERNAUT_TEXTURE, 60.0, 72.0)
+  }
+  @sprite.Sprite::from_picture(
+    @sprite.Picture::new(@math.Vec2D(width, height), texture),
     20,
-    offset=@math.Vec2D(-16.0, -16.0),
+    offset=@math.Vec2D(-width / 2.0, -height / 2.0),
   )
 }
 
 ///|
 fn enemy_sprite(kind : EnemyKind) -> @sprite.Sprite {
   match kind {
-    Pawn =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(20.0, 20.0), PAWN_TEXTURE),
-        10,
-        offset=@math.Vec2D(-10.0, -10.0),
-      )
-    Drone =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(20.0, 20.0), DRONE_TEXTURE),
-        10,
-        offset=@math.Vec2D(-10.0, -10.0),
-      )
-    Shelly =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(24.0, 25.0), SHELLY_TEXTURE),
-        10,
-        offset=@math.Vec2D(-12.0, -12.5),
-      )
-    StraferRight =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(26.0, 14.0), STRAFER_TEXTURE),
-        10,
-        offset=@math.Vec2D(-13.0, -7.0),
-      )
-    StraferLeft =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(26.0, 14.0), STRAFER_TEXTURE),
-        10,
-        offset=@math.Vec2D(-13.0, -7.0),
-      )
+    Pawn => animated_sprite(PAWN_TEXTURE, 20.0, 20.0, 3, 4.0, 10)
+    Drone => animated_sprite(DRONE_TEXTURE, 20.0, 20.0, 3, 4.0, 10)
+    TutorialDrone =>
+      animated_sprite(TUTORIAL_DRONE_TEXTURE, 22.0, 23.0, 3, 4.0, 10)
+    Shelly => animated_sprite(SHELLY_TEXTURE, 24.0, 25.0, 3, 4.0, 10)
+    StraferRight => animated_sprite(STRAFER_TEXTURE, 26.0, 14.0, 3, 4.0, 10)
+    StraferLeft => animated_sprite(STRAFER_TEXTURE, 26.0, 14.0, 3, 4.0, 10)
     MissileLauncher =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(23.0, 28.0), MISSILE_LAUNCHER_TEXTURE),
-        10,
-        offset=@math.Vec2D(-11.5, -14.0),
-      )
-    Missile =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(11.0, 20.0), MISSILE_TEXTURE),
-        11,
-        offset=@math.Vec2D(-5.5, -10.0),
-      )
+      animated_sprite(MISSILE_LAUNCHER_TEXTURE, 23.0, 28.0, 3, 4.0, 10)
+    Missile => animated_sprite(MISSILE_TEXTURE, 11.0, 20.0, 4, 8.0, 11)
     MoneyAsteroid =>
       @sprite.Sprite::from_picture(
         @sprite.Picture::new(@math.Vec2D(21.0, 21.0), MONEY_ASTEROID_TEXTURE),
         9,
         offset=@math.Vec2D(-10.5, -10.5),
       )
-    CrustlingRight =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(24.0, 25.0), SHELLY_TEXTURE),
-        10,
-        offset=@math.Vec2D(-12.0, -12.5),
-      )
-    CrustlingLeft =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(24.0, 25.0), SHELLY_TEXTURE),
-        10,
-        offset=@math.Vec2D(-12.0, -12.5),
-      )
-    Ferritharax =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(18.0, 26.0), FERRITHARAX_TEXTURE),
-        12,
-        offset=@math.Vec2D(-9.0, -13.0),
-      )
+    CrustlingRight => animated_sprite(CRUSTLING_TEXTURE, 38.0, 29.0, 3, 4.0, 10)
+    CrustlingLeft => animated_sprite(CRUSTLING_TEXTURE, 38.0, 29.0, 3, 4.0, 10)
+    Ferritharax => animated_sprite(FERRITHARAX_TEXTURE, 68.0, 49.0, 3, 4.0, 12)
     MechaFerritharax =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(18.0, 24.0), MECHA_FERRITHARAX_TEXTURE),
-        12,
-        offset=@math.Vec2D(-9.0, -12.0),
-      )
+      animated_sprite(MECHA_FERRITHARAX_TEXTURE, 42.0, 48.0, 3, 4.0, 12)
     MechaSaucetron =>
-      @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(18.0, 15.0), MECHA_SAUCETRON_TEXTURE),
-        12,
-        offset=@math.Vec2D(-9.0, -7.5),
-      )
+      animated_sprite(MECHA_SAUCETRON_TEXTURE, 46.0, 50.0, 3, 4.0, 12)
     Hauler =>
       @sprite.Sprite::from_picture(
         @sprite.Picture::new(@math.Vec2D(18.0, 15.0), HAULER_TEXTURE),
@@ -266,7 +435,14 @@ fn background_sprite(kind : BackgroundKind) -> @sprite.Sprite {
     Menu => MENU_BG_TEXTURE
     CharacterSelection => CHARACTER_SELECT_BG_TEXTURE
     Game => GAME_BG_TEXTURE
+    GameOver => GAME_OVER_BG_TEXTURE
+    Victory => VICTORY_BG_TEXTURE
   }
+  background_sprite_by_texture(texture)
+}
+
+///|
+fn background_sprite_by_texture(texture : String) -> @sprite.Sprite {
   @sprite.Sprite::from_picture(
     @sprite.Picture::new(@math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT), texture),
     -100,

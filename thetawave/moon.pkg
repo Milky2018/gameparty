@@ -4,6 +4,7 @@ import {
   "Milky2018/selene/entity",
   "Milky2018/selene/math",
   "Milky2018/selene/sprite",
+  "Milky2018/selene/ui",
   "Milky2018/selene/inputs",
   "Milky2018/selene/transform",
   "Milky2018/selene/audio",
@@ -31,4 +32,10 @@ options(
       "output": "embedded_assets_blob.mbt",
     },
   ],
+  targets: {
+    "embedded_assets_blob.mbt": [ "release" ],
+    "embedded_assets_bootstrap_debug.mbt": [ "debug" ],
+    "embedded_assets_bootstrap_release.mbt": [ "release" ],
+    "embedded_assets_index.mbt": [ "release" ],
+  },
 )

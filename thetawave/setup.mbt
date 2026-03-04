@@ -1,6 +1,7 @@
 ///|
 fn startup_system(_delta : Double) -> Unit {
   if !ui_initialized.val {
+    install_embedded_assets()
     preload_assets()
     initialize_scene()
     initialize_ui()
@@ -10,20 +11,42 @@ fn startup_system(_delta : Double) -> Unit {
 }
 
 ///|
+let game_background_textures : Array[String] = [
+  "thetawave/assets/texture/backgrounds/background_1.png", "thetawave/assets/texture/backgrounds/background_2.png",
+  "thetawave/assets/texture/backgrounds/background_3.png", "thetawave/assets/texture/backgrounds/background_4.png",
+  "thetawave/assets/texture/backgrounds/background_5.png", "thetawave/assets/texture/backgrounds/background_6.png",
+  "thetawave/assets/texture/backgrounds/background_7.png", "thetawave/assets/texture/backgrounds/background_8.png",
+  "thetawave/assets/texture/backgrounds/background_9.png", "thetawave/assets/texture/backgrounds/background_10.png",
+  "thetawave/assets/texture/backgrounds/background_11.png", "thetawave/assets/texture/backgrounds/background_12.png",
+]
+
+///|
 fn preload_assets() -> Unit {
   @backend.preload_img(MENU_BG_TEXTURE)
   @backend.preload_img(CHARACTER_SELECT_BG_TEXTURE)
   @backend.preload_img(GAME_BG_TEXTURE)
+  @backend.preload_img(GAME_OVER_BG_TEXTURE)
+  @backend.preload_img(VICTORY_BG_TEXTURE)
+  @backend.preload_img(THETAWAVE_LOGO_TEXTURE)
+  @backend.preload_img(MENU_BUTTON_SPRITESHEET_TEXTURE)
   @backend.preload_img(CAPTAIN_TEXTURE)
   @backend.preload_img(JUGGERNAUT_TEXTURE)
+  @backend.preload_img(CAPTAIN_DESCRIPTION_TEXTURE)
+  @backend.preload_img(JUGGERNAUT_DESCRIPTION_TEXTURE)
+  @backend.preload_img(RESTART_GAME_PROMPT_TEXTURE)
   @backend.preload_img(PAWN_TEXTURE)
   @backend.preload_img(DRONE_TEXTURE)
+  @backend.preload_img(TUTORIAL_DRONE_TEXTURE)
   @backend.preload_img(SHELLY_TEXTURE)
   @backend.preload_img(STRAFER_TEXTURE)
   @backend.preload_img(MISSILE_LAUNCHER_TEXTURE)
   @backend.preload_img(MISSILE_TEXTURE)
   @backend.preload_img(MONEY_ASTEROID_TEXTURE)
   @backend.preload_img(HAULER_TEXTURE)
+  @backend.preload_img(CRUSTLING_TEXTURE)
+  @backend.preload_img(FERRITHARAX_TEXTURE)
+  @backend.preload_img(MECHA_FERRITHARAX_TEXTURE)
+  @backend.preload_img(MECHA_SAUCETRON_TEXTURE)
   @backend.preload_img(PLAYER_BULLET_TEXTURE)
   @backend.preload_img(PLAYER_BLAST_TEXTURE)
   @backend.preload_img(ENEMY_BULLET_TEXTURE)
@@ -34,6 +57,21 @@ fn preload_assets() -> Unit {
   @backend.preload_img(CONSUMABLE_ARMOR_TEXTURE)
   @backend.preload_img(CONSUMABLE_GAIN_PROJECTILES_TEXTURE)
   @backend.preload_img(ITEM_ENHANCED_PLATING_TEXTURE)
+  @backend.preload_img(HEALTH_BAR_LABEL_TEXTURE)
+  @backend.preload_img(DEFENSE_BAR_LABEL_TEXTURE)
+  @backend.preload_img(WARNING_GRADIENT_TEXTURE)
+  @backend.preload_img(DEFENSE_GRADIENT_TEXTURE)
+  @backend.preload_img(ABILITY_SQUARE_LEFT_TEXTURE)
+  @backend.preload_img(BLAST_ABILITY_TEXTURE)
+  @backend.preload_img(BULLET_ABILITY_TEXTURE)
+  @backend.preload_img(MEGABLAST_ABILITY_TEXTURE)
+  @backend.preload_img(CHARGE_ABILITY_TEXTURE)
+  for texture in game_background_textures {
+    @backend.preload_img(texture)
+  }
+  @backend.load_font(FONT_LUNCHDS_ALIAS, FONT_LUNCHDS_PATH)
+  @backend.load_font(FONT_SPACE_MADNESS_ALIAS, FONT_SPACE_MADNESS_PATH)
+  @backend.load_font(FONT_WIBLETOWN_ALIAS, FONT_WIBLETOWN_PATH)
   @backend.preload_audio(MUSIC_GAME_LOOP)
   @backend.preload_audio(SFX_PLAYER_FIRE)
   @backend.preload_audio(SFX_ENEMY_FIRE)
@@ -42,6 +80,7 @@ fn preload_assets() -> Unit {
   @backend.preload_audio(SFX_DEFENSE_HEAL)
   @backend.preload_audio(SFX_MEGABLAST)
   @backend.preload_audio(SFX_CONSUMABLE_PICKUP)
+  @backend.preload_audio(SFX_MENU_INPUT_SUCCESS)
 }
 
 ///|
@@ -55,12 +94,29 @@ fn initialize_scene() -> Unit {
 
 ///|
 fn set_background(kind : BackgroundKind) -> Unit {
-  if game_state.background_kind == kind {
+  if game_state.background_kind == kind &&
+    @sprite.sprites.get(game_state.background) is Some(_) {
     return
   }
   game_state.background_kind = kind
-  @sprite.sprites.set(game_state.background, background_sprite(kind))
+  let sprite = if kind is Game {
+    background_sprite_by_texture(random_game_background_texture())
+  } else {
+    background_sprite(kind)
+  }
+  @sprite.sprites.set(game_state.background, sprite)
   @transform.positions.set(game_state.background, @math.Vec2D(0.0, 0.0))
+}
+
+///|
+fn random_game_background_texture() -> String {
+  let len = game_background_textures.length()
+  if len <= 0 {
+    return GAME_BG_TEXTURE
+  }
+  let idx = (game_state.rand.double() * len.to_double()).to_int()
+  let idx = clamp_int(idx, 0, len - 1)
+  game_background_textures[idx]
 }
 
 ///|
@@ -100,6 +156,226 @@ fn initialize_ui() -> Unit {
     game_state.banner_text,
     @math.Vec2D(40.0, VIEWPORT_HEIGHT - 20.0),
   )
+  setup_picture_entity(
+    game_state.menu_logo_ui,
+    menu_logo_sprite(),
+    @math.Vec2D(58.0, 16.0),
+  )
+  setup_picture_entity(
+    game_state.menu_button_start_ui,
+    menu_button_background_sprite(false),
+    @math.Vec2D(160.0, 176.0),
+  )
+  setup_button_entity(game_state.menu_button_start_ui, @math.Vec2D(160.0, 22.0))
+  setup_picture_entity(
+    game_state.menu_button_options_ui,
+    menu_button_background_sprite(false),
+    @math.Vec2D(160.0, 198.0),
+  )
+  setup_button_entity(
+    game_state.menu_button_options_ui,
+    @math.Vec2D(160.0, 22.0),
+  )
+  setup_picture_entity(
+    game_state.menu_button_compendium_ui,
+    menu_button_background_sprite(false),
+    @math.Vec2D(160.0, 220.0),
+  )
+  setup_button_entity(
+    game_state.menu_button_compendium_ui,
+    @math.Vec2D(160.0, 22.0),
+  )
+  setup_picture_entity(
+    game_state.menu_button_exit_ui,
+    menu_button_background_sprite(false),
+    @math.Vec2D(160.0, 242.0),
+  )
+  setup_button_entity(game_state.menu_button_exit_ui, @math.Vec2D(160.0, 22.0))
+  setup_picture_entity(
+    game_state.character_portrait_ui,
+    character_portrait_sprite(Captain),
+    @math.Vec2D(240.0, 118.0),
+  )
+  setup_picture_entity(
+    game_state.character_description_ui,
+    character_description_sprite(Captain),
+    @math.Vec2D(240.0, 242.0),
+  )
+  setup_picture_entity(
+    game_state.phase_prompt_ui,
+    restart_prompt_sprite(),
+    @math.Vec2D(240.0, 244.0),
+  )
+  setup_picture_entity(
+    game_state.warning_gradient_ui,
+    border_gradient_sprite(WARNING_GRADIENT_TEXTURE, 0.0),
+    @math.Vec2D(0.0, VIEWPORT_HEIGHT),
+  )
+  setup_picture_entity(
+    game_state.defense_gradient_ui,
+    border_gradient_sprite(DEFENSE_GRADIENT_TEXTURE, 0.0),
+    @math.Vec2D(0.0, VIEWPORT_HEIGHT),
+  )
+  setup_picture_entity(
+    game_state.hud_health_label_ui,
+    hud_health_label_sprite(),
+    @math.Vec2D(16.0, 160.0),
+  )
+  setup_picture_entity(
+    game_state.hud_health_bar_bg_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(12.0, 120.0),
+        "rgba(128, 16, 24, 0.18)",
+      ),
+      91,
+    ),
+    @math.Vec2D(30.0, 98.0),
+  )
+  setup_picture_entity(
+    game_state.hud_health_bar_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(10.0, 116.0),
+        "rgba(220, 20, 60, 0.85)",
+      ),
+      92,
+    ),
+    @math.Vec2D(31.0, 100.0),
+  )
+  setup_picture_entity(
+    game_state.hud_shield_bar_bg_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(12.0, 120.0), "rgba(0, 96, 128, 0.18)"),
+      91,
+    ),
+    @math.Vec2D(46.0, 98.0),
+  )
+  setup_picture_entity(
+    game_state.hud_shield_bar_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(10.0, 116.0),
+        "rgba(0, 255, 255, 0.75)",
+      ),
+      92,
+    ),
+    @math.Vec2D(47.0, 100.0),
+  )
+  setup_picture_entity(
+    game_state.hud_defense_label_ui,
+    hud_defense_label_sprite(),
+    @math.Vec2D(240.0, 300.0),
+  )
+  setup_picture_entity(
+    game_state.hud_defense_bar_bg_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(120.0, 8.0), "rgba(18, 24, 78, 0.55)"),
+      93,
+    ),
+    @math.Vec2D(180.0, 295.0),
+  )
+  setup_picture_entity(
+    game_state.hud_defense_bar_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(120.0, 8.0), "rgba(40, 110, 255, 0.9)"),
+      94,
+    ),
+    @math.Vec2D(180.0, 295.0),
+  )
+  setup_picture_entity(
+    game_state.hud_slot1_bg_ui,
+    hud_ability_slot_sprite(),
+    @math.Vec2D(34.0, 248.0),
+  )
+  setup_picture_entity(
+    game_state.hud_slot1_icon_ui,
+    hud_ability_icon_sprite(Captain, 1),
+    @math.Vec2D(34.0, 248.0),
+  )
+  setup_picture_entity(
+    game_state.hud_slot1_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(64.0, 0.0), "rgba(0, 0, 0, 0.55)"),
+      95,
+    ),
+    @math.Vec2D(2.0, 280.0),
+  )
+  setup_picture_entity(
+    game_state.hud_slot2_bg_ui,
+    hud_ability_slot_sprite(),
+    @math.Vec2D(34.0, 176.0),
+  )
+  setup_picture_entity(
+    game_state.hud_slot2_icon_ui,
+    hud_ability_icon_sprite(Captain, 2),
+    @math.Vec2D(34.0, 176.0),
+  )
+  setup_picture_entity(
+    game_state.hud_slot2_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(64.0, 0.0), "rgba(0, 0, 0, 0.55)"),
+      95,
+    ),
+    @math.Vec2D(2.0, 208.0),
+  )
+  if @sprite.sprites.get(game_state.character_portrait_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.character_description_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.phase_prompt_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.warning_gradient_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.defense_gradient_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_health_label_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_health_bar_bg_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_health_bar_fill_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_shield_bar_bg_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_shield_bar_fill_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_defense_label_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_defense_bar_bg_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_defense_bar_fill_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_slot1_bg_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_slot1_icon_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_slot1_fill_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_slot2_bg_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_slot2_icon_ui) is Some(sprite) {
+    sprite.visible = false
+  }
+  if @sprite.sprites.get(game_state.hud_slot2_fill_ui) is Some(sprite) {
+    sprite.visible = false
+  }
 }
 
 ///|
@@ -113,6 +389,27 @@ fn setup_text_entity(
   }
   @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 100))
   @transform.positions.set(entity, position)
+  @ui.uis.set(entity, @ui.Ui::new())
+}
+
+///|
+fn setup_picture_entity(
+  entity : @entity.Entity,
+  sprite : @sprite.Sprite,
+  position : @math.Vec2D,
+) -> Unit {
+  if !entity.is_alive() {
+    entity.respawn()
+  }
+  @sprite.sprites.set(entity, sprite)
+  @transform.positions.set(entity, position)
+  @ui.uis.set(entity, @ui.Ui::new())
+}
+
+///|
+fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2D) -> Unit {
+  @ui.buttons.set(entity, @ui.Button::new(hit_size~))
+  @ui.interactions.set(entity, @ui.None)
 }
 
 ///|
@@ -120,6 +417,7 @@ fn enter_main_menu() -> Unit {
   clear_dynamic_entities()
   game_state.screen = MainMenu
   game_state.phase = Playing
+  game_state.main_menu_selected = 0
   set_background(Menu)
   if !game_state.music_started {
     @audio.play_audio(MUSIC_GAME_LOOP, volume=0.35, loop_=true)
@@ -190,6 +488,9 @@ fn clear_dynamic_entities() -> Unit {
 fn reset_game_state_data() -> Unit {
   game_state.phase = Playing
   game_state.score = 0
+  game_state.shots_fired = 0
+  game_state.shots_hit = 0
+  game_state.enemies_destroyed = 0
   game_state.money = 0
   game_state.armor = 0
   game_state.defense = 100
@@ -216,6 +517,10 @@ fn reset_game_state_data() -> Unit {
   game_state.tutorial_slot1_protect = 0
   game_state.tutorial_slot2_destroy = 0
   game_state.tutorial_spawn_timer = 0.0
+  game_state.center_intro_text = ""
+  game_state.center_intro_timer = 0.0
+  game_state.warning_gradient_timer = 0.0
+  game_state.defense_gradient_timer = 0.0
   game_state.shoot_cooldown = 0.0
   game_state.special_cooldown = 0.0
   game_state.player_invulnerable = 0.0
@@ -265,6 +570,7 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
   let archetype = enemy_archetype(kind)
   let hp_bonus = if kind is Missile ||
     kind is MoneyAsteroid ||
+    kind is TutorialDrone ||
     kind is Hauler ||
     kind is Ferritharax ||
     kind is MechaFerritharax ||
@@ -367,6 +673,7 @@ fn spawn_player_projectile(
   kind : ProjectileKind,
   ttl : Double,
 ) -> Unit {
+  game_state.shots_fired += 1
   spawn_projectile(start_pos, velocity, damage, kind, Ally, ttl)
 }
 

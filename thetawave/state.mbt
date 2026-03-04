@@ -52,6 +52,8 @@ enum BackgroundKind {
   Menu
   CharacterSelection
   Game
+  GameOver
+  Victory
 } derive(Eq)
 
 ///|
@@ -90,6 +92,7 @@ enum SpecialAbility {
 enum EnemyKind {
   Pawn
   Drone
+  TutorialDrone
   Shelly
   StraferRight
   StraferLeft
@@ -259,6 +262,30 @@ priv struct GameState {
   stage_ui : @entity.Entity
   timer_ui : @entity.Entity
   banner_ui : @entity.Entity
+  menu_logo_ui : @entity.Entity
+  menu_button_start_ui : @entity.Entity
+  menu_button_options_ui : @entity.Entity
+  menu_button_compendium_ui : @entity.Entity
+  menu_button_exit_ui : @entity.Entity
+  character_portrait_ui : @entity.Entity
+  character_description_ui : @entity.Entity
+  phase_prompt_ui : @entity.Entity
+  warning_gradient_ui : @entity.Entity
+  defense_gradient_ui : @entity.Entity
+  hud_health_label_ui : @entity.Entity
+  hud_health_bar_bg_ui : @entity.Entity
+  hud_health_bar_fill_ui : @entity.Entity
+  hud_shield_bar_bg_ui : @entity.Entity
+  hud_shield_bar_fill_ui : @entity.Entity
+  hud_defense_label_ui : @entity.Entity
+  hud_defense_bar_bg_ui : @entity.Entity
+  hud_defense_bar_fill_ui : @entity.Entity
+  hud_slot1_bg_ui : @entity.Entity
+  hud_slot1_icon_ui : @entity.Entity
+  hud_slot1_fill_ui : @entity.Entity
+  hud_slot2_bg_ui : @entity.Entity
+  hud_slot2_icon_ui : @entity.Entity
+  hud_slot2_fill_ui : @entity.Entity
   score_text : @sprite.Text
   hull_text : @sprite.Text
   shield_text : @sprite.Text
@@ -271,6 +298,9 @@ priv struct GameState {
   mut phase : RunPhase
   mut selected_character : CharacterType
   mut score : Int
+  mut shots_fired : Int
+  mut shots_hit : Int
+  mut enemies_destroyed : Int
   mut money : Int
   mut armor : Int
   mut hull : Int
@@ -304,6 +334,10 @@ priv struct GameState {
   mut tutorial_slot1_protect : Int
   mut tutorial_slot2_destroy : Int
   mut tutorial_spawn_timer : Double
+  mut center_intro_text : String
+  mut center_intro_timer : Double
+  mut warning_gradient_timer : Double
+  mut defense_gradient_timer : Double
   mut shoot_cooldown : Double
   mut special_cooldown : Double
   mut player_invulnerable : Double
@@ -322,6 +356,7 @@ priv struct GameState {
   mut projectile_damage : Int
   mut projectile_ttl : Double
   mut special_ability : SpecialAbility
+  mut main_menu_selected : Int
   mut music_started : Bool
   rand : @random.Rand
 }
@@ -337,45 +372,76 @@ let game_state : GameState = {
   stage_ui: @entity.Entity::new(),
   timer_ui: @entity.Entity::new(),
   banner_ui: @entity.Entity::new(),
+  menu_logo_ui: @entity.Entity::new(),
+  menu_button_start_ui: @entity.Entity::new(),
+  menu_button_options_ui: @entity.Entity::new(),
+  menu_button_compendium_ui: @entity.Entity::new(),
+  menu_button_exit_ui: @entity.Entity::new(),
+  character_portrait_ui: @entity.Entity::new(),
+  character_description_ui: @entity.Entity::new(),
+  phase_prompt_ui: @entity.Entity::new(),
+  warning_gradient_ui: @entity.Entity::new(),
+  defense_gradient_ui: @entity.Entity::new(),
+  hud_health_label_ui: @entity.Entity::new(),
+  hud_health_bar_bg_ui: @entity.Entity::new(),
+  hud_health_bar_fill_ui: @entity.Entity::new(),
+  hud_shield_bar_bg_ui: @entity.Entity::new(),
+  hud_shield_bar_fill_ui: @entity.Entity::new(),
+  hud_defense_label_ui: @entity.Entity::new(),
+  hud_defense_bar_bg_ui: @entity.Entity::new(),
+  hud_defense_bar_fill_ui: @entity.Entity::new(),
+  hud_slot1_bg_ui: @entity.Entity::new(),
+  hud_slot1_icon_ui: @entity.Entity::new(),
+  hud_slot1_fill_ui: @entity.Entity::new(),
+  hud_slot2_bg_ui: @entity.Entity::new(),
+  hud_slot2_icon_ui: @entity.Entity::new(),
+  hud_slot2_fill_ui: @entity.Entity::new(),
   score_text: @sprite.Text::new(
     "Score: 0",
     color="white",
+    font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
   hull_text: @sprite.Text::new(
     "Hull: 0",
     color="white",
+    font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
   shield_text: @sprite.Text::new(
     "Shield: 0",
     color="white",
+    font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
   defense_text: @sprite.Text::new(
     "Defense: 0",
     color="white",
+    font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
   stage_text: @sprite.Text::new(
     "Stage",
     color="white",
+    font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
   timer_text: @sprite.Text::new(
     "Time: 0",
     color="white",
+    font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
   banner_text: @sprite.Text::new(
     "Press Enter",
     color="skyblue",
+    font=UI_FONT_MEDIUM,
     baseline=Top,
     align=Left,
   ),
@@ -384,6 +450,9 @@ let game_state : GameState = {
   phase: Playing,
   selected_character: Captain,
   score: 0,
+  shots_fired: 0,
+  shots_hit: 0,
+  enemies_destroyed: 0,
   money: 0,
   armor: 0,
   hull: 80,
@@ -417,6 +486,10 @@ let game_state : GameState = {
   tutorial_slot1_protect: 0,
   tutorial_slot2_destroy: 0,
   tutorial_spawn_timer: 0.0,
+  center_intro_text: "",
+  center_intro_timer: 0.0,
+  warning_gradient_timer: 0.0,
+  defense_gradient_timer: 0.0,
   shoot_cooldown: 0.0,
   special_cooldown: 0.0,
   player_invulnerable: 0.0,
@@ -435,6 +508,7 @@ let game_state : GameState = {
   projectile_damage: 10,
   projectile_ttl: 1.0,
   special_ability: MegaBlast,
+  main_menu_selected: 0,
   music_started: false,
   rand: @random.Rand::new(),
 }
@@ -476,6 +550,19 @@ fn enemy_archetype(kind : EnemyKind) -> EnemyArchetype {
         initial_shoot_delay: 1.0,
       }
     Drone =>
+      {
+        hp: 30,
+        speed_x: 0.0,
+        speed_y: 100.0,
+        collision_damage: 12,
+        escape_defense_delta: -8,
+        movement: DownBrake,
+        horizontal_dir: 0.0,
+        shooter: NoShooter,
+        shoot_interval: 0.0,
+        initial_shoot_delay: 0.0,
+      }
+    TutorialDrone =>
       {
         hp: 30,
         speed_x: 0.0,

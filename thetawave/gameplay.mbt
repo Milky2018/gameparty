@@ -1,40 +1,217 @@
 ///|
 fn menu_state_system(_delta : Double) -> Unit {
   match game_state.screen {
-    MainMenu =>
-      if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
-        enter_character_selection()
+    MainMenu => {
+      if main_menu_hovered_index() is Some(hovered_index) {
+        game_state.main_menu_selected = hovered_index
       }
+      let mut moved = false
+      if @inputs.is_just_pressed(KeyW) ||
+        @inputs.is_just_pressed(ArrowUp) ||
+        gamepad_menu_up_just_pressed() {
+        game_state.main_menu_selected = (game_state.main_menu_selected + 3) % 4
+        moved = true
+      } else if @inputs.is_just_pressed(KeyS) ||
+        @inputs.is_just_pressed(ArrowDown) ||
+        gamepad_menu_down_just_pressed() {
+        game_state.main_menu_selected = (game_state.main_menu_selected + 1) % 4
+        moved = true
+      }
+      if moved {
+        @audio.play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.20)
+      }
+      if main_menu_pressed_index() is Some(clicked_index) {
+        game_state.main_menu_selected = clicked_index
+        confirm_main_menu_selection()
+      }
+      if @inputs.is_just_pressed(Enter) ||
+        @inputs.is_just_pressed(Space) ||
+        gamepad_confirm_just_pressed() {
+        confirm_main_menu_selection()
+      }
+    }
     CharacterSelection => {
-      if @inputs.is_just_pressed(KeyA) || @inputs.is_just_pressed(ArrowLeft) {
+      if @inputs.is_just_pressed(KeyA) ||
+        @inputs.is_just_pressed(ArrowLeft) ||
+        gamepad_left_just_pressed() {
         game_state.selected_character = Captain
       }
-      if @inputs.is_just_pressed(KeyD) || @inputs.is_just_pressed(ArrowRight) {
+      if @inputs.is_just_pressed(KeyD) ||
+        @inputs.is_just_pressed(ArrowRight) ||
+        gamepad_right_just_pressed() {
         game_state.selected_character = Juggernaut
       }
-      if @inputs.is_just_pressed(Escape) {
+      if @inputs.is_just_pressed(Escape) || gamepad_back_just_pressed() {
         enter_main_menu()
-      } else if @inputs.is_just_pressed(Enter) {
+      } else if @inputs.is_just_pressed(Enter) || gamepad_confirm_just_pressed() {
         start_game_with_selected_character()
       }
     }
     InGame =>
       if game_state.phase is GameOver || game_state.phase is Victory {
-        if @inputs.is_just_pressed(Enter) {
-          enter_character_selection()
-        } else if @inputs.is_just_pressed(Escape) {
+        if @inputs.is_just_pressed(KeyR) ||
+          @inputs.is_just_pressed(Enter) ||
+          gamepad_confirm_just_pressed() {
           enter_main_menu()
         }
       } else if game_state.phase is Paused {
-        if @inputs.is_just_pressed(Escape) || @inputs.is_just_pressed(Enter) {
+        if @inputs.is_just_pressed(Escape) || gamepad_confirm_just_pressed() {
           game_state.phase = Playing
-        } else if @inputs.is_just_pressed(KeyR) {
+          set_background(Game)
+        } else if @inputs.is_just_pressed(KeyR) || gamepad_back_just_pressed() {
           enter_main_menu()
         }
-      } else if @inputs.is_just_pressed(Escape) {
+      } else if @inputs.is_just_pressed(Escape) ||
+        gamepad_confirm_just_pressed() {
         game_state.phase = Paused
       }
   }
+}
+
+///|
+fn main_menu_hovered_index() -> Int? {
+  let menu_entities = [
+    game_state.menu_button_start_ui,
+    game_state.menu_button_options_ui,
+    game_state.menu_button_compendium_ui,
+    game_state.menu_button_exit_ui,
+  ]
+  for i in 0..<menu_entities.length() {
+    if @ui.interactions.get(menu_entities[i]) is Some(interaction) {
+      if interaction is @ui.Hovered || interaction is @ui.Pressed {
+        return Some(i)
+      }
+    }
+  }
+  None
+}
+
+///|
+fn menu_button_index(entity : @entity.Entity) -> Int? {
+  if entity == game_state.menu_button_start_ui {
+    Some(0)
+  } else if entity == game_state.menu_button_options_ui {
+    Some(1)
+  } else if entity == game_state.menu_button_compendium_ui {
+    Some(2)
+  } else if entity == game_state.menu_button_exit_ui {
+    Some(3)
+  } else {
+    None
+  }
+}
+
+///|
+fn main_menu_pressed_index() -> Int? {
+  for event in @ui.interaction_events() {
+    if event.current is @ui.Pressed &&
+      menu_button_index(event.entity) is Some(index) {
+      return Some(index)
+    }
+  }
+  None
+}
+
+///|
+fn confirm_main_menu_selection() -> Unit {
+  match game_state.main_menu_selected {
+    0 => enter_character_selection()
+    1 => ()
+    2 => ()
+    3 => @backend.request_close()
+    _ => ()
+  }
+  @audio.play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.30)
+}
+
+///|
+fn active_gamepad() -> @inputs.Gamepad? {
+  for gamepad in @inputs.connected_gamepads {
+    return Some(gamepad)
+  }
+  None
+}
+
+///|
+fn gamepad_button_just_pressed(button : @inputs.GamepadButton) -> Bool {
+  if active_gamepad() is Some(gamepad) {
+    @inputs.is_gamepad_button_just_pressed(gamepad, button)
+  } else {
+    false
+  }
+}
+
+///|
+fn gamepad_button_pressed(button : @inputs.GamepadButton) -> Bool {
+  if active_gamepad() is Some(gamepad) {
+    @inputs.is_gamepad_button_pressed(gamepad, button)
+  } else {
+    false
+  }
+}
+
+///|
+fn gamepad_confirm_just_pressed() -> Bool {
+  gamepad_button_just_pressed(South) || gamepad_button_just_pressed(Start)
+}
+
+///|
+fn gamepad_back_just_pressed() -> Bool {
+  gamepad_button_just_pressed(East) || gamepad_button_just_pressed(Select)
+}
+
+///|
+fn gamepad_menu_up_just_pressed() -> Bool {
+  gamepad_button_just_pressed(DPadUp)
+}
+
+///|
+fn gamepad_menu_down_just_pressed() -> Bool {
+  gamepad_button_just_pressed(DPadDown)
+}
+
+///|
+fn gamepad_left_just_pressed() -> Bool {
+  gamepad_button_just_pressed(DPadLeft)
+}
+
+///|
+fn gamepad_right_just_pressed() -> Bool {
+  gamepad_button_just_pressed(DPadRight)
+}
+
+///|
+const GAMEPAD_STICK_DEADZONE : Double = 0.25
+
+///|
+fn gamepad_left_stick_dir() -> @math.Vec2D {
+  if active_gamepad() is Some(gamepad) {
+    let stick = @inputs.gamepad_left_stick(gamepad)
+    if stick.distance() >= GAMEPAD_STICK_DEADZONE {
+      stick
+    } else {
+      @math.Vec2D(0.0, 0.0)
+    }
+  } else {
+    @math.Vec2D(0.0, 0.0)
+  }
+}
+
+///|
+const GAMEPAD_DIRECTION_THRESHOLD : Double = 0.45
+
+///|
+fn gamepad_direction_flags() -> (Bool, Bool, Bool, Bool) {
+  let stick = gamepad_left_stick_dir()
+  let up = gamepad_button_pressed(DPadUp) ||
+    stick[Y] <= -GAMEPAD_DIRECTION_THRESHOLD
+  let down = gamepad_button_pressed(DPadDown) ||
+    stick[Y] >= GAMEPAD_DIRECTION_THRESHOLD
+  let left = gamepad_button_pressed(DPadLeft) ||
+    stick[X] <= -GAMEPAD_DIRECTION_THRESHOLD
+  let right = gamepad_button_pressed(DPadRight) ||
+    stick[X] >= GAMEPAD_DIRECTION_THRESHOLD
+  (up, down, left, right)
 }
 
 ///|
@@ -48,7 +225,8 @@ fn player_input_system(delta : Double) -> Unit {
 
   let wasd = @inputs.key_vector(KeyW, KeyS, KeyA, KeyD)
   let arrows = @inputs.key_vector(ArrowUp, ArrowDown, ArrowLeft, ArrowRight)
-  let direction = (wasd + arrows).normalize()
+  let gamepad = gamepad_left_stick_dir()
+  let direction = (wasd + arrows + gamepad).normalize()
   let next = player_position.0 +
     direction.scalar_mul(game_state.player_speed * delta)
   @transform.positions.set(
@@ -67,7 +245,10 @@ fn player_shoot_system(delta : Double) -> Unit {
   if game_state.shoot_cooldown > 0.0 {
     game_state.shoot_cooldown -= delta
   }
-  let fire_pressed = @inputs.is_pressed(Space) || @inputs.is_mouse_pressed(Left)
+  let fire_pressed = @inputs.is_pressed(Space) ||
+    @inputs.is_mouse_pressed(Left) ||
+    gamepad_button_pressed(RightTrigger) ||
+    gamepad_button_pressed(South)
   if game_state.shoot_cooldown <= 0.0 && fire_pressed {
     spawn_player_burst()
     game_state.shoot_cooldown = current_shoot_interval()
@@ -81,8 +262,9 @@ fn player_special_system(delta : Double) -> Unit {
   if game_state.special_cooldown > 0.0 {
     game_state.special_cooldown -= delta
   }
-  let special_pressed = @inputs.is_just_pressed(KeyQ) ||
-    @inputs.is_mouse_just_pressed(Right)
+  let special_pressed = @inputs.is_mouse_just_pressed(Right) ||
+    gamepad_button_just_pressed(LeftTrigger) ||
+    gamepad_button_just_pressed(East)
   if game_state.special_cooldown <= 0.0 && special_pressed {
     trigger_special_ability()
     game_state.special_cooldown = special_cooldown_duration()
@@ -136,7 +318,7 @@ fn trigger_charge() -> Unit {
   guard @transform.positions.get(game_state.player) is Some(_player_position)
   let wasd = @inputs.key_vector(KeyW, KeyS, KeyA, KeyD)
   let arrows = @inputs.key_vector(ArrowUp, ArrowDown, ArrowLeft, ArrowRight)
-  let input_dir = (wasd + arrows).normalize()
+  let input_dir = (wasd + arrows + gamepad_left_stick_dir()).normalize()
   let direction = if input_dir.distance() <= 0.0001 {
     @math.Vec2D(0.0, -1.0)
   } else {
@@ -361,10 +543,19 @@ fn tick_tutorial(delta : Double) -> Bool {
 
 ///|
 fn tick_tutorial_movement(delta : Double) -> Bool {
-  let up = @inputs.is_pressed(KeyW) || @inputs.is_pressed(ArrowUp)
-  let down = @inputs.is_pressed(KeyS) || @inputs.is_pressed(ArrowDown)
-  let left = @inputs.is_pressed(KeyA) || @inputs.is_pressed(ArrowLeft)
-  let right = @inputs.is_pressed(KeyD) || @inputs.is_pressed(ArrowRight)
+  let gamepad_dir = gamepad_direction_flags()
+  let up = @inputs.is_pressed(KeyW) ||
+    @inputs.is_pressed(ArrowUp) ||
+    gamepad_dir.0
+  let down = @inputs.is_pressed(KeyS) ||
+    @inputs.is_pressed(ArrowDown) ||
+    gamepad_dir.1
+  let left = @inputs.is_pressed(KeyA) ||
+    @inputs.is_pressed(ArrowLeft) ||
+    gamepad_dir.2
+  let right = @inputs.is_pressed(KeyD) ||
+    @inputs.is_pressed(ArrowRight) ||
+    gamepad_dir.3
 
   if up && !down && !left && !right {
     game_state.tutorial_up_progress = clamp(
@@ -430,8 +621,8 @@ fn tick_tutorial_movement(delta : Double) -> Bool {
 fn tick_tutorial_slot1(delta : Double) -> Bool {
   if game_state.tutorial_slot1_destroy > 0 {
     game_state.tutorial_spawn_timer -= delta
-    if !has_enemy_kind(Drone) && game_state.tutorial_spawn_timer <= 0.0 {
-      spawn_tutorial_enemy(Drone)
+    if !has_enemy_kind(TutorialDrone) && game_state.tutorial_spawn_timer <= 0.0 {
+      spawn_tutorial_enemy(TutorialDrone)
       game_state.tutorial_spawn_timer = TUTORIAL_SPAWN_DELAY_SECONDS
     }
     return false
@@ -451,8 +642,8 @@ fn tick_tutorial_slot1(delta : Double) -> Bool {
 fn tick_tutorial_slot2(delta : Double) -> Bool {
   if game_state.tutorial_slot2_destroy > 0 {
     game_state.tutorial_spawn_timer -= delta
-    if !has_enemy_kind(Drone) && game_state.tutorial_spawn_timer <= 0.0 {
-      spawn_tutorial_enemy(Drone)
+    if !has_enemy_kind(TutorialDrone) && game_state.tutorial_spawn_timer <= 0.0 {
+      spawn_tutorial_enemy(TutorialDrone)
       game_state.tutorial_spawn_timer = TUTORIAL_SPAWN_DELAY_SECONDS
     }
     return false
@@ -467,7 +658,7 @@ fn on_enemy_defeated(kind : EnemyKind) -> Unit {
   }
   match game_state.tutorial_lesson {
     1 =>
-      if kind is Drone {
+      if kind is TutorialDrone {
         game_state.tutorial_slot1_destroy = clamp_int(
           game_state.tutorial_slot1_destroy - 1,
           0,
@@ -476,7 +667,7 @@ fn on_enemy_defeated(kind : EnemyKind) -> Unit {
         game_state.tutorial_spawn_timer = 0.0
       }
     2 =>
-      if kind is Drone {
+      if kind is TutorialDrone {
         game_state.tutorial_slot2_destroy = clamp_int(
           game_state.tutorial_slot2_destroy - 1,
           0,
@@ -495,7 +686,7 @@ fn on_enemy_escaped(kind : EnemyKind) -> Unit {
   }
   match game_state.tutorial_lesson {
     1 =>
-      if game_state.tutorial_slot1_destroy > 0 && kind is Drone {
+      if game_state.tutorial_slot1_destroy > 0 && kind is TutorialDrone {
         game_state.tutorial_spawn_timer = 0.0
       } else if game_state.tutorial_slot1_destroy == 0 && kind is Hauler {
         game_state.tutorial_slot1_protect = clamp_int(
@@ -505,7 +696,7 @@ fn on_enemy_escaped(kind : EnemyKind) -> Unit {
         )
         game_state.tutorial_spawn_timer = 0.0
       }
-    2 => if kind is Drone { game_state.tutorial_spawn_timer = 0.0 }
+    2 => if kind is TutorialDrone { game_state.tutorial_spawn_timer = 0.0 }
     _ => ()
   }
 }
@@ -524,6 +715,8 @@ fn has_enemy_kind(kind : EnemyKind) -> Bool {
 fn simulation_system(delta : Double) -> Unit {
   guard is_run_playing() else { return }
   game_state.elapsed += delta
+  tick_center_intro(delta)
+  tick_border_gradients(delta)
   if game_state.player_invulnerable > 0.0 {
     game_state.player_invulnerable -= delta
   }
@@ -534,6 +727,35 @@ fn simulation_system(delta : Double) -> Unit {
   enemy_attack_system(delta)
   move_consumables(delta)
   move_items(delta)
+}
+
+///|
+fn tick_center_intro(delta : Double) -> Unit {
+  if game_state.center_intro_timer > 0.0 {
+    game_state.center_intro_timer = clamp(
+      game_state.center_intro_timer - delta,
+      0.0,
+      5.0,
+    )
+  }
+}
+
+///|
+fn tick_border_gradients(delta : Double) -> Unit {
+  if game_state.warning_gradient_timer > 0.0 {
+    game_state.warning_gradient_timer = clamp(
+      game_state.warning_gradient_timer - delta,
+      0.0,
+      0.4,
+    )
+  }
+  if game_state.defense_gradient_timer > 0.0 {
+    game_state.defense_gradient_timer = clamp(
+      game_state.defense_gradient_timer - delta,
+      0.0,
+      0.4,
+    )
+  }
 }
 
 ///|
@@ -886,6 +1108,7 @@ fn bullet_enemy_collision() -> Unit {
           enemy_radius(enemy.kind),
         ) {
         dead_bullets.push(bullet_entity)
+        game_state.shots_hit += 1
         enemy.hp -= bullet.damage
         if enemy.hp <= 0 {
           defeated_enemies.push((enemy_entity, enemy.kind, enemy_position.0))
@@ -902,6 +1125,7 @@ fn bullet_enemy_collision() -> Unit {
     if enemies.contains(enemy_entity) {
       despawn_enemy(enemy_entity)
       game_state.score += SCORE_PER_KILL
+      game_state.enemies_destroyed += 1
       maybe_spawn_drop(enemy_kind, enemy_pos)
       on_enemy_defeated(enemy_kind)
     }
@@ -1006,6 +1230,9 @@ fn drop_rules(drop_list : DropListType) -> Array[DropRule] {
 
 ///|
 fn maybe_spawn_drop(kind : EnemyKind, position : @math.Vec2D) -> Unit {
+  if is_tutorial_stage() {
+    return
+  }
   let drop_list = drop_list_for_enemy(kind)
   let rules = drop_rules(drop_list)
   for rule in rules {
@@ -1190,6 +1417,7 @@ fn damage_player(amount : Int) -> Unit {
   @audio.play_audio(SFX_PLAYER_HIT, volume=0.25)
   if game_state.hull == 0 {
     game_state.phase = GameOver
+    set_background(GameOver)
   }
 }
 
@@ -1198,12 +1426,15 @@ fn apply_defense_delta(delta : Int) -> Unit {
   guard is_run_playing() else { return }
   game_state.defense = clamp_int(game_state.defense + delta, 0, 100)
   if delta < 0 {
+    game_state.warning_gradient_timer = 0.4
     @audio.play_audio(SFX_DEFENSE_DAMAGE, volume=0.20)
   } else if delta > 0 {
+    game_state.defense_gradient_timer = 0.4
     @audio.play_audio(SFX_DEFENSE_HEAL, volume=0.20)
   }
   if game_state.defense == 0 {
     game_state.phase = GameOver
+    set_background(GameOver)
   }
 }
 
@@ -1213,6 +1444,7 @@ fn victory_system(_delta : Double) -> Unit {
     game_state.stage_index >= run_stages.length() &&
     enemies.length() == 0 {
     game_state.phase = Victory
+    set_background(Victory)
   }
 }
 
@@ -1223,65 +1455,721 @@ fn ui_system(_delta : Double) -> Unit {
     CharacterSelection => ui_character_selection()
     InGame => ui_in_game()
   }
+  sync_text_ui_sprites()
+}
+
+///|
+fn main_menu_button_text(index : Int, label : String) -> String {
+  ignore(index)
+  label
+}
+
+///|
+fn set_ui_visible(entity : @entity.Entity, visible : Bool) -> Unit {
+  if @sprite.sprites.get(entity) is Some(sprite) {
+    sprite.visible = visible
+  }
+}
+
+///|
+fn set_ui_button_enabled(entity : @entity.Entity, enabled : Bool) -> Unit {
+  if @ui.buttons.get(entity) is Some(button) {
+    button.enabled = enabled
+  }
+}
+
+///|
+fn sync_text_ui_sprites() -> Unit {
+  @sprite.sprites.set(
+    game_state.score_ui,
+    @sprite.Sprite::from_text(game_state.score_text, 100),
+  )
+  @sprite.sprites.set(
+    game_state.hull_ui,
+    @sprite.Sprite::from_text(game_state.hull_text, 100),
+  )
+  @sprite.sprites.set(
+    game_state.shield_ui,
+    @sprite.Sprite::from_text(game_state.shield_text, 100),
+  )
+  @sprite.sprites.set(
+    game_state.defense_ui,
+    @sprite.Sprite::from_text(game_state.defense_text, 100),
+  )
+  @sprite.sprites.set(
+    game_state.stage_ui,
+    @sprite.Sprite::from_text(game_state.stage_text, 100),
+  )
+  @sprite.sprites.set(
+    game_state.timer_ui,
+    @sprite.Sprite::from_text(game_state.timer_text, 100),
+  )
+  @sprite.sprites.set(
+    game_state.banner_ui,
+    @sprite.Sprite::from_text(game_state.banner_text, 100),
+  )
+}
+
+///|
+fn set_menu_widgets_visible(visible : Bool) -> Unit {
+  set_ui_visible(game_state.menu_logo_ui, visible)
+  set_ui_visible(game_state.menu_button_start_ui, visible)
+  set_ui_visible(game_state.menu_button_options_ui, visible)
+  set_ui_visible(game_state.menu_button_compendium_ui, visible)
+  set_ui_visible(game_state.menu_button_exit_ui, visible)
+  set_ui_button_enabled(game_state.menu_button_start_ui, visible)
+  set_ui_button_enabled(game_state.menu_button_options_ui, visible)
+  set_ui_button_enabled(game_state.menu_button_compendium_ui, visible)
+  set_ui_button_enabled(game_state.menu_button_exit_ui, visible)
+}
+
+///|
+fn set_character_selection_widgets_visible(visible : Bool) -> Unit {
+  set_ui_visible(game_state.character_portrait_ui, visible)
+  set_ui_visible(game_state.character_description_ui, visible)
+}
+
+///|
+fn set_in_game_hud_widgets_visible(visible : Bool) -> Unit {
+  set_ui_visible(game_state.hud_health_label_ui, visible)
+  set_ui_visible(game_state.hud_health_bar_bg_ui, visible)
+  set_ui_visible(game_state.hud_health_bar_fill_ui, visible)
+  set_ui_visible(game_state.hud_shield_bar_bg_ui, visible)
+  set_ui_visible(game_state.hud_shield_bar_fill_ui, visible)
+  set_ui_visible(game_state.hud_defense_label_ui, visible)
+  set_ui_visible(game_state.hud_defense_bar_bg_ui, visible)
+  set_ui_visible(game_state.hud_defense_bar_fill_ui, visible)
+  set_ui_visible(game_state.hud_slot1_bg_ui, visible)
+  set_ui_visible(game_state.hud_slot1_icon_ui, visible)
+  set_ui_visible(game_state.hud_slot1_fill_ui, visible)
+  set_ui_visible(game_state.hud_slot2_bg_ui, visible)
+  set_ui_visible(game_state.hud_slot2_icon_ui, visible)
+  set_ui_visible(game_state.hud_slot2_fill_ui, visible)
+  set_ui_visible(
+    game_state.warning_gradient_ui,
+    visible && game_state.warning_gradient_timer > 0.0,
+  )
+  set_ui_visible(
+    game_state.defense_gradient_ui,
+    visible && game_state.defense_gradient_timer > 0.0,
+  )
+}
+
+///|
+fn update_in_game_hud_widgets() -> Unit {
+  @sprite.sprites.set(
+    game_state.hud_slot1_icon_ui,
+    hud_ability_icon_sprite(game_state.selected_character, 1),
+  )
+  @sprite.sprites.set(
+    game_state.hud_slot2_icon_ui,
+    hud_ability_icon_sprite(game_state.selected_character, 2),
+  )
+
+  let health_ratio = if game_state.max_hull <= 0 {
+    0.0
+  } else {
+    clamp(
+      game_state.hull.to_double() / game_state.max_hull.to_double(),
+      0.0,
+      1.0,
+    )
+  }
+  let health_fill_h = 116.0 * health_ratio
+  @sprite.sprites.set(
+    game_state.hud_health_bar_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(10.0, health_fill_h),
+        "rgba(220, 20, 60, 0.85)",
+      ),
+      92,
+    ),
+  )
+  @transform.positions.set(
+    game_state.hud_health_bar_fill_ui,
+    @math.Vec2D(31.0, 216.0 - health_fill_h),
+  )
+
+  let shield_ratio = if game_state.max_shield <= 0 {
+    0.0
+  } else {
+    clamp(
+      game_state.shield.to_double() / game_state.max_shield.to_double(),
+      0.0,
+      1.0,
+    )
+  }
+  let shield_fill_h = 116.0 * shield_ratio
+  @sprite.sprites.set(
+    game_state.hud_shield_bar_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(10.0, shield_fill_h),
+        "rgba(0, 255, 255, 0.75)",
+      ),
+      92,
+    ),
+  )
+  @transform.positions.set(
+    game_state.hud_shield_bar_fill_ui,
+    @math.Vec2D(47.0, 216.0 - shield_fill_h),
+  )
+
+  let defense_ratio = clamp(game_state.defense.to_double() / 100.0, 0.0, 1.0)
+  let defense_w = 120.0 * defense_ratio
+  @sprite.sprites.set(
+    game_state.hud_defense_bar_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(defense_w, 8.0),
+        "rgba(40, 110, 255, 0.9)",
+      ),
+      94,
+    ),
+  )
+  @transform.positions.set(
+    game_state.hud_defense_bar_fill_ui,
+    @math.Vec2D(180.0, 295.0),
+  )
+
+  let slot1_ratio = if current_shoot_interval() <= 0.0001 {
+    0.0
+  } else {
+    clamp(game_state.shoot_cooldown / current_shoot_interval(), 0.0, 1.0)
+  }
+  let slot1_h = 64.0 * slot1_ratio
+  @sprite.sprites.set(
+    game_state.hud_slot1_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(64.0, slot1_h), "rgba(0, 0, 0, 0.55)"),
+      95,
+    ),
+  )
+  @transform.positions.set(
+    game_state.hud_slot1_fill_ui,
+    @math.Vec2D(2.0, 280.0 - slot1_h),
+  )
+  set_ui_visible(game_state.hud_slot1_fill_ui, slot1_h > 0.5)
+
+  let slot2_ratio = if special_cooldown_duration() <= 0.0001 {
+    0.0
+  } else {
+    clamp(game_state.special_cooldown / special_cooldown_duration(), 0.0, 1.0)
+  }
+  let slot2_h = 64.0 * slot2_ratio
+  @sprite.sprites.set(
+    game_state.hud_slot2_fill_ui,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(@math.Vec2D(64.0, slot2_h), "rgba(0, 0, 0, 0.55)"),
+      95,
+    ),
+  )
+  @transform.positions.set(
+    game_state.hud_slot2_fill_ui,
+    @math.Vec2D(2.0, 208.0 - slot2_h),
+  )
+  set_ui_visible(game_state.hud_slot2_fill_ui, slot2_h > 0.5)
+}
+
+///|
+const BORDER_GRADIENT_DURATION : Double = 0.4
+
+///|
+const BORDER_GRADIENT_HEIGHT : Double = 48.0
+
+///|
+const CENTER_INTRO_DURATION : Double = 5.0
+
+///|
+fn current_level_name() -> String {
+  if game_state.stage_index <= 0 {
+    "Tutorial"
+  } else if game_state.stage_index <= 7 {
+    "Test Level I: Defense"
+  } else if game_state.stage_index <= 14 {
+    "Test Level II: Defense"
+  } else if game_state.stage_index < run_stages.length() {
+    "Test Level III: Defense"
+  } else {
+    "Run Complete"
+  }
+}
+
+///|
+fn enemy_display_name(kind : EnemyKind) -> String {
+  match kind {
+    Pawn => "Pawn"
+    Drone => "Drone"
+    TutorialDrone => "Drone"
+    Shelly => "Shelly"
+    StraferRight | StraferLeft => "Strafer"
+    MissileLauncher => "Missile Launcher"
+    Missile => "Missile"
+    MoneyAsteroid => "Money Asteroid"
+    CrustlingRight | CrustlingLeft => "Crustling"
+    Ferritharax => "Ferritharax"
+    MechaFerritharax => "MechaFerritharax"
+    MechaSaucetron => "MechaSaucetron"
+    Hauler => "Hauler"
+  }
+}
+
+///|
+fn current_phase_name() -> String {
+  ignore(game_state.stage_label)
+  if current_stage() is Some(stage) {
+    match stage.kind {
+      Formation => "Formation Invasion"
+      Break => "Break"
+      Boss =>
+        if stage.boss_kind is Some(kind) {
+          "Boss: \{enemy_display_name(kind)}"
+        } else {
+          "Boss"
+        }
+      Tutorial => "Tutorial: \{tutorial_lesson_name()}"
+    }
+  } else {
+    "Run Clear"
+  }
+}
+
+///|
+fn current_boss_health_text(kind : EnemyKind) -> String {
+  for _, enemy in enemies {
+    if enemy.kind == kind {
+      let max_hp = @cmp.maximum(1, enemy_archetype(kind).hp)
+      let hp = clamp_int(enemy.hp, 0, max_hp)
+      return "\{hp}/\{max_hp}"
+    }
+  }
+  ""
+}
+
+///|
+fn tutorial_phase_data_text() -> String {
+  match game_state.tutorial_lesson {
+    0 => "Movement: \{tutorial_movement_completed_count()}/8"
+    1 =>
+      if game_state.tutorial_slot1_destroy > 0 {
+        "Destroy drones: \{game_state.tutorial_slot1_destroy}"
+      } else {
+        "Protect haulers: \{game_state.tutorial_slot1_protect}"
+      }
+    2 => "Destroy drones: \{game_state.tutorial_slot2_destroy}"
+    _ => ""
+  }
+}
+
+///|
+fn current_phase_data() -> String {
+  if current_stage() is Some(stage) {
+    match stage.kind {
+      Formation | Break => {
+        let remaining = clamp(
+          stage.duration - game_state.stage_elapsed,
+          0.0,
+          stage.duration,
+        )
+        "\{@cmath.ceil(remaining).to_int()}"
+      }
+      Boss =>
+        if stage.boss_kind is Some(kind) {
+          current_boss_health_text(kind)
+        } else {
+          ""
+        }
+      Tutorial => tutorial_phase_data_text()
+    }
+  } else {
+    ""
+  }
+}
+
+///|
+fn gradient_height(timer : Double) -> Double {
+  if timer <= 0.0 {
+    return 0.0
+  }
+  let progress = 1.0 - clamp(timer / BORDER_GRADIENT_DURATION, 0.0, 1.0)
+  let wave = @cmath.sin(progress * 3.141592653589793)
+  @cmp.maximum(0.0, BORDER_GRADIENT_HEIGHT * wave)
+}
+
+///|
+fn update_border_gradient_widgets() -> Unit {
+  let warning_h = gradient_height(game_state.warning_gradient_timer)
+  if warning_h > 0.01 {
+    set_ui_visible(game_state.warning_gradient_ui, true)
+    @sprite.sprites.set(
+      game_state.warning_gradient_ui,
+      border_gradient_sprite(WARNING_GRADIENT_TEXTURE, warning_h),
+    )
+    @transform.positions.set(
+      game_state.warning_gradient_ui,
+      @math.Vec2D(0.0, VIEWPORT_HEIGHT - warning_h),
+    )
+  } else {
+    set_ui_visible(game_state.warning_gradient_ui, false)
+  }
+
+  let defense_h = gradient_height(game_state.defense_gradient_timer)
+  if defense_h > 0.01 {
+    set_ui_visible(game_state.defense_gradient_ui, true)
+    @sprite.sprites.set(
+      game_state.defense_gradient_ui,
+      border_gradient_sprite(DEFENSE_GRADIENT_TEXTURE, defense_h),
+    )
+    @transform.positions.set(
+      game_state.defense_gradient_ui,
+      @math.Vec2D(0.0, VIEWPORT_HEIGHT - defense_h),
+    )
+  } else {
+    set_ui_visible(game_state.defense_gradient_ui, false)
+  }
+}
+
+///|
+fn current_intro_alpha() -> Double {
+  if game_state.center_intro_timer <= 0.0 {
+    0.0
+  } else {
+    clamp(game_state.center_intro_timer / CENTER_INTRO_DURATION, 0.0, 1.0)
+  }
+}
+
+///|
+fn update_main_menu_button_sprites() -> Unit {
+  @sprite.sprites.set(
+    game_state.menu_button_start_ui,
+    menu_button_background_sprite(game_state.main_menu_selected == 0),
+  )
+  @sprite.sprites.set(
+    game_state.menu_button_options_ui,
+    menu_button_background_sprite(game_state.main_menu_selected == 1),
+  )
+  @sprite.sprites.set(
+    game_state.menu_button_compendium_ui,
+    menu_button_background_sprite(game_state.main_menu_selected == 2),
+  )
+  @sprite.sprites.set(
+    game_state.menu_button_exit_ui,
+    menu_button_background_sprite(game_state.main_menu_selected == 3),
+  )
+}
+
+///|
+fn end_screen_accuracy_percent() -> Int {
+  if game_state.shots_fired <= 0 {
+    100
+  } else {
+    game_state.shots_hit * 100 / game_state.shots_fired
+  }
+}
+
+///|
+fn apply_main_menu_layout() -> Unit {
+  @transform.positions.set(game_state.score_ui, @math.Vec2D(240.0, 187.0))
+  @transform.positions.set(game_state.hull_ui, @math.Vec2D(240.0, 209.0))
+  @transform.positions.set(game_state.shield_ui, @math.Vec2D(240.0, 231.0))
+  @transform.positions.set(game_state.defense_ui, @math.Vec2D(240.0, 253.0))
+  @transform.positions.set(game_state.stage_ui, @math.Vec2D(470.0, 8.0))
+  @transform.positions.set(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
+  @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 304.0))
+}
+
+///|
+fn apply_character_selection_layout() -> Unit {
+  @transform.positions.set(game_state.score_ui, @math.Vec2D(8.0, 8.0))
+  @transform.positions.set(game_state.hull_ui, @math.Vec2D(8.0, 36.0))
+  @transform.positions.set(game_state.shield_ui, @math.Vec2D(8.0, 56.0))
+  @transform.positions.set(game_state.defense_ui, @math.Vec2D(8.0, 76.0))
+  @transform.positions.set(game_state.stage_ui, @math.Vec2D(240.0, 8.0))
+  @transform.positions.set(game_state.timer_ui, @math.Vec2D(470.0, 8.0))
+  @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
+  @transform.positions.set(
+    game_state.character_portrait_ui,
+    @math.Vec2D(240.0, 120.0),
+  )
+  @transform.positions.set(
+    game_state.character_description_ui,
+    @math.Vec2D(240.0, 245.0),
+  )
+}
+
+///|
+fn apply_in_game_layout() -> Unit {
+  @transform.positions.set(game_state.score_ui, @math.Vec2D(240.0, 300.0))
+  @transform.positions.set(game_state.hull_ui, @math.Vec2D(8.0, 8.0))
+  @transform.positions.set(game_state.shield_ui, @math.Vec2D(8.0, 28.0))
+  @transform.positions.set(game_state.defense_ui, @math.Vec2D(8.0, 48.0))
+  @transform.positions.set(game_state.stage_ui, @math.Vec2D(192.0, 8.0))
+  @transform.positions.set(game_state.timer_ui, @math.Vec2D(310.0, 8.0))
+  @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 145.0))
+  @transform.positions.set(
+    game_state.phase_prompt_ui,
+    @math.Vec2D(240.0, 244.0),
+  )
+}
+
+///|
+fn apply_end_screen_layout() -> Unit {
+  @transform.positions.set(game_state.stage_ui, @math.Vec2D(240.0, 36.0))
+  @transform.positions.set(game_state.score_ui, @math.Vec2D(120.0, 112.0))
+  @transform.positions.set(game_state.hull_ui, @math.Vec2D(120.0, 138.0))
+  @transform.positions.set(game_state.shield_ui, @math.Vec2D(120.0, 164.0))
+  @transform.positions.set(game_state.defense_ui, @math.Vec2D(120.0, 190.0))
+  @transform.positions.set(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
+  @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 306.0))
+  @transform.positions.set(
+    game_state.phase_prompt_ui,
+    @math.Vec2D(240.0, 244.0),
+  )
 }
 
 ///|
 fn ui_main_menu() -> Unit {
-  game_state.score_text.content = ""
-  game_state.hull_text.content = ""
-  game_state.shield_text.content = ""
-  game_state.defense_text.content = ""
-  game_state.stage_text.content = "THETAWAVE"
-  game_state.timer_text.content = "Press Enter"
-  game_state.banner_text.content = "MoonBit Port 2026"
+  apply_main_menu_layout()
+  set_menu_widgets_visible(true)
+  set_character_selection_widgets_visible(false)
+  set_in_game_hud_widgets_visible(false)
+  set_ui_visible(game_state.phase_prompt_ui, false)
+  set_ui_visible(game_state.warning_gradient_ui, false)
+  set_ui_visible(game_state.defense_gradient_ui, false)
+  set_ui_visible(game_state.score_ui, true)
+  set_ui_visible(game_state.hull_ui, true)
+  set_ui_visible(game_state.shield_ui, true)
+  set_ui_visible(game_state.defense_ui, true)
+  set_ui_visible(game_state.stage_ui, true)
+  set_ui_visible(game_state.timer_ui, true)
+  set_ui_visible(game_state.banner_ui, true)
+  update_main_menu_button_sprites()
+
+  game_state.score_text.font = "20px Lunchds"
+  game_state.hull_text.font = "20px Lunchds"
+  game_state.shield_text.font = "20px Lunchds"
+  game_state.defense_text.font = "20px Lunchds"
+  game_state.stage_text.font = "22px SpaceMadness"
+  game_state.timer_text.font = UI_FONT_SMALL
+  game_state.banner_text.font = UI_FONT_SMALL
+  game_state.score_text.color = "black"
+  game_state.hull_text.color = "black"
+  game_state.shield_text.color = "black"
+  game_state.defense_text.color = "black"
+  game_state.stage_text.color = "white"
+  game_state.timer_text.color = "white"
+  game_state.banner_text.color = "white"
+  game_state.score_text.align = Center
+  game_state.hull_text.align = Center
+  game_state.shield_text.align = Center
+  game_state.defense_text.align = Center
+  game_state.stage_text.align = Right
+  game_state.timer_text.align = Center
+  game_state.banner_text.align = Center
+  game_state.score_text.baseline = Center
+  game_state.hull_text.baseline = Center
+  game_state.shield_text.baseline = Center
+  game_state.defense_text.baseline = Center
+  game_state.stage_text.baseline = Top
+  game_state.timer_text.baseline = Top
+  game_state.banner_text.baseline = Top
+  game_state.score_text.content = main_menu_button_text(0, "Start Game")
+  game_state.hull_text.content = main_menu_button_text(1, "Options")
+  game_state.shield_text.content = main_menu_button_text(2, "Compendium")
+  game_state.defense_text.content = main_menu_button_text(3, "Exit Game")
+  game_state.stage_text.content = "PRESS ENTER"
+  game_state.timer_text.content = "W/S or Arrow Keys Select"
+  game_state.banner_text.content = ""
 }
 
 ///|
 fn ui_character_selection() -> Unit {
+  apply_character_selection_layout()
+  set_menu_widgets_visible(false)
+  set_character_selection_widgets_visible(true)
+  set_in_game_hud_widgets_visible(false)
+  set_ui_visible(game_state.phase_prompt_ui, false)
+  set_ui_visible(game_state.warning_gradient_ui, false)
+  set_ui_visible(game_state.defense_gradient_ui, false)
+  set_ui_visible(game_state.score_ui, true)
+  set_ui_visible(game_state.hull_ui, true)
+  set_ui_visible(game_state.shield_ui, true)
+  set_ui_visible(game_state.defense_ui, true)
+  set_ui_visible(game_state.stage_ui, true)
+  set_ui_visible(game_state.timer_ui, true)
+  set_ui_visible(game_state.banner_ui, true)
+  @sprite.sprites.set(
+    game_state.character_portrait_ui,
+    character_portrait_sprite(game_state.selected_character),
+  )
+  @sprite.sprites.set(
+    game_state.character_description_ui,
+    character_description_sprite(game_state.selected_character),
+  )
+
+  game_state.score_text.font = "22px Lunchds"
+  game_state.hull_text.font = UI_FONT_SMALL
+  game_state.shield_text.font = UI_FONT_SMALL
+  game_state.defense_text.font = UI_FONT_SMALL
+  game_state.stage_text.font = "28px SpaceMadness"
+  game_state.timer_text.font = UI_FONT_SMALL
+  game_state.banner_text.font = "18px Lunchds"
+  game_state.score_text.color = "white"
+  game_state.hull_text.color = "white"
+  game_state.shield_text.color = "white"
+  game_state.defense_text.color = "white"
+  game_state.stage_text.color = "white"
+  game_state.timer_text.color = "white"
+  game_state.banner_text.color = "white"
+  game_state.score_text.align = Left
+  game_state.hull_text.align = Left
+  game_state.shield_text.align = Left
+  game_state.defense_text.align = Left
+  game_state.stage_text.align = Center
+  game_state.timer_text.align = Right
+  game_state.banner_text.align = Center
+  game_state.score_text.baseline = Top
+  game_state.hull_text.baseline = Top
+  game_state.shield_text.baseline = Top
+  game_state.defense_text.baseline = Top
+  game_state.stage_text.baseline = Top
+  game_state.timer_text.baseline = Top
+  game_state.banner_text.baseline = Top
   let config = character_config(game_state.selected_character)
   game_state.score_text.content = "Select Character"
   game_state.hull_text.content = "Name: \{config.name}"
-  game_state.shield_text.content = "Hull \{config.max_hull}  Shield \{config.max_shield}"
+  game_state.shield_text.content = "Hull \{config.max_hull}   Shield \{config.max_shield}"
   game_state.defense_text.content = "Speed \{config.speed.to_int()}"
-  game_state.stage_text.content = "A/Left: Captain  D/Right: Juggernaut"
-  game_state.timer_text.content = "Enter: Start  Esc: Back"
+  game_state.stage_text.content = ""
+  game_state.timer_text.content = "Enter: Start   Esc: Back"
   game_state.banner_text.content = if game_state.selected_character is Captain {
-    "Captain: Blast + MegaBlast"
+    "A/Left: Captain    D/Right: Juggernaut    Captain: Blast + MegaBlast"
   } else {
-    "Juggernaut: Bullet + Charge"
+    "A/Left: Captain    D/Right: Juggernaut    Juggernaut: Bullet + Charge"
   }
 }
 
 ///|
 fn ui_in_game() -> Unit {
-  game_state.score_text.content = "Score: \{game_state.score}  Money: \{game_state.money}"
-  game_state.hull_text.content = "Hull: \{game_state.hull}/\{game_state.max_hull}"
-  game_state.shield_text.content = "Shield: \{game_state.shield}/\{game_state.max_shield}"
-  game_state.defense_text.content = "Defense: \{game_state.defense}/100  Armor: \{game_state.armor}"
-  if game_state.plating_count > 0 {
-    game_state.defense_text.content = "Defense: \{game_state.defense}/100  Armor: \{game_state.armor}  Plating: \{game_state.plating_count}"
+  ignore(game_state.plating_count)
+  set_menu_widgets_visible(false)
+  set_character_selection_widgets_visible(false)
+
+  if game_state.phase is GameOver || game_state.phase is Victory {
+    set_in_game_hud_widgets_visible(false)
+    set_ui_visible(game_state.warning_gradient_ui, false)
+    set_ui_visible(game_state.defense_gradient_ui, false)
+    set_ui_visible(game_state.score_ui, true)
+    set_ui_visible(game_state.hull_ui, true)
+    set_ui_visible(game_state.shield_ui, true)
+    set_ui_visible(game_state.defense_ui, true)
+    set_ui_visible(game_state.stage_ui, true)
+    set_ui_visible(game_state.timer_ui, true)
+    set_ui_visible(game_state.banner_ui, true)
+    apply_end_screen_layout()
+
+    let phase_text = if game_state.phase is GameOver {
+      "Game Over"
+    } else {
+      "Victory"
+    }
+    game_state.score_text.font = "24px Lunchds"
+    game_state.hull_text.font = "24px Lunchds"
+    game_state.shield_text.font = "24px Lunchds"
+    game_state.defense_text.font = "24px Lunchds"
+    game_state.score_text.color = "white"
+    game_state.hull_text.color = "white"
+    game_state.shield_text.color = "white"
+    game_state.defense_text.color = "white"
+    game_state.score_text.align = Left
+    game_state.hull_text.align = Left
+    game_state.shield_text.align = Left
+    game_state.defense_text.align = Left
+    game_state.score_text.baseline = Top
+    game_state.hull_text.baseline = Top
+    game_state.shield_text.baseline = Top
+    game_state.defense_text.baseline = Top
+    game_state.stage_text.font = "54px SpaceMadness"
+    game_state.stage_text.align = Center
+    game_state.timer_text.align = Center
+    game_state.banner_text.align = Center
+    game_state.stage_text.content = phase_text
+    game_state.score_text.content = "Projectiles fired: \{game_state.shots_fired}"
+    game_state.hull_text.content = "Accuracy: \{end_screen_accuracy_percent()}%"
+    game_state.shield_text.content = "Enemies destroyed: \{game_state.enemies_destroyed}"
+    game_state.defense_text.content = "Score: \{game_state.score}"
+    game_state.timer_text.content = "Press R to return to main menu"
+    game_state.banner_text.content = ""
+    set_ui_visible(game_state.phase_prompt_ui, true)
+    return
   }
-  game_state.stage_text.content = if game_state.stage_index >=
-    run_stages.length() {
-    "Stage: Run Clear"
-  } else if is_tutorial_stage() {
-    "Stage: Tutorial - \{tutorial_lesson_name()}"
+
+  set_in_game_hud_widgets_visible(true)
+  update_in_game_hud_widgets()
+  update_border_gradient_widgets()
+  apply_in_game_layout()
+
+  game_state.score_text.font = "24px Lunchds"
+  game_state.hull_text.font = UI_FONT_SMALL
+  game_state.shield_text.font = UI_FONT_SMALL
+  game_state.defense_text.font = UI_FONT_SMALL
+  game_state.stage_text.font = "26px Lunchds"
+  game_state.timer_text.font = "18px Lunchds"
+  game_state.banner_text.font = "44px SpaceMadness"
+  game_state.score_text.color = "white"
+  game_state.hull_text.color = "white"
+  game_state.shield_text.color = "white"
+  game_state.defense_text.color = "white"
+  game_state.stage_text.color = "white"
+  game_state.timer_text.color = "white"
+  game_state.banner_text.color = "rgba(255,255,255,255)"
+  game_state.score_text.align = Center
+  game_state.hull_text.align = Left
+  game_state.shield_text.align = Left
+  game_state.defense_text.align = Left
+  game_state.stage_text.align = Center
+  game_state.timer_text.align = Left
+  game_state.banner_text.align = Center
+  game_state.score_text.baseline = Top
+  game_state.hull_text.baseline = Top
+  game_state.shield_text.baseline = Top
+  game_state.defense_text.baseline = Top
+  game_state.stage_text.baseline = Top
+  game_state.timer_text.baseline = Top
+  game_state.banner_text.baseline = Top
+  game_state.score_text.content = current_level_name()
+  game_state.hull_text.content = ""
+  game_state.shield_text.content = ""
+  game_state.defense_text.content = ""
+  game_state.stage_text.content = current_phase_name()
+  game_state.timer_text.content = current_phase_data()
+
+  let intro_alpha = current_intro_alpha()
+  let intro_alpha_255 = clamp_int((intro_alpha * 255.0).to_int(), 0, 255)
+  if intro_alpha_255 > 0 && game_state.center_intro_text != "" {
+    game_state.banner_text.content = game_state.center_intro_text
+    game_state.banner_text.color = "rgba(255,255,255,\{intro_alpha_255})"
+    set_ui_visible(game_state.banner_ui, true)
   } else {
-    "Stage: \{game_state.stage_label}"
+    game_state.banner_text.content = ""
+    set_ui_visible(game_state.banner_ui, false)
   }
-  game_state.timer_text.content = "Run: \{game_state.elapsed.to_int()}s"
-  game_state.banner_text.content = match game_state.phase {
-    Playing =>
-      if is_tutorial_stage() {
-        tutorial_status_text()
-      } else if game_state.special_cooldown <= 0.0 {
-        "Space/LMB Fire  Q/RMB Special"
-      } else {
-        "Special CD: \{game_state.special_cooldown.to_int()}s"
-      }
-    Paused => "PAUSED  Esc/Enter Resume  R Main Menu"
-    GameOver => "GAME OVER  Enter: Character Select  Esc: Main Menu"
-    Victory => "VICTORY  Enter: Character Select  Esc: Main Menu"
+
+  set_ui_visible(game_state.score_ui, true)
+  set_ui_visible(game_state.hull_ui, false)
+  set_ui_visible(game_state.shield_ui, false)
+  set_ui_visible(game_state.defense_ui, false)
+  set_ui_visible(game_state.stage_ui, true)
+  set_ui_visible(game_state.timer_ui, true)
+
+  if game_state.phase is Paused {
+    game_state.banner_text.content = "PAUSED"
+    game_state.banner_text.color = "rgba(255,255,255,255)"
+    set_ui_visible(game_state.banner_ui, true)
+    set_ui_visible(game_state.phase_prompt_ui, true)
+  } else {
+    set_ui_visible(game_state.phase_prompt_ui, false)
   }
 }
 
@@ -1337,22 +2225,6 @@ fn tutorial_movement_completed_count() -> Int {
     count += 1
   }
   count
-}
-
-///|
-fn tutorial_status_text() -> String {
-  match game_state.tutorial_lesson {
-    0 => "Movement checkpoints: \{tutorial_movement_completed_count()}/8"
-    1 =>
-      if game_state.tutorial_slot1_destroy > 0 {
-        "Destroy drones: \{game_state.tutorial_slot1_destroy} left"
-      } else {
-        "Protect haulers: \{game_state.tutorial_slot1_protect} left"
-      }
-    2 =>
-      "Use special to destroy drones: \{game_state.tutorial_slot2_destroy} left"
-    _ => "Tutorial complete"
-  }
 }
 
 ///|
