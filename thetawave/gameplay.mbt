@@ -1846,35 +1846,26 @@ fn set_ui_button_enabled(entity : @entity.Entity, enabled : Bool) -> Unit {
 }
 
 ///|
+fn sync_text_ui_sprite(entity : @entity.Entity, text : @sprite.Text) -> Unit {
+  let visible = if @sprite.sprites.get(entity) is Some(old_sprite) {
+    old_sprite.visible
+  } else {
+    true
+  }
+  let sprite = @sprite.Sprite::from_text(text, 100)
+  sprite.visible = visible
+  @sprite.sprites.set(entity, sprite)
+}
+
+///|
 fn sync_text_ui_sprites() -> Unit {
-  @sprite.sprites.set(
-    game_state.score_ui,
-    @sprite.Sprite::from_text(game_state.score_text, 100),
-  )
-  @sprite.sprites.set(
-    game_state.hull_ui,
-    @sprite.Sprite::from_text(game_state.hull_text, 100),
-  )
-  @sprite.sprites.set(
-    game_state.shield_ui,
-    @sprite.Sprite::from_text(game_state.shield_text, 100),
-  )
-  @sprite.sprites.set(
-    game_state.defense_ui,
-    @sprite.Sprite::from_text(game_state.defense_text, 100),
-  )
-  @sprite.sprites.set(
-    game_state.stage_ui,
-    @sprite.Sprite::from_text(game_state.stage_text, 100),
-  )
-  @sprite.sprites.set(
-    game_state.timer_ui,
-    @sprite.Sprite::from_text(game_state.timer_text, 100),
-  )
-  @sprite.sprites.set(
-    game_state.banner_ui,
-    @sprite.Sprite::from_text(game_state.banner_text, 100),
-  )
+  sync_text_ui_sprite(game_state.score_ui, game_state.score_text)
+  sync_text_ui_sprite(game_state.hull_ui, game_state.hull_text)
+  sync_text_ui_sprite(game_state.shield_ui, game_state.shield_text)
+  sync_text_ui_sprite(game_state.defense_ui, game_state.defense_text)
+  sync_text_ui_sprite(game_state.stage_ui, game_state.stage_text)
+  sync_text_ui_sprite(game_state.timer_ui, game_state.timer_text)
+  sync_text_ui_sprite(game_state.banner_ui, game_state.banner_text)
 }
 
 ///|
@@ -1939,12 +1930,13 @@ fn set_character_selection_widgets_visible(visible : Bool) -> Unit {
 
 ///|
 fn set_in_game_hud_widgets_visible(visible : Bool) -> Unit {
-  set_ui_visible(game_state.hud_health_label_ui, visible)
+  // Upstream game UI does not rely on these oversized label sprites.
+  set_ui_visible(game_state.hud_health_label_ui, false)
   set_ui_visible(game_state.hud_health_bar_bg_ui, visible)
   set_ui_visible(game_state.hud_health_bar_fill_ui, visible)
   set_ui_visible(game_state.hud_shield_bar_bg_ui, visible)
   set_ui_visible(game_state.hud_shield_bar_fill_ui, visible)
-  set_ui_visible(game_state.hud_defense_label_ui, visible)
+  set_ui_visible(game_state.hud_defense_label_ui, false)
   set_ui_visible(game_state.hud_defense_bar_bg_ui, visible)
   set_ui_visible(game_state.hud_defense_bar_fill_ui, visible)
   set_ui_visible(game_state.hud_slot1_bg_ui, visible)
@@ -1996,7 +1988,7 @@ fn update_in_game_hud_widgets() -> Unit {
   )
   @transform.positions.set(
     game_state.hud_health_bar_fill_ui,
-    @math.Vec2D(31.0, 216.0 - health_fill_h),
+    @math.Vec2D(HUD_HEALTH_BAR_FILL_X, 216.0 - health_fill_h),
   )
 
   let shield_ratio = if game_state.max_shield <= 0 {
@@ -2021,7 +2013,7 @@ fn update_in_game_hud_widgets() -> Unit {
   )
   @transform.positions.set(
     game_state.hud_shield_bar_fill_ui,
-    @math.Vec2D(47.0, 216.0 - shield_fill_h),
+    @math.Vec2D(HUD_SHIELD_BAR_FILL_X, 216.0 - shield_fill_h),
   )
 
   let defense_ratio = clamp(game_state.defense.to_double() / 100.0, 0.0, 1.0)
@@ -2046,17 +2038,23 @@ fn update_in_game_hud_widgets() -> Unit {
   } else {
     clamp(game_state.shoot_cooldown / current_shoot_interval(), 0.0, 1.0)
   }
-  let slot1_h = 64.0 * slot1_ratio
+  let slot1_h = HUD_ABILITY_SLOT_SIZE * slot1_ratio
   @sprite.sprites.set(
     game_state.hud_slot1_fill_ui,
     @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(64.0, slot1_h), "rgba(0, 0, 0, 0.55)"),
+      @sprite.ColorRect::new(
+        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot1_h),
+        "rgba(0, 0, 0, 0.55)",
+      ),
       95,
     ),
   )
   @transform.positions.set(
     game_state.hud_slot1_fill_ui,
-    @math.Vec2D(2.0, 280.0 - slot1_h),
+    @math.Vec2D(
+      HUD_ABILITY_SLOT_LEFT_X,
+      HUD_ABILITY_SLOT1_FILL_BOTTOM_Y - slot1_h,
+    ),
   )
   set_ui_visible(game_state.hud_slot1_fill_ui, slot1_h > 0.5)
 
@@ -2065,17 +2063,23 @@ fn update_in_game_hud_widgets() -> Unit {
   } else {
     clamp(game_state.special_cooldown / special_cooldown_duration(), 0.0, 1.0)
   }
-  let slot2_h = 64.0 * slot2_ratio
+  let slot2_h = HUD_ABILITY_SLOT_SIZE * slot2_ratio
   @sprite.sprites.set(
     game_state.hud_slot2_fill_ui,
     @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(64.0, slot2_h), "rgba(0, 0, 0, 0.55)"),
+      @sprite.ColorRect::new(
+        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot2_h),
+        "rgba(0, 0, 0, 0.55)",
+      ),
       95,
     ),
   )
   @transform.positions.set(
     game_state.hud_slot2_fill_ui,
-    @math.Vec2D(2.0, 208.0 - slot2_h),
+    @math.Vec2D(
+      HUD_ABILITY_SLOT_LEFT_X,
+      HUD_ABILITY_SLOT2_FILL_BOTTOM_Y - slot2_h,
+    ),
   )
   set_ui_visible(game_state.hud_slot2_fill_ui, slot2_h > 0.5)
 }
@@ -2136,7 +2140,7 @@ fn current_phase_name() -> String {
         } else {
           "Boss"
         }
-      Tutorial => "Tutorial: \{tutorial_lesson_name()}"
+      Tutorial => tutorial_lesson_name()
     }
   } else {
     "Run Clear"
@@ -2168,6 +2172,176 @@ fn tutorial_phase_data_text() -> String {
     2 => "Destroy drones: \{game_state.tutorial_slot2_destroy}"
     _ => ""
   }
+}
+
+///|
+fn format_tutorial_progress(progress : Double) -> String {
+  let clamped = clamp(progress, 0.0, TUTORIAL_DIRECTION_SECONDS)
+  let tenths = (clamped * 10.0 + 0.000001).to_int()
+  let whole = tenths / 10
+  let frac = tenths % 10
+  "\{whole}.\{frac}"
+}
+
+///|
+fn text_with_font_width(text : String, font : String) -> Double {
+  let probe = @sprite.Text::new(
+    text,
+    color="white",
+    font~,
+    baseline=Top,
+    align=Left,
+  )
+  @sprite.measure_text_size(probe)[X]
+}
+
+///|
+fn clip_text_to_width(
+  text : String,
+  font : String,
+  max_width : Double,
+) -> String {
+  if text == "" || max_width <= 0.0 {
+    return ""
+  }
+  if text_with_font_width(text, font) <= max_width {
+    return text
+  }
+  let mut end = text.length()
+  while end > 0 {
+    let candidate = text.unsafe_substring(start=0, end~)
+    if text_with_font_width(candidate, font) <= max_width {
+      return candidate
+    }
+    end -= 1
+  }
+  ""
+}
+
+///|
+fn tutorial_direction_progress_line(
+  label : String,
+  progress : Double,
+) -> (String, Bool) {
+  let clamped = clamp(progress, 0.0, TUTORIAL_DIRECTION_SECONDS)
+  (
+    "\{label}: \{format_tutorial_progress(clamped)}/\{format_tutorial_progress(TUTORIAL_DIRECTION_SECONDS)}",
+    clamped >= TUTORIAL_DIRECTION_SECONDS,
+  )
+}
+
+///|
+fn tutorial_phase_data_lines() -> Array[(String, Bool)] {
+  match game_state.tutorial_lesson {
+    0 =>
+      [
+        tutorial_direction_progress_line("Up", game_state.tutorial_up_progress),
+        tutorial_direction_progress_line(
+          "Down",
+          game_state.tutorial_down_progress,
+        ),
+        tutorial_direction_progress_line(
+          "Left",
+          game_state.tutorial_left_progress,
+        ),
+        tutorial_direction_progress_line(
+          "Right",
+          game_state.tutorial_right_progress,
+        ),
+        tutorial_direction_progress_line(
+          "Up+Left",
+          game_state.tutorial_up_left_progress,
+        ),
+        tutorial_direction_progress_line(
+          "Up+Right",
+          game_state.tutorial_up_right_progress,
+        ),
+        tutorial_direction_progress_line(
+          "Down+Left",
+          game_state.tutorial_down_left_progress,
+        ),
+        tutorial_direction_progress_line(
+          "Down+Right",
+          game_state.tutorial_down_right_progress,
+        ),
+      ]
+    1 =>
+      [
+        (
+          "Destroy drones: \{game_state.tutorial_slot1_destroy}",
+          game_state.tutorial_slot1_destroy <= 0,
+        ),
+        (
+          "Protect haulers: \{game_state.tutorial_slot1_protect}",
+          game_state.tutorial_slot1_protect <= 0,
+        ),
+      ]
+    2 =>
+      [
+        (
+          "Destroy drones: \{game_state.tutorial_slot2_destroy}",
+          game_state.tutorial_slot2_destroy <= 0,
+        ),
+      ]
+    _ => []
+  }
+}
+
+///|
+const TUTORIAL_PHASE_LINE_BASE_Y : Double = 8.0
+
+///|
+const TUTORIAL_PHASE_LINE_STEP_Y : Double = 12.0
+
+///|
+const TUTORIAL_PHASE_LINE_FONT : String = "10px Lunchds"
+
+///|
+fn hide_tutorial_phase_data_lines() -> Unit {
+  for entity in tutorial_phase_data_line_uis {
+    set_ui_visible(entity, false)
+  }
+}
+
+///|
+fn update_tutorial_phase_data_lines() -> Bool {
+  guard is_tutorial_stage() else {
+    hide_tutorial_phase_data_lines()
+    return false
+  }
+  let lines = tutorial_phase_data_lines()
+  for i in 0..<tutorial_phase_data_line_uis.length() {
+    let entity = tutorial_phase_data_line_uis[i]
+    if i < lines.length() {
+      let (raw_content, completed) = lines[i]
+      let content = clip_text_to_width(
+        raw_content,
+        TUTORIAL_PHASE_LINE_FONT,
+        HUD_TOP_PANEL_WIDTH,
+      )
+      let color = if completed { "rgb(0,255,0)" } else { "white" }
+      let text = @sprite.Text::new(
+        content,
+        color~,
+        font=TUTORIAL_PHASE_LINE_FONT,
+        baseline=Top,
+        align=Left,
+      )
+      @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 100))
+      @transform.positions.set(
+        entity,
+        @math.Vec2D(
+          HUD_TOP_RIGHT_PANEL_X,
+          TUTORIAL_PHASE_LINE_BASE_Y +
+          i.to_double() * TUTORIAL_PHASE_LINE_STEP_Y,
+        ),
+      )
+      set_ui_visible(entity, content != "")
+    } else {
+      set_ui_visible(entity, false)
+    }
+  }
+  true
 }
 
 ///|
@@ -2316,8 +2490,9 @@ fn set_character_slot_joined_visibility(
   set_ui_visible(join_prompt_ui, !joined)
   set_ui_visible(ready_text_ui, joined)
   set_ui_visible(center_portrait_ui, joined)
-  set_ui_visible(left_portrait_ui, joined)
-  set_ui_visible(right_portrait_ui, joined)
+  // Upstream currently does not display side carousel portraits in this port.
+  set_ui_visible(left_portrait_ui, false)
+  set_ui_visible(right_portrait_ui, false)
   set_ui_visible(name_ui, joined)
   set_ui_visible(ability_slot1_ui, joined)
   set_ui_visible(ability_slot1_icon_ui, joined)
@@ -2354,6 +2529,7 @@ fn update_character_selection_widgets_for_slot(
   stat_icon_uis : Array[@entity.Entity],
   stat_bg_uis : Array[@entity.Entity],
   stat_fill_uis : Array[@entity.Entity],
+  ability_text_max_width : Double,
   stat_fill_max_width : Double,
   join_prompt_ui : @entity.Entity,
   join_prompt_content : String,
@@ -2362,7 +2538,7 @@ fn update_character_selection_widgets_for_slot(
   let join_prompt_text = @sprite.Text::new(
     join_prompt_content,
     color="white",
-    font=UI_FONT_SMALL,
+    font="8px Lunchds",
     baseline=Top,
     align=Center,
   )
@@ -2409,7 +2585,7 @@ fn update_character_selection_widgets_for_slot(
   let character_name_text = @sprite.Text::new(
     character_config(character).name,
     color="rgb(255, 215, 0)",
-    font=UI_FONT_MEDIUM,
+    font="9px Lunchds",
     baseline=Top,
     align=Center,
   )
@@ -2419,9 +2595,13 @@ fn update_character_selection_widgets_for_slot(
   )
 
   let slot1_text = @sprite.Text::new(
-    character_slot_ability_description(character, 1),
+    clip_text_to_width(
+      character_slot_ability_description(character, 1),
+      "7px Lunchds",
+      ability_text_max_width,
+    ),
     color="white",
-    font="14px Lunchds",
+    font="7px Lunchds",
     baseline=Top,
     align=Left,
   )
@@ -2431,9 +2611,13 @@ fn update_character_selection_widgets_for_slot(
   )
 
   let slot2_text = @sprite.Text::new(
-    character_slot_ability_description(character, 2),
+    clip_text_to_width(
+      character_slot_ability_description(character, 2),
+      "7px Lunchds",
+      ability_text_max_width,
+    ),
     color="white",
-    font="14px Lunchds",
+    font="7px Lunchds",
     baseline=Top,
     align=Left,
   )
@@ -2445,6 +2629,16 @@ fn update_character_selection_widgets_for_slot(
   for i in 0..<character_stats_order.length() {
     let stat = character_stats_order[i]
     @sprite.sprites.set(stat_icon_uis[i], character_stat_icon_sprite(stat))
+    @sprite.sprites.set(
+      stat_bg_uis[i],
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(
+          @math.Vec2D(stat_fill_max_width + 8.0, 7.0),
+          "rgba(255,255,255,0.15)",
+        ),
+        89,
+      ),
+    )
     let fill_width = stat_fill_max_width *
       character_stat_percent(character, stat)
     @sprite.sprites.set(
@@ -2466,7 +2660,7 @@ fn update_character_selection_widgets_for_slot(
       "Not Ready"
     },
     color=if ready { "rgb(80, 255, 120)" } else { "rgb(220,220,220)" },
-    font=UI_FONT_SMALL,
+    font="8px Lunchds",
     baseline=Top,
     align=Center,
   )
@@ -2497,7 +2691,8 @@ fn update_character_selection_widgets() -> Unit {
     character_stat_icon_uis,
     character_stat_bg_uis,
     character_stat_fill_uis,
-    56.0,
+    CS_LEFT_ABILITY_TEXT_MAX_WIDTH,
+    CS_STAT_FILL_WIDTH,
     character_join_prompt_ui,
     "P1 Press Enter/Space to Join",
     character_ready_text_ui,
@@ -2519,7 +2714,8 @@ fn update_character_selection_widgets() -> Unit {
     character_p2_stat_icon_uis,
     character_p2_stat_bg_uis,
     character_p2_stat_fill_uis,
-    56.0,
+    CS_RIGHT_ABILITY_TEXT_MAX_WIDTH,
+    CS_STAT_FILL_WIDTH,
     character_p2_join_prompt_ui,
     p2_join_prompt,
     character_p2_ready_text_ui,
@@ -2527,11 +2723,108 @@ fn update_character_selection_widgets() -> Unit {
 }
 
 ///|
+const MENU_BUTTON_WIDTH : Double = 160.0
+
+///|
+const MENU_BUTTON_HEIGHT : Double = 34.0
+
+///|
+const MENU_BUTTON_TEXT_Y_TWEAK : Double = 3.0
+
+///|
+const CS_ABILITY_SLOT_SIZE : Double = 32.0
+
+///|
+const CS_ABILITY_TEXT_MIN_GAP_FROM_SLOT : Double = 8.0
+
+///|
+const CS_ABILITY_TEXT_EXTRA_SLOT_OFFSET : Double = 8.0
+
+///|
+const CS_ABILITY_TEXT_GAP_TO_STAT_ICON : Double = 8.0
+
+///|
+const CS_STAT_FILL_WIDTH : Double = 42.0
+
+///|
+const CS_LEFT_ABILITY_SLOT_X : Double = 52.0
+
+///|
+const CS_LEFT_ABILITY_TEXT_X : Double = CS_LEFT_ABILITY_SLOT_X +
+  CS_ABILITY_SLOT_SIZE / 2.0 +
+  CS_ABILITY_TEXT_MIN_GAP_FROM_SLOT +
+  CS_ABILITY_TEXT_EXTRA_SLOT_OFFSET
+
+///|
+const CS_LEFT_STAT_ICON_X : Double = 190.0
+
+///|
+const CS_RIGHT_ABILITY_SLOT_X : Double = 292.0
+
+///|
+const CS_RIGHT_ABILITY_TEXT_X : Double = CS_RIGHT_ABILITY_SLOT_X +
+  CS_ABILITY_SLOT_SIZE / 2.0 +
+  CS_ABILITY_TEXT_MIN_GAP_FROM_SLOT +
+  CS_ABILITY_TEXT_EXTRA_SLOT_OFFSET
+
+///|
+const CS_RIGHT_STAT_ICON_X : Double = 430.0
+
+///|
+const CS_PORTRAIT_CENTER_Y : Double = 128.0
+
+///|
+const CS_MAX_PORTRAIT_HALF_HEIGHT : Double = 48.0
+
+///|
+const CS_NAME_MIN_GAP_FROM_PORTRAIT : Double = 6.0
+
+///|
+const CS_NAME_Y : Double = CS_PORTRAIT_CENTER_Y +
+  CS_MAX_PORTRAIT_HALF_HEIGHT +
+  CS_NAME_MIN_GAP_FROM_PORTRAIT
+
+///|
+const CS_LEFT_ABILITY_TEXT_MAX_WIDTH : Double = CS_LEFT_STAT_ICON_X -
+  CS_LEFT_ABILITY_TEXT_X -
+  CS_ABILITY_TEXT_GAP_TO_STAT_ICON
+
+///|
+const CS_RIGHT_ABILITY_TEXT_MAX_WIDTH : Double = CS_RIGHT_STAT_ICON_X -
+  CS_RIGHT_ABILITY_TEXT_X -
+  CS_ABILITY_TEXT_GAP_TO_STAT_ICON
+
+///|
+fn text_center_for_menu_button(button : @entity.Entity) -> @math.Vec2D {
+  if @transform.positions.get(button) is Some(pos) {
+    let base = pos.0
+    @math.Vec2D(
+      base[X] + MENU_BUTTON_WIDTH / 2.0,
+      base[Y] + MENU_BUTTON_HEIGHT / 2.0 + MENU_BUTTON_TEXT_Y_TWEAK,
+    )
+  } else {
+    @math.Vec2D(240.0, 193.0)
+  }
+}
+
+///|
 fn apply_main_menu_layout() -> Unit {
-  @transform.positions.set(game_state.score_ui, @math.Vec2D(240.0, 187.0))
-  @transform.positions.set(game_state.hull_ui, @math.Vec2D(240.0, 209.0))
-  @transform.positions.set(game_state.shield_ui, @math.Vec2D(240.0, 231.0))
-  @transform.positions.set(game_state.defense_ui, @math.Vec2D(240.0, 253.0))
+  @transform.positions.set(
+    game_state.score_ui,
+    text_center_for_menu_button(game_state.menu_button_start_ui),
+  )
+  @transform.positions.set(
+    game_state.hull_ui,
+    text_center_for_menu_button(game_state.menu_button_options_ui),
+  )
+  @transform.positions.set(
+    game_state.shield_ui,
+    text_center_for_menu_button(game_state.menu_button_compendium_ui),
+  )
+  @transform.positions.set(
+    game_state.defense_ui,
+    text_center_for_menu_button(game_state.menu_button_exit_ui),
+  )
   @transform.positions.set(game_state.stage_ui, @math.Vec2D(470.0, 8.0))
   @transform.positions.set(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
   @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 304.0))
@@ -2544,43 +2837,52 @@ fn apply_character_selection_layout() -> Unit {
   @transform.positions.set(game_state.shield_ui, @math.Vec2D(8.0, 56.0))
   @transform.positions.set(game_state.defense_ui, @math.Vec2D(8.0, 76.0))
   @transform.positions.set(game_state.stage_ui, @math.Vec2D(240.0, 8.0))
-  @transform.positions.set(game_state.timer_ui, @math.Vec2D(470.0, 8.0))
+  @transform.positions.set(game_state.timer_ui, @math.Vec2D(240.0, 20.0))
   @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
   @transform.positions.set(
     game_state.character_portrait_ui,
-    @math.Vec2D(120.0, 108.0),
+    @math.Vec2D(120.0, CS_PORTRAIT_CENTER_Y),
   )
   @transform.positions.set(character_left_portrait_ui, @math.Vec2D(82.0, 110.0))
   @transform.positions.set(
     character_right_portrait_ui,
     @math.Vec2D(158.0, 110.0),
   )
-  @transform.positions.set(character_name_ui, @math.Vec2D(120.0, 154.0))
-  @transform.positions.set(character_ability_slot1_ui, @math.Vec2D(62.0, 191.0))
+  @transform.positions.set(character_name_ui, @math.Vec2D(120.0, CS_NAME_Y))
+  @transform.positions.set(
+    character_ability_slot1_ui,
+    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
+  )
   @transform.positions.set(
     character_ability_slot1_icon_ui,
-    @math.Vec2D(62.0, 191.0),
+    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
   )
   @transform.positions.set(
     character_ability_slot1_text_ui,
-    @math.Vec2D(94.0, 183.0),
+    @math.Vec2D(CS_LEFT_ABILITY_TEXT_X, 206.0),
   )
-  @transform.positions.set(character_ability_slot2_ui, @math.Vec2D(62.0, 225.0))
+  @transform.positions.set(
+    character_ability_slot2_ui,
+    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 246.0),
+  )
   @transform.positions.set(
     character_ability_slot2_icon_ui,
-    @math.Vec2D(62.0, 225.0),
+    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 246.0),
   )
   @transform.positions.set(
     character_ability_slot2_text_ui,
-    @math.Vec2D(94.0, 217.0),
+    @math.Vec2D(CS_LEFT_ABILITY_TEXT_X, 240.0),
   )
   for i in 0..<character_stats_order.length() {
-    let y = 183.0 + i.to_double() * 16.0
-    @transform.positions.set(character_stat_icon_uis[i], @math.Vec2D(170.0, y))
-    @transform.positions.set(character_stat_bg_uis[i], @math.Vec2D(202.0, y))
+    let y = 206.0 + i.to_double() * 14.0
+    @transform.positions.set(
+      character_stat_icon_uis[i],
+      @math.Vec2D(CS_LEFT_STAT_ICON_X, y),
+    )
+    @transform.positions.set(character_stat_bg_uis[i], @math.Vec2D(216.0, y))
     @transform.positions.set(
       character_stat_fill_uis[i],
-      @math.Vec2D(173.0, y + 1.0),
+      @math.Vec2D(218.0, y + 1.0),
     )
   }
   @transform.positions.set(character_join_prompt_ui, @math.Vec2D(120.0, 130.0))
@@ -2588,7 +2890,7 @@ fn apply_character_selection_layout() -> Unit {
 
   @transform.positions.set(
     character_p2_center_portrait_ui,
-    @math.Vec2D(360.0, 108.0),
+    @math.Vec2D(360.0, CS_PORTRAIT_CENTER_Y),
   )
   @transform.positions.set(
     character_p2_left_portrait_ui,
@@ -2598,41 +2900,41 @@ fn apply_character_selection_layout() -> Unit {
     character_p2_right_portrait_ui,
     @math.Vec2D(398.0, 110.0),
   )
-  @transform.positions.set(character_p2_name_ui, @math.Vec2D(360.0, 154.0))
+  @transform.positions.set(character_p2_name_ui, @math.Vec2D(360.0, CS_NAME_Y))
   @transform.positions.set(
     character_p2_ability_slot1_ui,
-    @math.Vec2D(302.0, 191.0),
+    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
   )
   @transform.positions.set(
     character_p2_ability_slot1_icon_ui,
-    @math.Vec2D(302.0, 191.0),
+    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
   )
   @transform.positions.set(
     character_p2_ability_slot1_text_ui,
-    @math.Vec2D(334.0, 183.0),
+    @math.Vec2D(CS_RIGHT_ABILITY_TEXT_X, 206.0),
   )
   @transform.positions.set(
     character_p2_ability_slot2_ui,
-    @math.Vec2D(302.0, 225.0),
+    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 246.0),
   )
   @transform.positions.set(
     character_p2_ability_slot2_icon_ui,
-    @math.Vec2D(302.0, 225.0),
+    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 246.0),
   )
   @transform.positions.set(
     character_p2_ability_slot2_text_ui,
-    @math.Vec2D(334.0, 217.0),
+    @math.Vec2D(CS_RIGHT_ABILITY_TEXT_X, 240.0),
   )
   for i in 0..<character_stats_order.length() {
-    let y = 183.0 + i.to_double() * 16.0
+    let y = 206.0 + i.to_double() * 14.0
     @transform.positions.set(
       character_p2_stat_icon_uis[i],
-      @math.Vec2D(410.0, y),
+      @math.Vec2D(CS_RIGHT_STAT_ICON_X, y),
     )
-    @transform.positions.set(character_p2_stat_bg_uis[i], @math.Vec2D(442.0, y))
+    @transform.positions.set(character_p2_stat_bg_uis[i], @math.Vec2D(456.0, y))
     @transform.positions.set(
       character_p2_stat_fill_uis[i],
-      @math.Vec2D(414.0, y + 1.0),
+      @math.Vec2D(458.0, y + 1.0),
     )
   }
   @transform.positions.set(
@@ -2651,12 +2953,22 @@ fn apply_character_selection_layout() -> Unit {
 
 ///|
 fn apply_in_game_layout() -> Unit {
-  @transform.positions.set(game_state.score_ui, @math.Vec2D(240.0, 300.0))
+  let bottom_row_center_y = VIEWPORT_HEIGHT - VIEWPORT_HEIGHT * 0.13 / 2.0
+  @transform.positions.set(
+    game_state.score_ui,
+    @math.Vec2D(HUD_CENTER_LEFT_X, bottom_row_center_y),
+  )
   @transform.positions.set(game_state.hull_ui, @math.Vec2D(8.0, 8.0))
   @transform.positions.set(game_state.shield_ui, @math.Vec2D(8.0, 28.0))
   @transform.positions.set(game_state.defense_ui, @math.Vec2D(8.0, 48.0))
-  @transform.positions.set(game_state.stage_ui, @math.Vec2D(192.0, 8.0))
-  @transform.positions.set(game_state.timer_ui, @math.Vec2D(310.0, 8.0))
+  @transform.positions.set(
+    game_state.stage_ui,
+    @math.Vec2D(HUD_TOP_LEFT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
+  )
+  @transform.positions.set(
+    game_state.timer_ui,
+    @math.Vec2D(HUD_TOP_RIGHT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
+  )
   @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 145.0))
   @transform.positions.set(
     game_state.phase_prompt_ui,
@@ -2685,6 +2997,7 @@ fn ui_main_menu() -> Unit {
   set_menu_widgets_visible(true)
   set_character_selection_widgets_visible(false)
   set_in_game_hud_widgets_visible(false)
+  hide_tutorial_phase_data_lines()
   set_ui_visible(game_state.phase_prompt_ui, false)
   set_ui_visible(game_state.warning_gradient_ui, false)
   set_ui_visible(game_state.defense_gradient_ui, false)
@@ -2697,10 +3010,10 @@ fn ui_main_menu() -> Unit {
   set_ui_visible(game_state.banner_ui, true)
   update_main_menu_button_sprites()
 
-  game_state.score_text.font = "20px Lunchds"
-  game_state.hull_text.font = "20px Lunchds"
-  game_state.shield_text.font = "20px Lunchds"
-  game_state.defense_text.font = "20px Lunchds"
+  game_state.score_text.font = "16px Lunchds"
+  game_state.hull_text.font = "16px Lunchds"
+  game_state.shield_text.font = "16px Lunchds"
+  game_state.defense_text.font = "16px Lunchds"
   game_state.stage_text.font = "22px SpaceMadness"
   game_state.timer_text.font = UI_FONT_SMALL
   game_state.banner_text.font = UI_FONT_SMALL
@@ -2740,6 +3053,7 @@ fn ui_character_selection() -> Unit {
   set_menu_widgets_visible(false)
   set_character_selection_widgets_visible(true)
   set_in_game_hud_widgets_visible(false)
+  hide_tutorial_phase_data_lines()
   set_ui_visible(game_state.phase_prompt_ui, false)
   set_ui_visible(game_state.warning_gradient_ui, false)
   set_ui_visible(game_state.defense_gradient_ui, false)
@@ -2760,13 +3074,13 @@ fn ui_character_selection() -> Unit {
   }
   update_character_selection_widgets()
 
-  game_state.score_text.font = "22px Lunchds"
-  game_state.hull_text.font = UI_FONT_SMALL
-  game_state.shield_text.font = UI_FONT_SMALL
-  game_state.defense_text.font = UI_FONT_SMALL
-  game_state.stage_text.font = "20px Lunchds"
-  game_state.timer_text.font = UI_FONT_SMALL
-  game_state.banner_text.font = UI_FONT_SMALL
+  game_state.score_text.font = "11px Lunchds"
+  game_state.hull_text.font = "8px Lunchds"
+  game_state.shield_text.font = "8px Lunchds"
+  game_state.defense_text.font = "8px Lunchds"
+  game_state.stage_text.font = "10px Lunchds"
+  game_state.timer_text.font = "8px Lunchds"
+  game_state.banner_text.font = "8px Lunchds"
   game_state.score_text.color = "white"
   game_state.hull_text.color = "white"
   game_state.shield_text.color = "white"
@@ -2803,15 +3117,18 @@ fn ui_character_selection() -> Unit {
   }
   game_state.defense_text.content = "A/D or DPad L/R: Select Character"
   game_state.stage_text.content = "Enter/A: Ready Toggle    Esc/B: Leave/Back"
-  game_state.timer_text.content = if (
-      game_state.cs_p1_joined || game_state.cs_p2_joined
-    ) &&
+  let auto_start_hint = if (game_state.cs_p1_joined || game_state.cs_p2_joined) &&
     (!game_state.cs_p1_joined || game_state.cs_p1_ready) &&
     (!game_state.cs_p2_joined || game_state.cs_p2_ready) {
     "All joined players ready. Starting..."
   } else {
     "Game starts automatically when all joined players are ready."
   }
+  game_state.timer_text.content = clip_text_to_width(
+    auto_start_hint,
+    game_state.timer_text.font,
+    VIEWPORT_WIDTH - 248.0,
+  )
   game_state.banner_text.content = "Current Preview: \{character_config(preview_character).name}"
 }
 
@@ -2823,6 +3140,7 @@ fn ui_in_game() -> Unit {
 
   if game_state.phase is GameOver || game_state.phase is Victory {
     set_in_game_hud_widgets_visible(false)
+    hide_tutorial_phase_data_lines()
     set_ui_visible(game_state.warning_gradient_ui, false)
     set_ui_visible(game_state.defense_gradient_ui, false)
     set_ui_visible(game_state.score_ui, true)
@@ -2875,13 +3193,13 @@ fn ui_in_game() -> Unit {
   update_border_gradient_widgets()
   apply_in_game_layout()
 
-  game_state.score_text.font = "24px Lunchds"
+  game_state.score_text.font = "20px Lunchds"
   game_state.hull_text.font = UI_FONT_SMALL
   game_state.shield_text.font = UI_FONT_SMALL
   game_state.defense_text.font = UI_FONT_SMALL
-  game_state.stage_text.font = "26px Lunchds"
-  game_state.timer_text.font = "18px Lunchds"
-  game_state.banner_text.font = "44px SpaceMadness"
+  game_state.stage_text.font = "19px Lunchds"
+  game_state.timer_text.font = "19px Lunchds"
+  game_state.banner_text.font = "36px SpaceMadness"
   game_state.score_text.color = "white"
   game_state.hull_text.color = "white"
   game_state.shield_text.color = "white"
@@ -2894,21 +3212,40 @@ fn ui_in_game() -> Unit {
   game_state.shield_text.align = Left
   game_state.defense_text.align = Left
   game_state.stage_text.align = Center
-  game_state.timer_text.align = Left
+  game_state.timer_text.align = Center
   game_state.banner_text.align = Center
-  game_state.score_text.baseline = Top
+  game_state.score_text.baseline = Center
   game_state.hull_text.baseline = Top
   game_state.shield_text.baseline = Top
   game_state.defense_text.baseline = Top
   game_state.stage_text.baseline = Top
   game_state.timer_text.baseline = Top
   game_state.banner_text.baseline = Top
-  game_state.score_text.content = current_level_name()
+  let use_tutorial_lines = update_tutorial_phase_data_lines()
+  let show_header_labels = show_tutorial_header_labels() && !use_tutorial_lines
+
+  game_state.score_text.content = if show_header_labels {
+    current_level_name()
+  } else {
+    ""
+  }
   game_state.hull_text.content = ""
   game_state.shield_text.content = ""
   game_state.defense_text.content = ""
-  game_state.stage_text.content = current_phase_name()
-  game_state.timer_text.content = current_phase_data()
+  game_state.stage_text.content = if show_header_labels {
+    clip_text_to_width(
+      current_phase_name(),
+      game_state.stage_text.font,
+      HUD_TOP_PANEL_WIDTH,
+    )
+  } else {
+    ""
+  }
+  game_state.timer_text.content = clip_text_to_width(
+    current_phase_data(),
+    game_state.timer_text.font,
+    HUD_TOP_PANEL_WIDTH,
+  )
 
   let intro_alpha = current_intro_alpha()
   let intro_alpha_255 = clamp_int((intro_alpha * 255.0).to_int(), 0, 255)
@@ -2921,12 +3258,12 @@ fn ui_in_game() -> Unit {
     set_ui_visible(game_state.banner_ui, false)
   }
 
-  set_ui_visible(game_state.score_ui, true)
+  set_ui_visible(game_state.score_ui, show_header_labels)
   set_ui_visible(game_state.hull_ui, false)
   set_ui_visible(game_state.shield_ui, false)
   set_ui_visible(game_state.defense_ui, false)
-  set_ui_visible(game_state.stage_ui, true)
-  set_ui_visible(game_state.timer_ui, true)
+  set_ui_visible(game_state.stage_ui, show_header_labels)
+  set_ui_visible(game_state.timer_ui, !use_tutorial_lines)
 
   if game_state.phase is Paused {
     game_state.banner_text.content = "PAUSED"
@@ -2950,6 +3287,11 @@ fn is_tutorial_stage() -> Bool {
   } else {
     false
   }
+}
+
+///|
+fn show_tutorial_header_labels() -> Bool {
+  !is_tutorial_stage()
 }
 
 ///|

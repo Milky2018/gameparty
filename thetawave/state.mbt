@@ -1,14 +1,81 @@
 ///|
-const VIEWPORT_WIDTH : Double = 480.0
+const VIEWPORT_WIDTH : Double = 512.0
 
 ///|
 const VIEWPORT_HEIGHT : Double = 320.0
 
 ///|
-const ZOOM : Double = 2.0
+const ZOOM : Double = 2.5
 
 ///|
 const FPS : UInt = 60
+
+///|
+const HUD_SIDE_COLUMN_WIDTH : Double = VIEWPORT_WIDTH * 0.1
+
+///|
+const HUD_CENTER_BAND_WIDTH : Double = VIEWPORT_WIDTH * 0.8
+
+///|
+const HUD_CENTER_LEFT_X : Double = HUD_SIDE_COLUMN_WIDTH +
+  HUD_CENTER_BAND_WIDTH * 0.25
+
+///|
+const HUD_TOP_SPLIT_X : Double = HUD_SIDE_COLUMN_WIDTH +
+  HUD_CENTER_BAND_WIDTH * 0.5
+
+///|
+const HUD_TOP_PANEL_PADDING : Double = 8.0
+
+///|
+const HUD_TOP_LEFT_PANEL_X : Double = HUD_SIDE_COLUMN_WIDTH +
+  HUD_TOP_PANEL_PADDING
+
+///|
+const HUD_TOP_RIGHT_PANEL_X : Double = HUD_TOP_SPLIT_X + HUD_TOP_PANEL_PADDING
+
+///|
+const HUD_TOP_PANEL_WIDTH : Double = HUD_CENTER_BAND_WIDTH * 0.5 -
+  HUD_TOP_PANEL_PADDING * 2.0
+
+///|
+const HUD_ABILITY_SLOT_SIZE : Double = 32.0
+
+///|
+const HUD_ABILITY_SLOT_LEFT_X : Double = 0.0
+
+///|
+const HUD_ABILITY_SLOT_CENTER_X : Double = HUD_ABILITY_SLOT_LEFT_X +
+  HUD_ABILITY_SLOT_SIZE / 2.0
+
+///|
+const HUD_ABILITY_SLOT1_CENTER_Y : Double = 248.0
+
+///|
+const HUD_ABILITY_SLOT2_CENTER_Y : Double = 176.0
+
+///|
+const HUD_ABILITY_SLOT_FILL_WIDTH : Double = HUD_ABILITY_SLOT_SIZE
+
+///|
+const HUD_ABILITY_SLOT1_FILL_BOTTOM_Y : Double = HUD_ABILITY_SLOT1_CENTER_Y +
+  HUD_ABILITY_SLOT_SIZE / 2.0
+
+///|
+const HUD_ABILITY_SLOT2_FILL_BOTTOM_Y : Double = HUD_ABILITY_SLOT2_CENTER_Y +
+  HUD_ABILITY_SLOT_SIZE / 2.0
+
+///|
+const HUD_HEALTH_BAR_BG_X : Double = 32.0
+
+///|
+const HUD_HEALTH_BAR_FILL_X : Double = 33.0
+
+///|
+const HUD_SHIELD_BAR_BG_X : Double = 46.0
+
+///|
+const HUD_SHIELD_BAR_FILL_X : Double = 47.0
 
 ///|
 const WORLD_X_SCALE : Double = 0.35

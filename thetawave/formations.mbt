@@ -667,4 +667,7 @@ fn enter_stage() -> Unit {
     game_state.center_intro_text = ""
     game_state.center_intro_timer = 0.0
   }
+  if game_state.screen is InGame {
+    set_background(Game)
+  }
 }

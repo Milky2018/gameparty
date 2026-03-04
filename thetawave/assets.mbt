@@ -2,9 +2,6 @@
 const MENU_BG_TEXTURE : String = "thetawave/assets/texture/main_menu_background_54.png"
 
 ///|
-const CHARACTER_SELECT_BG_TEXTURE : String = "thetawave/assets/texture/character_selection_54.png"
-
-///|
 const GAME_BG_TEXTURE : String = "thetawave/assets/texture/main_menu_background_54.png"
 
 ///|
@@ -251,6 +248,9 @@ const UI_FONT_SMALL : String = "16px Lunchds"
 const UI_FONT_MEDIUM : String = "18px Lunchds"
 
 ///|
+const GAMEPLAY_SPRITE_SCALE : Double = 1.0
+
+///|
 const SFX_PLAYER_FIRE : String = "thetawave/assets/sounds/player_fire_blast.wav"
 
 ///|
@@ -302,10 +302,7 @@ fn animated_sprite(
 ///|
 fn menu_logo_sprite() -> @sprite.Sprite {
   @sprite.Sprite::from_picture(
-    @sprite.Picture::new(
-      @math.Vec2D(364.0, 152.0),
-      THETAWAVE_LOGO_TEXTURE,
-    ),
+    @sprite.Picture::new(@math.Vec2D(364.0, 152.0), THETAWAVE_LOGO_TEXTURE),
     90,
   )
 }
@@ -461,9 +458,9 @@ fn border_gradient_sprite(texture : String, height : Double) -> @sprite.Sprite {
 ///|
 fn hud_ability_slot_sprite() -> @sprite.Sprite {
   @sprite.Sprite::from_picture(
-    @sprite.Picture::new(@math.Vec2D(64.0, 64.0), ABILITY_SQUARE_LEFT_TEXTURE),
+    @sprite.Picture::new(@math.Vec2D(32.0, 32.0), ABILITY_SQUARE_LEFT_TEXTURE),
     92,
-    offset=@math.Vec2D(-32.0, -32.0),
+    offset=@math.Vec2D(-16.0, -16.0),
   )
 }
 
@@ -484,17 +481,27 @@ fn hud_ability_icon_sprite(
     }
   }
   @sprite.Sprite::from_picture(
-    @sprite.Picture::new(@math.Vec2D(64.0, 64.0), texture),
+    @sprite.Picture::new(@math.Vec2D(32.0, 32.0), texture),
     93,
-    offset=@math.Vec2D(-32.0, -32.0),
+    offset=@math.Vec2D(-16.0, -16.0),
   )
 }
 
 ///|
 fn player_sprite(character : CharacterType) -> @sprite.Sprite {
   let (texture, width, height) = match character {
-    Captain => (CAPTAIN_TEXTURE, 54.0, 54.0)
-    Juggernaut => (JUGGERNAUT_TEXTURE, 60.0, 72.0)
+    Captain =>
+      (
+        CAPTAIN_TEXTURE,
+        18.0 * GAMEPLAY_SPRITE_SCALE,
+        18.0 * GAMEPLAY_SPRITE_SCALE,
+      )
+    Juggernaut =>
+      (
+        JUGGERNAUT_TEXTURE,
+        20.0 * GAMEPLAY_SPRITE_SCALE,
+        24.0 * GAMEPLAY_SPRITE_SCALE,
+      )
   }
   @sprite.Sprite::from_picture(
     @sprite.Picture::new(@math.Vec2D(width, height), texture),
@@ -505,35 +512,44 @@ fn player_sprite(character : CharacterType) -> @sprite.Sprite {
 
 ///|
 fn enemy_sprite(kind : EnemyKind) -> @sprite.Sprite {
+  let s = GAMEPLAY_SPRITE_SCALE
   match kind {
-    Pawn => animated_sprite(PAWN_TEXTURE, 20.0, 20.0, 3, 4.0, 10)
-    Drone => animated_sprite(DRONE_TEXTURE, 20.0, 20.0, 3, 4.0, 10)
+    Pawn => animated_sprite(PAWN_TEXTURE, 20.0 * s, 20.0 * s, 3, 4.0, 10)
+    Drone => animated_sprite(DRONE_TEXTURE, 20.0 * s, 20.0 * s, 3, 4.0, 10)
     TutorialDrone =>
-      animated_sprite(TUTORIAL_DRONE_TEXTURE, 22.0, 23.0, 3, 4.0, 10)
-    Shelly => animated_sprite(SHELLY_TEXTURE, 24.0, 25.0, 3, 4.0, 10)
-    StraferRight => animated_sprite(STRAFER_TEXTURE, 26.0, 14.0, 3, 4.0, 10)
-    StraferLeft => animated_sprite(STRAFER_TEXTURE, 26.0, 14.0, 3, 4.0, 10)
+      animated_sprite(TUTORIAL_DRONE_TEXTURE, 20.0 * s, 21.0 * s, 3, 4.0, 10)
+    Shelly => animated_sprite(SHELLY_TEXTURE, 24.0 * s, 25.0 * s, 3, 4.0, 10)
+    StraferRight =>
+      animated_sprite(STRAFER_TEXTURE, 26.0 * s, 14.0 * s, 3, 4.0, 10)
+    StraferLeft =>
+      animated_sprite(STRAFER_TEXTURE, 26.0 * s, 14.0 * s, 3, 4.0, 10)
     MissileLauncher =>
-      animated_sprite(MISSILE_LAUNCHER_TEXTURE, 23.0, 28.0, 3, 4.0, 10)
-    Missile => animated_sprite(MISSILE_TEXTURE, 11.0, 20.0, 4, 8.0, 11)
+      animated_sprite(MISSILE_LAUNCHER_TEXTURE, 23.0 * s, 28.0 * s, 3, 4.0, 10)
+    Missile => animated_sprite(MISSILE_TEXTURE, 11.0 * s, 20.0 * s, 4, 8.0, 11)
     MoneyAsteroid =>
       @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(21.0, 21.0), MONEY_ASTEROID_TEXTURE),
+        @sprite.Picture::new(
+          @math.Vec2D(21.0 * s, 21.0 * s),
+          MONEY_ASTEROID_TEXTURE,
+        ),
         9,
-        offset=@math.Vec2D(-10.5, -10.5),
+        offset=@math.Vec2D(-10.5 * s, -10.5 * s),
       )
-    CrustlingRight => animated_sprite(CRUSTLING_TEXTURE, 38.0, 29.0, 3, 4.0, 10)
-    CrustlingLeft => animated_sprite(CRUSTLING_TEXTURE, 38.0, 29.0, 3, 4.0, 10)
-    Ferritharax => animated_sprite(FERRITHARAX_TEXTURE, 68.0, 49.0, 3, 4.0, 12)
+    CrustlingRight =>
+      animated_sprite(CRUSTLING_TEXTURE, 38.0 * s, 29.0 * s, 3, 4.0, 10)
+    CrustlingLeft =>
+      animated_sprite(CRUSTLING_TEXTURE, 38.0 * s, 29.0 * s, 3, 4.0, 10)
+    Ferritharax =>
+      animated_sprite(FERRITHARAX_TEXTURE, 68.0 * s, 49.0 * s, 3, 4.0, 12)
     MechaFerritharax =>
-      animated_sprite(MECHA_FERRITHARAX_TEXTURE, 42.0, 48.0, 3, 4.0, 12)
+      animated_sprite(MECHA_FERRITHARAX_TEXTURE, 42.0 * s, 48.0 * s, 3, 4.0, 12)
     MechaSaucetron =>
-      animated_sprite(MECHA_SAUCETRON_TEXTURE, 46.0, 50.0, 3, 4.0, 12)
+      animated_sprite(MECHA_SAUCETRON_TEXTURE, 46.0 * s, 50.0 * s, 3, 4.0, 12)
     Hauler =>
       @sprite.Sprite::from_picture(
-        @sprite.Picture::new(@math.Vec2D(18.0, 15.0), HAULER_TEXTURE),
+        @sprite.Picture::new(@math.Vec2D(18.0 * s, 15.0 * s), HAULER_TEXTURE),
         11,
-        offset=@math.Vec2D(-9.0, -7.5),
+        offset=@math.Vec2D(-9.0 * s, -7.5 * s),
       )
   }
 }
@@ -556,8 +572,10 @@ fn projectile_sprite(
       }
   }
   let size = match kind {
-    Blast => @math.Vec2D(10.0, 10.0)
-    Bullet => @math.Vec2D(8.0, 12.0)
+    Blast =>
+      @math.Vec2D(4.0 * GAMEPLAY_SPRITE_SCALE, 4.0 * GAMEPLAY_SPRITE_SCALE)
+    Bullet =>
+      @math.Vec2D(5.0 * GAMEPLAY_SPRITE_SCALE, 5.0 * GAMEPLAY_SPRITE_SCALE)
   }
   @sprite.Sprite::from_picture(
     @sprite.Picture::new(size, texture),
@@ -568,13 +586,14 @@ fn projectile_sprite(
 
 ///|
 fn consumable_sprite(kind : ConsumableKind) -> @sprite.Sprite {
+  let s = GAMEPLAY_SPRITE_SCALE
   let (texture, size) = match kind {
-    Money1 => (CONSUMABLE_MONEY_TEXTURE, @math.Vec2D(12.0, 12.0))
-    Money3 => (CONSUMABLE_MONEY3_TEXTURE, @math.Vec2D(14.0, 14.0))
-    HealthWrench => (CONSUMABLE_HEALTH_TEXTURE, @math.Vec2D(16.0, 16.0))
-    Armor => (CONSUMABLE_ARMOR_TEXTURE, @math.Vec2D(16.0, 16.0))
+    Money1 => (CONSUMABLE_MONEY_TEXTURE, @math.Vec2D(7.0 * s, 7.0 * s))
+    Money3 => (CONSUMABLE_MONEY3_TEXTURE, @math.Vec2D(10.0 * s, 11.0 * s))
+    HealthWrench => (CONSUMABLE_HEALTH_TEXTURE, @math.Vec2D(12.0 * s, 12.0 * s))
+    Armor => (CONSUMABLE_ARMOR_TEXTURE, @math.Vec2D(12.0 * s, 12.0 * s))
     GainProjectiles =>
-      (CONSUMABLE_GAIN_PROJECTILES_TEXTURE, @math.Vec2D(14.0, 14.0))
+      (CONSUMABLE_GAIN_PROJECTILES_TEXTURE, @math.Vec2D(14.0 * s, 14.0 * s))
   }
   @sprite.Sprite::from_picture(
     @sprite.Picture::new(size, texture),
@@ -585,8 +604,10 @@ fn consumable_sprite(kind : ConsumableKind) -> @sprite.Sprite {
 
 ///|
 fn item_sprite(kind : ItemKind) -> @sprite.Sprite {
+  let s = GAMEPLAY_SPRITE_SCALE
   let (texture, size) = match kind {
-    EnhancedPlating => (ITEM_ENHANCED_PLATING_TEXTURE, @math.Vec2D(24.0, 10.0))
+    EnhancedPlating =>
+      (ITEM_ENHANCED_PLATING_TEXTURE, @math.Vec2D(24.0 * s, 10.0 * s))
   }
   @sprite.Sprite::from_picture(
     @sprite.Picture::new(size, texture),
@@ -597,14 +618,20 @@ fn item_sprite(kind : ItemKind) -> @sprite.Sprite {
 
 ///|
 fn background_sprite(kind : BackgroundKind) -> @sprite.Sprite {
-  let texture = match kind {
-    Menu => MENU_BG_TEXTURE
-    CharacterSelection => CHARACTER_SELECT_BG_TEXTURE
-    Game => GAME_BG_TEXTURE
-    GameOver => GAME_OVER_BG_TEXTURE
-    Victory => VICTORY_BG_TEXTURE
+  match kind {
+    Menu => background_sprite_by_texture(MENU_BG_TEXTURE)
+    CharacterSelection =>
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(
+          @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+          "black",
+        ),
+        -100,
+      )
+    Game => background_sprite_by_texture(GAME_BG_TEXTURE)
+    GameOver => background_sprite_by_texture(GAME_OVER_BG_TEXTURE)
+    Victory => background_sprite_by_texture(VICTORY_BG_TEXTURE)
   }
-  background_sprite_by_texture(texture)
 }
 
 ///|

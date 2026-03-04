@@ -12,10 +12,15 @@ fn startup_system(_delta : Double) -> Unit {
 
 ///|
 let game_background_textures : Array[String] = [
-  "thetawave/assets/texture/backgrounds/background_1.png",
-  "thetawave/assets/texture/backgrounds/background_2.png",
+  "thetawave/assets/texture/backgrounds/background_1.png", "thetawave/assets/texture/backgrounds/background_2.png",
   "thetawave/assets/texture/backgrounds/background_3.png",
 ]
+
+///|
+const GAME_BACKGROUND_LEVEL1_STAGE_END : Int = 7
+
+///|
+const GAME_BACKGROUND_LEVEL2_STAGE_END : Int = 14
 
 ///|
 const BG3D_BACKGROUND_ALPHA : Double = 0.06
@@ -73,6 +78,9 @@ const BG3D_STAR_LIGHT_INTENSITY : Double = 100000000.0
 
 ///|
 const BG3D_STAR_LIGHT_RANGE : Double = 10000.0
+
+///|
+const BG3D_ENABLE_FALLBACK_BODIES : Bool = false
 
 ///|
 let background3d_initialized : Ref[Bool] = { val: false }
@@ -263,6 +271,21 @@ let character_p2_stat_fill_uis : Array[@entity.Entity] = [
 ]
 
 ///|
+const TUTORIAL_PHASE_DATA_LINE_COUNT : Int = 8
+
+///|
+let tutorial_phase_data_line_uis : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
 fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -288,7 +311,8 @@ fn random_channel(min : Int, max : Int) -> UInt {
 
 ///|
 fn uses_3d_background(kind : BackgroundKind) -> Bool {
-  kind is Menu || kind is CharacterSelection || kind is Game
+  ignore(kind)
+  false
 }
 
 ///|
@@ -315,8 +339,28 @@ fn set_background3d_active(active : Bool) -> Unit {
     camera.enabled = active
   }
   set_mesh3d_visible(background3d_quad_entity, active)
-  set_mesh3d_visible(background3d_planet_entity, active)
-  set_mesh3d_visible(background3d_star_entity, active)
+  if BG3D_ENABLE_FALLBACK_BODIES {
+    set_mesh3d_visible(background3d_planet_entity, active)
+    set_mesh3d_visible(background3d_star_entity, active)
+  } else {
+    // Some backends ignore `visible` for 3D meshes; remove fallback bodies entirely.
+    @render3d.mesh3d_renderers.remove(background3d_planet_entity)
+    @render3d.mesh3d_renderers.remove(background3d_star_entity)
+  }
+  if !active || !BG3D_ENABLE_FALLBACK_BODIES {
+    @render3d.point_lights3d.remove(background3d_star_light_entity)
+  }
+  if active {
+    let ambient_intensity = if BG3D_ENABLE_FALLBACK_BODIES { 0.35 } else { 1.0 }
+    @render3d.set_ambient_light3d(
+      Some({
+        color: color_u8(255U, 255U, 255U, 1.0),
+        intensity: ambient_intensity,
+      }),
+    )
+  } else {
+    @render3d.set_ambient_light3d(None)
+  }
 }
 
 ///|
@@ -359,13 +403,18 @@ fn refresh_background3d_assets() -> Unit {
   let old_star_material = background3d_star_material.val
 
   let quad_image = @render3d.register_image_asset({
-    path: random_game_background_texture(),
+    path: game_background_texture_for_stage(game_state.stage_index),
   })
+  let quad_alpha = if BG3D_ENABLE_FALLBACK_BODIES {
+    BG3D_BACKGROUND_ALPHA
+  } else {
+    1.0
+  }
   let quad_material = @render3d.default_standard_material3d()
   let quad_material = {
     ..quad_material,
     base_color_texture: Some(quad_image),
-    base_color: color_u8(255U, 255U, 255U, BG3D_BACKGROUND_ALPHA),
+    base_color: color_u8(255U, 255U, 255U, quad_alpha),
     alpha_mode: Blend,
   }
   let quad_material = @render3d.register_material_asset(quad_material)
@@ -383,12 +432,7 @@ fn refresh_background3d_assets() -> Unit {
   let planet_material = @render3d.default_standard_material3d()
   let planet_material = {
     ..planet_material,
-    base_color: color_u8(
-      random_channel(90, 180),
-      random_channel(90, 180),
-      random_channel(90, 180),
-      1.0,
-    ),
+    base_color: color_u8(255U, 255U, 255U, 1.0),
   }
   let planet_material = @render3d.register_material_asset(planet_material)
 
@@ -403,38 +447,50 @@ fn refresh_background3d_assets() -> Unit {
     scale: @math.Vec3::new(BG3D_QUAD_SCALE_X, BG3D_QUAD_SCALE_Y, 1.0),
   })
 
-  @render3d.mesh3d_renderers.set(background3d_planet_entity, {
-    mesh: planet_mesh,
-    material: planet_material,
-    visible: background3d_active.val,
-  })
-  @transform3d.transforms3d.set(background3d_planet_entity, {
-    translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
-    rotation: @math.Quat::from_axis_angle(
-      @math.Vec3::new(0.0, 1.0, 0.0),
-      random_range(0.0, @cmath.PI * 2.0),
-    ),
-    scale: @math.Vec3::one(),
-  })
+  if BG3D_ENABLE_FALLBACK_BODIES {
+    @render3d.mesh3d_renderers.set(background3d_planet_entity, {
+      mesh: planet_mesh,
+      material: planet_material,
+      visible: background3d_active.val,
+    })
+    @transform3d.transforms3d.set(background3d_planet_entity, {
+      translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
+      rotation: @math.Quat::from_axis_angle(
+        @math.Vec3::new(0.0, 1.0, 0.0),
+        random_range(0.0, @cmath.PI * 2.0),
+      ),
+      scale: @math.Vec3::one(),
+    })
+  } else {
+    @render3d.mesh3d_renderers.remove(background3d_planet_entity)
+  }
 
   let star_x = random_range(BG3D_STAR_X_MIN, BG3D_STAR_X_MAX)
   let star_z = random_range(BG3D_STAR_Z_MIN, BG3D_STAR_Z_MAX)
   let star_translation = @math.Vec3::new(star_x, 0.0, star_z)
-  @render3d.mesh3d_renderers.set(background3d_star_entity, {
-    mesh: star_mesh,
-    material: star_material,
-    visible: background3d_active.val,
-  })
-  @transform3d.transforms3d.set(background3d_star_entity, {
-    translation: star_translation,
-    rotation: @math.Quat::identity(),
-    scale: @math.Vec3::one(),
-  })
-  @render3d.point_lights3d.set(background3d_star_light_entity, {
-    color: star_color,
-    intensity: BG3D_STAR_LIGHT_INTENSITY,
-    range: BG3D_STAR_LIGHT_RANGE,
-  })
+  if BG3D_ENABLE_FALLBACK_BODIES {
+    @render3d.mesh3d_renderers.set(background3d_star_entity, {
+      mesh: star_mesh,
+      material: star_material,
+      visible: background3d_active.val,
+    })
+    @transform3d.transforms3d.set(background3d_star_entity, {
+      translation: star_translation,
+      rotation: @math.Quat::identity(),
+      scale: @math.Vec3::one(),
+    })
+  } else {
+    @render3d.mesh3d_renderers.remove(background3d_star_entity)
+  }
+  if BG3D_ENABLE_FALLBACK_BODIES {
+    @render3d.point_lights3d.set(background3d_star_light_entity, {
+      color: star_color,
+      intensity: BG3D_STAR_LIGHT_INTENSITY,
+      range: BG3D_STAR_LIGHT_RANGE,
+    })
+  } else {
+    @render3d.point_lights3d.remove(background3d_star_light_entity)
+  }
   @transform3d.transforms3d.set(background3d_star_light_entity, {
     translation: star_translation,
     rotation: @math.Quat::identity(),
@@ -522,7 +578,6 @@ fn background3d_system(delta : Double) -> Unit {
 ///|
 fn preload_assets() -> Unit {
   @backend.preload_img(MENU_BG_TEXTURE)
-  @backend.preload_img(CHARACTER_SELECT_BG_TEXTURE)
   @backend.preload_img(GAME_BG_TEXTURE)
   @backend.preload_img(GAME_OVER_BG_TEXTURE)
   @backend.preload_img(VICTORY_BG_TEXTURE)
@@ -638,19 +693,31 @@ fn set_background(kind : BackgroundKind) -> Unit {
   }
 
   set_background3d_active(false)
-  let sprite = background_sprite(kind)
+  let sprite = if kind is Game {
+    background_sprite_by_texture(
+      game_background_texture_for_stage(game_state.stage_index),
+    )
+  } else {
+    background_sprite(kind)
+  }
   @sprite.sprites.set(game_state.background, sprite)
   @transform.positions.set(game_state.background, @math.Vec2D(0.0, 0.0))
   set_background_sprite_visible(true)
 }
 
 ///|
-fn random_game_background_texture() -> String {
+fn game_background_texture_for_stage(stage_index : Int) -> String {
   let len = game_background_textures.length()
   if len <= 0 {
     return GAME_BG_TEXTURE
   }
-  let idx = (game_state.rand.double() * len.to_double()).to_int()
+  let idx = if stage_index <= GAME_BACKGROUND_LEVEL1_STAGE_END {
+    0
+  } else if stage_index <= GAME_BACKGROUND_LEVEL2_STAGE_END {
+    1
+  } else {
+    2
+  }
   let idx = clamp_int(idx, 0, len - 1)
   game_background_textures[idx]
 }
@@ -687,6 +754,19 @@ fn initialize_ui() -> Unit {
     game_state.timer_text,
     @math.Vec2D(VIEWPORT_WIDTH - 150.0, 8.0),
   )
+  for i in 0..<TUTORIAL_PHASE_DATA_LINE_COUNT {
+    setup_text_entity(
+      tutorial_phase_data_line_uis[i],
+      @sprite.Text::new(
+        "",
+        color="white",
+        font=TUTORIAL_PHASE_LINE_FONT,
+        baseline=Top,
+        align=Left,
+      ),
+      @math.Vec2D(HUD_TOP_RIGHT_PANEL_X, 8.0 + i.to_double() * 12.0),
+    )
+  }
   setup_text_entity(
     game_state.banner_ui,
     game_state.banner_text,
@@ -988,7 +1068,7 @@ fn initialize_ui() -> Unit {
       ),
       91,
     ),
-    @math.Vec2D(30.0, 98.0),
+    @math.Vec2D(HUD_HEALTH_BAR_BG_X, 98.0),
   )
   setup_picture_entity(
     game_state.hud_health_bar_fill_ui,
@@ -999,7 +1079,7 @@ fn initialize_ui() -> Unit {
       ),
       92,
     ),
-    @math.Vec2D(31.0, 100.0),
+    @math.Vec2D(HUD_HEALTH_BAR_FILL_X, 100.0),
   )
   setup_picture_entity(
     game_state.hud_shield_bar_bg_ui,
@@ -1007,7 +1087,7 @@ fn initialize_ui() -> Unit {
       @sprite.ColorRect::new(@math.Vec2D(12.0, 120.0), "rgba(0, 96, 128, 0.18)"),
       91,
     ),
-    @math.Vec2D(46.0, 98.0),
+    @math.Vec2D(HUD_SHIELD_BAR_BG_X, 98.0),
   )
   setup_picture_entity(
     game_state.hud_shield_bar_fill_ui,
@@ -1018,7 +1098,7 @@ fn initialize_ui() -> Unit {
       ),
       92,
     ),
-    @math.Vec2D(47.0, 100.0),
+    @math.Vec2D(HUD_SHIELD_BAR_FILL_X, 100.0),
   )
   setup_picture_entity(
     game_state.hud_defense_label_ui,
@@ -1044,38 +1124,44 @@ fn initialize_ui() -> Unit {
   setup_picture_entity(
     game_state.hud_slot1_bg_ui,
     hud_ability_slot_sprite(),
-    @math.Vec2D(34.0, 248.0),
+    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT1_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot1_icon_ui,
     hud_ability_icon_sprite(Captain, 1),
-    @math.Vec2D(34.0, 248.0),
+    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT1_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot1_fill_ui,
     @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(64.0, 0.0), "rgba(0, 0, 0, 0.55)"),
+      @sprite.ColorRect::new(
+        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
+        "rgba(0, 0, 0, 0.55)",
+      ),
       95,
     ),
-    @math.Vec2D(2.0, 280.0),
+    @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT1_FILL_BOTTOM_Y),
   )
   setup_picture_entity(
     game_state.hud_slot2_bg_ui,
     hud_ability_slot_sprite(),
-    @math.Vec2D(34.0, 176.0),
+    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT2_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot2_icon_ui,
     hud_ability_icon_sprite(Captain, 2),
-    @math.Vec2D(34.0, 176.0),
+    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT2_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot2_fill_ui,
     @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(64.0, 0.0), "rgba(0, 0, 0, 0.55)"),
+      @sprite.ColorRect::new(
+        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
+        "rgba(0, 0, 0, 0.55)",
+      ),
       95,
     ),
-    @math.Vec2D(2.0, 208.0),
+    @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT2_FILL_BOTTOM_Y),
   )
   if @sprite.sprites.get(game_state.character_portrait_ui) is Some(sprite) {
     sprite.visible = false
@@ -1233,6 +1319,11 @@ fn initialize_ui() -> Unit {
   if @sprite.sprites.get(game_state.hud_slot2_fill_ui) is Some(sprite) {
     sprite.visible = false
   }
+  for entity in tutorial_phase_data_line_uis {
+    if @sprite.sprites.get(entity) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
 }
 
 ///|
@@ -1299,7 +1390,6 @@ fn enter_character_selection() -> Unit {
 ///|
 fn start_game_with_selected_character() -> Unit {
   game_state.screen = InGame
-  set_background(Game)
   reset_run()
 }
 

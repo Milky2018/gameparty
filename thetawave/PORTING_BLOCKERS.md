@@ -11,7 +11,7 @@ Last updated: 2026-03-04
 
 2. 3D scene/model parity is still not complete even after moving to Selene 0.22.2.
    - Port now uses Selene 3D pipeline (textured quad + star + rotating planet sphere), but upstream uses random planet model scenes, bloom-driven star lighting, and richer PBR behavior.
-   - Current `scene3d` loader path in Selene is JSON glTF-oriented; upstream asset usage includes binary `.glb` pipelines and Bevy scene behavior not yet mirrored 1:1 here.
+   - Current `scene3d` loader path in Selene is JSON glTF-oriented (`load_scene_gltf` parses textual JSON scene bytes). Upstream asset usage includes binary `.glb` model pipelines (`assets/models/earth.glb`, `assets/models/sun.glb`) and Bevy scene behavior not yet mirrored 1:1 here.
    - Upstream source: `upstream-rust/src/background/mod.rs`.
 
 ## Resolved by Selene 0.22.x adoption
@@ -41,6 +41,8 @@ Last updated: 2026-03-04
    - Current implementation uses manual pixel layout and sprite/text composition.
    - Character-selection dual-column slot content/join-ready flow is now mirrored, but it is still not a Bevy-style flex tree with per-widget button entities.
    - Current run loop remains single-player; if multiple players are marked ready, port still starts with player-1 character only.
+   - Top phase row text still cannot fully match Bevy `NodeBundle` clipping/wrapping semantics (especially tutorial phase data lists) because Selene text sprites are drawn without parent layout clipping; current port uses split anchors + dedicated tutorial line entities as an approximation.
+   - Upstream sources: `upstream-rust/src/ui/game/phase.rs`, `upstream-rust/src/ui/game/parent.rs`.
 
 2. Composite boss/mob behavioral parity is still incomplete.
    - Port now includes synchronized multi-part visuals plus Ferritharax/MechaFerritharax/MechaSaucetron phase sequences (stage movement, side mob spawners, arm missiles/weapon cadence) mapped from upstream `assets/data/*.ron`.
