@@ -4,12 +4,18 @@ MoonBit game collection module.
 
 ## Games
 
-- `thetawave` (ported with `Milky2018/selene@0.21.2` + `Milky2018/selene_raylib@0.21.2`)
+- `thetawave`
+- `pacman3d`
 
-## Run Thetawave
+## Run Game Menu
+
+```bash
+moon run cmd/gameparty
+```
+
+## Run Individual Games
 
 ```bash
 moon run cmd/thetawave
+moon run cmd/pacman3d
 ```
-
-`cmd/gameparty` currently forwards to `cmd/thetawave`.

@@ -1,4 +1,11 @@
 import {
   "Milky2018/gameparty/pacman3d",
+  "Milky2018/selene/entity",
+  "Milky2018/selene/inputs",
+  "Milky2018/selene/math",
+  "Milky2018/selene/plugins",
+  "Milky2018/selene/sprite",
+  "Milky2018/selene/system",
+  "Milky2018/selene/transform",
   "Milky2018/gameparty/thetawave",
 }

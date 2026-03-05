@@ -1,4 +1,4 @@
 ///|
 fn main {
-  @app.run_thetawave()
+  @app.run()
 }

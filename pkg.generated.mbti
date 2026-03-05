@@ -2,6 +2,8 @@
 package "Milky2018/gameparty"
 
 // Values
+pub fn run() -> Unit
+
 pub fn run_pacman3d() -> Unit
 
 pub fn run_thetawave() -> Unit

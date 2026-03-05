@@ -212,10 +212,22 @@ fn clear_level_entities() -> Unit {
 ///|
 fn sync_camera_transform() -> Unit {
   ensure_entity_alive(camera_entity)
+  ensure_entity_alive(player_light_entity)
   let yaw = -(player_state.yaw + @cmath.PI / 2.0)
   @transform3d.transforms3d.set(camera_entity, {
     translation: @math.Vec3::new(player_state.x, PLAYER_HEIGHT, player_state.z),
     rotation: @math.Quat::from_axis_angle(@math.Vec3::new(0.0, 1.0, 0.0), yaw),
+    scale: @math.Vec3::one(),
+  })
+  let forward_x = @cmath.cos(player_state.yaw)
+  let forward_z = @cmath.sin(player_state.yaw)
+  @transform3d.transforms3d.set(player_light_entity, {
+    translation: @math.Vec3::new(
+      player_state.x + forward_x * 0.45,
+      PLAYER_HEIGHT + 0.2,
+      player_state.z + forward_z * 0.45,
+    ),
+    rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
 }
@@ -345,6 +357,7 @@ fn reset_run() -> Unit {
 fn startup_system(_delta : Double) -> Unit {
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(light_entity)
+  ensure_entity_alive(player_light_entity)
   ensure_entity_alive(hud_title_ui)
   ensure_entity_alive(hud_line1_ui)
   ensure_entity_alive(hud_line2_ui)
@@ -363,11 +376,16 @@ fn startup_system(_delta : Double) -> Unit {
   @render3d.directional_lights3d.set(light_entity, {
     direction: @math.Vec3::new(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
-    intensity: 1.3,
+    intensity: 0.55,
     shadows: false,
   })
+  @render3d.point_lights3d.set(player_light_entity, {
+    color: color_rgba(255U, 240U, 214U, 1.0),
+    intensity: 2.8,
+    range: 9.5,
+  })
   @render3d.set_ambient_light3d(
-    Some({ color: color_rgba(200U, 215U, 255U, 1.0), intensity: 0.65 }),
+    Some({ color: color_rgba(190U, 205U, 240U, 1.0), intensity: 0.18 }),
   )
 
   setup_text_entity(

@@ -217,6 +217,9 @@ let camera_entity : @entity.Entity = @entity.Entity::new()
 let light_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
+let player_light_entity : @entity.Entity = @entity.Entity::new()
+
+///|
 let hud_title_ui : @entity.Entity = @entity.Entity::new()
 
 ///|
