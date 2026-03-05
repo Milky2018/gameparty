@@ -24,14 +24,13 @@ fn add_background_3d_pipeline(app : @system.App) -> Unit {
   )
   ..push((@camera3d.camera3d_extract_system, RenderExtract, "Camera3D Extract"))
   ..push((@render3d.render3d_extract_system, RenderExtract, "Render3D Extract"))
-  ..push(
+  .push(
     (
       @render3d_pipeline.render3d_prepare_system,
       RenderPrepare,
       "Render3D Prepare",
     ),
   )
-  .push((@render3d_pipeline.render3d_submit_system, Render, "Render3D Submit"))
 }
 
 ///|

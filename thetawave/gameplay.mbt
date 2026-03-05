@@ -170,26 +170,21 @@ fn main_menu_hovered_index() -> Int? {
 }
 
 ///|
-fn menu_button_index(entity : @entity.Entity) -> Int? {
-  if entity == game_state.menu_button_start_ui {
-    Some(0)
-  } else if entity == game_state.menu_button_options_ui {
-    Some(1)
-  } else if entity == game_state.menu_button_compendium_ui {
-    Some(2)
-  } else if entity == game_state.menu_button_exit_ui {
-    Some(3)
-  } else {
-    None
-  }
-}
-
-///|
 fn main_menu_pressed_index() -> Int? {
-  for event in @ui.interaction_events() {
-    if event.current is @ui.Pressed &&
-      menu_button_index(event.entity) is Some(index) {
-      return Some(index)
+  if !@inputs.is_mouse_just_pressed(Left) {
+    return None
+  }
+  let menu_entities = [
+    game_state.menu_button_start_ui,
+    game_state.menu_button_options_ui,
+    game_state.menu_button_compendium_ui,
+    game_state.menu_button_exit_ui,
+  ]
+  for i in 0..<menu_entities.length() {
+    let entity = menu_entities[i]
+    if @ui.interactions.get(entity) is Some(interaction) &&
+      interaction is @ui.Pressed {
+      return Some(i)
     }
   }
   None

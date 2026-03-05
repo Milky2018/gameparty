@@ -577,96 +577,110 @@ fn background3d_system(delta : Double) -> Unit {
 
 ///|
 fn preload_assets() -> Unit {
-  @backend.preload_img(MENU_BG_TEXTURE)
-  @backend.preload_img(GAME_BG_TEXTURE)
-  @backend.preload_img(GAME_OVER_BG_TEXTURE)
-  @backend.preload_img(VICTORY_BG_TEXTURE)
-  @backend.preload_img(THETAWAVE_LOGO_TEXTURE)
-  @backend.preload_img(MENU_BUTTON_SPRITESHEET_TEXTURE)
-  @backend.preload_img(CAPTAIN_TEXTURE)
-  @backend.preload_img(JUGGERNAUT_TEXTURE)
-  @backend.preload_img(CAPTAIN_OUTLINE_TEXTURE)
-  @backend.preload_img(JUGGERNAUT_OUTLINE_TEXTURE)
-  @backend.preload_img(CAPTAIN_DESCRIPTION_TEXTURE)
-  @backend.preload_img(JUGGERNAUT_DESCRIPTION_TEXTURE)
-  @backend.preload_img(RESTART_GAME_PROMPT_TEXTURE)
-  @backend.preload_img(PAWN_TEXTURE)
-  @backend.preload_img(DRONE_TEXTURE)
-  @backend.preload_img(TUTORIAL_DRONE_TEXTURE)
-  @backend.preload_img(SHELLY_TEXTURE)
-  @backend.preload_img(STRAFER_TEXTURE)
-  @backend.preload_img(MISSILE_LAUNCHER_TEXTURE)
-  @backend.preload_img(MISSILE_TEXTURE)
-  @backend.preload_img(MONEY_ASTEROID_TEXTURE)
-  @backend.preload_img(HAULER_TEXTURE)
-  @backend.preload_img(HAULER_MIDDLE_TEXTURE)
-  @backend.preload_img(HAULER_BACK_TEXTURE)
-  @backend.preload_img(HAULER_THRUSTERS_TEXTURE)
-  @backend.preload_img(CRUSTLING_TEXTURE)
-  @backend.preload_img(FERRITHARAX_TEXTURE)
-  @backend.preload_img(FERRITHARAX_BODY_TEXTURE)
-  @backend.preload_img(FERRITHARAX_LEFT_SHOULDER_TEXTURE)
-  @backend.preload_img(FERRITHARAX_RIGHT_SHOULDER_TEXTURE)
-  @backend.preload_img(FERRITHARAX_LEFT_ARM_TEXTURE)
-  @backend.preload_img(FERRITHARAX_RIGHT_ARM_TEXTURE)
-  @backend.preload_img(FERRITHARAX_LEFT_CLAW_TEXTURE)
-  @backend.preload_img(FERRITHARAX_RIGHT_CLAW_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_BODY_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_LEFT_ARM_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE)
-  @backend.preload_img(MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_BODY_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_LEFT_ARM_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_RIGHT_ARM_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_LEFT_CLAW_TEXTURE)
-  @backend.preload_img(MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE)
-  @backend.preload_img(PLAYER_BULLET_TEXTURE)
-  @backend.preload_img(PLAYER_BLAST_TEXTURE)
-  @backend.preload_img(ENEMY_BULLET_TEXTURE)
-  @backend.preload_img(ENEMY_BLAST_TEXTURE)
-  @backend.preload_img(CONSUMABLE_MONEY_TEXTURE)
-  @backend.preload_img(CONSUMABLE_MONEY3_TEXTURE)
-  @backend.preload_img(CONSUMABLE_HEALTH_TEXTURE)
-  @backend.preload_img(CONSUMABLE_ARMOR_TEXTURE)
-  @backend.preload_img(CONSUMABLE_GAIN_PROJECTILES_TEXTURE)
-  @backend.preload_img(ITEM_ENHANCED_PLATING_TEXTURE)
-  @backend.preload_img(HEALTH_BAR_LABEL_TEXTURE)
-  @backend.preload_img(DEFENSE_BAR_LABEL_TEXTURE)
-  @backend.preload_img(WARNING_GRADIENT_TEXTURE)
-  @backend.preload_img(DEFENSE_GRADIENT_TEXTURE)
-  @backend.preload_img(ABILITY_SQUARE_LEFT_TEXTURE)
-  @backend.preload_img(BLAST_ABILITY_TEXTURE)
-  @backend.preload_img(BULLET_ABILITY_TEXTURE)
-  @backend.preload_img(MEGABLAST_ABILITY_TEXTURE)
-  @backend.preload_img(CHARGE_ABILITY_TEXTURE)
-  @backend.preload_img(DAMAGE_ICON_TEXTURE)
-  @backend.preload_img(HEALTH_ICON_TEXTURE)
-  @backend.preload_img(RANGE_ICON_TEXTURE)
-  @backend.preload_img(FIRE_RATE_ICON_TEXTURE)
-  @backend.preload_img(SIZE_ICON_TEXTURE)
-  @backend.preload_img(SPEED_ICON_TEXTURE)
-  for texture in game_background_textures {
-    @backend.preload_img(texture)
+  let image_paths = [
+    MENU_BG_TEXTURE,
+    GAME_BG_TEXTURE,
+    GAME_OVER_BG_TEXTURE,
+    VICTORY_BG_TEXTURE,
+    THETAWAVE_LOGO_TEXTURE,
+    MENU_BUTTON_SPRITESHEET_TEXTURE,
+    CAPTAIN_TEXTURE,
+    JUGGERNAUT_TEXTURE,
+    CAPTAIN_OUTLINE_TEXTURE,
+    JUGGERNAUT_OUTLINE_TEXTURE,
+    CAPTAIN_DESCRIPTION_TEXTURE,
+    JUGGERNAUT_DESCRIPTION_TEXTURE,
+    RESTART_GAME_PROMPT_TEXTURE,
+    PAWN_TEXTURE,
+    DRONE_TEXTURE,
+    TUTORIAL_DRONE_TEXTURE,
+    SHELLY_TEXTURE,
+    STRAFER_TEXTURE,
+    MISSILE_LAUNCHER_TEXTURE,
+    MISSILE_TEXTURE,
+    MONEY_ASTEROID_TEXTURE,
+    HAULER_TEXTURE,
+    HAULER_MIDDLE_TEXTURE,
+    HAULER_BACK_TEXTURE,
+    HAULER_THRUSTERS_TEXTURE,
+    CRUSTLING_TEXTURE,
+    FERRITHARAX_TEXTURE,
+    FERRITHARAX_BODY_TEXTURE,
+    FERRITHARAX_LEFT_SHOULDER_TEXTURE,
+    FERRITHARAX_RIGHT_SHOULDER_TEXTURE,
+    FERRITHARAX_LEFT_ARM_TEXTURE,
+    FERRITHARAX_RIGHT_ARM_TEXTURE,
+    FERRITHARAX_LEFT_CLAW_TEXTURE,
+    FERRITHARAX_RIGHT_CLAW_TEXTURE,
+    MECHA_FERRITHARAX_TEXTURE,
+    MECHA_FERRITHARAX_BODY_TEXTURE,
+    MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE,
+    MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE,
+    MECHA_FERRITHARAX_LEFT_ARM_TEXTURE,
+    MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE,
+    MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE,
+    MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE,
+    MECHA_SAUCETRON_TEXTURE,
+    MECHA_SAUCETRON_BODY_TEXTURE,
+    MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE,
+    MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE,
+    MECHA_SAUCETRON_LEFT_ARM_TEXTURE,
+    MECHA_SAUCETRON_RIGHT_ARM_TEXTURE,
+    MECHA_SAUCETRON_LEFT_CLAW_TEXTURE,
+    MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE,
+    PLAYER_BULLET_TEXTURE,
+    PLAYER_BLAST_TEXTURE,
+    ENEMY_BULLET_TEXTURE,
+    ENEMY_BLAST_TEXTURE,
+    CONSUMABLE_MONEY_TEXTURE,
+    CONSUMABLE_MONEY3_TEXTURE,
+    CONSUMABLE_HEALTH_TEXTURE,
+    CONSUMABLE_ARMOR_TEXTURE,
+    CONSUMABLE_GAIN_PROJECTILES_TEXTURE,
+    ITEM_ENHANCED_PLATING_TEXTURE,
+    HEALTH_BAR_LABEL_TEXTURE,
+    DEFENSE_BAR_LABEL_TEXTURE,
+    WARNING_GRADIENT_TEXTURE,
+    DEFENSE_GRADIENT_TEXTURE,
+    ABILITY_SQUARE_LEFT_TEXTURE,
+    BLAST_ABILITY_TEXTURE,
+    BULLET_ABILITY_TEXTURE,
+    MEGABLAST_ABILITY_TEXTURE,
+    CHARGE_ABILITY_TEXTURE,
+    DAMAGE_ICON_TEXTURE,
+    HEALTH_ICON_TEXTURE,
+    RANGE_ICON_TEXTURE,
+    FIRE_RATE_ICON_TEXTURE,
+    SIZE_ICON_TEXTURE,
+    SPEED_ICON_TEXTURE,
+  ]
+  for path in image_paths {
+    ignore(@asset.load_image(path))
   }
-  @backend.load_font(FONT_LUNCHDS_ALIAS, FONT_LUNCHDS_PATH)
-  @backend.load_font(FONT_SPACE_MADNESS_ALIAS, FONT_SPACE_MADNESS_PATH)
-  @backend.load_font(FONT_WIBLETOWN_ALIAS, FONT_WIBLETOWN_PATH)
-  @backend.preload_audio(MUSIC_GAME_LOOP)
-  @backend.preload_audio(SFX_PLAYER_FIRE)
-  @backend.preload_audio(SFX_ENEMY_FIRE)
-  @backend.preload_audio(SFX_PLAYER_HIT)
-  @backend.preload_audio(SFX_DEFENSE_DAMAGE)
-  @backend.preload_audio(SFX_DEFENSE_HEAL)
-  @backend.preload_audio(SFX_MEGABLAST)
-  @backend.preload_audio(SFX_CONSUMABLE_PICKUP)
-  @backend.preload_audio(SFX_MENU_INPUT_SUCCESS)
+  for texture in game_background_textures {
+    ignore(@asset.load_image(texture))
+  }
+
+  ignore(@asset.load_font(FONT_LUNCHDS_PATH, family=FONT_LUNCHDS_ALIAS))
+  ignore(
+    @asset.load_font(FONT_SPACE_MADNESS_PATH, family=FONT_SPACE_MADNESS_ALIAS),
+  )
+  ignore(@asset.load_font(FONT_WIBLETOWN_PATH, family=FONT_WIBLETOWN_ALIAS))
+
+  let audio_paths = [
+    MUSIC_GAME_LOOP,
+    SFX_PLAYER_FIRE,
+    SFX_ENEMY_FIRE,
+    SFX_PLAYER_HIT,
+    SFX_DEFENSE_DAMAGE,
+    SFX_DEFENSE_HEAL,
+    SFX_MEGABLAST,
+    SFX_CONSUMABLE_PICKUP,
+    SFX_MENU_INPUT_SUCCESS,
+  ]
+  for path in audio_paths {
+    ignore(@asset.load_audio(path))
+  }
 }
 
 ///|

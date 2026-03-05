@@ -4,5 +4,4 @@ import {
 
 options(
   "is-main": true,
-  overrides: [ "Milky2018/selene_raylib" ],
 )

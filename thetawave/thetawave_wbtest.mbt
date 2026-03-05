@@ -969,7 +969,10 @@ test "set_background game path binds stage-selected texture sprite" {
   if @sprite.sprites.get(game_state.background) is Some(sprite) {
     match sprite.sprite_type {
       @sprite.SpriteType::Picture(picture) =>
-        assert_eq(picture.tile_path, game_background_texture_for_stage(0))
+        assert_eq(
+          @asset.image_path(picture.image),
+          Some(game_background_texture_for_stage(0)),
+        )
       _ => fail("expected picture sprite for gameplay background")
     }
   } else {

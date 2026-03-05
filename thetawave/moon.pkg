@@ -13,6 +13,7 @@ import {
   "Milky2018/selene/transform",
   "Milky2018/selene/transform3d",
   "Milky2018/selene/audio",
+  "Milky2018/selene/asset",
   "Milky2018/selene/backend",
   "moonbitlang/core/cmp",
   "moonbitlang/core/math" @cmath,
