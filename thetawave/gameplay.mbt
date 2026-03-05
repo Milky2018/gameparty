@@ -2525,9 +2525,8 @@ fn set_character_slot_joined_visibility(
   set_ui_visible(join_prompt_ui, !joined)
   set_ui_visible(ready_text_ui, joined)
   set_ui_visible(center_portrait_ui, joined)
-  // Upstream currently does not display side carousel portraits in this port.
-  set_ui_visible(left_portrait_ui, false)
-  set_ui_visible(right_portrait_ui, false)
+  set_ui_visible(left_portrait_ui, joined)
+  set_ui_visible(right_portrait_ui, joined)
   set_ui_visible(name_ui, joined)
   set_ui_visible(ability_slot1_ui, joined)
   set_ui_visible(ability_slot1_icon_ui, joined)
@@ -2806,6 +2805,15 @@ const CS_RIGHT_ABILITY_TEXT_X : Double = CS_RIGHT_ABILITY_SLOT_X +
 const CS_RIGHT_STAT_ICON_X : Double = 430.0
 
 ///|
+const CS_P1_CAROUSEL_CENTER_X : Double = 120.0
+
+///|
+const CS_P2_CAROUSEL_CENTER_X : Double = 360.0
+
+///|
+const CS_CAROUSEL_SIDE_OFFSET_X : Double = 72.0
+
+///|
 const CS_PORTRAIT_CENTER_Y : Double = 128.0
 
 ///|
@@ -2876,14 +2884,26 @@ fn apply_character_selection_layout() -> Unit {
   @transform.positions.set(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
   @transform.positions.set(
     game_state.character_portrait_ui,
-    @math.Vec2D(120.0, CS_PORTRAIT_CENTER_Y),
+    @math.Vec2D(CS_P1_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
   )
-  @transform.positions.set(character_left_portrait_ui, @math.Vec2D(82.0, 110.0))
+  @transform.positions.set(
+    character_left_portrait_ui,
+    @math.Vec2D(
+      CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X,
+      CS_PORTRAIT_CENTER_Y,
+    ),
+  )
   @transform.positions.set(
     character_right_portrait_ui,
-    @math.Vec2D(158.0, 110.0),
+    @math.Vec2D(
+      CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X,
+      CS_PORTRAIT_CENTER_Y,
+    ),
   )
-  @transform.positions.set(character_name_ui, @math.Vec2D(120.0, CS_NAME_Y))
+  @transform.positions.set(
+    character_name_ui,
+    @math.Vec2D(CS_P1_CAROUSEL_CENTER_X, CS_NAME_Y),
+  )
   @transform.positions.set(
     character_ability_slot1_ui,
     @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
@@ -2925,17 +2945,26 @@ fn apply_character_selection_layout() -> Unit {
 
   @transform.positions.set(
     character_p2_center_portrait_ui,
-    @math.Vec2D(360.0, CS_PORTRAIT_CENTER_Y),
+    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
   )
   @transform.positions.set(
     character_p2_left_portrait_ui,
-    @math.Vec2D(322.0, 110.0),
+    @math.Vec2D(
+      CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X,
+      CS_PORTRAIT_CENTER_Y,
+    ),
   )
   @transform.positions.set(
     character_p2_right_portrait_ui,
-    @math.Vec2D(398.0, 110.0),
+    @math.Vec2D(
+      CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X,
+      CS_PORTRAIT_CENTER_Y,
+    ),
   )
-  @transform.positions.set(character_p2_name_ui, @math.Vec2D(360.0, CS_NAME_Y))
+  @transform.positions.set(
+    character_p2_name_ui,
+    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, CS_NAME_Y),
+  )
   @transform.positions.set(
     character_p2_ability_slot1_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
@@ -2974,11 +3003,11 @@ fn apply_character_selection_layout() -> Unit {
   }
   @transform.positions.set(
     character_p2_join_prompt_ui,
-    @math.Vec2D(360.0, 130.0),
+    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, 130.0),
   )
   @transform.positions.set(
     character_p2_ready_text_ui,
-    @math.Vec2D(360.0, 282.0),
+    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, 282.0),
   )
   @transform.positions.set(
     game_state.character_description_ui,

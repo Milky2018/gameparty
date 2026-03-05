@@ -337,18 +337,8 @@ fn character_carousel_portrait_sprite(
   center : Bool,
 ) -> @sprite.Sprite {
   let (texture, width, height) = match character {
-    Captain =>
-      if center {
-        (CAPTAIN_TEXTURE, 18.0, 18.0)
-      } else {
-        (CAPTAIN_OUTLINE_TEXTURE, 18.0, 18.0)
-      }
-    Juggernaut =>
-      if center {
-        (JUGGERNAUT_TEXTURE, 20.0, 24.0)
-      } else {
-        (JUGGERNAUT_OUTLINE_TEXTURE, 20.0, 24.0)
-      }
+    Captain => (CAPTAIN_TEXTURE, 18.0, 18.0)
+    Juggernaut => (JUGGERNAUT_TEXTURE, 20.0, 24.0)
   }
   let scale = if center { 4.0 } else { 3.0 }
   @sprite.Sprite::from_picture(

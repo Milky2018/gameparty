@@ -1053,6 +1053,21 @@ test "character selection horizontal lanes reserve non-overlap spacing" {
     CS_ABILITY_TEXT_GAP_TO_STAT_ICON <=
     CS_RIGHT_STAT_ICON_X,
   )
+
+  // Ensure the 3-item carousel has explicit spacing and does not overlap.
+  let center_max_half_width = 20.0 * 4.0 / 2.0
+  let side_max_half_width = 20.0 * 3.0 / 2.0
+  assert_true(
+    CS_CAROUSEL_SIDE_OFFSET_X >= center_max_half_width + side_max_half_width,
+  )
+  assert_true(
+    CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X - side_max_half_width >=
+    0.0,
+  )
+  assert_true(
+    CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X + side_max_half_width <=
+    VIEWPORT_WIDTH,
+  )
 }
 
 ///|
@@ -1192,13 +1207,25 @@ test "apply_character_selection_layout keeps canonical anchor positions" {
   }
 
   if @transform.positions.get(game_state.character_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], 120.0)
+    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 portrait ui")
   }
+  if @transform.positions.get(character_left_portrait_ui) is Some(pos) {
+    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  } else {
+    fail("missing position for p1 left portrait ui")
+  }
+  if @transform.positions.get(character_right_portrait_ui) is Some(pos) {
+    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  } else {
+    fail("missing position for p1 right portrait ui")
+  }
   if @transform.positions.get(character_name_ui) is Some(pos) {
-    assert_eq(pos.0[X], 120.0)
+    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_NAME_Y)
   } else {
     fail("missing position for p1 name ui")
@@ -1229,13 +1256,25 @@ test "apply_character_selection_layout keeps canonical anchor positions" {
   }
 
   if @transform.positions.get(character_p2_center_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], 360.0)
+    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 portrait ui")
   }
+  if @transform.positions.get(character_p2_left_portrait_ui) is Some(pos) {
+    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  } else {
+    fail("missing position for p2 left portrait ui")
+  }
+  if @transform.positions.get(character_p2_right_portrait_ui) is Some(pos) {
+    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  } else {
+    fail("missing position for p2 right portrait ui")
+  }
   if @transform.positions.get(character_p2_name_ui) is Some(pos) {
-    assert_eq(pos.0[X], 360.0)
+    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_NAME_Y)
   } else {
     fail("missing position for p2 name ui")
@@ -1351,5 +1390,130 @@ test "sync_text_ui_sprites preserves explicit visibility flags" {
     assert_true(sprite.visible)
   } else {
     fail("missing timer sprite after second sync")
+  }
+}
+
+///|
+test "character slot visibility follows joined state for carousel portraits" {
+  let center_portrait = @entity.Entity::new()
+  let left_portrait = @entity.Entity::new()
+  let right_portrait = @entity.Entity::new()
+  let name_ui = @entity.Entity::new()
+  let ability_slot1_ui = @entity.Entity::new()
+  let ability_slot1_icon_ui = @entity.Entity::new()
+  let ability_slot1_text_ui = @entity.Entity::new()
+  let ability_slot2_ui = @entity.Entity::new()
+  let ability_slot2_icon_ui = @entity.Entity::new()
+  let ability_slot2_text_ui = @entity.Entity::new()
+  let join_prompt_ui = @entity.Entity::new()
+  let ready_text_ui = @entity.Entity::new()
+  let stat_icon_uis = [@entity.Entity::new(), @entity.Entity::new()]
+  let stat_bg_uis = [@entity.Entity::new(), @entity.Entity::new()]
+  let stat_fill_uis = [@entity.Entity::new(), @entity.Entity::new()]
+
+  let all_entities = [
+    center_portrait, left_portrait, right_portrait, name_ui, ability_slot1_ui, ability_slot1_icon_ui,
+    ability_slot1_text_ui, ability_slot2_ui, ability_slot2_icon_ui, ability_slot2_text_ui,
+    join_prompt_ui, ready_text_ui,
+  ]
+  for entity in all_entities {
+    @sprite.sprites.set(
+      entity,
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
+        1,
+      ),
+    )
+  }
+  for entity in stat_icon_uis {
+    @sprite.sprites.set(
+      entity,
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
+        1,
+      ),
+    )
+  }
+  for entity in stat_bg_uis {
+    @sprite.sprites.set(
+      entity,
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
+        1,
+      ),
+    )
+  }
+  for entity in stat_fill_uis {
+    @sprite.sprites.set(
+      entity,
+      @sprite.Sprite::from_color_rect(
+        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
+        1,
+      ),
+    )
+  }
+
+  set_character_slot_joined_visibility(
+    false, center_portrait, left_portrait, right_portrait, name_ui, ability_slot1_ui,
+    ability_slot1_icon_ui, ability_slot1_text_ui, ability_slot2_ui, ability_slot2_icon_ui,
+    ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
+    ready_text_ui,
+  )
+  if @sprite.sprites.get(center_portrait) is Some(sprite) {
+    assert_true(!sprite.visible)
+  } else {
+    fail("missing center portrait sprite")
+  }
+  if @sprite.sprites.get(left_portrait) is Some(sprite) {
+    assert_true(!sprite.visible)
+  } else {
+    fail("missing left portrait sprite")
+  }
+  if @sprite.sprites.get(right_portrait) is Some(sprite) {
+    assert_true(!sprite.visible)
+  } else {
+    fail("missing right portrait sprite")
+  }
+  if @sprite.sprites.get(join_prompt_ui) is Some(sprite) {
+    assert_true(sprite.visible)
+  } else {
+    fail("missing join prompt sprite")
+  }
+  if @sprite.sprites.get(ready_text_ui) is Some(sprite) {
+    assert_true(!sprite.visible)
+  } else {
+    fail("missing ready text sprite")
+  }
+
+  set_character_slot_joined_visibility(
+    true, center_portrait, left_portrait, right_portrait, name_ui, ability_slot1_ui,
+    ability_slot1_icon_ui, ability_slot1_text_ui, ability_slot2_ui, ability_slot2_icon_ui,
+    ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
+    ready_text_ui,
+  )
+  if @sprite.sprites.get(center_portrait) is Some(sprite) {
+    assert_true(sprite.visible)
+  } else {
+    fail("missing center portrait sprite")
+  }
+  if @sprite.sprites.get(left_portrait) is Some(sprite) {
+    assert_true(sprite.visible)
+  } else {
+    fail("missing left portrait sprite")
+  }
+  if @sprite.sprites.get(right_portrait) is Some(sprite) {
+    assert_true(sprite.visible)
+  } else {
+    fail("missing right portrait sprite")
+  }
+  if @sprite.sprites.get(join_prompt_ui) is Some(sprite) {
+    assert_true(!sprite.visible)
+  } else {
+    fail("missing join prompt sprite")
+  }
+  if @sprite.sprites.get(ready_text_ui) is Some(sprite) {
+    assert_true(sprite.visible)
+  } else {
+    fail("missing ready text sprite")
   }
 }
