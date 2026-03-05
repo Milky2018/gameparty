@@ -27,8 +27,8 @@ Last updated: 2026-03-04
 3. `ui` button interaction system is available.
    - Port now uses Selene UI button interactions for main menu hover/press behavior instead of manual mouse-position heuristics.
 
-4. `ShiftLeft` keyboard input is available.
-   - Port now maps slot-two ability to `ShiftLeft` (while keeping mouse/gamepad mappings aligned).
+4. `KeyQ` keyboard input is available.
+   - Port now maps slot-two ability to `Q` (while keeping mouse/gamepad mappings aligned).
    - Upstream source: `upstream-rust/src/options/input.ron`.
 
 5. Selene 3D rendering pipeline is available.

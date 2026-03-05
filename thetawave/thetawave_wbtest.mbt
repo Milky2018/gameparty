@@ -928,7 +928,7 @@ test "victory_system requires finished stages and no living enemies" {
 }
 
 ///|
-test "background mode policy keeps character selection on 2d background" {
+test "background mode policy keeps all screens on 2d background" {
   assert_true(!uses_3d_background(Menu))
   assert_true(!uses_3d_background(CharacterSelection))
   assert_true(!uses_3d_background(Game))
@@ -966,7 +966,17 @@ test "set_background game path binds stage-selected texture sprite" {
   game_state.stage_index = 0
   set_background(Game)
 
-  if @sprite.sprites.get(game_state.background) is Some(sprite) {
+  if uses_3d_background(Game) {
+    assert_true(background3d_active.val)
+    assert_true(
+      @render3d.mesh3d_renderers.get(background3d_quad_entity) is Some(_),
+    )
+    if @sprite.sprites.get(game_state.background) is Some(sprite) {
+      assert_true(!sprite.visible)
+    } else {
+      fail("missing gameplay background sprite")
+    }
+  } else if @sprite.sprites.get(game_state.background) is Some(sprite) {
     match sprite.sprite_type {
       @sprite.SpriteType::Picture(picture) =>
         assert_eq(

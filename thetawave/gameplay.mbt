@@ -340,7 +340,7 @@ fn player_special_system(delta : Double) -> Unit {
   if game_state.special_cooldown > 0.0 {
     game_state.special_cooldown -= delta
   }
-  let special_pressed = @inputs.is_just_pressed(ShiftLeft) ||
+  let special_pressed = @inputs.is_just_pressed(KeyQ) ||
     @inputs.is_mouse_just_pressed(Right) ||
     gamepad_button_just_pressed(LeftTrigger) ||
     gamepad_button_just_pressed(East)
@@ -583,7 +583,7 @@ fn begin_tutorial_lesson(lesson : Int) -> Unit {
       game_state.allow_special = true
       game_state.tutorial_slot2_destroy = 3
       game_state.tutorial_spawn_timer = TUTORIAL_SPAWN_DELAY_SECONDS
-      game_state.stage_label = "Destroy enemies using your special ability"
+      game_state.stage_label = "Destroy enemies using your special ability (Q / Right Click)"
     }
     _ => {
       game_state.allow_move = true

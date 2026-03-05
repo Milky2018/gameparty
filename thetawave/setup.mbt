@@ -558,24 +558,6 @@ fn ensure_background3d_initialized() -> Unit {
 }
 
 ///|
-fn background3d_system(delta : Double) -> Unit {
-  if !background3d_active.val || !uses_3d_background(game_state.background_kind) {
-    return
-  }
-  if @transform3d.transforms3d.get(background3d_planet_entity)
-    is Some(transform) {
-    let step = @math.Quat::from_axis_angle(
-      @math.Vec3::new(0.0, 1.0, 0.0),
-      delta * background3d_planet_rotation_speed.val,
-    )
-    @transform3d.transforms3d.set(background3d_planet_entity, {
-      ..transform,
-      rotation: (transform.rotation * step).normalize(),
-    })
-  }
-}
-
-///|
 fn preload_assets() -> Unit {
   let image_paths = [
     MENU_BG_TEXTURE,
@@ -689,13 +671,13 @@ fn initialize_scene() -> Unit {
   if !entity.is_alive() {
     entity.respawn()
   }
-  ensure_background3d_initialized()
   set_background(Menu)
 }
 
 ///|
 fn set_background(kind : BackgroundKind) -> Unit {
   game_state.background_kind = kind
+  ignore(game_state.background_kind)
   if uses_3d_background(kind) {
     ensure_background3d_initialized()
     if kind is Menu || kind is Game {
