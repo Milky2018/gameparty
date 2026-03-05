@@ -1101,6 +1101,74 @@ test "menu button text center uses button rect and fallback anchor" {
 }
 
 ///|
+test "main menu mouse click uses cursor hit test instead of stale interaction state" {
+  let start_entity = game_state.menu_button_start_ui
+  let exit_entity = game_state.menu_button_exit_ui
+
+  let old_mouse_pos = @inputs.mouse.pos
+  let old_just_pressed_left = @inputs.just_pressed_mouse.left_button
+  let old_start_interaction = @ui.interactions.get(start_entity)
+  let old_exit_interaction = @ui.interactions.get(exit_entity)
+  let old_start_position = @transform.positions.get(start_entity)
+  let old_exit_position = @transform.positions.get(exit_entity)
+  let old_start_button = @ui.buttons.get(start_entity)
+  let old_exit_button = @ui.buttons.get(exit_entity)
+
+  @transform.positions.set(start_entity, @math.Vec2D(160.0, 176.0))
+  @transform.positions.set(exit_entity, @math.Vec2D(160.0, 242.0))
+  @ui.buttons.set(
+    start_entity,
+    @ui.Button::new(hit_size=@math.Vec2D(160.0, 22.0)),
+  )
+  @ui.buttons.set(
+    exit_entity,
+    @ui.Button::new(hit_size=@math.Vec2D(160.0, 22.0)),
+  )
+
+  let exit_position = menu_entity_virtual_position(exit_entity)
+  let exit_size = menu_button_hit_size(exit_entity)
+  let exit_center_virtual = @math.Vec2D(
+    exit_position[X] + exit_size[X] / 2.0,
+    exit_position[Y] + exit_size[Y] / 2.0,
+  )
+  @inputs.mouse.pos = @system.ui_virtual_to_screen(exit_center_virtual)
+  @inputs.just_pressed_mouse.left_button = true
+
+  // Simulate stale previous-frame interaction still pointing to Start.
+  @ui.interactions.set(start_entity, @ui.Pressed)
+  @ui.interactions.set(exit_entity, @ui.None)
+
+  assert_eq(main_menu_pressed_index(), Some(3))
+
+  @inputs.mouse.pos = old_mouse_pos
+  @inputs.just_pressed_mouse.left_button = old_just_pressed_left
+  match old_start_position {
+    Some(position) => @transform.positions.set(start_entity, position.0)
+    None => @transform.positions.remove(start_entity)
+  }
+  match old_exit_position {
+    Some(position) => @transform.positions.set(exit_entity, position.0)
+    None => @transform.positions.remove(exit_entity)
+  }
+  match old_start_button {
+    Some(button) => @ui.buttons.set(start_entity, button)
+    None => @ui.buttons.remove(start_entity)
+  }
+  match old_exit_button {
+    Some(button) => @ui.buttons.set(exit_entity, button)
+    None => @ui.buttons.remove(exit_entity)
+  }
+  match old_start_interaction {
+    Some(interaction) => @ui.interactions.set(start_entity, interaction)
+    None => @ui.interactions.remove(start_entity)
+  }
+  match old_exit_interaction {
+    Some(interaction) => @ui.interactions.set(exit_entity, interaction)
+    None => @ui.interactions.remove(exit_entity)
+  }
+}
+
+///|
 test "apply_character_selection_layout keeps canonical anchor positions" {
   apply_character_selection_layout()
 

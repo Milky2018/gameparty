@@ -174,6 +174,7 @@ fn main_menu_pressed_index() -> Int? {
   if !@inputs.is_mouse_just_pressed(Left) {
     return None
   }
+  let mouse_virtual = @system.screen_to_ui_virtual(@inputs.mouse.pos)
   let menu_entities = [
     game_state.menu_button_start_ui,
     game_state.menu_button_options_ui,
@@ -182,12 +183,51 @@ fn main_menu_pressed_index() -> Int? {
   ]
   for i in 0..<menu_entities.length() {
     let entity = menu_entities[i]
-    if @ui.interactions.get(entity) is Some(interaction) &&
-      interaction is @ui.Pressed {
+    if menu_button_contains_virtual_point(entity, mouse_virtual) {
       return Some(i)
     }
   }
   None
+}
+
+///|
+fn menu_button_contains_virtual_point(
+  entity : @entity.Entity,
+  point : @math.Vec2D,
+) -> Bool {
+  let size = menu_button_hit_size(entity)
+  if size[X] <= 0.0 || size[Y] <= 0.0 {
+    return false
+  }
+  let position = menu_entity_virtual_position(entity)
+  point[X] >= position[X] &&
+  point[X] <= position[X] + size[X] &&
+  point[Y] >= position[Y] &&
+  point[Y] <= position[Y] + size[Y]
+}
+
+///|
+fn menu_button_hit_size(entity : @entity.Entity) -> @math.Vec2D {
+  @ui.layout_sizes
+  .get(entity)
+  .unwrap_or(
+    @ui.buttons
+    .get(entity)
+    .map_or(@math.Vec2D(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT), button => {
+      button.hit_size
+    }),
+  )
+}
+
+///|
+fn menu_entity_virtual_position(entity : @entity.Entity) -> @math.Vec2D {
+  if entity.get_parent() is Some(parent) {
+    menu_entity_virtual_position(parent) + entity.get_offset()
+  } else {
+    @transform.positions
+    .get(entity)
+    .map_or(@math.Vec2D::zero(), position => position.0)
+  }
 }
 
 ///|
