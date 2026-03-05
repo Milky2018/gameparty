@@ -1,4 +1,5 @@
 import {
+  "Milky2018/selene/asset",
   "Milky2018/selene/system",
   "Milky2018/selene/plugins",
   "Milky2018/selene/entity",

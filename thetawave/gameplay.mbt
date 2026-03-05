@@ -18,7 +18,7 @@ fn menu_state_system(_delta : Double) -> Unit {
         moved = true
       }
       if moved {
-        @audio.play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.20)
+        play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.20)
       }
       if main_menu_pressed_index() is Some(clicked_index) {
         game_state.main_menu_selected = clicked_index
@@ -115,7 +115,7 @@ fn menu_state_system(_delta : Double) -> Unit {
       }
 
       if changed {
-        @audio.play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.20)
+        play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.20)
       }
 
       let any_joined = game_state.cs_p1_joined || game_state.cs_p2_joined
@@ -236,10 +236,10 @@ fn confirm_main_menu_selection() -> Unit {
     0 => enter_character_selection()
     1 => ()
     2 => ()
-    3 => @backend.request_close()
+    3 => @system.exit()
     _ => ()
   }
-  @audio.play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.30)
+  play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.30)
 }
 
 ///|
@@ -429,7 +429,7 @@ fn trigger_mega_blast() -> Unit {
       game_state.projectile_ttl,
     )
   }
-  @audio.play_audio(SFX_MEGABLAST, volume=0.35)
+  play_audio(SFX_MEGABLAST, volume=0.35)
 }
 
 ///|
@@ -446,7 +446,7 @@ fn trigger_charge() -> Unit {
   game_state.charge_time_left = 0.50
   game_state.charge_velocity = direction.scalar_mul(520.0)
   game_state.player_invulnerable = 0.50
-  @audio.play_audio(SFX_MEGABLAST, volume=0.20)
+  play_audio(SFX_MEGABLAST, volume=0.20)
 }
 
 ///|
@@ -1399,7 +1399,7 @@ fn enemy_attack_system(delta : Double) -> Unit {
   }
 
   if projectile_spawns.length() > 0 {
-    @audio.play_audio(SFX_ENEMY_FIRE, volume=0.15)
+    play_audio(SFX_ENEMY_FIRE, volume=0.15)
   }
 }
 
@@ -1774,7 +1774,7 @@ fn apply_consumable(kind : ConsumableKind) -> Unit {
   if money_changed {
     refresh_cooldown_multiplier()
   }
-  @audio.play_audio(SFX_CONSUMABLE_PICKUP, volume=0.2)
+  play_audio(SFX_CONSUMABLE_PICKUP, volume=0.2)
 }
 
 ///|
@@ -1786,7 +1786,7 @@ fn apply_item(kind : ItemKind) -> Unit {
       game_state.plating_count += 1
     }
   }
-  @audio.play_audio(SFX_CONSUMABLE_PICKUP, volume=0.25)
+  play_audio(SFX_CONSUMABLE_PICKUP, volume=0.25)
 }
 
 ///|
@@ -1816,7 +1816,7 @@ fn damage_player(amount : Int) -> Unit {
   game_state.shield_recharge_delay = SHIELD_RECHARGE_DELAY_SECONDS
   game_state.shield_recharge_progress = 0.0
   game_state.player_invulnerable = PLAYER_INVULNERABLE_SECONDS
-  @audio.play_audio(SFX_PLAYER_HIT, volume=0.25)
+  play_audio(SFX_PLAYER_HIT, volume=0.25)
   if game_state.hull == 0 {
     game_state.phase = GameOver
     set_background(GameOver)
@@ -1829,10 +1829,10 @@ fn apply_defense_delta(delta : Int) -> Unit {
   game_state.defense = clamp_int(game_state.defense + delta, 0, 100)
   if delta < 0 {
     game_state.warning_gradient_timer = 0.4
-    @audio.play_audio(SFX_DEFENSE_DAMAGE, volume=0.20)
+    play_audio(SFX_DEFENSE_DAMAGE, volume=0.20)
   } else if delta > 0 {
     game_state.defense_gradient_timer = 0.4
-    @audio.play_audio(SFX_DEFENSE_HEAL, volume=0.20)
+    play_audio(SFX_DEFENSE_HEAL, volume=0.20)
   }
   if game_state.defense == 0 {
     game_state.phase = GameOver

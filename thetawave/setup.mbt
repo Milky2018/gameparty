@@ -1364,7 +1364,7 @@ fn enter_main_menu() -> Unit {
   game_state.main_menu_selected = 0
   set_background(Menu)
   if !game_state.music_started {
-    @audio.play_audio(MUSIC_GAME_LOOP, volume=0.35, loop_=true)
+    play_audio(MUSIC_GAME_LOOP, volume=0.35, loop_=true)
     game_state.music_started = true
   }
 }
@@ -2143,7 +2143,7 @@ fn spawn_player_burst() -> Unit {
         )
       }
   }
-  @audio.play_audio(SFX_PLAYER_FIRE, volume=0.18)
+  play_audio(SFX_PLAYER_FIRE, volume=0.18)
 }
 
 ///|

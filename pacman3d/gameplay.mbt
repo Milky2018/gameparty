@@ -4,6 +4,25 @@ fn squared(value : Double) -> Double {
 }
 
 ///|
+fn play_audio(
+  path : String,
+  volume? : Double = 1.0,
+  loop_? : Bool = false,
+) -> Unit {
+  let source = @asset.load_audio(path)
+  if loop_ {
+    ignore(
+      @audio.spawn_audio(
+        source,
+        settings=@audio.PlaybackSettings::looped().with_volume(volume),
+      ),
+    )
+  } else {
+    @audio.play_one_shot(source, volume~)
+  }
+}
+
+///|
 fn dir_step(direction : Direction, speed : Double) -> (Double, Double) {
   match direction {
     Up => (0.0, -speed)
@@ -89,7 +108,7 @@ fn check_dot_collection() -> Unit {
       dots[i].collected = true
       dots[i].entity.destroy()
       dots[i].minimap_entity.destroy()
-      @audio.play_audio("pacman3d/assets/coin.wav")
+      play_audio("pacman3d/assets/coin.wav")
       if all_dots_collected() {
         next_level()
         reset_level_entities()
@@ -164,7 +183,7 @@ fn player_input_system(delta : Double) -> Unit {
 
   check_dot_collection()
   if check_ghost_collision() {
-    @audio.play_audio("pacman3d/assets/hurt.wav")
+    play_audio("pacman3d/assets/hurt.wav")
     reset_level_entities()
   }
   sync_camera_transform()

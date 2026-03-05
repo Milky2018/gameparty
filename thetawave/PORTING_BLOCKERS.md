@@ -17,7 +17,7 @@ Last updated: 2026-03-04
 ## Resolved by Selene 0.22.x adoption
 
 1. `backend.request_close()` is available.
-   - Port now maps main menu `Exit Game` to `@backend.request_close()`.
+   - Port now maps main menu `Exit Game` to `@system.exit()`.
    - Upstream source: `upstream-rust/src/ui/button.rs`.
 
 2. Gamepad abstraction and input queries are available.
