@@ -12,4 +12,4 @@ MoonBit game collection module.
 moon run cmd/thetawave
 ```
 
-`cmd/main` currently forwards to `cmd/thetawave`.
+`cmd/gameparty` currently forwards to `cmd/thetawave`.
