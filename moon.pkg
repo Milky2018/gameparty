@@ -1,3 +1,4 @@
 import {
+  "Milky2018/gameparty/pacman3d",
   "Milky2018/gameparty/thetawave",
 }
