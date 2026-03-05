@@ -8,6 +8,33 @@ const MENU_VIEWPORT_HEIGHT : Double = 540.0
 const MENU_FPS : UInt = 60
 
 ///|
+const PACMAN_UPSTREAM_FONT_FAMILY : String = "Arial"
+
+///|
+let pacman_upstream_font_registered : Ref[Bool] = { val: false }
+
+///|
+let pacman_upstream_font_candidate_paths : Array[String] = [
+  "/System/Library/Fonts/Supplemental/Arial.ttf", "/Library/Fonts/Arial.ttf", "C:/Windows/Fonts/arial.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+]
+
+///|
+fn register_pacman_upstream_font_once() -> Unit {
+  if pacman_upstream_font_registered.val {
+    return
+  }
+  for path in pacman_upstream_font_candidate_paths {
+    if @asset.read_bytes(path) is Some(_) {
+      ignore(@asset.load_font(path, family=PACMAN_UPSTREAM_FONT_FAMILY))
+      pacman_upstream_font_registered.val = true
+      return
+    }
+  }
+  pacman_upstream_font_registered.val = true
+}
+
+///|
 priv enum MenuChoice {
   LaunchThetawave
   LaunchPacman3d
@@ -121,7 +148,7 @@ fn refresh_menu_visuals() -> Unit {
     menu_title_entity,
     "GAME PARTY",
     @math.Vec2D(center_x, 92.0),
-    "64px Lunchds",
+    "64px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "white",
     300,
   )
@@ -129,7 +156,7 @@ fn refresh_menu_visuals() -> Unit {
     menu_hint_entity,
     "W/S or Arrow Keys Select   Enter/Space Confirm   ESC Exit",
     @math.Vec2D(center_x, 450.0),
-    "20px Lunchds",
+    "20px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "rgb(170,170,170)",
     300,
   )
@@ -141,7 +168,7 @@ fn refresh_menu_visuals() -> Unit {
       menu_item_entity(index),
       menu_item_text(index, selected),
       @math.Vec2D(center_x, item_y),
-      "40px Lunchds",
+      "40px \{PACMAN_UPSTREAM_FONT_FAMILY}",
       menu_item_color(index, selected),
       300,
     )
@@ -150,6 +177,7 @@ fn refresh_menu_visuals() -> Unit {
 
 ///|
 fn menu_startup_system(_delta : Double) -> Unit {
+  register_pacman_upstream_font_once()
   ensure_entity_alive(menu_title_entity)
   ensure_entity_alive(menu_hint_entity)
   ensure_entity_alive(menu_item1_entity)

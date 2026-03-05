@@ -4,6 +4,33 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
+const PACMAN_UPSTREAM_FONT_FAMILY : String = "Arial"
+
+///|
+let pacman_upstream_font_registered : Ref[Bool] = { val: false }
+
+///|
+let pacman_upstream_font_candidate_paths : Array[String] = [
+  "/System/Library/Fonts/Supplemental/Arial.ttf", "/Library/Fonts/Arial.ttf", "C:/Windows/Fonts/arial.ttf",
+  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+]
+
+///|
+fn register_pacman_upstream_font_once() -> Unit {
+  if pacman_upstream_font_registered.val {
+    return
+  }
+  for path in pacman_upstream_font_candidate_paths {
+    if @asset.read_bytes(path) is Some(_) {
+      ignore(@asset.load_font(path, family=PACMAN_UPSTREAM_FONT_FAMILY))
+      pacman_upstream_font_registered.val = true
+      return
+    }
+  }
+  pacman_upstream_font_registered.val = true
+}
+
+///|
 fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -21,7 +48,7 @@ fn setup_text_entity(
   let text = @sprite.Text::new(
     content,
     color~,
-    font="18px Lunchds",
+    font="18px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     baseline=Top,
     align=Left,
   )
@@ -355,6 +382,8 @@ fn reset_run() -> Unit {
 
 ///|
 fn startup_system(_delta : Double) -> Unit {
+  register_pacman_upstream_font_once()
+  install_embedded_assets()
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(light_entity)
   ensure_entity_alive(player_light_entity)

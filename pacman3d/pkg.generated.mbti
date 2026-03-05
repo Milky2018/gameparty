@@ -2,6 +2,8 @@
 package "Milky2018/gameparty/pacman3d"
 
 // Values
+pub fn get_embedded_asset(String) -> Bytes?
+
 pub fn run() -> Unit
 
 // Errors

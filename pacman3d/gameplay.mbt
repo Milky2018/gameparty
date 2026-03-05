@@ -273,22 +273,28 @@ fn hud_system(_delta : Double) -> Unit {
     hud_title_ui,
     hud_level_text(),
     @math.Vec2D(VIEWPORT_WIDTH - 140.0, 40.0),
-    "36px Lunchds",
+    "36px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "white",
   )
   set_hud_text(
     hud_line1_ui,
     hud_completion_title(),
     @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 170.0, 30.0),
-    "32px Lunchds",
+    "32px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "rgb(0,255,0)",
   )
   set_hud_text(
     hud_line2_ui,
     hud_completion_body(),
     @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 120.0, 70.0),
-    "20px Lunchds",
+    "20px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "rgb(0,255,0)",
   )
-  set_hud_text(hud_line3_ui, "", @math.Vec2D(0.0, 0.0), "18px Lunchds", "white")
+  set_hud_text(
+    hud_line3_ui,
+    "",
+    @math.Vec2D(0.0, 0.0),
+    "18px \{PACMAN_UPSTREAM_FONT_FAMILY}",
+    "white",
+  )
 }
