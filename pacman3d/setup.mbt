@@ -118,8 +118,17 @@ fn register_render_assets_once() -> Unit {
   dot_mesh.val = Some(
     @render3d.register_mesh_asset(@render3d.sphere_mesh(DOT_RADIUS)),
   )
-  ghost_mesh.val = Some(
-    @render3d.register_mesh_asset(@render3d.sphere_mesh(GHOST_RADIUS)),
+  ghost_body_mesh.val = Some(
+    @render3d.register_mesh_asset(
+      @render3d.cylinder_mesh(
+        GHOST_BODY_RADIUS,
+        GHOST_BODY_RADIUS,
+        GHOST_BODY_HEIGHT,
+      ),
+    ),
+  )
+  ghost_eye_mesh.val = Some(
+    @render3d.register_mesh_asset(@render3d.sphere_mesh(GHOST_EYE_RADIUS)),
   )
 
   let ceiling_texture_path = resolve_pacman_asset_path(
@@ -204,6 +213,16 @@ fn register_render_assets_once() -> Unit {
   ghost_material_slow.val = Some(
     @render3d.register_material_asset(slow_ghost_material_asset),
   )
+
+  let ghost_eye_material_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    emissive_color: color_rgba(40U, 40U, 40U, 1.0),
+    roughness: 0.25,
+  }
+  ghost_eye_material.val = Some(
+    @render3d.register_material_asset(ghost_eye_material_asset),
+  )
 }
 
 ///|
@@ -229,6 +248,52 @@ fn ghost_material_for_type(ghost_type : GhostType) -> @render3d.MaterialHandle {
     Normal => ghost_material_normal.val.unwrap()
     Slow => ghost_material_slow.val.unwrap()
   }
+}
+
+///|
+fn ghost_forward_vector(direction : Direction) -> (Double, Double) {
+  match direction {
+    Up => (0.0, -1.0)
+    Down => (0.0, 1.0)
+    Left => (-1.0, 0.0)
+    Right => (1.0, 0.0)
+  }
+}
+
+///|
+fn sync_ghost_visuals(ghost : Ghost) -> Unit {
+  @transform3d.transforms3d.set(ghost.entity, {
+    translation: @math.Vec3::new(ghost.x, MAP_GHOST_Y, ghost.z),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
+
+  let (forward_x, forward_z) = ghost_forward_vector(ghost.direction)
+  let side_x = -forward_z
+  let side_z = forward_x
+  let eye_base = @math.Vec3::new(
+    ghost.x + forward_x * GHOST_EYE_FORWARD_OFFSET,
+    MAP_GHOST_Y + GHOST_EYE_HEIGHT_OFFSET,
+    ghost.z + forward_z * GHOST_EYE_FORWARD_OFFSET,
+  )
+  @transform3d.transforms3d.set(ghost.left_eye_entity, {
+    translation: @math.Vec3::new(
+      eye_base.x + side_x * GHOST_EYE_SIDE_OFFSET,
+      eye_base.y,
+      eye_base.z + side_z * GHOST_EYE_SIDE_OFFSET,
+    ),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
+  @transform3d.transforms3d.set(ghost.right_eye_entity, {
+    translation: @math.Vec3::new(
+      eye_base.x - side_x * GHOST_EYE_SIDE_OFFSET,
+      eye_base.y,
+      eye_base.z - side_z * GHOST_EYE_SIDE_OFFSET,
+    ),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
 }
 
 ///|
@@ -273,6 +338,8 @@ fn clear_level_entities() -> Unit {
 
   for ghost in ghosts {
     ghost.entity.destroy()
+    ghost.left_eye_entity.destroy()
+    ghost.right_eye_entity.destroy()
     ghost.minimap_entity.destroy()
   }
   ghosts.clear()
@@ -380,8 +447,18 @@ fn reset_level_entities() -> Unit {
       if tile == 3 || tile == 4 || tile == 5 {
         let ghost_type = ghost_type_from_tile(tile)
         let ghost_entity = spawn_mesh_entity(
-          ghost_mesh.val.unwrap(),
+          ghost_body_mesh.val.unwrap(),
           ghost_material_for_type(ghost_type),
+          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+        )
+        let left_eye_entity = spawn_mesh_entity(
+          ghost_eye_mesh.val.unwrap(),
+          ghost_eye_material.val.unwrap(),
+          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+        )
+        let right_eye_entity = spawn_mesh_entity(
+          ghost_eye_mesh.val.unwrap(),
+          ghost_eye_material.val.unwrap(),
           @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
         )
         let ghost_minimap_color = match ghost_type {
@@ -395,14 +472,19 @@ fn reset_level_entities() -> Unit {
           ghost_minimap_color,
           180,
         )
-        ghosts.push({
+        let ghost_direction = random_direction()
+        let ghost = {
           entity: ghost_entity,
+          left_eye_entity,
+          right_eye_entity,
           minimap_entity: ghost_minimap_entity,
           x: world_x,
           z: world_z,
-          direction: random_direction(),
+          direction: ghost_direction,
           ghost_type,
-        })
+        }
+        sync_ghost_visuals(ghost)
+        ghosts.push(ghost)
       }
     }
   }

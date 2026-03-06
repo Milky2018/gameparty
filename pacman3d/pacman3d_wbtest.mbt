@@ -121,6 +121,8 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   )
   ghosts.push({
     entity: @entity.Entity::new(),
+    left_eye_entity: @entity.Entity::new(),
+    right_eye_entity: @entity.Entity::new(),
     minimap_entity: ghost_marker,
     x: world_x_for_tile(2),
     z: world_z_for_tile(2),

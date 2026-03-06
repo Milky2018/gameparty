@@ -209,11 +209,7 @@ pub fn ghost_update_system(delta : Double) -> Unit {
       ghost.direction = random_direction()
     }
     ghosts[i] = ghost
-    @transform3d.transforms3d.set(ghost.entity, {
-      translation: @math.Vec3::new(ghost.x, MAP_GHOST_Y, ghost.z),
-      rotation: @math.Quat::identity(),
-      scale: @math.Vec3::one(),
-    })
+    sync_ghost_visuals(ghost)
   }
 }
 

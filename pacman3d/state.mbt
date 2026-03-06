@@ -23,6 +23,26 @@ const DOT_RADIUS : Double = 0.125
 const GHOST_RADIUS : Double = 0.625
 
 ///|
+const GHOST_BODY_RADIUS : Double = 0.45
+
+///|
+const GHOST_BODY_HEIGHT : Double = GHOST_RADIUS * 2.0
+
+///|
+const GHOST_EYE_RADIUS : Double = 0.1
+
+///|
+const GHOST_EYE_FORWARD_OFFSET : Double = 0.41
+
+///|
+const GHOST_EYE_SIDE_OFFSET : Double = 0.16
+
+///|
+const GHOST_EYE_HEIGHT_OFFSET : Double = GHOST_BODY_HEIGHT / 2.0 +
+  GHOST_EYE_RADIUS +
+  0.06
+
+///|
 const PLAYER_RADIUS : Double = 0.625
 
 ///|
@@ -110,6 +130,8 @@ priv struct Dot {
 ///|
 priv struct Ghost {
   entity : @entity.Entity
+  left_eye_entity : @entity.Entity
+  right_eye_entity : @entity.Entity
   minimap_entity : @entity.Entity
   mut x : Double
   mut z : Double
@@ -247,7 +269,10 @@ let floor_mesh : Ref[@render3d.MeshHandle?] = { val: None }
 let dot_mesh : Ref[@render3d.MeshHandle?] = { val: None }
 
 ///|
-let ghost_mesh : Ref[@render3d.MeshHandle?] = { val: None }
+let ghost_body_mesh : Ref[@render3d.MeshHandle?] = { val: None }
+
+///|
+let ghost_eye_mesh : Ref[@render3d.MeshHandle?] = { val: None }
 
 ///|
 let wall_material : Ref[@render3d.MaterialHandle?] = { val: None }
@@ -269,6 +294,9 @@ let ghost_material_normal : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
 let ghost_material_slow : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ghost_eye_material : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
 let rand : @random.Rand = @random.Rand::new()
