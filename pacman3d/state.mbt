@@ -94,6 +94,60 @@ const MINIMAP_DOT_SIZE : Double = 4.0
 const MINIMAP_MARKER_SIZE : Double = 4.0
 
 ///|
+const WORLD_CLEAR_COLOR_R : UInt = 4U
+
+///|
+const WORLD_CLEAR_COLOR_G : UInt = 5U
+
+///|
+const WORLD_CLEAR_COLOR_B : UInt = 8U
+
+///|
+const AMBIENT_LIGHT_INTENSITY : Double = 0.06
+
+///|
+const DIRECTIONAL_LIGHT_INTENSITY : Double = 0.12
+
+///|
+const PLAYER_LIGHT_INTENSITY : Double = 0.9
+
+///|
+const PLAYER_LIGHT_RANGE : Double = 7.0
+
+///|
+const DOT_LIGHT_INTENSITY : Double = 0.28
+
+///|
+const DOT_LIGHT_RANGE : Double = 1.15
+
+///|
+const GHOST_POINT_LIGHT_INTENSITY : Double = 0.34
+
+///|
+const GHOST_POINT_LIGHT_RANGE : Double = 3.45
+
+///|
+const GHOST_SPOT_LIGHT_INTENSITY : Double = 2.6
+
+///|
+const GHOST_SPOT_LIGHT_RANGE : Double = 15.4
+
+///|
+const GHOST_SPOT_LIGHT_INNER_ANGLE : Double = 0.45
+
+///|
+const GHOST_SPOT_LIGHT_OUTER_ANGLE : Double = 2.52
+
+///|
+const GHOST_SPOT_LIGHT_FORWARD_OFFSET : Double = 0.32
+
+///|
+const GHOST_SPOT_LIGHT_HEIGHT_OFFSET : Double = 0.36
+
+///|
+const GHOST_SPOT_LIGHT_DOWNWARD : Double = 0.55
+
+///|
 type Level = ReadOnlyArray[ReadOnlyArray[Int]]
 
 ///|
@@ -130,6 +184,7 @@ priv struct Dot {
 ///|
 priv struct Ghost {
   entity : @entity.Entity
+  light_entity : @entity.Entity
   left_eye_entity : @entity.Entity
   right_eye_entity : @entity.Entity
   minimap_entity : @entity.Entity

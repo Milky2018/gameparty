@@ -106,6 +106,7 @@ fn check_dot_collection() -> Unit {
     let dz = dots[i].z - player_state.z
     if squared(dx) + squared(dz) <= squared(DOT_PICKUP_RADIUS) {
       dots[i].collected = true
+      @render3d.point_lights3d.remove(dots[i].entity)
       dots[i].entity.destroy()
       dots[i].minimap_entity.destroy()
       play_audio("pacman3d/assets/coin.wav")

@@ -249,6 +249,15 @@ fn ghost_material_for_type(ghost_type : GhostType) -> @render3d.MaterialHandle {
 }
 
 ///|
+fn ghost_light_color_for_type(ghost_type : GhostType) -> @render.Color {
+  match ghost_type {
+    Fast => color_rgba(220U, 42U, 42U, 1.0)
+    Normal => color_rgba(246U, 146U, 46U, 1.0)
+    Slow => color_rgba(42U, 108U, 214U, 1.0)
+  }
+}
+
+///|
 fn ghost_forward_vector(direction : Direction) -> (Double, Double) {
   match direction {
     Up => (0.0, -1.0)
@@ -274,6 +283,33 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     MAP_GHOST_Y + GHOST_EYE_HEIGHT_OFFSET,
     ghost.z + forward_z * GHOST_EYE_FORWARD_OFFSET,
   )
+  let spot_direction = @math.Vec3::new(
+    forward_x,
+    -GHOST_SPOT_LIGHT_DOWNWARD,
+    forward_z,
+  ).normalize()
+  @transform3d.transforms3d.set(ghost.light_entity, {
+    translation: @math.Vec3::new(
+      ghost.x + forward_x * GHOST_SPOT_LIGHT_FORWARD_OFFSET,
+      MAP_GHOST_Y + GHOST_SPOT_LIGHT_HEIGHT_OFFSET,
+      ghost.z + forward_z * GHOST_SPOT_LIGHT_FORWARD_OFFSET,
+    ),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  })
+  @render3d.point_lights3d.set(ghost.light_entity, {
+    color: ghost_light_color_for_type(ghost.ghost_type),
+    intensity: GHOST_POINT_LIGHT_INTENSITY,
+    range: GHOST_POINT_LIGHT_RANGE,
+  })
+  @render3d.spot_lights3d.set(ghost.light_entity, {
+    direction: spot_direction,
+    color: ghost_light_color_for_type(ghost.ghost_type),
+    intensity: GHOST_SPOT_LIGHT_INTENSITY,
+    range: GHOST_SPOT_LIGHT_RANGE,
+    inner_angle: GHOST_SPOT_LIGHT_INNER_ANGLE,
+    outer_angle: GHOST_SPOT_LIGHT_OUTER_ANGLE,
+  })
   @transform3d.transforms3d.set(ghost.left_eye_entity, {
     translation: @math.Vec3::new(
       eye_base.x + side_x * GHOST_EYE_SIDE_OFFSET,
@@ -329,13 +365,16 @@ fn clear_level_entities() -> Unit {
   minimap_tile_entities.clear()
 
   for dot in dots {
+    @render3d.point_lights3d.remove(dot.entity)
     dot.entity.destroy()
     dot.minimap_entity.destroy()
   }
   dots.clear()
 
   for ghost in ghosts {
+    @render3d.spot_lights3d.remove(ghost.light_entity)
     ghost.entity.destroy()
+    ghost.light_entity.destroy()
     ghost.left_eye_entity.destroy()
     ghost.right_eye_entity.destroy()
     ghost.minimap_entity.destroy()
@@ -427,6 +466,11 @@ fn reset_level_entities() -> Unit {
           dot_material.val.unwrap(),
           @math.Vec3::new(world_x, MAP_DOT_Y, world_z),
         )
+        @render3d.point_lights3d.set(dot_entity, {
+          color: color_rgba(245U, 227U, 92U, 1.0),
+          intensity: DOT_LIGHT_INTENSITY,
+          range: DOT_LIGHT_RANGE,
+        })
         let minimap_dot_entity = spawn_color_rect_entity(
           @math.Vec2D(MINIMAP_DOT_SIZE, MINIMAP_DOT_SIZE),
           minimap_pos_for_world(world_x, world_z, MINIMAP_DOT_SIZE),
@@ -449,6 +493,7 @@ fn reset_level_entities() -> Unit {
           ghost_material_for_type(ghost_type),
           @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
         )
+        let ghost_light_entity = @entity.Entity::new()
         let left_eye_entity = spawn_mesh_entity(
           ghost_eye_mesh.val.unwrap(),
           ghost_eye_material.val.unwrap(),
@@ -473,6 +518,7 @@ fn reset_level_entities() -> Unit {
         let ghost_direction = random_direction()
         let ghost = {
           entity: ghost_entity,
+          light_entity: ghost_light_entity,
           left_eye_entity,
           right_eye_entity,
           minimap_entity: ghost_minimap_entity,
@@ -527,23 +573,31 @@ pub fn startup_system(_delta : Double) -> Unit {
     fov_y: 60.0,
     near: 0.01,
     far: 300.0,
-    clear_color: color_rgba(7U, 8U, 12U, 1.0),
+    clear_color: color_rgba(
+      WORLD_CLEAR_COLOR_R,
+      WORLD_CLEAR_COLOR_G,
+      WORLD_CLEAR_COLOR_B,
+      1.0,
+    ),
     order: 10,
     enabled: true,
   })
   @render3d.directional_lights3d.set(light_entity, {
     direction: @math.Vec3::new(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
-    intensity: 0.55,
+    intensity: DIRECTIONAL_LIGHT_INTENSITY,
     shadows: false,
   })
   @render3d.point_lights3d.set(player_light_entity, {
     color: color_rgba(255U, 240U, 214U, 1.0),
-    intensity: 2.8,
-    range: 9.5,
+    intensity: PLAYER_LIGHT_INTENSITY,
+    range: PLAYER_LIGHT_RANGE,
   })
   @render3d.set_ambient_light3d(
-    Some({ color: color_rgba(190U, 205U, 240U, 1.0), intensity: 0.18 }),
+    Some({
+      color: color_rgba(190U, 205U, 240U, 1.0),
+      intensity: AMBIENT_LIGHT_INTENSITY,
+    }),
   )
 
   setup_text_entity(
