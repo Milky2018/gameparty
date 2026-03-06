@@ -128,6 +128,7 @@ test "minimap ghost markers stay hidden until half dots are collected" {
     x: world_x_for_tile(2),
     z: world_z_for_tile(2),
     direction: Right,
+    bob_phase: 0.0,
     ghost_type: Normal,
   })
   dots.push({

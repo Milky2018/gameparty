@@ -268,9 +268,31 @@ fn ghost_forward_vector(direction : Direction) -> (Double, Double) {
 }
 
 ///|
+fn ghost_bob_phase_for_spawn(
+  x : Double,
+  z : Double,
+  ghost_type : GhostType,
+) -> Double {
+  let type_offset = match ghost_type {
+    Fast => 0.0
+    Normal => @cmath.PI / 3.0
+    Slow => @cmath.PI * 2.0 / 3.0
+  }
+  x * 0.37 + z * 0.61 + type_offset
+}
+
+///|
 fn sync_ghost_visuals(ghost : Ghost) -> Unit {
+  let bob_offset = @cmath.sin(
+      @time.elapsed() *
+      ghost_speed(ghost.ghost_type) *
+      GHOST_BOB_FREQUENCY_PER_SPEED +
+      ghost.bob_phase,
+    ) *
+    GHOST_BOB_AMPLITUDE
+  let ghost_y = MAP_GHOST_Y + bob_offset
   @transform3d.transforms3d.set(ghost.entity, {
-    translation: @math.Vec3::new(ghost.x, MAP_GHOST_Y, ghost.z),
+    translation: @math.Vec3::new(ghost.x, ghost_y, ghost.z),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
@@ -280,7 +302,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let side_z = forward_x
   let eye_base = @math.Vec3::new(
     ghost.x + forward_x * GHOST_EYE_FORWARD_OFFSET,
-    MAP_GHOST_Y + GHOST_EYE_HEIGHT_OFFSET,
+    ghost_y + GHOST_EYE_HEIGHT_OFFSET,
     ghost.z + forward_z * GHOST_EYE_FORWARD_OFFSET,
   )
   let spot_direction = @math.Vec3::new(
@@ -291,7 +313,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   @transform3d.transforms3d.set(ghost.light_entity, {
     translation: @math.Vec3::new(
       ghost.x + forward_x * GHOST_SPOT_LIGHT_FORWARD_OFFSET,
-      MAP_GHOST_Y + GHOST_SPOT_LIGHT_HEIGHT_OFFSET,
+      ghost_y + GHOST_SPOT_LIGHT_HEIGHT_OFFSET,
       ghost.z + forward_z * GHOST_SPOT_LIGHT_FORWARD_OFFSET,
     ),
     rotation: @math.Quat::identity(),
@@ -525,6 +547,7 @@ fn reset_level_entities() -> Unit {
           x: world_x,
           z: world_z,
           direction: ghost_direction,
+          bob_phase: ghost_bob_phase_for_spawn(world_x, world_z, ghost_type),
           ghost_type,
         }
         sync_ghost_visuals(ghost)

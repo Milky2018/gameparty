@@ -148,6 +148,12 @@ const GHOST_SPOT_LIGHT_HEIGHT_OFFSET : Double = 0.36
 const GHOST_SPOT_LIGHT_DOWNWARD : Double = 0.55
 
 ///|
+const GHOST_BOB_AMPLITUDE : Double = 0.14
+
+///|
+const GHOST_BOB_FREQUENCY_PER_SPEED : Double = 2.1
+
+///|
 type Level = ReadOnlyArray[ReadOnlyArray[Int]]
 
 ///|
@@ -191,6 +197,7 @@ priv struct Ghost {
   mut x : Double
   mut z : Double
   mut direction : Direction
+  bob_phase : Double
   ghost_type : GhostType
 }
 
