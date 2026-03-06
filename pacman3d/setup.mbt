@@ -62,6 +62,7 @@ fn setup_text_entity(
     align=Left,
   )
   @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 200))
+  @sprite.set_overlay_space(entity)
   @transform.positions.set(entity, position)
 }
 
@@ -79,6 +80,7 @@ fn setup_color_rect_entity(
     zindex,
   )
   @sprite.sprites.set(entity, sprite)
+  @sprite.set_overlay_space(entity)
   @transform.positions.set(entity, position)
 }
 
