@@ -1,5 +1,5 @@
 ///|
-fn startup_system(_delta : Double) -> Unit {
+pub fn startup_system(_delta : Double) -> Unit {
   if !ui_initialized.val {
     install_embedded_assets()
     preload_assets()

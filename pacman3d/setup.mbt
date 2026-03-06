@@ -7,6 +7,15 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 const PACMAN_UPSTREAM_FONT_FAMILY : String = "Arial"
 
 ///|
+const CEILING_TILE_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile.png"
+
+///|
+const WALL_TILE_TEXTURE_PATH : String = "pacman3d/assets/wall_tile.png"
+
+///|
+const FLOOR_TILE_TEXTURE_PATH : String = "pacman3d/assets/floor_tile.png"
+
+///|
 let pacman_upstream_font_registered : Ref[Bool] = { val: false }
 
 ///|
@@ -111,11 +120,26 @@ fn register_render_assets_once() -> Unit {
     @render3d.register_mesh_asset(@render3d.sphere_mesh(GHOST_RADIUS)),
   )
 
+  let ceiling_texture_path = resolve_pacman_asset_path(
+    CEILING_TILE_TEXTURE_PATH,
+  )
+  let wall_texture_path = resolve_pacman_asset_path(WALL_TILE_TEXTURE_PATH)
+  let floor_texture_path = resolve_pacman_asset_path(FLOOR_TILE_TEXTURE_PATH)
+
+  let ceiling_texture = @render3d.register_image_asset({
+    path: ceiling_texture_path,
+  })
+  let wall_texture = @render3d.register_image_asset({ path: wall_texture_path })
+  let floor_texture = @render3d.register_image_asset({
+    path: floor_texture_path,
+  })
+
   let wall_material_asset = {
     ..@render3d.default_standard_material3d(),
-    base_color: color_rgba(73U, 111U, 223U, 1.0),
-    roughness: 0.85,
-    metallic: 0.05,
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    base_color_texture: Some(wall_texture),
+    roughness: 0.86,
+    metallic: 0.02,
   }
   wall_material.val = Some(
     @render3d.register_material_asset(wall_material_asset),
@@ -123,11 +147,22 @@ fn register_render_assets_once() -> Unit {
 
   let floor_material_asset = {
     ..@render3d.default_standard_material3d(),
-    base_color: color_rgba(18U, 24U, 36U, 1.0),
-    roughness: 0.98,
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    base_color_texture: Some(floor_texture),
+    roughness: 0.97,
   }
   floor_material.val = Some(
     @render3d.register_material_asset(floor_material_asset),
+  )
+
+  let ceiling_material_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    base_color_texture: Some(ceiling_texture),
+    roughness: 0.92,
+  }
+  ceiling_material.val = Some(
+    @render3d.register_material_asset(ceiling_material_asset),
   )
 
   let dot_material_asset = {
@@ -213,6 +248,11 @@ fn clear_level_entities() -> Unit {
   }
   floor_entities.clear()
 
+  for entity in ceiling_entities {
+    entity.destroy()
+  }
+  ceiling_entities.clear()
+
   for entity in wall_entities {
     entity.destroy()
   }
@@ -293,6 +333,13 @@ fn reset_level_entities() -> Unit {
           @math.Vec3::new(world_x, MAP_FLOOR_Y, world_z),
         )
         floor_entities.push(floor_entity)
+
+        let ceiling_entity = spawn_mesh_entity(
+          floor_mesh.val.unwrap(),
+          ceiling_material.val.unwrap(),
+          @math.Vec3::new(world_x, MAP_CEILING_Y, world_z),
+        )
+        ceiling_entities.push(ceiling_entity)
       }
 
       if tile == 1 {
@@ -381,7 +428,7 @@ fn reset_run() -> Unit {
 }
 
 ///|
-fn startup_system(_delta : Double) -> Unit {
+pub fn startup_system(_delta : Double) -> Unit {
   register_pacman_upstream_font_once()
   install_embedded_assets()
   ensure_entity_alive(camera_entity)

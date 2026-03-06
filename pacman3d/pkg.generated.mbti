@@ -1,10 +1,32 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "Milky2018/gameparty/pacman3d"
 
+import {
+  "Milky2018/selene/system",
+}
+
 // Values
+pub fn add_runtime_systems(@system.App, () -> Bool) -> @system.App
+
+pub fn enter_from_host() -> Unit
+
 pub fn get_embedded_asset(String) -> Bytes?
 
+pub fn ghost_update_system(Double) -> Unit
+
+pub fn hud_system(Double) -> Unit
+
+pub fn minimap_system(Double) -> Unit
+
+pub fn player_input_system(Double) -> Unit
+
+pub fn reset_exit_handler() -> Unit
+
 pub fn run() -> Unit
+
+pub fn set_exit_handler(() -> Unit) -> Unit
+
+pub fn startup_system(Double) -> Unit
 
 // Errors
 

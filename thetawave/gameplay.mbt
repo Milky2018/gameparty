@@ -1,5 +1,5 @@
 ///|
-fn menu_state_system(_delta : Double) -> Unit {
+pub fn menu_state_system(_delta : Double) -> Unit {
   match game_state.screen {
     MainMenu => {
       if main_menu_hovered_index() is Some(hovered_index) {
@@ -236,7 +236,7 @@ fn confirm_main_menu_selection() -> Unit {
     0 => enter_character_selection()
     1 => ()
     2 => ()
-    3 => @system.exit()
+    3 => request_exit()
     _ => ()
   }
   play_audio(SFX_MENU_INPUT_SUCCESS, volume=0.30)
@@ -333,7 +333,7 @@ fn gamepad_direction_flags() -> (Bool, Bool, Bool, Bool) {
 }
 
 ///|
-fn player_input_system(delta : Double) -> Unit {
+pub fn player_input_system(delta : Double) -> Unit {
   guard is_run_playing() else { return }
   guard game_state.allow_move else { return }
   if game_state.charge_time_left > 0.0 {
@@ -357,7 +357,7 @@ fn player_input_system(delta : Double) -> Unit {
 }
 
 ///|
-fn player_shoot_system(delta : Double) -> Unit {
+pub fn player_shoot_system(delta : Double) -> Unit {
   guard is_run_playing() else { return }
   guard game_state.allow_main_attack else { return }
   if game_state.shoot_cooldown > 0.0 {
@@ -374,7 +374,7 @@ fn player_shoot_system(delta : Double) -> Unit {
 }
 
 ///|
-fn player_special_system(delta : Double) -> Unit {
+pub fn player_special_system(delta : Double) -> Unit {
   guard is_run_playing() else { return }
   guard game_state.allow_special else { return }
   if game_state.special_cooldown > 0.0 {
@@ -450,7 +450,7 @@ fn trigger_charge() -> Unit {
 }
 
 ///|
-fn enemy_spawn_system(delta : Double) -> Unit {
+pub fn enemy_spawn_system(delta : Double) -> Unit {
   guard is_run_playing() else { return }
   update_stage_progress(delta)
   guard current_stage() is Some(stage) else { return }
@@ -831,7 +831,7 @@ fn has_enemy_kind(kind : EnemyKind) -> Bool {
 }
 
 ///|
-fn simulation_system(delta : Double) -> Unit {
+pub fn simulation_system(delta : Double) -> Unit {
   guard is_run_playing() else { return }
   game_state.elapsed += delta
   tick_center_intro(delta)
@@ -1474,7 +1474,7 @@ fn move_items(delta : Double) -> Unit {
 }
 
 ///|
-fn combat_system(_delta : Double) -> Unit {
+pub fn combat_system(_delta : Double) -> Unit {
   guard is_run_playing() else { return }
   bullet_enemy_collision()
   enemy_bullet_player_collision()
@@ -1841,7 +1841,7 @@ fn apply_defense_delta(delta : Int) -> Unit {
 }
 
 ///|
-fn victory_system(_delta : Double) -> Unit {
+pub fn victory_system(_delta : Double) -> Unit {
   if is_run_playing() &&
     game_state.stage_index >= run_stages.length() &&
     enemies.length() == 0 {
@@ -1851,7 +1851,7 @@ fn victory_system(_delta : Double) -> Unit {
 }
 
 ///|
-fn ui_system(_delta : Double) -> Unit {
+pub fn ui_system(_delta : Double) -> Unit {
   match game_state.screen {
     MainMenu => ui_main_menu()
     CharacterSelection => ui_character_selection()

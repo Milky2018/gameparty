@@ -9,7 +9,7 @@ fn play_audio(
   volume? : Double = 1.0,
   loop_? : Bool = false,
 ) -> Unit {
-  let source = @asset.load_audio(path)
+  let source = @asset.load_audio(resolve_pacman_asset_path(path))
   if loop_ {
     ignore(
       @audio.spawn_audio(
@@ -133,7 +133,12 @@ fn check_ghost_collision() -> Bool {
 }
 
 ///|
-fn player_input_system(delta : Double) -> Unit {
+pub fn player_input_system(delta : Double) -> Unit {
+  if @inputs.is_just_pressed(Escape) {
+    request_exit()
+    return
+  }
+
   if @inputs.just_pressed_mouse.left_button {
     @system.lock_mouse()
   }
@@ -190,7 +195,7 @@ fn player_input_system(delta : Double) -> Unit {
 }
 
 ///|
-fn ghost_update_system(delta : Double) -> Unit {
+pub fn ghost_update_system(delta : Double) -> Unit {
   for i in 0..<ghosts.length() {
     let ghost = ghosts[i]
     let speed = ghost_speed(ghost.ghost_type) * delta
@@ -213,7 +218,7 @@ fn ghost_update_system(delta : Double) -> Unit {
 }
 
 ///|
-fn minimap_system(_delta : Double) -> Unit {
+pub fn minimap_system(_delta : Double) -> Unit {
   @transform.positions.set(
     minimap_player_entity,
     minimap_pos_for_world(player_state.x, player_state.z, MINIMAP_MARKER_SIZE),
@@ -268,7 +273,7 @@ fn hud_completion_body() -> String {
 }
 
 ///|
-fn hud_system(_delta : Double) -> Unit {
+pub fn hud_system(_delta : Double) -> Unit {
   set_hud_text(
     hud_title_ui,
     hud_level_text(),

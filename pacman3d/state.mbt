@@ -47,6 +47,9 @@ const GHOST_LEVEL_SPEED_BONUS : Double = 0.5625
 const MAP_FLOOR_Y : Double = -FLOOR_THICKNESS / 2.0
 
 ///|
+const MAP_CEILING_Y : Double = WALL_HEIGHT + FLOOR_THICKNESS / 2.0
+
+///|
 const MAP_DOT_Y : Double = 0.14
 
 ///|
@@ -202,6 +205,9 @@ let ghosts : Array[Ghost] = []
 let floor_entities : Array[@entity.Entity] = []
 
 ///|
+let ceiling_entities : Array[@entity.Entity] = []
+
+///|
 let wall_entities : Array[@entity.Entity] = []
 
 ///|
@@ -250,6 +256,9 @@ let wall_material : Ref[@render3d.MaterialHandle?] = { val: None }
 let floor_material : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
+let ceiling_material : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
 let dot_material : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
@@ -263,6 +272,22 @@ let ghost_material_slow : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
 let rand : @random.Rand = @random.Rand::new()
+
+///|
+let pacman_asset_path_prefixes : Array[String] = [
+  "", "../", "../../", "../../../",
+]
+
+///|
+fn resolve_pacman_asset_path(path : String) -> String {
+  for prefix in pacman_asset_path_prefixes {
+    let candidate = "\{prefix}\{path}"
+    if @asset.read_bytes(candidate) is Some(_) {
+      return candidate
+    }
+  }
+  path
+}
 
 ///|
 fn map_width(level : Level) -> Int {
