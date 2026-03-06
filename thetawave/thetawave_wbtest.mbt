@@ -1131,13 +1131,15 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
 
   @transform.positions.set(start_entity, @math.Vec2D(160.0, 176.0))
   @transform.positions.set(exit_entity, @math.Vec2D(160.0, 242.0))
-  @ui.buttons.set(
+  @ui.buttons.set(start_entity, @ui.Button::new())
+  @ui.buttons.set(exit_entity, @ui.Button::new())
+  @ui.nodes.set(
     start_entity,
-    @ui.Button::new(hit_size=@math.Vec2D(160.0, 22.0)),
+    @ui.Node::absolute(@math.Vec2D::zero(), size=@math.Vec2D(160.0, 22.0)),
   )
-  @ui.buttons.set(
+  @ui.nodes.set(
     exit_entity,
-    @ui.Button::new(hit_size=@math.Vec2D(160.0, 22.0)),
+    @ui.Node::absolute(@math.Vec2D::zero(), size=@math.Vec2D(160.0, 22.0)),
   )
 
   let exit_position = menu_entity_virtual_position(exit_entity)

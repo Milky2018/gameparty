@@ -208,14 +208,18 @@ fn menu_button_contains_virtual_point(
 
 ///|
 fn menu_button_hit_size(entity : @entity.Entity) -> @math.Vec2D {
-  @ui.layout_sizes
+  @ui.computed_ui_nodes
   .get(entity)
-  .unwrap_or(
-    @ui.buttons
+  .map_or(
+    @ui.nodes
     .get(entity)
-    .map_or(@math.Vec2D(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT), button => {
-      button.hit_size
+    .map_or(@math.Vec2D(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT), node => {
+      match (node.width, node.height) {
+        (@ui.Px(width), @ui.Px(height)) => @math.Vec2D(width, height)
+        _ => @math.Vec2D(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT)
+      }
     }),
+    node => node.size,
   )
 }
 
@@ -1876,7 +1880,8 @@ fn set_ui_visible(entity : @entity.Entity, visible : Bool) -> Unit {
 ///|
 fn set_ui_button_enabled(entity : @entity.Entity, enabled : Bool) -> Unit {
   if @ui.buttons.get(entity) is Some(button) {
-    button.enabled = enabled
+    ignore(button)
+    @ui.buttons.set(entity, @ui.Button::new(enabled~))
   }
 }
 

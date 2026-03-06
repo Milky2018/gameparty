@@ -1333,7 +1333,6 @@ fn setup_text_entity(
   }
   @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 100))
   @transform.positions.set(entity, position)
-  @ui.uis.set(entity, @ui.Ui::new())
 }
 
 ///|
@@ -1347,12 +1346,15 @@ fn setup_picture_entity(
   }
   @sprite.sprites.set(entity, sprite)
   @transform.positions.set(entity, position)
-  @ui.uis.set(entity, @ui.Ui::new())
 }
 
 ///|
 fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2D) -> Unit {
-  @ui.buttons.set(entity, @ui.Button::new(hit_size~))
+  let position = @transform.positions
+    .get(entity)
+    .map_or(@math.Vec2D::zero(), position => position.0)
+  @ui.nodes.set(entity, @ui.Node::absolute(position, size=hit_size))
+  @ui.buttons.set(entity, @ui.Button::new())
   @ui.interactions.set(entity, @ui.None)
 }
 
