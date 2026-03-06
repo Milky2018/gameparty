@@ -1,4 +1,7 @@
 ///|
+let mouse_locked_last_frame : Ref[Bool] = { val: false }
+
+///|
 fn squared(value : Double) -> Double {
   value * value
 }
@@ -136,7 +139,10 @@ fn check_ghost_collision() -> Bool {
 ///|
 pub fn player_input_system(delta : Double) -> Unit {
   if @inputs.is_just_pressed(Escape) {
-    request_exit()
+    if !mouse_locked_last_frame.val {
+      request_exit()
+    }
+    mouse_locked_last_frame.val = @system.is_mouse_locked()
     return
   }
 
@@ -193,6 +199,7 @@ pub fn player_input_system(delta : Double) -> Unit {
     reset_level_entities()
   }
   sync_camera_transform()
+  mouse_locked_last_frame.val = @system.is_mouse_locked()
 }
 
 ///|

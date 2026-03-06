@@ -644,5 +644,6 @@ pub fn startup_system(_delta : Double) -> Unit {
   setup_text_entity(hud_line3_ui, "", @math.Vec2D(0.0, 0.0), "white")
 
   @system.lock_mouse()
+  mouse_locked_last_frame.val = @system.is_mouse_locked()
   reset_run()
 }
