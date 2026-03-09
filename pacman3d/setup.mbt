@@ -10,10 +10,19 @@ const PACMAN_UPSTREAM_FONT_FAMILY : String = "Arial"
 const CEILING_TILE_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile.png"
 
 ///|
+const CEILING_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile_albedo.png"
+
+///|
 const WALL_TILE_TEXTURE_PATH : String = "pacman3d/assets/wall_tile.png"
 
 ///|
+const WALL_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/wall_tile_albedo.png"
+
+///|
 const FLOOR_TILE_TEXTURE_PATH : String = "pacman3d/assets/floor_tile.png"
+
+///|
+const FLOOR_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/floor_tile_albedo.png"
 
 ///|
 let pacman_upstream_font_registered : Ref[Bool] = { val: false }
@@ -128,50 +137,165 @@ fn register_render_assets_once() -> Unit {
   ghost_eye_mesh.val = Some(
     @render3d.register_mesh_asset(@render3d.sphere_mesh(GHOST_EYE_RADIUS)),
   )
+  ghost_spot_ray_mesh.val = Some(
+    @render3d.register_mesh_asset(
+      @render3d.cube_mesh(
+        @math.Vec3::new(
+          GHOST_SPOT_DEBUG_RAY_THICKNESS,
+          GHOST_SPOT_DEBUG_RAY_THICKNESS,
+          GHOST_SPOT_DEBUG_RAY_LENGTH,
+        ),
+      ),
+    ),
+  )
 
   let ceiling_texture_path = resolve_pacman_asset_path(
     CEILING_TILE_TEXTURE_PATH,
   )
+  let ceiling_texture_albedo_path = resolve_pacman_asset_path(
+    CEILING_TILE_ALBEDO_TEXTURE_PATH,
+  )
   let wall_texture_path = resolve_pacman_asset_path(WALL_TILE_TEXTURE_PATH)
+  let wall_texture_albedo_path = resolve_pacman_asset_path(
+    WALL_TILE_ALBEDO_TEXTURE_PATH,
+  )
   let floor_texture_path = resolve_pacman_asset_path(FLOOR_TILE_TEXTURE_PATH)
+  let floor_texture_albedo_path = resolve_pacman_asset_path(
+    FLOOR_TILE_ALBEDO_TEXTURE_PATH,
+  )
 
   let ceiling_texture = @render3d.register_image_asset({
     path: ceiling_texture_path,
   })
+  let ceiling_texture_albedo = @render3d.register_image_asset({
+    path: ceiling_texture_albedo_path,
+  })
   let wall_texture = @render3d.register_image_asset({ path: wall_texture_path })
+  let wall_texture_albedo = @render3d.register_image_asset({
+    path: wall_texture_albedo_path,
+  })
   let floor_texture = @render3d.register_image_asset({
     path: floor_texture_path,
+  })
+  let floor_texture_albedo = @render3d.register_image_asset({
+    path: floor_texture_albedo_path,
   })
 
   let wall_material_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    base_color_texture: Some(wall_texture),
+    base_color_texture: Some(@render3d.texture_binding3d(wall_texture)),
     roughness: 0.86,
     metallic: 0.02,
   }
   wall_material.val = Some(
     @render3d.register_material_asset(wall_material_asset),
   )
+  let wall_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  wall_material_neutral.val = Some(
+    @render3d.register_material_asset(wall_material_neutral_asset),
+  )
+  let wall_material_textured_flat_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    base_color_texture: Some(@render3d.texture_binding3d(wall_texture_albedo)),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  wall_material_textured_flat.val = Some(
+    @render3d.register_material_asset(wall_material_textured_flat_asset),
+  )
+  let wall_material_brdf_only_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 0.86,
+    metallic: 0.02,
+  }
+  wall_material_brdf_only.val = Some(
+    @render3d.register_material_asset(wall_material_brdf_only_asset),
+  )
 
   let floor_material_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    base_color_texture: Some(floor_texture),
+    base_color_texture: Some(@render3d.texture_binding3d(floor_texture)),
     roughness: 0.97,
   }
   floor_material.val = Some(
     @render3d.register_material_asset(floor_material_asset),
   )
+  let floor_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  floor_material_neutral.val = Some(
+    @render3d.register_material_asset(floor_material_neutral_asset),
+  )
+  let floor_material_textured_flat_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    base_color_texture: Some(@render3d.texture_binding3d(floor_texture_albedo)),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  floor_material_textured_flat.val = Some(
+    @render3d.register_material_asset(floor_material_textured_flat_asset),
+  )
+  let floor_material_brdf_only_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 0.97,
+    metallic: 0.0,
+  }
+  floor_material_brdf_only.val = Some(
+    @render3d.register_material_asset(floor_material_brdf_only_asset),
+  )
 
   let ceiling_material_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    base_color_texture: Some(ceiling_texture),
+    base_color_texture: Some(@render3d.texture_binding3d(ceiling_texture)),
     roughness: 0.92,
   }
   ceiling_material.val = Some(
     @render3d.register_material_asset(ceiling_material_asset),
+  )
+  let ceiling_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  ceiling_material_neutral.val = Some(
+    @render3d.register_material_asset(ceiling_material_neutral_asset),
+  )
+  let ceiling_material_textured_flat_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    base_color_texture: Some(
+      @render3d.texture_binding3d(ceiling_texture_albedo),
+    ),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  ceiling_material_textured_flat.val = Some(
+    @render3d.register_material_asset(ceiling_material_textured_flat_asset),
+  )
+  let ceiling_material_brdf_only_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 0.92,
+    metallic: 0.0,
+  }
+  ceiling_material_brdf_only.val = Some(
+    @render3d.register_material_asset(ceiling_material_brdf_only_asset),
   )
 
   let dot_material_asset = {
@@ -181,6 +305,24 @@ fn register_render_assets_once() -> Unit {
     roughness: 0.3,
   }
   dot_material.val = Some(@render3d.register_material_asset(dot_material_asset))
+  let dot_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  dot_material_neutral.val = Some(
+    @render3d.register_material_asset(dot_material_neutral_asset),
+  )
+  let dot_material_no_emissive_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(245U, 227U, 92U, 1.0),
+    roughness: 0.3,
+    metallic: 0.0,
+  }
+  dot_material_no_emissive.val = Some(
+    @render3d.register_material_asset(dot_material_no_emissive_asset),
+  )
 
   let fast_ghost_material_asset = {
     ..@render3d.default_standard_material3d(),
@@ -190,6 +332,24 @@ fn register_render_assets_once() -> Unit {
   }
   ghost_material_fast.val = Some(
     @render3d.register_material_asset(fast_ghost_material_asset),
+  )
+  let fast_ghost_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  ghost_material_fast_neutral.val = Some(
+    @render3d.register_material_asset(fast_ghost_material_neutral_asset),
+  )
+  let fast_ghost_material_no_emissive_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(220U, 42U, 42U, 1.0),
+    roughness: 0.35,
+    metallic: 0.0,
+  }
+  ghost_material_fast_no_emissive.val = Some(
+    @render3d.register_material_asset(fast_ghost_material_no_emissive_asset),
   )
 
   let normal_ghost_material_asset = {
@@ -201,6 +361,24 @@ fn register_render_assets_once() -> Unit {
   ghost_material_normal.val = Some(
     @render3d.register_material_asset(normal_ghost_material_asset),
   )
+  let normal_ghost_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  ghost_material_normal_neutral.val = Some(
+    @render3d.register_material_asset(normal_ghost_material_neutral_asset),
+  )
+  let normal_ghost_material_no_emissive_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(246U, 146U, 46U, 1.0),
+    roughness: 0.35,
+    metallic: 0.0,
+  }
+  ghost_material_normal_no_emissive.val = Some(
+    @render3d.register_material_asset(normal_ghost_material_no_emissive_asset),
+  )
 
   let slow_ghost_material_asset = {
     ..@render3d.default_standard_material3d(),
@@ -210,6 +388,24 @@ fn register_render_assets_once() -> Unit {
   }
   ghost_material_slow.val = Some(
     @render3d.register_material_asset(slow_ghost_material_asset),
+  )
+  let slow_ghost_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  ghost_material_slow_neutral.val = Some(
+    @render3d.register_material_asset(slow_ghost_material_neutral_asset),
+  )
+  let slow_ghost_material_no_emissive_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(42U, 108U, 214U, 1.0),
+    roughness: 0.35,
+    metallic: 0.0,
+  }
+  ghost_material_slow_no_emissive.val = Some(
+    @render3d.register_material_asset(slow_ghost_material_no_emissive_asset),
   )
 
   let ghost_eye_material_asset = {
@@ -221,6 +417,51 @@ fn register_render_assets_once() -> Unit {
   ghost_eye_material.val = Some(
     @render3d.register_material_asset(ghost_eye_material_asset),
   )
+  let ghost_eye_material_neutral_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 1.0,
+    metallic: 0.0,
+  }
+  ghost_eye_material_neutral.val = Some(
+    @render3d.register_material_asset(ghost_eye_material_neutral_asset),
+  )
+  let ghost_eye_material_no_emissive_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(255U, 255U, 255U, 1.0),
+    roughness: 0.25,
+    metallic: 0.0,
+  }
+  ghost_eye_material_no_emissive.val = Some(
+    @render3d.register_material_asset(ghost_eye_material_no_emissive_asset),
+  )
+
+  let fast_ghost_spot_ray_material_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(220U, 42U, 42U, 1.0),
+    unlit: true,
+  }
+  ghost_spot_ray_material_fast.val = Some(
+    @render3d.register_material_asset(fast_ghost_spot_ray_material_asset),
+  )
+
+  let normal_ghost_spot_ray_material_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(246U, 146U, 46U, 1.0),
+    unlit: true,
+  }
+  ghost_spot_ray_material_normal.val = Some(
+    @render3d.register_material_asset(normal_ghost_spot_ray_material_asset),
+  )
+
+  let slow_ghost_spot_ray_material_asset = {
+    ..@render3d.default_standard_material3d(),
+    base_color: color_rgba(42U, 108U, 214U, 1.0),
+    unlit: true,
+  }
+  ghost_spot_ray_material_slow.val = Some(
+    @render3d.register_material_asset(slow_ghost_spot_ray_material_asset),
+  )
 }
 
 ///|
@@ -228,9 +469,17 @@ fn spawn_mesh_entity(
   mesh : @render3d.MeshHandle,
   material : @render3d.MaterialHandle,
   translation : @math.Vec3,
+  cast_shadows? : Bool = true,
+  receive_shadows? : Bool = true,
 ) -> @entity.Entity {
   let entity = @entity.Entity::new()
-  @render3d.mesh3d_renderers.set(entity, { mesh, material, visible: true })
+  @render3d.mesh3d_renderers.set(entity, {
+    mesh,
+    material,
+    visible: true,
+    cast_shadows,
+    receive_shadows,
+  })
   @transform3d.transforms3d.set(entity, {
     translation,
     rotation: @math.Quat::identity(),
@@ -241,10 +490,75 @@ fn spawn_mesh_entity(
 
 ///|
 fn ghost_material_for_type(ghost_type : GhostType) -> @render3d.MaterialHandle {
-  match ghost_type {
-    Fast => ghost_material_fast.val.unwrap()
-    Normal => ghost_material_normal.val.unwrap()
-    Slow => ghost_material_slow.val.unwrap()
+  match lighting_debug.material_mode {
+    Neutral | WorldTextureFlat | WorldBrdfOnly | WorldActorsNeutral =>
+      match ghost_type {
+        Fast => ghost_material_fast_neutral.val.unwrap()
+        Normal => ghost_material_normal_neutral.val.unwrap()
+        Slow => ghost_material_slow_neutral.val.unwrap()
+      }
+    WorldActorsColor =>
+      match ghost_type {
+        Fast => ghost_material_fast_no_emissive.val.unwrap()
+        Normal => ghost_material_normal_no_emissive.val.unwrap()
+        Slow => ghost_material_slow_no_emissive.val.unwrap()
+      }
+    Scene =>
+      match ghost_type {
+        Fast => ghost_material_fast.val.unwrap()
+        Normal => ghost_material_normal.val.unwrap()
+        Slow => ghost_material_slow.val.unwrap()
+      }
+  }
+}
+
+///|
+fn active_wall_material() -> @render3d.MaterialHandle {
+  match lighting_debug.material_mode {
+    Neutral => wall_material_neutral.val.unwrap()
+    WorldTextureFlat => wall_material_textured_flat.val.unwrap()
+    WorldBrdfOnly => wall_material_brdf_only.val.unwrap()
+    _ => wall_material.val.unwrap()
+  }
+}
+
+///|
+fn active_floor_material() -> @render3d.MaterialHandle {
+  match lighting_debug.material_mode {
+    Neutral => floor_material_neutral.val.unwrap()
+    WorldTextureFlat => floor_material_textured_flat.val.unwrap()
+    WorldBrdfOnly => floor_material_brdf_only.val.unwrap()
+    _ => floor_material.val.unwrap()
+  }
+}
+
+///|
+fn active_ceiling_material() -> @render3d.MaterialHandle {
+  match lighting_debug.material_mode {
+    Neutral => ceiling_material_neutral.val.unwrap()
+    WorldTextureFlat => ceiling_material_textured_flat.val.unwrap()
+    WorldBrdfOnly => ceiling_material_brdf_only.val.unwrap()
+    _ => ceiling_material.val.unwrap()
+  }
+}
+
+///|
+fn active_dot_material() -> @render3d.MaterialHandle {
+  match lighting_debug.material_mode {
+    Neutral | WorldTextureFlat | WorldBrdfOnly | WorldActorsNeutral =>
+      dot_material_neutral.val.unwrap()
+    WorldActorsColor => dot_material_no_emissive.val.unwrap()
+    Scene => dot_material.val.unwrap()
+  }
+}
+
+///|
+fn active_ghost_eye_material() -> @render3d.MaterialHandle {
+  match lighting_debug.material_mode {
+    Neutral | WorldTextureFlat | WorldBrdfOnly | WorldActorsNeutral =>
+      ghost_eye_material_neutral.val.unwrap()
+    WorldActorsColor => ghost_eye_material_no_emissive.val.unwrap()
+    Scene => ghost_eye_material.val.unwrap()
   }
 }
 
@@ -258,13 +572,76 @@ fn ghost_light_color_for_type(ghost_type : GhostType) -> @render.Color {
 }
 
 ///|
-fn ghost_forward_vector(direction : Direction) -> (Double, Double) {
-  match direction {
-    Up => (0.0, -1.0)
-    Down => (0.0, 1.0)
-    Left => (-1.0, 0.0)
-    Right => (1.0, 0.0)
+fn ghost_spot_ray_material_for_type(
+  ghost_type : GhostType,
+) -> @render3d.MaterialHandle {
+  match ghost_type {
+    Fast => ghost_spot_ray_material_fast.val.unwrap()
+    Normal => ghost_spot_ray_material_normal.val.unwrap()
+    Slow => ghost_spot_ray_material_slow.val.unwrap()
   }
+}
+
+///|
+fn ghost_rotation(direction : Direction) -> @math.Quat {
+  let yaw = match direction {
+    Up => 0.0
+    Down => @cmath.PI
+    Left => @cmath.PI / 2.0
+    Right => -@cmath.PI / 2.0
+  }
+  @math.Quat::from_axis_angle(@math.Vec3::new(0.0, 1.0, 0.0), yaw)
+}
+
+///|
+fn ghost_forward_vector_from_rotation(
+  rotation : @math.Quat,
+) -> (Double, Double) {
+  let forward = rotation.rotate_vec3(@math.Vec3::new(0.0, 0.0, -1.0))
+  (forward.x, forward.z)
+}
+
+///|
+fn ghost_local_spot_direction() -> @math.Vec3 {
+  @math.Vec3::new(0.0, -GHOST_SPOT_LIGHT_DOWNWARD, -1.0).normalize()
+}
+
+///|
+fn ghost_spot_forward_offset() -> Double {
+  if lighting_debug.center_ghost_spot_origin {
+    0.0
+  } else {
+    GHOST_SPOT_LIGHT_FORWARD_OFFSET
+  }
+}
+
+///|
+fn quat_from_forward_direction(direction : @math.Vec3) -> @math.Quat {
+  let source = @math.Vec3::new(0.0, 0.0, -1.0)
+  let target = direction.normalize()
+  if target.length_squared() <= 0.000000001 {
+    return @math.Quat::identity()
+  }
+  let dot = source.dot(target)
+  let clamped_dot = if dot > 1.0 {
+    1.0
+  } else if dot < -1.0 {
+    -1.0
+  } else {
+    dot
+  }
+  if clamped_dot >= 0.999999 {
+    return @math.Quat::identity()
+  }
+  if clamped_dot <= -0.999999 {
+    return @math.Quat::from_axis_angle(
+      @math.Vec3::new(0.0, 1.0, 0.0),
+      @cmath.PI,
+    )
+  }
+  let axis = source.cross(target).normalize()
+  let angle = @cmath.acos(clamped_dot)
+  @math.Quat::from_axis_angle(axis, angle)
 }
 
 ///|
@@ -282,22 +659,36 @@ fn ghost_bob_phase_for_spawn(
 }
 
 ///|
+fn sandbox_ghost_direction_for_spawn(spawn_index : Int) -> Direction {
+  if spawn_index % 2 == 0 {
+    Up
+  } else {
+    Down
+  }
+}
+
+///|
 fn sync_ghost_visuals(ghost : Ghost) -> Unit {
-  let bob_offset = @cmath.sin(
+  let bob_offset = if lighting_debug.bobbing_enabled {
+    @cmath.sin(
       @time.elapsed() *
       ghost_speed(ghost.ghost_type) *
       GHOST_BOB_FREQUENCY_PER_SPEED +
       ghost.bob_phase,
     ) *
     GHOST_BOB_AMPLITUDE
+  } else {
+    0.0
+  }
   let ghost_y = MAP_GHOST_Y + bob_offset
+  let rotation = ghost_rotation(ghost.direction)
+  let (forward_x, forward_z) = ghost_forward_vector_from_rotation(rotation)
   @transform3d.transforms3d.set(ghost.entity, {
     translation: @math.Vec3::new(ghost.x, ghost_y, ghost.z),
-    rotation: @math.Quat::identity(),
+    rotation,
     scale: @math.Vec3::one(),
   })
 
-  let (forward_x, forward_z) = ghost_forward_vector(ghost.direction)
   let side_x = -forward_z
   let side_z = forward_x
   let eye_base = @math.Vec3::new(
@@ -305,32 +696,56 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     ghost_y + GHOST_EYE_HEIGHT_OFFSET,
     ghost.z + forward_z * GHOST_EYE_FORWARD_OFFSET,
   )
-  let spot_direction = @math.Vec3::new(
-    forward_x,
-    -GHOST_SPOT_LIGHT_DOWNWARD,
-    forward_z,
-  ).normalize()
+  let local_spot_direction = ghost_local_spot_direction()
+  let spot_forward_offset = ghost_spot_forward_offset()
+  let light_translation = @math.Vec3::new(
+    ghost.x + forward_x * spot_forward_offset,
+    ghost_y + GHOST_SPOT_LIGHT_HEIGHT_OFFSET,
+    ghost.z + forward_z * spot_forward_offset,
+  )
+  let world_spot_direction = rotation
+    .rotate_vec3(local_spot_direction)
+    .normalize()
   @transform3d.transforms3d.set(ghost.light_entity, {
-    translation: @math.Vec3::new(
-      ghost.x + forward_x * GHOST_SPOT_LIGHT_FORWARD_OFFSET,
-      ghost_y + GHOST_SPOT_LIGHT_HEIGHT_OFFSET,
-      ghost.z + forward_z * GHOST_SPOT_LIGHT_FORWARD_OFFSET,
-    ),
-    rotation: @math.Quat::identity(),
+    translation: light_translation,
+    rotation,
     scale: @math.Vec3::one(),
   })
   @render3d.point_lights3d.set(ghost.light_entity, {
+    ..@render3d.default_point_light3d(),
     color: ghost_light_color_for_type(ghost.ghost_type),
-    intensity: GHOST_POINT_LIGHT_INTENSITY,
+    intensity: if debug_mode_allows_ghost_point_light() {
+      GHOST_POINT_LIGHT_INTENSITY
+    } else {
+      0.0
+    },
     range: GHOST_POINT_LIGHT_RANGE,
   })
   @render3d.spot_lights3d.set(ghost.light_entity, {
-    direction: spot_direction,
+    ..@render3d.default_spot_light3d(),
+    direction: local_spot_direction,
     color: ghost_light_color_for_type(ghost.ghost_type),
-    intensity: GHOST_SPOT_LIGHT_INTENSITY,
+    intensity: if debug_mode_allows_ghost_spot_light() {
+      GHOST_SPOT_LIGHT_INTENSITY
+    } else {
+      0.0
+    },
     range: GHOST_SPOT_LIGHT_RANGE,
     inner_angle: GHOST_SPOT_LIGHT_INNER_ANGLE,
     outer_angle: GHOST_SPOT_LIGHT_OUTER_ANGLE,
+  })
+  @render3d.mesh3d_renderers.set(ghost.spot_ray_entity, {
+    mesh: ghost_spot_ray_mesh.val.unwrap(),
+    material: ghost_spot_ray_material_for_type(ghost.ghost_type),
+    visible: lighting_debug.show_ghost_spot_rays,
+    cast_shadows: false,
+    receive_shadows: false,
+  })
+  @transform3d.transforms3d.set(ghost.spot_ray_entity, {
+    translation: light_translation +
+    world_spot_direction.scalar_mul(GHOST_SPOT_DEBUG_RAY_LENGTH * 0.5),
+    rotation: quat_from_forward_direction(world_spot_direction),
+    scale: @math.Vec3::one(),
   })
   @transform3d.transforms3d.set(ghost.left_eye_entity, {
     translation: @math.Vec3::new(
@@ -394,9 +809,11 @@ fn clear_level_entities() -> Unit {
   dots.clear()
 
   for ghost in ghosts {
+    @render3d.point_lights3d.remove(ghost.light_entity)
     @render3d.spot_lights3d.remove(ghost.light_entity)
     ghost.entity.destroy()
     ghost.light_entity.destroy()
+    ghost.spot_ray_entity.destroy()
     ghost.left_eye_entity.destroy()
     ghost.right_eye_entity.destroy()
     ghost.minimap_entity.destroy()
@@ -424,6 +841,16 @@ fn sync_camera_transform() -> Unit {
     ),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
+  })
+  @render3d.point_lights3d.set(player_light_entity, {
+    ..@render3d.default_point_light3d(),
+    color: color_rgba(255U, 240U, 214U, 1.0),
+    intensity: if debug_mode_allows_player_light() {
+      PLAYER_LIGHT_INTENSITY
+    } else {
+      0.0
+    },
+    range: PLAYER_LIGHT_RANGE,
   })
 }
 
@@ -457,14 +884,14 @@ fn reset_level_entities() -> Unit {
       if tile != 1 {
         let floor_entity = spawn_mesh_entity(
           floor_mesh.val.unwrap(),
-          floor_material.val.unwrap(),
+          active_floor_material(),
           @math.Vec3::new(world_x, MAP_FLOOR_Y, world_z),
         )
         floor_entities.push(floor_entity)
 
         let ceiling_entity = spawn_mesh_entity(
           floor_mesh.val.unwrap(),
-          ceiling_material.val.unwrap(),
+          active_ceiling_material(),
           @math.Vec3::new(world_x, MAP_CEILING_Y, world_z),
         )
         ceiling_entities.push(ceiling_entity)
@@ -473,7 +900,7 @@ fn reset_level_entities() -> Unit {
       if tile == 1 {
         let wall_entity = spawn_mesh_entity(
           wall_mesh.val.unwrap(),
-          wall_material.val.unwrap(),
+          active_wall_material(),
           @math.Vec3::new(world_x, WALL_HALF_HEIGHT_Y, world_z),
         )
         wall_entities.push(wall_entity)
@@ -482,13 +909,14 @@ fn reset_level_entities() -> Unit {
         player_state.z = world_z
         player_state.yaw = 0.0
         found_spawn = true
-      } else {
+      } else if !lighting_debug.scene_enabled {
         let dot_entity = spawn_mesh_entity(
           dot_mesh.val.unwrap(),
-          dot_material.val.unwrap(),
+          active_dot_material(),
           @math.Vec3::new(world_x, MAP_DOT_Y, world_z),
         )
         @render3d.point_lights3d.set(dot_entity, {
+          ..@render3d.default_point_light3d(),
           color: color_rgba(245U, 227U, 92U, 1.0),
           intensity: DOT_LIGHT_INTENSITY,
           range: DOT_LIGHT_RANGE,
@@ -516,14 +944,21 @@ fn reset_level_entities() -> Unit {
           @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
         )
         let ghost_light_entity = @entity.Entity::new()
+        let ghost_spot_ray_entity = spawn_mesh_entity(
+          ghost_spot_ray_mesh.val.unwrap(),
+          ghost_spot_ray_material_for_type(ghost_type),
+          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+          cast_shadows=false,
+          receive_shadows=false,
+        )
         let left_eye_entity = spawn_mesh_entity(
           ghost_eye_mesh.val.unwrap(),
-          ghost_eye_material.val.unwrap(),
+          active_ghost_eye_material(),
           @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
         )
         let right_eye_entity = spawn_mesh_entity(
           ghost_eye_mesh.val.unwrap(),
-          ghost_eye_material.val.unwrap(),
+          active_ghost_eye_material(),
           @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
         )
         let ghost_minimap_color = match ghost_type {
@@ -537,10 +972,15 @@ fn reset_level_entities() -> Unit {
           ghost_minimap_color,
           180,
         )
-        let ghost_direction = random_direction()
+        let ghost_direction = if lighting_debug.scene_enabled {
+          sandbox_ghost_direction_for_spawn(ghosts.length())
+        } else {
+          random_direction()
+        }
         let ghost = {
           entity: ghost_entity,
           light_entity: ghost_light_entity,
+          spot_ray_entity: ghost_spot_ray_entity,
           left_eye_entity,
           right_eye_entity,
           minimap_entity: ghost_minimap_entity,
@@ -575,6 +1015,7 @@ fn reset_level_entities() -> Unit {
 fn reset_run() -> Unit {
   current_level.val = 0
   completed_all_levels.val = false
+  reset_lighting_debug_tracking()
   reset_level_entities()
 }
 
@@ -589,6 +1030,7 @@ pub fn startup_system(_delta : Double) -> Unit {
   ensure_entity_alive(hud_line1_ui)
   ensure_entity_alive(hud_line2_ui)
   ensure_entity_alive(hud_line3_ui)
+  ensure_entity_alive(hud_debug_ui)
   ensure_entity_alive(minimap_player_entity)
 
   @camera3d.cameras3d.set(camera_entity, {
@@ -606,12 +1048,13 @@ pub fn startup_system(_delta : Double) -> Unit {
     enabled: true,
   })
   @render3d.directional_lights3d.set(light_entity, {
+    ..@render3d.default_directional_light3d(),
     direction: @math.Vec3::new(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
     intensity: DIRECTIONAL_LIGHT_INTENSITY,
-    shadows: false,
   })
   @render3d.point_lights3d.set(player_light_entity, {
+    ..@render3d.default_point_light3d(),
     color: color_rgba(255U, 240U, 214U, 1.0),
     intensity: PLAYER_LIGHT_INTENSITY,
     range: PLAYER_LIGHT_RANGE,
@@ -642,6 +1085,7 @@ pub fn startup_system(_delta : Double) -> Unit {
     "rgb(0,255,0)",
   )
   setup_text_entity(hud_line3_ui, "", @math.Vec2D(0.0, 0.0), "white")
+  setup_text_entity(hud_debug_ui, "", @math.Vec2D(8.0, 8.0), "rgb(180,255,180)")
 
   @system.lock_mouse()
   mouse_locked_last_frame.val = @system.is_mouse_locked()

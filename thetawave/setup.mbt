@@ -413,7 +413,7 @@ fn refresh_background3d_assets() -> Unit {
   let quad_material = @render3d.default_standard_material3d()
   let quad_material = {
     ..quad_material,
-    base_color_texture: Some(quad_image),
+    base_color_texture: Some(@render3d.texture_binding3d(quad_image)),
     base_color: color_u8(255U, 255U, 255U, quad_alpha),
     alpha_mode: Blend,
   }
@@ -440,6 +440,8 @@ fn refresh_background3d_assets() -> Unit {
     mesh: quad_mesh,
     material: quad_material,
     visible: background3d_active.val,
+    cast_shadows: false,
+    receive_shadows: false,
   })
   @transform3d.transforms3d.set(background3d_quad_entity, {
     translation: @math.Vec3::new(0.0, 0.0, BG3D_QUAD_Z),
@@ -452,6 +454,8 @@ fn refresh_background3d_assets() -> Unit {
       mesh: planet_mesh,
       material: planet_material,
       visible: background3d_active.val,
+      cast_shadows: false,
+      receive_shadows: false,
     })
     @transform3d.transforms3d.set(background3d_planet_entity, {
       translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
@@ -473,6 +477,8 @@ fn refresh_background3d_assets() -> Unit {
       mesh: star_mesh,
       material: star_material,
       visible: background3d_active.val,
+      cast_shadows: false,
+      receive_shadows: false,
     })
     @transform3d.transforms3d.set(background3d_star_entity, {
       translation: star_translation,
@@ -484,6 +490,7 @@ fn refresh_background3d_assets() -> Unit {
   }
   if BG3D_ENABLE_FALLBACK_BODIES {
     @render3d.point_lights3d.set(background3d_star_light_entity, {
+      ..@render3d.default_point_light3d(),
       color: star_color,
       intensity: BG3D_STAR_LIGHT_INTENSITY,
       range: BG3D_STAR_LIGHT_RANGE,

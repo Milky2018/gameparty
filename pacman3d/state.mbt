@@ -148,6 +148,12 @@ const GHOST_SPOT_LIGHT_HEIGHT_OFFSET : Double = 0.36
 const GHOST_SPOT_LIGHT_DOWNWARD : Double = 0.55
 
 ///|
+const GHOST_SPOT_DEBUG_RAY_LENGTH : Double = 6.0
+
+///|
+const GHOST_SPOT_DEBUG_RAY_THICKNESS : Double = 0.12
+
+///|
 const GHOST_BOB_AMPLITUDE : Double = 0.14
 
 ///|
@@ -191,6 +197,7 @@ priv struct Dot {
 priv struct Ghost {
   entity : @entity.Entity
   light_entity : @entity.Entity
+  spot_ray_entity : @entity.Entity
   left_eye_entity : @entity.Entity
   right_eye_entity : @entity.Entity
   minimap_entity : @entity.Entity
@@ -322,6 +329,9 @@ let hud_line2_ui : @entity.Entity = @entity.Entity::new()
 let hud_line3_ui : @entity.Entity = @entity.Entity::new()
 
 ///|
+let hud_debug_ui : @entity.Entity = @entity.Entity::new()
+
+///|
 let wall_mesh : Ref[@render3d.MeshHandle?] = { val: None }
 
 ///|
@@ -337,28 +347,117 @@ let ghost_body_mesh : Ref[@render3d.MeshHandle?] = { val: None }
 let ghost_eye_mesh : Ref[@render3d.MeshHandle?] = { val: None }
 
 ///|
+let ghost_spot_ray_mesh : Ref[@render3d.MeshHandle?] = { val: None }
+
+///|
 let wall_material : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let wall_material_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let wall_material_textured_flat : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let wall_material_brdf_only : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
 let floor_material : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
+let floor_material_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let floor_material_textured_flat : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let floor_material_brdf_only : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
 let ceiling_material : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ceiling_material_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ceiling_material_textured_flat : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let ceiling_material_brdf_only : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
 let dot_material : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
+let dot_material_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let dot_material_no_emissive : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
 let ghost_material_fast : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ghost_material_fast_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ghost_material_fast_no_emissive : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
 
 ///|
 let ghost_material_normal : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
+let ghost_material_normal_neutral : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let ghost_material_normal_no_emissive : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
 let ghost_material_slow : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
+let ghost_material_slow_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ghost_material_slow_no_emissive : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
 let ghost_eye_material : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ghost_eye_material_neutral : Ref[@render3d.MaterialHandle?] = { val: None }
+
+///|
+let ghost_eye_material_no_emissive : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let ghost_spot_ray_material_fast : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let ghost_spot_ray_material_normal : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
+let ghost_spot_ray_material_slow : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
 
 ///|
 let rand : @random.Rand = @random.Rand::new()
@@ -395,7 +494,11 @@ fn map_height(level : Level) -> Int {
 
 ///|
 fn get_map() -> Level {
-  levels[current_level.val]
+  if lighting_debug.scene_enabled {
+    lighting_debug_level
+  } else {
+    levels[current_level.val]
+  }
 }
 
 ///|

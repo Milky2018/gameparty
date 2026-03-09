@@ -101,6 +101,9 @@ fn all_dots_collected() -> Bool {
 
 ///|
 fn check_dot_collection() -> Unit {
+  if lighting_debug.scene_enabled {
+    return
+  }
   for i in 0..<dots.length() {
     if dots[i].collected {
       continue
@@ -124,6 +127,9 @@ fn check_dot_collection() -> Unit {
 
 ///|
 fn check_ghost_collision() -> Bool {
+  if lighting_debug.scene_enabled {
+    return false
+  }
   let min_distance = PLAYER_RADIUS + GHOST_RADIUS
   let min_distance_sq = squared(min_distance)
   for ghost in ghosts {
@@ -138,10 +144,58 @@ fn check_ghost_collision() -> Bool {
 
 ///|
 pub fn player_input_system(delta : Double) -> Unit {
+  if @inputs.is_just_pressed(KeyF) {
+    lighting_debug.enabled = !lighting_debug.enabled
+  }
+  if @inputs.is_just_pressed(KeyG) {
+    lighting_debug.light_mode = next_debug_light_mode(lighting_debug.light_mode)
+  }
+  if @inputs.is_just_pressed(KeyH) {
+    lighting_debug.freeze_ghosts = !lighting_debug.freeze_ghosts
+  }
+  if @inputs.is_just_pressed(KeyJ) {
+    lighting_debug.bobbing_enabled = !lighting_debug.bobbing_enabled
+  }
+  if @inputs.is_just_pressed(KeyK) {
+    lighting_debug.scene_enabled = !lighting_debug.scene_enabled
+    if lighting_debug.scene_enabled {
+      apply_sandbox_debug_defaults()
+    }
+    reset_lighting_debug_tracking()
+    reset_level_entities()
+    mouse_locked_last_frame.val = @system.is_mouse_locked()
+    return
+  }
+  if @inputs.is_just_pressed(KeyL) {
+    lighting_debug.show_ghost_spot_rays = !lighting_debug.show_ghost_spot_rays
+  }
+  if @inputs.is_just_pressed(KeyM) {
+    lighting_debug.material_mode = next_debug_material_mode(
+      lighting_debug.material_mode,
+    )
+    if lighting_debug.scene_enabled {
+      reset_level_entities()
+      mouse_locked_last_frame.val = @system.is_mouse_locked()
+      return
+    }
+  }
+  if @inputs.is_just_pressed(KeyO) {
+    lighting_debug.center_ghost_spot_origin = !lighting_debug.center_ghost_spot_origin
+  }
+  if @inputs.is_just_pressed(Tab) {
+    cycle_tracked_ghost()
+  }
+
   if @inputs.is_just_pressed(Escape) {
     if !mouse_locked_last_frame.val {
       request_exit()
     }
+    mouse_locked_last_frame.val = @system.is_mouse_locked()
+    return
+  }
+
+  if lighting_debug.scene_enabled {
+    sync_camera_transform()
     mouse_locked_last_frame.val = @system.is_mouse_locked()
     return
   }
@@ -204,6 +258,9 @@ pub fn player_input_system(delta : Double) -> Unit {
 
 ///|
 pub fn ghost_update_system(delta : Double) -> Unit {
+  if lighting_debug.freeze_ghosts {
+    return
+  }
   for i in 0..<ghosts.length() {
     let ghost = ghosts[i]
     let speed = ghost_speed(ghost.ghost_type) * delta
@@ -306,4 +363,24 @@ pub fn hud_system(_delta : Double) -> Unit {
     "18px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "white",
   )
+  if lighting_debug.enabled {
+    let debug_text = debug_status_text() + "\n" + debug_help_text()
+    let text = @sprite.Text::new(
+      debug_text,
+      color="rgb(180,255,180)",
+      font="14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
+      baseline=Top,
+      align=Left,
+    )
+    @sprite.sprites.set(hud_debug_ui, @sprite.Sprite::from_text(text, 220))
+    @transform.positions.set(hud_debug_ui, @math.Vec2D(8.0, 8.0))
+  } else {
+    set_hud_text(
+      hud_debug_ui,
+      "",
+      @math.Vec2D(0.0, 0.0),
+      "14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
+      "white",
+    )
+  }
 }

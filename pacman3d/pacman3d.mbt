@@ -34,6 +34,7 @@ pub fn add_runtime_systems(
   app
   .add_system(player_input_system, run_if~)
   .add_system(ghost_update_system, run_if~)
+  .add_system(lighting_debug_system, run_if~)
   .add_system(minimap_system, run_if~)
   .add_system(hud_system, schedule=Render, run_if~)
 }
