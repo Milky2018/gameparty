@@ -1,0 +1,26 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/angryrabbits"
+
+import {
+  "Milky2018/selene/system",
+}
+
+// Values
+pub fn add_runtime_systems(@system.App, () -> Bool) -> @system.App
+
+pub fn enter_from_host() -> Unit
+
+pub fn reset_exit_handler() -> Unit
+
+pub fn run() -> Unit
+
+pub fn set_exit_handler(() -> Unit) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

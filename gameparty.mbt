@@ -41,6 +41,7 @@ fn register_pacman_upstream_font_once() -> Unit {
 priv enum MenuChoice {
   LaunchThetawave
   LaunchPacman3d
+  LaunchAngryRabbits
   Exit
 }
 
@@ -49,6 +50,7 @@ priv enum ActiveGame {
   Menu
   Thetawave
   Pacman3d
+  AngryRabbits
 }
 
 ///|
@@ -76,18 +78,22 @@ let menu_item2_entity : @entity.Entity = @entity.Entity::new()
 let menu_item3_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
+let menu_item4_entity : @entity.Entity = @entity.Entity::new()
+
+///|
 fn is_same_game(lhs : ActiveGame, rhs : ActiveGame) -> Bool {
   match (lhs, rhs) {
     (Menu, Menu) => true
     (Thetawave, Thetawave) => true
     (Pacman3d, Pacman3d) => true
+    (AngryRabbits, AngryRabbits) => true
     _ => false
   }
 }
 
 ///|
 fn menu_item_count() -> Int {
-  3
+  4
 }
 
 ///|
@@ -95,6 +101,7 @@ fn menu_label(index : Int) -> String {
   match index {
     0 => "Thetawave"
     1 => "Pacman 3D"
+    2 => "Angry Rabbits"
     _ => "Exit"
   }
 }
@@ -104,6 +111,7 @@ fn menu_choice_from_index(index : Int) -> MenuChoice {
   match index {
     0 => LaunchThetawave
     1 => LaunchPacman3d
+    2 => LaunchAngryRabbits
     _ => Exit
   }
 }
@@ -113,7 +121,8 @@ fn menu_item_entity(index : Int) -> @entity.Entity {
   match index {
     0 => menu_item1_entity
     1 => menu_item2_entity
-    _ => menu_item3_entity
+    2 => menu_item3_entity
+    _ => menu_item4_entity
   }
 }
 
@@ -121,6 +130,7 @@ fn menu_item_entity(index : Int) -> @entity.Entity {
 fn menu_entities() -> Array[@entity.Entity] {
   [
     menu_title_entity, menu_hint_entity, menu_item1_entity, menu_item2_entity, menu_item3_entity,
+    menu_item4_entity,
   ]
 }
 
@@ -248,6 +258,12 @@ fn enter_pacman3d_mode() -> Unit {
 }
 
 ///|
+fn enter_angryrabbits_mode() -> Unit {
+  hide_existing_scene_visuals()
+  @angryrabbits.enter_from_host()
+}
+
+///|
 fn game_mode_transition_system(_delta : Double) -> Unit {
   if is_same_game(active_game.val, previous_game.val) {
     return
@@ -256,6 +272,7 @@ fn game_mode_transition_system(_delta : Double) -> Unit {
     Menu => enter_menu_mode()
     Thetawave => enter_thetawave_mode()
     Pacman3d => enter_pacman3d_mode()
+    AngryRabbits => enter_angryrabbits_mode()
   }
   previous_game.val = active_game.val
 }
@@ -271,6 +288,7 @@ fn confirm_menu_selection() -> Unit {
   match menu_choice_from_index(menu_selected_index.val) {
     LaunchThetawave => active_game.val = Thetawave
     LaunchPacman3d => active_game.val = Pacman3d
+    LaunchAngryRabbits => active_game.val = AngryRabbits
     Exit => @system.exit()
   }
 }
@@ -299,6 +317,7 @@ fn menu_startup_system(_delta : Double) -> Unit {
   }
   @thetawave.set_exit_handler(fn() { active_game.val = Menu })
   @pacman3d.set_exit_handler(fn() { active_game.val = Menu })
+  @angryrabbits.set_exit_handler(fn() { active_game.val = Menu })
   active_game.val = Menu
   previous_game.val = Menu
   enter_menu_mode()
@@ -329,6 +348,14 @@ fn run_if_pacman3d() -> Bool {
 }
 
 ///|
+fn run_if_angryrabbits() -> Bool {
+  match active_game.val {
+    AngryRabbits => true
+    _ => false
+  }
+}
+
+///|
 pub fn run() -> Unit {
   let app = @system.App::new()
     .with_viewport_width(APP_VIEWPORT_WIDTH)
@@ -349,5 +376,6 @@ pub fn run() -> Unit {
     .add_system(menu_input_system, run_if=run_if_menu)
   let app = @thetawave.add_runtime_systems(app, run_if_thetawave)
   let app = @pacman3d.add_runtime_systems(app, run_if_pacman3d)
+  let app = @angryrabbits.add_runtime_systems(app, run_if_angryrabbits)
   app.run()
 }
