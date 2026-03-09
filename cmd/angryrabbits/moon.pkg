@@ -1,5 +1,5 @@
 import {
-  "Milky2018/gameparty/spotrepro" @repro,
+  "Milky2018/gameparty/angryrabbits" @game,
 }
 
 options(
