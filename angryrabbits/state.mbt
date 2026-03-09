@@ -24,7 +24,7 @@ const GROUND_Y : Double = VIEWPORT_HEIGHT - GROUND_HEIGHT
 
 ///|
 fn slingshot_anchor() -> @math.Vec2D {
-  @math.Vec2D(142.0, GROUND_Y - 70.0)
+  @math.Vec2D(142.0, GROUND_Y - 88.0)
 }
 
 ///|
@@ -37,7 +37,13 @@ const TARGET_RADIUS : Double = 18.0
 const MAX_DRAG_RADIUS : Double = 84.0
 
 ///|
-const LAUNCH_SPEED_FACTOR : Double = 6.2
+const DRAG_GROUND_CLEARANCE : Double = 12.0
+
+///|
+const MIN_LAUNCH_STRETCH : Double = 12.0
+
+///|
+const LAUNCH_SPEED_FACTOR : Double = 9.2
 
 ///|
 const GRAVITY : Double = 980.0

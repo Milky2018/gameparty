@@ -1,4 +1,24 @@
 ///|
+const ANGRYRABBITS_FONT_FAMILY : String = "ThaleahFat"
+
+///|
+const ANGRYRABBITS_FONT_PATH : String = "angryrabbits/assets/ThaleahFat.ttf"
+
+///|
+let angryrabbits_font_registered : Ref[Bool] = { val: false }
+
+///|
+fn register_angryrabbits_font_once() -> Unit {
+  if angryrabbits_font_registered.val {
+    return
+  }
+  ignore(
+    @asset.load_font(ANGRYRABBITS_FONT_PATH, family=ANGRYRABBITS_FONT_FAMILY),
+  )
+  angryrabbits_font_registered.val = true
+}
+
+///|
 fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -364,7 +384,7 @@ fn sync_ui() -> Unit {
     title_entity,
     "ANGRY RABBITS",
     @math.Vec2D(20.0, 16.0),
-    "32px Arial",
+    "32px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(84, 48, 22)",
     220,
   )
@@ -372,7 +392,7 @@ fn sync_ui() -> Unit {
     hint_entity,
     "Mouse drag/release launch   R/Enter restart   ESC back",
     @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
-    "16px Arial",
+    "16px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(77, 74, 66)",
     220,
   )
@@ -380,7 +400,7 @@ fn sync_ui() -> Unit {
     score_entity,
     score_text(),
     @math.Vec2D(20.0, 54.0),
-    "20px Arial",
+    "20px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(66, 52, 32)",
     220,
   )
@@ -388,7 +408,7 @@ fn sync_ui() -> Unit {
     status_entity,
     status_text(),
     @math.Vec2D(20.0, 82.0),
-    "18px Arial",
+    "18px \{ANGRYRABBITS_FONT_FAMILY}",
     if phase.val == Won {
       "rgb(32, 112, 48)"
     } else if phase.val == Lost {
@@ -403,6 +423,7 @@ fn sync_ui() -> Unit {
 ///|
 fn reset_level() -> Unit {
   register_scene_entities()
+  register_angryrabbits_font_once()
   sync_static_visuals()
   seed_level()
   shots_remaining.val = MAX_SHOTS

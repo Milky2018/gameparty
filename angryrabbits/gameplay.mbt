@@ -28,11 +28,25 @@ fn clamp(value : Double, lower : Double, upper : Double) -> Double {
 fn clamp_drag_target(mouse_center : @math.Vec2D) -> @math.Vec2D {
   let offset = mouse_center - slingshot_anchor()
   let length = vec_length(offset)
-  if length <= MAX_DRAG_RADIUS {
+  let clamped = if length <= MAX_DRAG_RADIUS {
     mouse_center
   } else {
     slingshot_anchor() + offset.scalar_div(length).scalar_mul(MAX_DRAG_RADIUS)
   }
+  let max_drag_y = GROUND_Y - RABBIT_RADIUS - DRAG_GROUND_CLEARANCE
+  @math.Vec2D(
+    clamped[X],
+    if clamped[Y] > max_drag_y {
+      max_drag_y
+    } else {
+      clamped[Y]
+    },
+  )
+}
+
+///|
+fn drag_distance(center : @math.Vec2D) -> Double {
+  vec_length(center - slingshot_anchor())
 }
 
 ///|
@@ -285,7 +299,8 @@ fn input_system(_delta : Double) -> Unit {
     return
   }
 
-  let mouse_center = @inputs.mouse.pos
+  let camera_pos = @camera.get_position()
+  let mouse_center = @system.screen_to_world(@inputs.mouse.pos, camera_pos)
   if rabbit_ready_for_pickup() &&
     @inputs.just_pressed_mouse.left_button &&
     rabbit_contains(mouse_center) {
@@ -297,10 +312,18 @@ fn input_system(_delta : Double) -> Unit {
       rabbit_center.val = clamp_drag_target(mouse_center)
     }
     if @inputs.just_release_mouse.left_button {
-      phase.val = Flying
-      rabbit_velocity.val = launch_velocity_from_rabbit(rabbit_center.val)
-      rabbit_flight_time.val = 0.0
-      shots_remaining.val = shots_remaining.val - 1
+      let release_center = clamp_drag_target(mouse_center)
+      rabbit_center.val = release_center
+      if drag_distance(release_center) < MIN_LAUNCH_STRETCH {
+        phase.val = Ready
+        rabbit_center.val = slingshot_anchor()
+        rabbit_velocity.val = @math.Vec2D::zero()
+      } else {
+        phase.val = Flying
+        rabbit_velocity.val = launch_velocity_from_rabbit(release_center)
+        rabbit_flight_time.val = 0.0
+        shots_remaining.val = shots_remaining.val - 1
+      }
     }
   }
 }

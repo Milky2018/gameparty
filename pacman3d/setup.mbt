@@ -4,7 +4,10 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
-const PACMAN_UPSTREAM_FONT_FAMILY : String = "Arial"
+const PACMAN_UPSTREAM_FONT_FAMILY : String = "ThaleahFat"
+
+///|
+const PACMAN_UPSTREAM_FONT_PATH : String = "pacman3d/assets/ThaleahFat.ttf"
 
 ///|
 const CEILING_TILE_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile.png"
@@ -28,23 +31,16 @@ const FLOOR_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/floor_tile_albe
 let pacman_upstream_font_registered : Ref[Bool] = { val: false }
 
 ///|
-let pacman_upstream_font_candidate_paths : Array[String] = [
-  "/System/Library/Fonts/Supplemental/Arial.ttf", "/Library/Fonts/Arial.ttf", "C:/Windows/Fonts/arial.ttf",
-  "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
-]
-
-///|
 fn register_pacman_upstream_font_once() -> Unit {
   if pacman_upstream_font_registered.val {
     return
   }
-  for path in pacman_upstream_font_candidate_paths {
-    if @asset.read_bytes(path) is Some(_) {
-      ignore(@asset.load_font(path, family=PACMAN_UPSTREAM_FONT_FAMILY))
-      pacman_upstream_font_registered.val = true
-      return
-    }
-  }
+  ignore(
+    @asset.load_font(
+      PACMAN_UPSTREAM_FONT_PATH,
+      family=PACMAN_UPSTREAM_FONT_FAMILY,
+    ),
+  )
   pacman_upstream_font_registered.val = true
 }
 
