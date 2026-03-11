@@ -1,5 +1,5 @@
 ///|
-test "load default tiled level" {
+test "load default ldtk level" {
   let level = load_level_from_path(DEFAULT_LEVEL_PATH)
   assert_eq(level.max_shots, 5)
   assert_eq(level.blocks.length(), 5)

@@ -1,0 +1,359 @@
+{
+  "__header__": "LDtk project JSON",
+  "appBuildId": 0,
+  "backupLimit": 10,
+  "backupOnSave": false,
+  "bgColor": "#B7E1FF",
+  "defaultLevelHeight": 480,
+  "defaultLevelWidth": 640,
+  "defaultPivotX": 0,
+  "defaultPivotY": 0,
+  "defs": {
+    "entities": [
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [],
+        "height": 0,
+        "identifier": "SlingshotAnchor",
+        "tags": [],
+        "uid": 101,
+        "width": 0
+      },
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [],
+        "height": 0,
+        "identifier": "RabbitSpawn",
+        "tags": [],
+        "uid": 102,
+        "width": 0
+      },
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [
+          { "__identifier": "color", "__type": "String", "uid": 1001 },
+          { "__identifier": "zindex", "__type": "Int", "uid": 1002 }
+        ],
+        "height": 480,
+        "identifier": "BackgroundRect",
+        "tags": [],
+        "uid": 103,
+        "width": 640
+      },
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [
+          { "__identifier": "color", "__type": "String", "uid": 1003 },
+          { "__identifier": "zindex", "__type": "Int", "uid": 1004 }
+        ],
+        "height": 92,
+        "identifier": "GroundRect",
+        "tags": [],
+        "uid": 104,
+        "width": 640
+      },
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [
+          { "__identifier": "color", "__type": "String", "uid": 1005 },
+          { "__identifier": "zindex", "__type": "Int", "uid": 1006 }
+        ],
+        "height": 240,
+        "identifier": "HillCircle",
+        "tags": [],
+        "uid": 105,
+        "width": 240
+      },
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [
+          { "__identifier": "color", "__type": "String", "uid": 1007 }
+        ],
+        "height": 32,
+        "identifier": "Block",
+        "tags": [],
+        "uid": 106,
+        "width": 32
+      },
+      {
+        "color": "#FFFFFF",
+        "fieldDefs": [
+          { "__identifier": "color", "__type": "String", "uid": 1008 },
+          { "__identifier": "radius", "__type": "Float", "uid": 1009 }
+        ],
+        "height": 36,
+        "identifier": "Target",
+        "tags": [],
+        "uid": 107,
+        "width": 36
+      }
+    ],
+    "enums": [],
+    "externalEnums": [],
+    "layers": [
+      {
+        "identifier": "Entities",
+        "intGridValues": [],
+        "type": "Entities",
+        "uid": 201
+      }
+    ],
+    "tilesets": []
+  },
+  "externalLevels": false,
+  "flags": [],
+  "iid": "angryrabbits-project",
+  "jsonVersion": "1.5.3",
+  "levelNamePattern": "Level_%d",
+  "levels": [
+    {
+      "__bgColor": "#B7E1FF",
+      "__neighbours": [],
+      "bgColor": "#B7E1FF",
+      "bgPivotX": 0,
+      "bgPivotY": 0,
+      "bgPos": null,
+      "bgRelPath": null,
+      "externalRelPath": null,
+      "fieldInstances": [
+        {
+          "__identifier": "max_shots",
+          "__type": "Int",
+          "__value": 5,
+          "__defUid": 1
+        }
+      ],
+      "identifier": "Level_0",
+      "iid": "angryrabbits-level-0",
+      "layerInstances": [
+        {
+          "__cHei": 15,
+          "__cWid": 20,
+          "__gridSize": 32,
+          "__identifier": "Entities",
+          "__opacity": 1,
+          "__pxTotalOffsetX": 0,
+          "__pxTotalOffsetY": 0,
+          "__tilesetDefUid": null,
+          "__type": "Entities",
+          "autoLayerTiles": [],
+          "entityInstances": [
+            {
+              "__defUid": 101,
+              "__grid": [4, 9],
+              "__height": 0,
+              "__identifier": "SlingshotAnchor",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 0,
+              "fieldInstances": [],
+              "iid": "entity-slingshot-anchor",
+              "px": [142, 300]
+            },
+            {
+              "__defUid": 102,
+              "__grid": [4, 9],
+              "__height": 0,
+              "__identifier": "RabbitSpawn",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 0,
+              "fieldInstances": [],
+              "iid": "entity-rabbit-spawn",
+              "px": [142, 300]
+            },
+            {
+              "__defUid": 103,
+              "__grid": [0, 0],
+              "__height": 480,
+              "__identifier": "BackgroundRect",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 640,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)", "__defUid": 1001 },
+                { "__identifier": "zindex", "__type": "Int", "__value": 0, "__defUid": 1002 }
+              ],
+              "iid": "entity-background",
+              "px": [0, 0]
+            },
+            {
+              "__defUid": 105,
+              "__grid": [15, 8],
+              "__height": 240,
+              "__identifier": "HillCircle",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 240,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)", "__defUid": 1005 },
+                { "__identifier": "zindex", "__type": "Int", "__value": 1, "__defUid": 1006 }
+              ],
+              "iid": "entity-hill",
+              "px": [500, 268]
+            },
+            {
+              "__defUid": 104,
+              "__grid": [0, 12],
+              "__height": 92,
+              "__identifier": "GroundRect",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 640,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)", "__defUid": 1003 },
+                { "__identifier": "zindex", "__type": "Int", "__value": 2, "__defUid": 1004 }
+              ],
+              "iid": "entity-ground",
+              "px": [0, 388]
+            },
+            {
+              "__defUid": 106,
+              "__grid": [14, 9],
+              "__height": 84,
+              "__identifier": "Block",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 28,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(191,132,78)", "__defUid": 1007 }
+              ],
+              "iid": "entity-block-1",
+              "px": [472, 304]
+            },
+            {
+              "__defUid": 106,
+              "__grid": [16, 9],
+              "__height": 84,
+              "__identifier": "Block",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 28,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(169,115,67)", "__defUid": 1007 }
+              ],
+              "iid": "entity-block-2",
+              "px": [530, 304]
+            },
+            {
+              "__defUid": 106,
+              "__grid": [18, 10],
+              "__height": 68,
+              "__identifier": "Block",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 32,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(208,148,88)", "__defUid": 1007 }
+              ],
+              "iid": "entity-block-3",
+              "px": [588, 320]
+            },
+            {
+              "__defUid": 106,
+              "__grid": [19, 10],
+              "__height": 60,
+              "__identifier": "Block",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 22,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(160,107,65)", "__defUid": 1007 }
+              ],
+              "iid": "entity-block-4",
+              "px": [635, 328]
+            },
+            {
+              "__defUid": 106,
+              "__grid": [15, 11],
+              "__height": 20,
+              "__identifier": "Block",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 132,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(221,171,108)", "__defUid": 1007 }
+              ],
+              "iid": "entity-block-5",
+              "px": [504, 368]
+            },
+            {
+              "__defUid": 107,
+              "__grid": [13, 10],
+              "__height": 36,
+              "__identifier": "Target",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 36,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(112, 209, 115)", "__defUid": 1008 }
+              ],
+              "iid": "entity-target-1",
+              "px": [428, 348]
+            },
+            {
+              "__defUid": 107,
+              "__grid": [17, 10],
+              "__height": 36,
+              "__identifier": "Target",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 36,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(112, 209, 115)", "__defUid": 1008 }
+              ],
+              "iid": "entity-target-2",
+              "px": [553, 348]
+            },
+            {
+              "__defUid": 107,
+              "__grid": [19, 10],
+              "__height": 36,
+              "__identifier": "Target",
+              "__pivot": [0, 0],
+              "__smartColor": "#FFFFFF",
+              "__tags": [],
+              "__width": 36,
+              "fieldInstances": [
+                { "__identifier": "color", "__type": "String", "__value": "rgb(112, 209, 115)", "__defUid": 1008 }
+              ],
+              "iid": "entity-target-3",
+              "px": [614, 348]
+            }
+          ],
+          "gridTiles": [],
+          "iid": "layer-entities",
+          "intGridCsv": [],
+          "optionalRules": [],
+          "seed": 0,
+          "visible": true
+        }
+      ],
+      "pxHei": 480,
+      "pxWid": 640,
+      "uid": 1,
+      "worldDepth": 0,
+      "worldX": 0,
+      "worldY": 0
+    }
+  ],
+  "nextUid": 300,
+  "pngFilePattern": "",
+  "simplifiedExport": false,
+  "worldGridHeight": 480,
+  "worldGridWidth": 640,
+  "worldLayout": "Free",
+  "worlds": []
+}

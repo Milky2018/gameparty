@@ -1,5 +1,5 @@
 ///|
-const DEFAULT_LEVEL_PATH : String = "angryrabbits/assets/levels/level_01.tmj"
+const DEFAULT_LEVEL_PATH : String = "angryrabbits/assets/levels/level_01.ldtk"
 
 ///|
 priv struct DecorRectDef {
@@ -121,15 +121,33 @@ fn load_current_level() -> LevelDef {
 
 ///|
 fn load_level_from_path(path : String) -> LevelDef {
-  let map = @tiled.load_tiled_map(path)
-  if map.layers.length() == 0 {
+  let project = @ldtk.load_ldtk_project(path)
+  if project.indexed_levels().is_empty() {
     return default_level_def()
   }
-  level_def_from_tiled_map(map)
+  level_def_from_ldtk_project(project)
 }
 
 ///|
-fn level_def_from_tiled_map(map : @tiled.TiledMap) -> LevelDef {
+fn level_def_from_ldtk_project(project : @ldtk.LdtkProject) -> LevelDef {
+  guard first_ldtk_level(project) is Some(level) else {
+    return default_level_def()
+  }
+  level_def_from_ldtk_level(level)
+}
+
+///|
+fn first_ldtk_level(project : @ldtk.LdtkProject) -> @ldtk.LdtkLevel? {
+  let levels = project.indexed_levels()
+  if levels.is_empty() {
+    None
+  } else {
+    Some(levels[0].level)
+  }
+}
+
+///|
+fn level_def_from_ldtk_level(level : @ldtk.LdtkLevel) -> LevelDef {
   let fallback = default_level_def()
   let mut slingshot = fallback.slingshot_anchor
   let mut rabbit_spawn = fallback.rabbit_spawn
@@ -139,41 +157,33 @@ fn level_def_from_tiled_map(map : @tiled.TiledMap) -> LevelDef {
   let blocks : Array[BlockDef] = []
   let targets : Array[TargetDef] = []
 
-  for layer in map.layers {
-    match layer.kind {
-      ObjectLayer(object_layer) =>
-        for object in object_layer.objects {
-          if !object.visible {
-            continue
-          }
-          match object.object_type {
-            "slingshot_anchor" => slingshot = tiled_object_anchor(object)
-            "rabbit_spawn" => rabbit_spawn = tiled_object_anchor(object)
-            "background_rect" =>
-              background_rect = decor_rect_def_from_tiled_object(
-                object, background_rect,
-              )
-            "ground_rect" =>
-              ground_rect = decor_rect_def_from_tiled_object(
-                object, ground_rect,
-              )
-            "hill_circle" =>
-              hill_circle = decor_circle_def_from_tiled_object(
-                object, hill_circle,
-              )
-            "block" => blocks.push(block_def_from_tiled_object(object))
-            "target" => targets.push(target_def_from_tiled_object(object))
-            _ => ()
-          }
-        }
-      _ => ()
+  for layer in level.layer_instances {
+    if !layer.visible {
+      continue
+    }
+    for entity in layer.entity_instances {
+      match entity.identifier {
+        "SlingshotAnchor" => slingshot = ldtk_entity_anchor(entity)
+        "RabbitSpawn" => rabbit_spawn = ldtk_entity_anchor(entity)
+        "BackgroundRect" =>
+          background_rect = decor_rect_def_from_ldtk_entity(
+            entity, background_rect,
+          )
+        "GroundRect" =>
+          ground_rect = decor_rect_def_from_ldtk_entity(entity, ground_rect)
+        "HillCircle" =>
+          hill_circle = decor_circle_def_from_ldtk_entity(entity, hill_circle)
+        "Block" => blocks.push(block_def_from_ldtk_entity(entity))
+        "Target" => targets.push(target_def_from_ldtk_entity(entity))
+        _ => ()
+      }
     }
   }
 
   {
     slingshot_anchor: slingshot,
     rabbit_spawn,
-    max_shots: tiled_property_int(map.property("max_shots"), fallback.max_shots),
+    max_shots: level.field_int("max_shots").unwrap_or(fallback.max_shots),
     background_rect,
     ground_rect,
     hill_circle,
@@ -191,129 +201,127 @@ fn level_def_from_tiled_map(map : @tiled.TiledMap) -> LevelDef {
 }
 
 ///|
-fn tiled_object_anchor(object : @tiled.TiledObject) -> @math.Vec2D {
-  if object.point {
-    return @math.Vec2D(object.x, object.y)
-  }
-  @math.Vec2D(object.x + object.width / 2.0, object.y + object.height / 2.0)
+fn ldtk_entity_anchor(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
+  entity.px
 }
 
 ///|
-fn tiled_object_center(object : @tiled.TiledObject) -> @math.Vec2D {
-  @math.Vec2D(object.x + object.width / 2.0, object.y + object.height / 2.0)
+fn ldtk_entity_size(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
+  @math.Vec2D(entity.width.to_double(), entity.height.to_double())
 }
 
 ///|
-fn tiled_property_string(
-  property : @tiled.TiledPropertyValue?,
+fn ldtk_entity_center(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
+  let size = ldtk_entity_size(entity)
+  entity.px + @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
+}
+
+///|
+fn ldtk_entity_string_field(
+  entity : @ldtk.LdtkEntityInstance,
+  field : String,
   fallback : String,
 ) -> String {
-  match property {
-    Some(String(value)) => value
-    Some(Color(value)) => value
-    Some(File(value)) => value
-    _ => fallback
+  match entity.field_string(field) {
+    Some(value) => value
+    None => entity.field_color(field).unwrap_or(fallback)
   }
 }
 
 ///|
-fn tiled_property_double(
-  property : @tiled.TiledPropertyValue?,
-  fallback : Double,
-) -> Double {
-  match property {
-    Some(Float(value)) => value
-    Some(Int(value)) => value.to_double()
-    _ => fallback
-  }
-}
-
-///|
-fn tiled_property_int(
-  property : @tiled.TiledPropertyValue?,
+fn ldtk_entity_int_field(
+  entity : @ldtk.LdtkEntityInstance,
+  field : String,
   fallback : Int,
 ) -> Int {
-  match property {
-    Some(Int(value)) => value
-    Some(Float(value)) => value.to_int()
-    _ => fallback
+  match entity.field_int(field) {
+    Some(value) => value
+    None =>
+      entity.field_number(field).map_or(fallback, fn(value) { value.to_int() })
   }
 }
 
 ///|
-fn decor_rect_def_from_tiled_object(
-  object : @tiled.TiledObject,
+fn ldtk_entity_number_field(
+  entity : @ldtk.LdtkEntityInstance,
+  field : String,
+  fallback : Double,
+) -> Double {
+  match entity.field_number(field) {
+    Some(value) => value
+    None =>
+      entity.field_int(field).map_or(fallback, fn(value) { value.to_double() })
+  }
+}
+
+///|
+fn decor_rect_def_from_ldtk_entity(
+  entity : @ldtk.LdtkEntityInstance,
   fallback : DecorRectDef,
 ) -> DecorRectDef {
   {
-    position: @math.Vec2D(object.x, object.y),
-    size: if object.width > 0.0 && object.height > 0.0 {
-      @math.Vec2D(object.width, object.height)
+    position: entity.px,
+    size: if entity.width > 0 && entity.height > 0 {
+      ldtk_entity_size(entity)
     } else {
       fallback.size
     },
-    color: tiled_property_string(object.property("color"), fallback.color),
-    zindex: tiled_property_int(object.property("zindex"), fallback.zindex),
+    color: ldtk_entity_string_field(entity, "color", fallback.color),
+    zindex: ldtk_entity_int_field(entity, "zindex", fallback.zindex),
   }
 }
 
 ///|
-fn decor_circle_def_from_tiled_object(
-  object : @tiled.TiledObject,
+fn decor_circle_def_from_ldtk_entity(
+  entity : @ldtk.LdtkEntityInstance,
   fallback : DecorCircleDef,
 ) -> DecorCircleDef {
-  let radius = if object.width > 0.0 && object.height > 0.0 {
-    let width_radius = object.width / 2.0
-    let height_radius = object.height / 2.0
+  let radius = if entity.width > 0 && entity.height > 0 {
+    let size = ldtk_entity_size(entity)
+    let width_radius = size[X] / 2.0
+    let height_radius = size[Y] / 2.0
     if width_radius < height_radius {
       width_radius
     } else {
       height_radius
     }
   } else {
-    tiled_property_double(object.property("radius"), fallback.radius)
+    ldtk_entity_number_field(entity, "radius", fallback.radius)
   }
   {
-    center: if object.point {
-      tiled_object_anchor(object)
-    } else {
-      tiled_object_center(object)
-    },
+    center: ldtk_entity_center(entity),
     radius,
-    color: tiled_property_string(object.property("color"), fallback.color),
-    zindex: tiled_property_int(object.property("zindex"), fallback.zindex),
+    color: ldtk_entity_string_field(entity, "color", fallback.color),
+    zindex: ldtk_entity_int_field(entity, "zindex", fallback.zindex),
   }
 }
 
 ///|
-fn block_def_from_tiled_object(object : @tiled.TiledObject) -> BlockDef {
+fn block_def_from_ldtk_entity(entity : @ldtk.LdtkEntityInstance) -> BlockDef {
   {
-    center: tiled_object_center(object),
-    size: @math.Vec2D(object.width, object.height),
-    color: tiled_property_string(object.property("color"), "rgb(191,132,78)"),
+    center: ldtk_entity_center(entity),
+    size: ldtk_entity_size(entity),
+    color: ldtk_entity_string_field(entity, "color", "rgb(191,132,78)"),
   }
 }
 
 ///|
-fn target_def_from_tiled_object(object : @tiled.TiledObject) -> TargetDef {
-  let radius = if object.width > 0.0 && object.height > 0.0 {
-    let width_radius = object.width / 2.0
-    let height_radius = object.height / 2.0
+fn target_def_from_ldtk_entity(entity : @ldtk.LdtkEntityInstance) -> TargetDef {
+  let size = ldtk_entity_size(entity)
+  let radius = if entity.width > 0 && entity.height > 0 {
+    let width_radius = size[X] / 2.0
+    let height_radius = size[Y] / 2.0
     if width_radius < height_radius {
       width_radius
     } else {
       height_radius
     }
   } else {
-    tiled_property_double(object.property("radius"), TARGET_RADIUS)
+    ldtk_entity_number_field(entity, "radius", TARGET_RADIUS)
   }
   {
-    center: if object.point {
-      tiled_object_anchor(object)
-    } else {
-      tiled_object_center(object)
-    },
+    center: ldtk_entity_center(entity),
     radius,
-    color: tiled_property_string(object.property("color"), "rgb(112, 209, 115)"),
+    color: ldtk_entity_string_field(entity, "color", "rgb(112, 209, 115)"),
   }
 }
