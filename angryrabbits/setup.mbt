@@ -67,80 +67,53 @@ fn register_scene_entities() -> Unit {
     ensure_entity_alive(entity)
   }
   ensure_entity_list(aim_dot_entities, AIM_DOT_COUNT)
-  ensure_entity_list(block_entities, 5)
-  ensure_entity_list(target_entities, 3)
 }
 
 ///|
-fn seed_level() -> Unit {
+fn register_level_entities(level : LevelDef) -> Unit {
+  ensure_entity_list(block_entities, level.blocks.length())
+  ensure_entity_list(target_entities, level.targets.length())
+}
+
+///|
+fn hide_unused_level_entities(level : LevelDef) -> Unit {
+  for index in level.blocks.length()..<block_entities.length() {
+    if @sprite.sprites.get(block_entities[index]) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+  for index in level.targets.length()..<target_entities.length() {
+    if @sprite.sprites.get(target_entities[index]) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
+}
+
+///|
+fn instantiate_level(level : LevelDef) -> Unit {
   blocks.clear()
   targets.clear()
-
-  blocks.push({
-    entity: block_entities[0],
-    center: @math.Vec2D(486.0, GROUND_Y - 42.0),
-    size: @math.Vec2D(28.0, 84.0),
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(191,132,78)",
-    alive: true,
-  })
-  blocks.push({
-    entity: block_entities[1],
-    center: @math.Vec2D(544.0, GROUND_Y - 42.0),
-    size: @math.Vec2D(28.0, 84.0),
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(169,115,67)",
-    alive: true,
-  })
-  blocks.push({
-    entity: block_entities[2],
-    center: @math.Vec2D(604.0, GROUND_Y - 34.0),
-    size: @math.Vec2D(32.0, 68.0),
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(208,148,88)",
-    alive: true,
-  })
-  blocks.push({
-    entity: block_entities[3],
-    center: @math.Vec2D(646.0, GROUND_Y - 30.0),
-    size: @math.Vec2D(22.0, 60.0),
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(160,107,65)",
-    alive: true,
-  })
-  blocks.push({
-    entity: block_entities[4],
-    center: @math.Vec2D(570.0, GROUND_Y - 10.0),
-    size: @math.Vec2D(132.0, 20.0),
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(221,171,108)",
-    alive: true,
-  })
-
-  targets.push({
-    entity: target_entities[0],
-    center: @math.Vec2D(446.0, GROUND_Y - TARGET_RADIUS - 4.0),
-    radius: TARGET_RADIUS,
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(112, 209, 115)",
-    alive: true,
-  })
-  targets.push({
-    entity: target_entities[1],
-    center: @math.Vec2D(571.0, GROUND_Y - TARGET_RADIUS - 4.0),
-    radius: TARGET_RADIUS,
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(112, 209, 115)",
-    alive: true,
-  })
-  targets.push({
-    entity: target_entities[2],
-    center: @math.Vec2D(632.0, GROUND_Y - TARGET_RADIUS - 4.0),
-    radius: TARGET_RADIUS,
-    velocity: @math.Vec2D::zero(),
-    color: "rgb(112, 209, 115)",
-    alive: true,
-  })
+  for index, block in level.blocks {
+    blocks.push({
+      entity: block_entities[index],
+      center: block.center,
+      size: block.size,
+      velocity: @math.Vec2D::zero(),
+      color: block.color,
+      alive: true,
+    })
+  }
+  for index, target in level.targets {
+    targets.push({
+      entity: target_entities[index],
+      center: target.center,
+      radius: target.radius,
+      velocity: @math.Vec2D::zero(),
+      color: target.color,
+      alive: true,
+    })
+  }
+  hide_unused_level_entities(level)
 }
 
 ///|
@@ -208,38 +181,40 @@ fn set_text_entity(
 
 ///|
 fn sync_static_visuals() -> Unit {
+  let anchor = slingshot_anchor()
+  let level = current_level.val
+  let background = level.background_rect
+  let ground = level.ground_rect
+  let hill = level.hill_circle
   @sprite.sprites.set(
     background_entity,
     @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-        SKY_COLOR,
-      ),
-      0,
+      @sprite.ColorRect::new(background.size, background.color),
+      background.zindex,
     ),
   )
-  @transform.positions.set(background_entity, @math.Vec2D::zero())
+  @transform.positions.set(background_entity, background.position)
 
   @sprite.sprites.set(
     hill_entity,
     @sprite.Sprite::from_color_circle(
-      @sprite.ColorCircle::new(120.0, "rgb(154, 211, 132)"),
-      1,
+      @sprite.ColorCircle::new(hill.radius, hill.color),
+      hill.zindex,
     ),
   )
-  @transform.positions.set(hill_entity, @math.Vec2D(500.0, GROUND_Y - 120.0))
+  @transform.positions.set(
+    hill_entity,
+    center_to_circle_position(hill.center, hill.radius),
+  )
 
   @sprite.sprites.set(
     ground_entity,
     @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(VIEWPORT_WIDTH, GROUND_HEIGHT),
-        GROUND_COLOR,
-      ),
-      2,
+      @sprite.ColorRect::new(ground.size, ground.color),
+      ground.zindex,
     ),
   )
-  @transform.positions.set(ground_entity, @math.Vec2D(0.0, GROUND_Y))
+  @transform.positions.set(ground_entity, ground.position)
 
   @sprite.sprites.set(
     slingshot_left_entity,
@@ -250,7 +225,7 @@ fn sync_static_visuals() -> Unit {
   )
   @transform.positions.set(
     slingshot_left_entity,
-    @math.Vec2D(116.0, GROUND_Y - 96.0),
+    anchor + @math.Vec2D(-26.0, -8.0),
   )
 
   @sprite.sprites.set(
@@ -262,7 +237,7 @@ fn sync_static_visuals() -> Unit {
   )
   @transform.positions.set(
     slingshot_right_entity,
-    @math.Vec2D(148.0, GROUND_Y - 112.0),
+    anchor + @math.Vec2D(6.0, -24.0),
   )
 
   @sprite.sprites.set(
@@ -274,7 +249,7 @@ fn sync_static_visuals() -> Unit {
   )
   @transform.positions.set(
     slingshot_base_entity,
-    @math.Vec2D(104.0, GROUND_Y - 18.0),
+    anchor + @math.Vec2D(-38.0, 70.0),
   )
 }
 
@@ -422,13 +397,16 @@ fn sync_ui() -> Unit {
 
 ///|
 fn reset_level() -> Unit {
+  let level = load_current_level()
+  current_level.val = level
   register_scene_entities()
+  register_level_entities(level)
   register_angryrabbits_font_once()
   sync_static_visuals()
-  seed_level()
-  shots_remaining.val = MAX_SHOTS
+  instantiate_level(level)
+  shots_remaining.val = level.max_shots
   phase.val = Ready
-  rabbit_center.val = slingshot_anchor()
+  rabbit_center.val = rabbit_spawn_point()
   rabbit_velocity.val = @math.Vec2D::zero()
   rabbit_visible.val = true
   rabbit_flight_time.val = 0.0

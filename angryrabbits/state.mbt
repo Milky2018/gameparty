@@ -23,8 +23,19 @@ const GROUND_HEIGHT : Double = 92.0
 const GROUND_Y : Double = VIEWPORT_HEIGHT - GROUND_HEIGHT
 
 ///|
+let current_level_path : Ref[String] = { val: DEFAULT_LEVEL_PATH }
+
+///|
+let current_level : Ref[LevelDef] = { val: default_level_def() }
+
+///|
 fn slingshot_anchor() -> @math.Vec2D {
-  @math.Vec2D(142.0, GROUND_Y - 88.0)
+  current_level.val.slingshot_anchor
+}
+
+///|
+fn rabbit_spawn_point() -> @math.Vec2D {
+  current_level.val.rabbit_spawn
 }
 
 ///|
@@ -123,7 +134,7 @@ let phase : Ref[RoundPhase] = { val: Ready }
 let shots_remaining : Ref[Int] = { val: MAX_SHOTS }
 
 ///|
-let rabbit_center : Ref[@math.Vec2D] = { val: slingshot_anchor() }
+let rabbit_center : Ref[@math.Vec2D] = { val: rabbit_spawn_point() }
 
 ///|
 let rabbit_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }

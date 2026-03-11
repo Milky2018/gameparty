@@ -1,0 +1,22 @@
+///|
+test "load default tiled level" {
+  let level = load_level_from_path(DEFAULT_LEVEL_PATH)
+  assert_eq(level.max_shots, 5)
+  assert_eq(level.blocks.length(), 5)
+  assert_eq(level.targets.length(), 3)
+  assert_eq(level.background_rect.size[X], 640.0)
+  assert_eq(level.background_rect.size[Y], 480.0)
+  assert_eq(level.background_rect.zindex, 0)
+  assert_eq(level.ground_rect.position[Y], 388.0)
+  assert_eq(level.ground_rect.zindex, 2)
+  assert_eq(level.hill_circle.radius, 120.0)
+  assert_eq(level.hill_circle.center[X], 620.0)
+  assert_eq(level.hill_circle.center[Y], 388.0)
+  assert_eq(level.slingshot_anchor[X], 142.0)
+  assert_eq(level.slingshot_anchor[Y], 300.0)
+  assert_eq(level.rabbit_spawn[X], 142.0)
+  assert_eq(level.rabbit_spawn[Y], 300.0)
+  assert_eq(level.blocks[0].size[X], 28.0)
+  assert_eq(level.blocks[4].size[Y], 20.0)
+  assert_eq(level.targets[0].radius, 18.0)
+}
