@@ -133,7 +133,84 @@ fn level_def_from_ldtk_project(project : @ldtk.LdtkProject) -> LevelDef {
   guard first_ldtk_level(project) is Some(level) else {
     return default_level_def()
   }
-  level_def_from_ldtk_level(level)
+  let fallback = default_level_def()
+  let slingshot_anchor : Ref[@math.Vec2D] = { val: fallback.slingshot_anchor }
+  let rabbit_spawn : Ref[@math.Vec2D] = { val: fallback.rabbit_spawn }
+  let background_rect : Ref[DecorRectDef] = { val: fallback.background_rect }
+  let ground_rect : Ref[DecorRectDef] = { val: fallback.ground_rect }
+  let hill_circle : Ref[DecorCircleDef] = { val: fallback.hill_circle }
+  let max_shots : Ref[Int] = {
+    val: level.field_int("max_shots").unwrap_or(fallback.max_shots),
+  }
+  let blocks : Array[BlockDef] = []
+  let targets : Array[TargetDef] = []
+  with_scoped_ldtk_entity_registrations_for_level(level.iid, fn() {
+    @ldtk.add_ldtk_entity_registration("SlingshotAnchor", fn(event) {
+      if event.layer.visible {
+        slingshot_anchor.val = ldtk_entity_anchor(event.instance)
+      }
+    })
+    @ldtk.add_ldtk_entity_registration("RabbitSpawn", fn(event) {
+      if event.layer.visible {
+        rabbit_spawn.val = ldtk_entity_anchor(event.instance)
+      }
+    })
+    @ldtk.add_ldtk_entity_registration("BackgroundRect", fn(event) {
+      if event.layer.visible {
+        background_rect.val = decor_rect_def_from_ldtk_entity(
+          event.instance,
+          background_rect.val,
+        )
+      }
+    })
+    @ldtk.add_ldtk_entity_registration("GroundRect", fn(event) {
+      if event.layer.visible {
+        ground_rect.val = decor_rect_def_from_ldtk_entity(
+          event.instance,
+          ground_rect.val,
+        )
+      }
+    })
+    @ldtk.add_ldtk_entity_registration("HillCircle", fn(event) {
+      if event.layer.visible {
+        hill_circle.val = decor_circle_def_from_ldtk_entity(
+          event.instance,
+          hill_circle.val,
+        )
+      }
+    })
+    @ldtk.add_ldtk_entity_registration("Block", fn(event) {
+      if event.layer.visible {
+        blocks.push(block_def_from_ldtk_entity(event.instance))
+      }
+    })
+    @ldtk.add_ldtk_entity_registration("Target", fn(event) {
+      if event.layer.visible {
+        targets.push(target_def_from_ldtk_entity(event.instance))
+      }
+    })
+    let world_entity = @ldtk.spawn_ldtk_world(project)
+    @ldtk.despawn_ldtk_tree(world_entity)
+  })
+
+  {
+    slingshot_anchor: slingshot_anchor.val,
+    rabbit_spawn: rabbit_spawn.val,
+    max_shots: max_shots.val,
+    background_rect: background_rect.val,
+    ground_rect: ground_rect.val,
+    hill_circle: hill_circle.val,
+    blocks: if blocks.is_empty() {
+      fallback.blocks
+    } else {
+      blocks
+    },
+    targets: if targets.is_empty() {
+      fallback.targets
+    } else {
+      targets
+    },
+  }
 }
 
 ///|
@@ -147,57 +224,20 @@ fn first_ldtk_level(project : @ldtk.LdtkProject) -> @ldtk.LdtkLevel? {
 }
 
 ///|
-fn level_def_from_ldtk_level(level : @ldtk.LdtkLevel) -> LevelDef {
-  let fallback = default_level_def()
-  let mut slingshot = fallback.slingshot_anchor
-  let mut rabbit_spawn = fallback.rabbit_spawn
-  let mut background_rect = fallback.background_rect
-  let mut ground_rect = fallback.ground_rect
-  let mut hill_circle = fallback.hill_circle
-  let blocks : Array[BlockDef] = []
-  let targets : Array[TargetDef] = []
-
-  for layer in level.layer_instances {
-    if !layer.visible {
-      continue
-    }
-    for entity in layer.entity_instances {
-      match entity.identifier {
-        "SlingshotAnchor" => slingshot = ldtk_entity_anchor(entity)
-        "RabbitSpawn" => rabbit_spawn = ldtk_entity_anchor(entity)
-        "BackgroundRect" =>
-          background_rect = decor_rect_def_from_ldtk_entity(
-            entity, background_rect,
-          )
-        "GroundRect" =>
-          ground_rect = decor_rect_def_from_ldtk_entity(entity, ground_rect)
-        "HillCircle" =>
-          hill_circle = decor_circle_def_from_ldtk_entity(entity, hill_circle)
-        "Block" => blocks.push(block_def_from_ldtk_entity(entity))
-        "Target" => targets.push(target_def_from_ldtk_entity(entity))
-        _ => ()
-      }
-    }
+fn with_scoped_ldtk_entity_registrations_for_level(
+  level_iid : String,
+  action : () -> Unit,
+) -> Unit {
+  let previous = @ldtk.ldtk_entity_typed_registrations.to_array()
+  let previous_level_selection = @ldtk.ldtk_level_selection.val
+  @ldtk.clear_ldtk_entity_registrations()
+  @ldtk.set_ldtk_level_selection(@ldtk.ldtk_level_selection_iid(level_iid))
+  action()
+  @ldtk.clear_ldtk_entity_registrations()
+  for entry in previous {
+    @ldtk.ldtk_entity_typed_registrations.set(entry.0, entry.1)
   }
-
-  {
-    slingshot_anchor: slingshot,
-    rabbit_spawn,
-    max_shots: level.field_int("max_shots").unwrap_or(fallback.max_shots),
-    background_rect,
-    ground_rect,
-    hill_circle,
-    blocks: if blocks.is_empty() {
-      fallback.blocks
-    } else {
-      blocks
-    },
-    targets: if targets.is_empty() {
-      fallback.targets
-    } else {
-      targets
-    },
-  }
+  @ldtk.set_ldtk_level_selection(previous_level_selection)
 }
 
 ///|
