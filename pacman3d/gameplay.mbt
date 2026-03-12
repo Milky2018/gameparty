@@ -112,7 +112,7 @@ fn check_dot_collection() -> Unit {
     let dz = dots[i].z - player_state.z
     if squared(dx) + squared(dz) <= squared(DOT_PICKUP_RADIUS) {
       dots[i].collected = true
-      @render3d.point_lights3d.remove(dots[i].entity)
+      @render3d.point_lights3d().remove(dots[i].entity)
       dots[i].entity.destroy()
       dots[i].minimap_entity.destroy()
       play_audio("pacman3d/assets/coin.wav")
@@ -143,7 +143,8 @@ fn check_ghost_collision() -> Bool {
 }
 
 ///|
-pub fn player_input_system(delta : Double) -> Unit {
+pub fn player_input_system(_world : @ecs.World) -> Unit {
+  let delta = @time.delta()
   if @inputs.is_just_pressed(KeyF) {
     lighting_debug.enabled = !lighting_debug.enabled
   }
@@ -257,7 +258,8 @@ pub fn player_input_system(delta : Double) -> Unit {
 }
 
 ///|
-pub fn ghost_update_system(delta : Double) -> Unit {
+pub fn ghost_update_system(_world : @ecs.World) -> Unit {
+  let delta = @time.delta()
   if lighting_debug.freeze_ghosts {
     return
   }
@@ -279,19 +281,19 @@ pub fn ghost_update_system(delta : Double) -> Unit {
 }
 
 ///|
-pub fn minimap_system(_delta : Double) -> Unit {
-  @transform.positions.set(
+pub fn minimap_system(_world : @ecs.World) -> Unit {
+  @transform.positions().set(
     minimap_player_entity,
     minimap_pos_for_world(player_state.x, player_state.z, MINIMAP_MARKER_SIZE),
   )
 
   let show_ghosts = half_dots_collected()
   for ghost in ghosts {
-    @transform.positions.set(
+    @transform.positions().set(
       ghost.minimap_entity,
       minimap_pos_for_world(ghost.x, ghost.z, MINIMAP_MARKER_SIZE),
     )
-    if @sprite.sprites.get(ghost.minimap_entity) is Some(sprite) {
+    if @sprite.sprites().get(ghost.minimap_entity) is Some(sprite) {
       sprite.visible = show_ghosts
     }
   }
@@ -306,13 +308,13 @@ fn set_hud_text(
   color : String,
 ) -> Unit {
   let text = @sprite.Text::new(content, color~, font~, baseline=Top, align=Left)
-  @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 200))
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 200))
+  @transform.positions().set(entity, position)
 }
 
 ///|
 fn hud_level_text() -> String {
-  "Level: \{current_level.val + 1}"
+  "المستوى: \{current_level.val + 1}"
 }
 
 ///|
@@ -334,7 +336,7 @@ fn hud_completion_body() -> String {
 }
 
 ///|
-pub fn hud_system(_delta : Double) -> Unit {
+pub fn hud_system(_world : @ecs.World) -> Unit {
   set_hud_text(
     hud_title_ui,
     hud_level_text(),
@@ -372,8 +374,8 @@ pub fn hud_system(_delta : Double) -> Unit {
       baseline=Top,
       align=Left,
     )
-    @sprite.sprites.set(hud_debug_ui, @sprite.Sprite::from_text(text, 220))
-    @transform.positions.set(hud_debug_ui, @math.Vec2D(8.0, 8.0))
+    @sprite.sprites().set(hud_debug_ui, @sprite.Sprite::from_text(text, 220))
+    @transform.positions().set(hud_debug_ui, @math.Vec2D(8.0, 8.0))
   } else {
     set_hud_text(
       hud_debug_ui,

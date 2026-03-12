@@ -162,8 +162,8 @@ fn set_center_text_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   let style = @sprite.Text::new(text, color~, font~, baseline=Top, align=Center)
-  @sprite.sprites.set(entity, @sprite.Sprite::from_text(style, zindex))
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, @sprite.Sprite::from_text(style, zindex))
+  @transform.positions().set(entity, position)
 }
 
 ///|
@@ -218,7 +218,7 @@ fn refresh_menu_visuals() -> Unit {
 ///|
 fn set_menu_visible(visible : Bool) -> Unit {
   for entity in menu_entities() {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = visible
     }
   }
@@ -226,13 +226,13 @@ fn set_menu_visible(visible : Bool) -> Unit {
 
 ///|
 fn hide_existing_scene_visuals() -> Unit {
-  for _, sprite in @sprite.sprites {
+  for _, sprite in @sprite.sprites() {
     sprite.visible = false
   }
-  for _, renderer in @render3d.mesh3d_renderers {
+  for _, renderer in @render3d.mesh3d_renderers() {
     renderer.visible = false
   }
-  for _, camera in @camera3d.cameras3d {
+  for _, camera in @camera3d.cameras3d() {
     camera.enabled = false
   }
 }
@@ -357,23 +357,39 @@ fn run_if_angryrabbits() -> Bool {
 
 ///|
 pub fn run() -> Unit {
-  let app = @system.App::new()
+  let app = @app.App::new()
     .with_viewport_width(APP_VIEWPORT_WIDTH)
     .with_viewport_height(APP_VIEWPORT_HEIGHT)
     .with_zoom(APP_ZOOM)
     .with_fps(APP_FPS)
     .with_image_smooth(true)
     .add_plugin(@plugins.default_plugin)
-    .add_system(@transform3d.transform3d_propagate_system, schedule=PostUpdate)
-    .add_system(@camera3d.camera3d_extract_system, schedule=RenderExtract)
-    .add_system(@render3d.render3d_extract_system, schedule=RenderExtract)
     .add_system(
-      @render3d_pipeline.render3d_prepare_system,
+      fn(_world, delta) { @transform3d.transform3d_propagate_system(delta) },
+      schedule=PostUpdate,
+    )
+    .add_system(
+      fn(_world, delta) { @camera3d.camera3d_extract_system(delta) },
+      schedule=RenderExtract,
+    )
+    .add_system(
+      fn(_world, delta) { @render3d.render3d_extract_system(delta) },
+      schedule=RenderExtract,
+    )
+    .add_system(
+      fn(_world, delta) { @render3d_pipeline.render3d_prepare_system(delta) },
       schedule=RenderPrepare,
     )
-    .add_system(menu_startup_system, schedule=Startup)
-    .add_system(game_mode_transition_system)
-    .add_system(menu_input_system, run_if=run_if_menu)
+    .add_system(
+      fn(_world, delta) { menu_startup_system(delta) },
+      schedule=Startup,
+    )
+    .add_system(fn(_world, delta) { game_mode_transition_system(delta) })
+    .add_system(fn(_world, delta) { menu_input_system(delta) }, run_if=fn(
+      _world,
+    ) {
+      run_if_menu()
+    })
   let app = @thetawave.add_runtime_systems(app, run_if_thetawave)
   let app = @pacman3d.add_runtime_systems(app, run_if_pacman3d)
   let app = @angryrabbits.add_runtime_systems(app, run_if_angryrabbits)

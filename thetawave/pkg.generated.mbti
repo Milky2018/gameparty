@@ -2,27 +2,28 @@
 package "Milky2018/gameparty/thetawave"
 
 import {
-  "Milky2018/selene/system",
+  "Milky2018/selene/app",
+  "Milky2018/selene/ecs",
 }
 
 // Values
-pub fn add_runtime_systems(@system.App, () -> Bool) -> @system.App
+pub fn add_runtime_systems(@app.App, () -> Bool) -> @app.App
 
-pub fn combat_system(Double) -> Unit
+pub fn combat_system(@ecs.World) -> Unit
 
-pub fn enemy_spawn_system(Double) -> Unit
+pub fn enemy_spawn_system(@ecs.World) -> Unit
 
 pub fn enter_from_host() -> Unit
 
 pub fn get_embedded_asset(String) -> Bytes?
 
-pub fn menu_state_system(Double) -> Unit
+pub fn menu_state_system(@ecs.World) -> Unit
 
-pub fn player_input_system(Double) -> Unit
+pub fn player_input_system(@ecs.World) -> Unit
 
-pub fn player_shoot_system(Double) -> Unit
+pub fn player_shoot_system(@ecs.World) -> Unit
 
-pub fn player_special_system(Double) -> Unit
+pub fn player_special_system(@ecs.World) -> Unit
 
 pub fn reset_exit_handler() -> Unit
 
@@ -30,13 +31,13 @@ pub fn run() -> Unit
 
 pub fn set_exit_handler(() -> Unit) -> Unit
 
-pub fn simulation_system(Double) -> Unit
+pub fn simulation_system(@ecs.World) -> Unit
 
-pub fn startup_system(Double) -> Unit
+pub fn startup_system(@ecs.World) -> Unit
 
-pub fn ui_system(Double) -> Unit
+pub fn ui_system(@ecs.World) -> Unit
 
-pub fn victory_system(Double) -> Unit
+pub fn victory_system(@ecs.World) -> Unit
 
 // Errors
 

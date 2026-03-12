@@ -2,11 +2,11 @@
 package "Milky2018/gameparty/angryrabbits"
 
 import {
-  "Milky2018/selene/system",
+  "Milky2018/selene/app",
 }
 
 // Values
-pub fn add_runtime_systems(@system.App, () -> Bool) -> @system.App
+pub fn add_runtime_systems(@app.App, () -> Bool) -> @app.App
 
 pub fn enter_from_host() -> Unit
 

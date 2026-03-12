@@ -78,12 +78,12 @@ fn register_level_entities(level : LevelDef) -> Unit {
 ///|
 fn hide_unused_level_entities(level : LevelDef) -> Unit {
   for index in level.blocks.length()..<block_entities.length() {
-    if @sprite.sprites.get(block_entities[index]) is Some(sprite) {
+    if @sprite.sprites().get(block_entities[index]) is Some(sprite) {
       sprite.visible = false
     }
   }
   for index in level.targets.length()..<target_entities.length() {
-    if @sprite.sprites.get(target_entities[index]) is Some(sprite) {
+    if @sprite.sprites().get(target_entities[index]) is Some(sprite) {
       sprite.visible = false
     }
   }
@@ -119,7 +119,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
 ///|
 fn hide_aim_dots() -> Unit {
   for entity in aim_dot_entities {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
@@ -141,11 +141,11 @@ fn refresh_aim_dots() -> Unit {
     let time = (index.to_double() + 1.0) * AIM_DOT_TIME_STEP
     let offset = velocity.scalar_mul(time) +
       @math.Vec2D(0.0, GRAVITY * 0.5 * time * time)
-    @transform.positions.set(
+    @transform.positions().set(
       entity,
       center_to_circle_position(rabbit_center.val + offset, AIM_DOT_RADIUS),
     )
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       entity,
       @sprite.Sprite::from_color_circle(
         @sprite.ColorCircle::new(
@@ -169,14 +169,14 @@ fn set_text_entity(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     entity,
     @sprite.Sprite::from_text(
       @sprite.Text::new(text, color~, font~, baseline=Top, align=Left),
       zindex,
     ),
   )
-  @transform.positions.set(entity, position)
+  @transform.positions().set(entity, position)
 }
 
 ///|
@@ -186,68 +186,68 @@ fn sync_static_visuals() -> Unit {
   let background = level.background_rect
   let ground = level.ground_rect
   let hill = level.hill_circle
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     background_entity,
     @sprite.Sprite::from_color_rect(
       @sprite.ColorRect::new(background.size, background.color),
       background.zindex,
     ),
   )
-  @transform.positions.set(background_entity, background.position)
+  @transform.positions().set(background_entity, background.position)
 
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     hill_entity,
     @sprite.Sprite::from_color_circle(
       @sprite.ColorCircle::new(hill.radius, hill.color),
       hill.zindex,
     ),
   )
-  @transform.positions.set(
+  @transform.positions().set(
     hill_entity,
     center_to_circle_position(hill.center, hill.radius),
   )
 
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     ground_entity,
     @sprite.Sprite::from_color_rect(
       @sprite.ColorRect::new(ground.size, ground.color),
       ground.zindex,
     ),
   )
-  @transform.positions.set(ground_entity, ground.position)
+  @transform.positions().set(ground_entity, ground.position)
 
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     slingshot_left_entity,
     @sprite.Sprite::from_color_rect(
       @sprite.ColorRect::new(@math.Vec2D(16.0, 96.0), "rgb(122, 76, 39)"),
       30,
     ),
   )
-  @transform.positions.set(
+  @transform.positions().set(
     slingshot_left_entity,
     anchor + @math.Vec2D(-26.0, -8.0),
   )
 
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     slingshot_right_entity,
     @sprite.Sprite::from_color_rect(
       @sprite.ColorRect::new(@math.Vec2D(16.0, 112.0), "rgb(101, 61, 28)"),
       31,
     ),
   )
-  @transform.positions.set(
+  @transform.positions().set(
     slingshot_right_entity,
     anchor + @math.Vec2D(6.0, -24.0),
   )
 
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     slingshot_base_entity,
     @sprite.Sprite::from_color_rect(
       @sprite.ColorRect::new(@math.Vec2D(54.0, 18.0), "rgb(133, 86, 45)"),
       29,
     ),
   )
-  @transform.positions.set(
+  @transform.positions().set(
     slingshot_base_entity,
     anchor + @math.Vec2D(-38.0, 70.0),
   )
@@ -260,7 +260,7 @@ fn sync_dynamic_visuals() -> Unit {
     Lost => "rgb(188, 188, 188)"
     _ => "rgb(246, 244, 238)"
   }
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     rabbit_entity,
     @sprite.Sprite::from_color_circle(
       @sprite.ColorCircle::new(
@@ -271,28 +271,28 @@ fn sync_dynamic_visuals() -> Unit {
       70,
     ),
   )
-  @transform.positions.set(rabbit_entity, rabbit_center_top_left())
-  if @sprite.sprites.get(rabbit_entity) is Some(sprite) {
+  @transform.positions().set(rabbit_entity, rabbit_center_top_left())
+  if @sprite.sprites().get(rabbit_entity) is Some(sprite) {
     sprite.visible = rabbit_visible.val
   }
 
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     rabbit_eye_entity,
     @sprite.Sprite::from_color_circle(
       @sprite.ColorCircle::new(3.2, "rgb(36, 32, 31)"),
       71,
     ),
   )
-  @transform.positions.set(
+  @transform.positions().set(
     rabbit_eye_entity,
     center_to_circle_position(rabbit_center.val + @math.Vec2D(6.0, -3.0), 3.2),
   )
-  if @sprite.sprites.get(rabbit_eye_entity) is Some(sprite) {
+  if @sprite.sprites().get(rabbit_eye_entity) is Some(sprite) {
     sprite.visible = rabbit_visible.val
   }
 
   for block in blocks {
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       block.entity,
       @sprite.Sprite::from_color_rect(
         @sprite.ColorRect::new(
@@ -303,17 +303,17 @@ fn sync_dynamic_visuals() -> Unit {
         60,
       ),
     )
-    @transform.positions.set(
+    @transform.positions().set(
       block.entity,
       center_to_rect_position(block.center, block.size),
     )
-    if @sprite.sprites.get(block.entity) is Some(sprite) {
+    if @sprite.sprites().get(block.entity) is Some(sprite) {
       sprite.visible = block.alive
     }
   }
 
   for target in targets {
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       target.entity,
       @sprite.Sprite::from_color_circle(
         @sprite.ColorCircle::new(
@@ -324,11 +324,11 @@ fn sync_dynamic_visuals() -> Unit {
         65,
       ),
     )
-    @transform.positions.set(
+    @transform.positions().set(
       target.entity,
       center_to_circle_position(target.center, target.radius),
     )
-    if @sprite.sprites.get(target.entity) is Some(sprite) {
+    if @sprite.sprites().get(target.entity) is Some(sprite) {
       sprite.visible = target.alive
     }
   }
@@ -423,7 +423,7 @@ fn setup_scene_if_needed() -> Unit {
 }
 
 ///|
-fn startup_system(_delta : Double) -> Unit {
+fn startup_system(_world : @ecs.World) -> Unit {
   setup_scene_if_needed()
   reset_level()
 }

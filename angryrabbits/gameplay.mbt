@@ -288,7 +288,7 @@ fn apply_rabbit_target_collisions() -> Unit {
 }
 
 ///|
-fn input_system(_delta : Double) -> Unit {
+fn input_system(_world : @ecs.World) -> Unit {
   if @inputs.is_just_pressed(Escape) {
     request_exit()
     return
@@ -329,7 +329,8 @@ fn input_system(_delta : Double) -> Unit {
 }
 
 ///|
-fn simulation_system(delta : Double) -> Unit {
+fn simulation_system(_world : @ecs.World) -> Unit {
+  let delta = @time.delta()
   if phase.val == Flying {
     rabbit_flight_time.val = rabbit_flight_time.val + delta
     rabbit_velocity.val = @math.Vec2D(
@@ -363,7 +364,7 @@ fn simulation_system(delta : Double) -> Unit {
 }
 
 ///|
-fn render_sync_system(_delta : Double) -> Unit {
+fn render_sync_system(_world : @ecs.World) -> Unit {
   sync_dynamic_visuals()
   sync_ui()
 }

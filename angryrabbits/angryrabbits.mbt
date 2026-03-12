@@ -28,27 +28,34 @@ pub fn enter_from_host() -> Unit {
 }
 
 ///|
-pub fn add_runtime_systems(
-  app : @system.App,
-  run_if : () -> Bool,
-) -> @system.App {
+pub fn add_runtime_systems(app : @app.App, run_if : () -> Bool) -> @app.App {
   app
-  .add_system(input_system, run_if~)
-  .add_system(simulation_system, run_if~)
-  .add_system(render_sync_system, run_if~)
+  .add_system(fn(world, _delta) { input_system(world) }, run_if=fn(_world) {
+    run_if()
+  })
+  .add_system(fn(world, _delta) { simulation_system(world) }, run_if=fn(
+    _world,
+  ) {
+    run_if()
+  })
+  .add_system(fn(world, _delta) { render_sync_system(world) }, run_if=fn(
+    _world,
+  ) {
+    run_if()
+  })
 }
 
 ///|
 pub fn run() -> Unit {
   reset_exit_handler()
-  let app = @system.App::new()
+  let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(ZOOM)
     .with_fps(FPS)
     .with_image_smooth(true)
     .add_plugin(@plugins.default_plugin)
-    .add_system(startup_system, schedule=Startup)
+    .add_system(fn(world, _delta) { startup_system(world) }, schedule=Startup)
   let app = add_runtime_systems(app, fn() { true })
   app.run()
 }

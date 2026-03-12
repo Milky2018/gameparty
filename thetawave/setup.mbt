@@ -1,5 +1,5 @@
 ///|
-pub fn startup_system(_delta : Double) -> Unit {
+pub fn startup_system(_world : @ecs.World) -> Unit {
   if !ui_initialized.val {
     install_embedded_assets()
     preload_assets()
@@ -317,14 +317,14 @@ fn uses_3d_background(kind : BackgroundKind) -> Bool {
 
 ///|
 fn set_background_sprite_visible(visible : Bool) -> Unit {
-  if @sprite.sprites.get(game_state.background) is Some(sprite) {
+  if @sprite.sprites().get(game_state.background) is Some(sprite) {
     sprite.visible = visible
   }
 }
 
 ///|
 fn set_mesh3d_visible(entity : @entity.Entity, visible : Bool) -> Unit {
-  if @render3d.mesh3d_renderers.get(entity) is Some(renderer) {
+  if @render3d.mesh3d_renderers().get(entity) is Some(renderer) {
     renderer.visible = visible
   }
 }
@@ -335,7 +335,7 @@ fn set_background3d_active(active : Bool) -> Unit {
   if !background3d_initialized.val {
     return
   }
-  if @camera3d.cameras3d.get(background3d_camera_entity) is Some(camera) {
+  if @camera3d.cameras3d().get(background3d_camera_entity) is Some(camera) {
     camera.enabled = active
   }
   set_mesh3d_visible(background3d_quad_entity, active)
@@ -344,11 +344,11 @@ fn set_background3d_active(active : Bool) -> Unit {
     set_mesh3d_visible(background3d_star_entity, active)
   } else {
     // Some backends ignore `visible` for 3D meshes; remove fallback bodies entirely.
-    @render3d.mesh3d_renderers.remove(background3d_planet_entity)
-    @render3d.mesh3d_renderers.remove(background3d_star_entity)
+    @render3d.mesh3d_renderers().remove(background3d_planet_entity)
+    @render3d.mesh3d_renderers().remove(background3d_star_entity)
   }
   if !active || !BG3D_ENABLE_FALLBACK_BODIES {
-    @render3d.point_lights3d.remove(background3d_star_light_entity)
+    @render3d.point_lights3d().remove(background3d_star_light_entity)
   }
   if active {
     let ambient_intensity = if BG3D_ENABLE_FALLBACK_BODIES { 0.35 } else { 1.0 }
@@ -436,28 +436,28 @@ fn refresh_background3d_assets() -> Unit {
   }
   let planet_material = @render3d.register_material_asset(planet_material)
 
-  @render3d.mesh3d_renderers.set(background3d_quad_entity, {
+  @render3d.mesh3d_renderers().set(background3d_quad_entity, {
     mesh: quad_mesh,
     material: quad_material,
     visible: background3d_active.val,
     cast_shadows: false,
     receive_shadows: false,
   })
-  @transform3d.transforms3d.set(background3d_quad_entity, {
+  @transform3d.transforms3d().set(background3d_quad_entity, {
     translation: @math.Vec3::new(0.0, 0.0, BG3D_QUAD_Z),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::new(BG3D_QUAD_SCALE_X, BG3D_QUAD_SCALE_Y, 1.0),
   })
 
   if BG3D_ENABLE_FALLBACK_BODIES {
-    @render3d.mesh3d_renderers.set(background3d_planet_entity, {
+    @render3d.mesh3d_renderers().set(background3d_planet_entity, {
       mesh: planet_mesh,
       material: planet_material,
       visible: background3d_active.val,
       cast_shadows: false,
       receive_shadows: false,
     })
-    @transform3d.transforms3d.set(background3d_planet_entity, {
+    @transform3d.transforms3d().set(background3d_planet_entity, {
       translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
       rotation: @math.Quat::from_axis_angle(
         @math.Vec3::new(0.0, 1.0, 0.0),
@@ -466,39 +466,39 @@ fn refresh_background3d_assets() -> Unit {
       scale: @math.Vec3::one(),
     })
   } else {
-    @render3d.mesh3d_renderers.remove(background3d_planet_entity)
+    @render3d.mesh3d_renderers().remove(background3d_planet_entity)
   }
 
   let star_x = random_range(BG3D_STAR_X_MIN, BG3D_STAR_X_MAX)
   let star_z = random_range(BG3D_STAR_Z_MIN, BG3D_STAR_Z_MAX)
   let star_translation = @math.Vec3::new(star_x, 0.0, star_z)
   if BG3D_ENABLE_FALLBACK_BODIES {
-    @render3d.mesh3d_renderers.set(background3d_star_entity, {
+    @render3d.mesh3d_renderers().set(background3d_star_entity, {
       mesh: star_mesh,
       material: star_material,
       visible: background3d_active.val,
       cast_shadows: false,
       receive_shadows: false,
     })
-    @transform3d.transforms3d.set(background3d_star_entity, {
+    @transform3d.transforms3d().set(background3d_star_entity, {
       translation: star_translation,
       rotation: @math.Quat::identity(),
       scale: @math.Vec3::one(),
     })
   } else {
-    @render3d.mesh3d_renderers.remove(background3d_star_entity)
+    @render3d.mesh3d_renderers().remove(background3d_star_entity)
   }
   if BG3D_ENABLE_FALLBACK_BODIES {
-    @render3d.point_lights3d.set(background3d_star_light_entity, {
+    @render3d.point_lights3d().set(background3d_star_light_entity, {
       ..@render3d.default_point_light3d(),
       color: star_color,
       intensity: BG3D_STAR_LIGHT_INTENSITY,
       range: BG3D_STAR_LIGHT_RANGE,
     })
   } else {
-    @render3d.point_lights3d.remove(background3d_star_light_entity)
+    @render3d.point_lights3d().remove(background3d_star_light_entity)
   }
-  @transform3d.transforms3d.set(background3d_star_light_entity, {
+  @transform3d.transforms3d().set(background3d_star_light_entity, {
     translation: star_translation,
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -539,11 +539,11 @@ fn ensure_background3d_initialized() -> Unit {
   ensure_entity_alive(background3d_star_entity)
   ensure_entity_alive(background3d_star_light_entity)
 
-  @camera3d.cameras3d.set(
+  @camera3d.cameras3d().set(
     background3d_camera_entity,
     @camera3d.Camera3DComponent::default(),
   )
-  @transform3d.transforms3d.set(background3d_camera_entity, {
+  @transform3d.transforms3d().set(background3d_camera_entity, {
     translation: @math.Vec3::new(0.0, 0.0, 60.0),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -703,8 +703,8 @@ fn set_background(kind : BackgroundKind) -> Unit {
   } else {
     background_sprite(kind)
   }
-  @sprite.sprites.set(game_state.background, sprite)
-  @transform.positions.set(game_state.background, @math.Vec2D(0.0, 0.0))
+  @sprite.sprites().set(game_state.background, sprite)
+  @transform.positions().set(game_state.background, @math.Vec2D(0.0, 0.0))
   set_background_sprite_visible(true)
 }
 
@@ -1166,164 +1166,164 @@ fn initialize_ui() -> Unit {
     ),
     @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT2_FILL_BOTTOM_Y),
   )
-  if @sprite.sprites.get(game_state.character_portrait_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.character_portrait_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.character_description_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.character_description_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_left_portrait_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_left_portrait_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_right_portrait_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_right_portrait_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_name_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_name_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ability_slot1_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ability_slot1_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ability_slot1_icon_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ability_slot1_icon_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ability_slot1_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ability_slot1_text_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ability_slot2_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ability_slot2_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ability_slot2_icon_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ability_slot2_icon_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ability_slot2_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ability_slot2_text_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_join_prompt_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_join_prompt_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_ready_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_ready_text_ui) is Some(sprite) {
     sprite.visible = false
   }
   for entity in character_stat_icon_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
   for entity in character_stat_bg_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
   for entity in character_stat_fill_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
-  if @sprite.sprites.get(character_p2_center_portrait_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_center_portrait_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_left_portrait_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_left_portrait_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_right_portrait_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_right_portrait_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_name_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_name_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ability_slot1_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ability_slot1_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ability_slot1_icon_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ability_slot1_icon_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ability_slot1_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ability_slot1_text_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ability_slot2_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ability_slot2_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ability_slot2_icon_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ability_slot2_icon_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ability_slot2_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ability_slot2_text_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_join_prompt_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_join_prompt_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(character_p2_ready_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(character_p2_ready_text_ui) is Some(sprite) {
     sprite.visible = false
   }
   for entity in character_p2_stat_icon_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
   for entity in character_p2_stat_bg_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
   for entity in character_p2_stat_fill_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
-  if @sprite.sprites.get(game_state.phase_prompt_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.phase_prompt_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.warning_gradient_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.warning_gradient_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.defense_gradient_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.defense_gradient_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_health_label_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_health_label_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_health_bar_bg_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_health_bar_bg_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_health_bar_fill_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_health_bar_fill_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_shield_bar_bg_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_shield_bar_bg_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_shield_bar_fill_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_shield_bar_fill_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_defense_label_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_defense_label_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_defense_bar_bg_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_defense_bar_bg_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_defense_bar_fill_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_defense_bar_fill_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_slot1_bg_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_slot1_bg_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_slot1_icon_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_slot1_icon_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_slot1_fill_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_slot1_fill_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_slot2_bg_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_slot2_bg_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_slot2_icon_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_slot2_icon_ui) is Some(sprite) {
     sprite.visible = false
   }
-  if @sprite.sprites.get(game_state.hud_slot2_fill_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.hud_slot2_fill_ui) is Some(sprite) {
     sprite.visible = false
   }
   for entity in tutorial_phase_data_line_uis {
-    if @sprite.sprites.get(entity) is Some(sprite) {
+    if @sprite.sprites().get(entity) is Some(sprite) {
       sprite.visible = false
     }
   }
@@ -1338,8 +1338,8 @@ fn setup_text_entity(
   if !entity.is_alive() {
     entity.respawn()
   }
-  @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 100))
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 100))
+  @transform.positions().set(entity, position)
 }
 
 ///|
@@ -1351,18 +1351,18 @@ fn setup_picture_entity(
   if !entity.is_alive() {
     entity.respawn()
   }
-  @sprite.sprites.set(entity, sprite)
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, sprite)
+  @transform.positions().set(entity, position)
 }
 
 ///|
 fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2D) -> Unit {
-  let position = @transform.positions
+  let position = @transform.positions()
     .get(entity)
     .map_or(@math.Vec2D::zero(), position => position.0)
-  @ui.nodes.set(entity, @ui.Node::absolute(position, size=hit_size))
-  @ui.buttons.set(entity, @ui.Button::new())
-  @ui.interactions.set(entity, @ui.None)
+  @ui.nodes().set(entity, @ui.Node::absolute(position, size=hit_size))
+  @ui.buttons().set(entity, @ui.Button::new())
+  @ui.interactions().set(entity, @ui.None)
 }
 
 ///|
@@ -1525,8 +1525,8 @@ fn spawn_player() -> Unit {
   if !entity.is_alive() {
     entity.respawn()
   }
-  @sprite.sprites.set(entity, player_sprite(game_state.selected_character))
-  @transform.positions.set(entity, initial_player_position())
+  @sprite.sprites().set(entity, player_sprite(game_state.selected_character))
+  @transform.positions().set(entity, initial_player_position())
 }
 
 ///|
@@ -1975,8 +1975,8 @@ fn spawn_enemy_visual_parts(
   for i in 0..<templates.length() {
     let template = templates[i]
     let part_entity = @entity.Entity::new()
-    @sprite.sprites.set(part_entity, template.sprite)
-    @transform.positions.set(part_entity, origin + template.offset)
+    @sprite.sprites().set(part_entity, template.sprite)
+    @transform.positions().set(part_entity, origin + template.offset)
     links.push({
       entity: part_entity,
       role: enemy_part_role(kind, i),
@@ -2013,7 +2013,7 @@ fn sync_enemy_visual_parts(
       } else {
         @math.Vec2D(0.0, 0.0)
       }
-      @transform.positions.set(
+      @transform.positions().set(
         part.entity,
         origin + part.offset + pose_offset + @math.Vec2D(0.0, bob_y),
       )
@@ -2025,8 +2025,8 @@ fn sync_enemy_visual_parts(
 fn despawn_enemy_visual_parts(enemy_entity : @entity.Entity) -> Unit {
   if enemy_visual_parts.get(enemy_entity) is Some(parts) {
     for part in parts {
-      @sprite.sprites.remove(part.entity)
-      @transform.positions.remove(part.entity)
+      @sprite.sprites().remove(part.entity)
+      @transform.positions().remove(part.entity)
       if part.entity.is_alive() {
         part.entity.destroy()
       }
@@ -2065,8 +2065,8 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
   } else {
     archetype.speed_y + speed_bonus
   }
-  @sprite.sprites.set(enemy_entity, enemy_sprite(kind))
-  @transform.positions.set(enemy_entity, spawn_pos)
+  @sprite.sprites().set(enemy_entity, enemy_sprite(kind))
+  @transform.positions().set(enemy_entity, spawn_pos)
   spawn_enemy_visual_parts(enemy_entity, kind, spawn_pos)
   enemies.set(enemy_entity, {
     kind,
@@ -2103,7 +2103,7 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
 
 ///|
 fn spawn_player_burst() -> Unit {
-  guard @transform.positions.get(game_state.player) is Some(player_position)
+  guard @transform.positions().get(game_state.player) is Some(player_position)
   let projectile_count = @cmp.maximum(1, game_state.projectile_count)
   let base = @math.Vec2D(
     player_position.0[X],
@@ -2188,8 +2188,8 @@ fn spawn_projectile(
   ttl : Double,
 ) -> Unit {
   let bullet_entity = @entity.Entity::new()
-  @sprite.sprites.set(bullet_entity, projectile_sprite(kind, faction))
-  @transform.positions.set(bullet_entity, start_pos)
+  @sprite.sprites().set(bullet_entity, projectile_sprite(kind, faction))
+  @transform.positions().set(bullet_entity, start_pos)
   let radius = if kind is Blast { 5.0 } else { 4.0 }
   bullets.set(bullet_entity, { ttl, velocity, damage, faction, radius })
 }
@@ -2197,16 +2197,16 @@ fn spawn_projectile(
 ///|
 fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2D) -> Unit {
   let entity = @entity.Entity::new()
-  @sprite.sprites.set(entity, consumable_sprite(kind))
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, consumable_sprite(kind))
+  @transform.positions().set(entity, position)
   consumables.set(entity, { kind, speed: 105.0 })
 }
 
 ///|
 fn spawn_item(kind : ItemKind, position : @math.Vec2D) -> Unit {
   let entity = @entity.Entity::new()
-  @sprite.sprites.set(entity, item_sprite(kind))
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, item_sprite(kind))
+  @transform.positions().set(entity, position)
   items.set(entity, { kind, speed: 105.0 })
 }
 
@@ -2214,8 +2214,8 @@ fn spawn_item(kind : ItemKind, position : @math.Vec2D) -> Unit {
 fn despawn_enemy(enemy_entity : @entity.Entity) -> Unit {
   despawn_enemy_visual_parts(enemy_entity)
   enemies.remove(enemy_entity)
-  @sprite.sprites.remove(enemy_entity)
-  @transform.positions.remove(enemy_entity)
+  @sprite.sprites().remove(enemy_entity)
+  @transform.positions().remove(enemy_entity)
   if enemy_entity.is_alive() {
     enemy_entity.destroy()
   }
@@ -2224,8 +2224,8 @@ fn despawn_enemy(enemy_entity : @entity.Entity) -> Unit {
 ///|
 fn despawn_bullet(bullet_entity : @entity.Entity) -> Unit {
   bullets.remove(bullet_entity)
-  @sprite.sprites.remove(bullet_entity)
-  @transform.positions.remove(bullet_entity)
+  @sprite.sprites().remove(bullet_entity)
+  @transform.positions().remove(bullet_entity)
   if bullet_entity.is_alive() {
     bullet_entity.destroy()
   }
@@ -2234,8 +2234,8 @@ fn despawn_bullet(bullet_entity : @entity.Entity) -> Unit {
 ///|
 fn despawn_consumable(entity : @entity.Entity) -> Unit {
   consumables.remove(entity)
-  @sprite.sprites.remove(entity)
-  @transform.positions.remove(entity)
+  @sprite.sprites().remove(entity)
+  @transform.positions().remove(entity)
   if entity.is_alive() {
     entity.destroy()
   }
@@ -2244,8 +2244,8 @@ fn despawn_consumable(entity : @entity.Entity) -> Unit {
 ///|
 fn despawn_item(entity : @entity.Entity) -> Unit {
   items.remove(entity)
-  @sprite.sprites.remove(entity)
-  @transform.positions.remove(entity)
+  @sprite.sprites().remove(entity)
+  @transform.positions().remove(entity)
   if entity.is_alive() {
     entity.destroy()
   }

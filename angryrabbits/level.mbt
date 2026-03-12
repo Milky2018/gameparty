@@ -228,14 +228,14 @@ fn with_scoped_ldtk_entity_registrations_for_level(
   level_iid : String,
   action : () -> Unit,
 ) -> Unit {
-  let previous = @ldtk.ldtk_entity_typed_registrations.to_array()
+  let previous = @ldtk.ldtk_entity_typed_registrations().to_array()
   let previous_level_selection = @ldtk.ldtk_level_selection.val
   @ldtk.clear_ldtk_entity_registrations()
   @ldtk.set_ldtk_level_selection(@ldtk.ldtk_level_selection_iid(level_iid))
   action()
   @ldtk.clear_ldtk_entity_registrations()
   for entry in previous {
-    @ldtk.ldtk_entity_typed_registrations.set(entry.0, entry.1)
+    @ldtk.ldtk_entity_typed_registrations().set(entry.0, entry.1)
   }
   @ldtk.set_ldtk_level_selection(previous_level_selection)
 }

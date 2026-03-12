@@ -457,15 +457,15 @@ test "tutorial stage hides top and bottom header labels" {
   game_state.phase = Playing
   game_state.stage_elapsed = 0.0
   game_state.tutorial_lesson = 0
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     game_state.score_ui,
     @sprite.Sprite::from_text(game_state.score_text, 100),
   )
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     game_state.stage_ui,
     @sprite.Sprite::from_text(game_state.stage_text, 100),
   )
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     game_state.timer_ui,
     @sprite.Sprite::from_text(game_state.timer_text, 100),
   )
@@ -475,17 +475,17 @@ test "tutorial stage hides top and bottom header labels" {
   assert_eq(game_state.score_text.content, "")
   assert_eq(game_state.stage_text.content, "")
   assert_true(!show_tutorial_header_labels())
-  if @sprite.sprites.get(game_state.score_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.score_ui) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing score sprite")
   }
-  if @sprite.sprites.get(game_state.stage_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.stage_ui) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing stage sprite")
   }
-  if @sprite.sprites.get(game_state.timer_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.timer_ui) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing timer sprite")
@@ -911,13 +911,13 @@ test "victory_system requires finished stages and no living enemies" {
   game_state.phase = Playing
   game_state.stage_index = run_stages.length()
 
-  victory_system(0.0)
+  victory_system(@ecs.require_current_world())
   assert_true(game_state.phase is Victory)
 
   game_state.phase = Playing
   let blocker = @entity.Entity::new()
   enemies.set(blocker, make_enemy_for_test(Pawn, 1))
-  victory_system(0.0)
+  victory_system(@ecs.require_current_world())
   assert_true(game_state.phase is Playing)
 
   clear_enemies_for_test()
@@ -969,14 +969,14 @@ test "set_background game path binds stage-selected texture sprite" {
   if uses_3d_background(Game) {
     assert_true(background3d_active.val)
     assert_true(
-      @render3d.mesh3d_renderers.get(background3d_quad_entity) is Some(_),
+      @render3d.mesh3d_renderers().get(background3d_quad_entity) is Some(_),
     )
-    if @sprite.sprites.get(game_state.background) is Some(sprite) {
+    if @sprite.sprites().get(game_state.background) is Some(sprite) {
       assert_true(!sprite.visible)
     } else {
       fail("missing gameplay background sprite")
     }
-  } else if @sprite.sprites.get(game_state.background) is Some(sprite) {
+  } else if @sprite.sprites().get(game_state.background) is Some(sprite) {
     match sprite.sprite_type {
       @sprite.SpriteType::Picture(picture) =>
         assert_eq(
@@ -1001,14 +1001,16 @@ test "3d background fallback bodies stay detached from renderer components" {
   set_background3d_active(true)
 
   assert_true(
-    @render3d.mesh3d_renderers.get(background3d_quad_entity) is Some(_),
+    @render3d.mesh3d_renderers().get(background3d_quad_entity) is Some(_),
   )
   assert_true(
-    @render3d.mesh3d_renderers.get(background3d_planet_entity) is None,
+    @render3d.mesh3d_renderers().get(background3d_planet_entity) is None,
   )
-  assert_true(@render3d.mesh3d_renderers.get(background3d_star_entity) is None)
   assert_true(
-    @render3d.point_lights3d.get(background3d_star_light_entity) is None,
+    @render3d.mesh3d_renderers().get(background3d_star_entity) is None,
+  )
+  assert_true(
+    @render3d.point_lights3d().get(background3d_star_light_entity) is None,
   )
   if @render3d.get_ambient_light3d() is Some(light) {
     assert_true(light.intensity > 0.0)
@@ -1102,7 +1104,7 @@ test "character selection text clipping respects lane width constraints" {
 ///|
 test "menu button text center uses button rect and fallback anchor" {
   let button = @entity.Entity::new()
-  @transform.positions.set(button, @math.Vec2D(100.0, 200.0))
+  @transform.positions().set(button, @math.Vec2D(100.0, 200.0))
   let center = text_center_for_menu_button(button)
   assert_eq(center[X], 100.0 + MENU_BUTTON_WIDTH / 2.0)
   assert_eq(
@@ -1122,22 +1124,22 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
 
   let old_mouse_pos = @inputs.mouse.pos
   let old_just_pressed_left = @inputs.just_pressed_mouse.left_button
-  let old_start_interaction = @ui.interactions.get(start_entity)
-  let old_exit_interaction = @ui.interactions.get(exit_entity)
-  let old_start_position = @transform.positions.get(start_entity)
-  let old_exit_position = @transform.positions.get(exit_entity)
-  let old_start_button = @ui.buttons.get(start_entity)
-  let old_exit_button = @ui.buttons.get(exit_entity)
+  let old_start_interaction = @ui.interactions().get(start_entity)
+  let old_exit_interaction = @ui.interactions().get(exit_entity)
+  let old_start_position = @transform.positions().get(start_entity)
+  let old_exit_position = @transform.positions().get(exit_entity)
+  let old_start_button = @ui.buttons().get(start_entity)
+  let old_exit_button = @ui.buttons().get(exit_entity)
 
-  @transform.positions.set(start_entity, @math.Vec2D(160.0, 176.0))
-  @transform.positions.set(exit_entity, @math.Vec2D(160.0, 242.0))
-  @ui.buttons.set(start_entity, @ui.Button::new())
-  @ui.buttons.set(exit_entity, @ui.Button::new())
-  @ui.nodes.set(
+  @transform.positions().set(start_entity, @math.Vec2D(160.0, 176.0))
+  @transform.positions().set(exit_entity, @math.Vec2D(160.0, 242.0))
+  @ui.buttons().set(start_entity, @ui.Button::new())
+  @ui.buttons().set(exit_entity, @ui.Button::new())
+  @ui.nodes().set(
     start_entity,
     @ui.Node::absolute(@math.Vec2D::zero(), size=@math.Vec2D(160.0, 22.0)),
   )
-  @ui.nodes.set(
+  @ui.nodes().set(
     exit_entity,
     @ui.Node::absolute(@math.Vec2D::zero(), size=@math.Vec2D(160.0, 22.0)),
   )
@@ -1152,36 +1154,36 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
   @inputs.just_pressed_mouse.left_button = true
 
   // Simulate stale previous-frame interaction still pointing to Start.
-  @ui.interactions.set(start_entity, @ui.Pressed)
-  @ui.interactions.set(exit_entity, @ui.None)
+  @ui.interactions().set(start_entity, @ui.Pressed)
+  @ui.interactions().set(exit_entity, @ui.None)
 
   assert_eq(main_menu_pressed_index(), Some(3))
 
   @inputs.mouse.pos = old_mouse_pos
   @inputs.just_pressed_mouse.left_button = old_just_pressed_left
   match old_start_position {
-    Some(position) => @transform.positions.set(start_entity, position.0)
-    None => @transform.positions.remove(start_entity)
+    Some(position) => @transform.positions().set(start_entity, position.0)
+    None => @transform.positions().remove(start_entity)
   }
   match old_exit_position {
-    Some(position) => @transform.positions.set(exit_entity, position.0)
-    None => @transform.positions.remove(exit_entity)
+    Some(position) => @transform.positions().set(exit_entity, position.0)
+    None => @transform.positions().remove(exit_entity)
   }
   match old_start_button {
-    Some(button) => @ui.buttons.set(start_entity, button)
-    None => @ui.buttons.remove(start_entity)
+    Some(button) => @ui.buttons().set(start_entity, button)
+    None => @ui.buttons().remove(start_entity)
   }
   match old_exit_button {
-    Some(button) => @ui.buttons.set(exit_entity, button)
-    None => @ui.buttons.remove(exit_entity)
+    Some(button) => @ui.buttons().set(exit_entity, button)
+    None => @ui.buttons().remove(exit_entity)
   }
   match old_start_interaction {
-    Some(interaction) => @ui.interactions.set(start_entity, interaction)
-    None => @ui.interactions.remove(start_entity)
+    Some(interaction) => @ui.interactions().set(start_entity, interaction)
+    None => @ui.interactions().remove(start_entity)
   }
   match old_exit_interaction {
-    Some(interaction) => @ui.interactions.set(exit_entity, interaction)
-    None => @ui.interactions.remove(exit_entity)
+    Some(interaction) => @ui.interactions().set(exit_entity, interaction)
+    None => @ui.interactions().remove(exit_entity)
   }
 }
 
@@ -1189,117 +1191,117 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
 test "apply_character_selection_layout keeps canonical anchor positions" {
   apply_character_selection_layout()
 
-  if @transform.positions.get(game_state.stage_ui) is Some(pos) {
+  if @transform.positions().get(game_state.stage_ui) is Some(pos) {
     assert_eq(pos.0[X], 240.0)
     assert_eq(pos.0[Y], 8.0)
   } else {
     fail("missing position for stage ui")
   }
-  if @transform.positions.get(game_state.timer_ui) is Some(pos) {
+  if @transform.positions().get(game_state.timer_ui) is Some(pos) {
     assert_eq(pos.0[X], 240.0)
     assert_eq(pos.0[Y], 20.0)
   } else {
     fail("missing position for timer ui")
   }
-  if @transform.positions.get(game_state.banner_ui) is Some(pos) {
+  if @transform.positions().get(game_state.banner_ui) is Some(pos) {
     assert_eq(pos.0[X], 240.0)
     assert_eq(pos.0[Y], 302.0)
   } else {
     fail("missing position for banner ui")
   }
 
-  if @transform.positions.get(game_state.character_portrait_ui) is Some(pos) {
+  if @transform.positions().get(game_state.character_portrait_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 portrait ui")
   }
-  if @transform.positions.get(character_left_portrait_ui) is Some(pos) {
+  if @transform.positions().get(character_left_portrait_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 left portrait ui")
   }
-  if @transform.positions.get(character_right_portrait_ui) is Some(pos) {
+  if @transform.positions().get(character_right_portrait_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 right portrait ui")
   }
-  if @transform.positions.get(character_name_ui) is Some(pos) {
+  if @transform.positions().get(character_name_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_NAME_Y)
   } else {
     fail("missing position for p1 name ui")
   }
-  if @transform.positions.get(character_ability_slot1_ui) is Some(pos) {
+  if @transform.positions().get(character_ability_slot1_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_LEFT_ABILITY_SLOT_X)
     assert_eq(pos.0[Y], 212.0)
   } else {
     fail("missing position for p1 ability slot1 ui")
   }
-  if @transform.positions.get(character_ability_slot2_ui) is Some(pos) {
+  if @transform.positions().get(character_ability_slot2_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_LEFT_ABILITY_SLOT_X)
     assert_eq(pos.0[Y], 246.0)
   } else {
     fail("missing position for p1 ability slot2 ui")
   }
-  if @transform.positions.get(character_ability_slot1_text_ui) is Some(pos) {
+  if @transform.positions().get(character_ability_slot1_text_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_LEFT_ABILITY_TEXT_X)
     assert_eq(pos.0[Y], 206.0)
   } else {
     fail("missing position for p1 ability text1 ui")
   }
-  if @transform.positions.get(character_ability_slot2_text_ui) is Some(pos) {
+  if @transform.positions().get(character_ability_slot2_text_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_LEFT_ABILITY_TEXT_X)
     assert_eq(pos.0[Y], 240.0)
   } else {
     fail("missing position for p1 ability text2 ui")
   }
 
-  if @transform.positions.get(character_p2_center_portrait_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_center_portrait_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 portrait ui")
   }
-  if @transform.positions.get(character_p2_left_portrait_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_left_portrait_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 left portrait ui")
   }
-  if @transform.positions.get(character_p2_right_portrait_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_right_portrait_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
     assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 right portrait ui")
   }
-  if @transform.positions.get(character_p2_name_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_name_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X)
     assert_eq(pos.0[Y], CS_NAME_Y)
   } else {
     fail("missing position for p2 name ui")
   }
-  if @transform.positions.get(character_p2_ability_slot1_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_ability_slot1_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_RIGHT_ABILITY_SLOT_X)
     assert_eq(pos.0[Y], 212.0)
   } else {
     fail("missing position for p2 ability slot1 ui")
   }
-  if @transform.positions.get(character_p2_ability_slot2_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_ability_slot2_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_RIGHT_ABILITY_SLOT_X)
     assert_eq(pos.0[Y], 246.0)
   } else {
     fail("missing position for p2 ability slot2 ui")
   }
-  if @transform.positions.get(character_p2_ability_slot1_text_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_ability_slot1_text_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_RIGHT_ABILITY_TEXT_X)
     assert_eq(pos.0[Y], 206.0)
   } else {
     fail("missing position for p2 ability text1 ui")
   }
-  if @transform.positions.get(character_p2_ability_slot2_text_ui) is Some(pos) {
+  if @transform.positions().get(character_p2_ability_slot2_text_ui) is Some(pos) {
     assert_eq(pos.0[X], CS_RIGHT_ABILITY_TEXT_X)
     assert_eq(pos.0[Y], 240.0)
   } else {
@@ -1373,14 +1375,14 @@ test "in-game left column lanes keep ability slots separated from health bars" {
 
 ///|
 test "sync_text_ui_sprites preserves explicit visibility flags" {
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     game_state.timer_ui,
     @sprite.Sprite::from_text(game_state.timer_text, 100),
   )
   set_ui_visible(game_state.timer_ui, false)
   game_state.timer_text.content = "Movement: 1/8"
   sync_text_ui_sprites()
-  if @sprite.sprites.get(game_state.timer_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.timer_ui) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing timer sprite after sync")
@@ -1388,7 +1390,7 @@ test "sync_text_ui_sprites preserves explicit visibility flags" {
 
   set_ui_visible(game_state.timer_ui, true)
   sync_text_ui_sprites()
-  if @sprite.sprites.get(game_state.timer_ui) is Some(sprite) {
+  if @sprite.sprites().get(game_state.timer_ui) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing timer sprite after second sync")
@@ -1419,7 +1421,7 @@ test "character slot visibility follows joined state for carousel portraits" {
     join_prompt_ui, ready_text_ui,
   ]
   for entity in all_entities {
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       entity,
       @sprite.Sprite::from_color_rect(
         @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
@@ -1428,7 +1430,7 @@ test "character slot visibility follows joined state for carousel portraits" {
     )
   }
   for entity in stat_icon_uis {
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       entity,
       @sprite.Sprite::from_color_rect(
         @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
@@ -1437,7 +1439,7 @@ test "character slot visibility follows joined state for carousel portraits" {
     )
   }
   for entity in stat_bg_uis {
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       entity,
       @sprite.Sprite::from_color_rect(
         @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
@@ -1446,7 +1448,7 @@ test "character slot visibility follows joined state for carousel portraits" {
     )
   }
   for entity in stat_fill_uis {
-    @sprite.sprites.set(
+    @sprite.sprites().set(
       entity,
       @sprite.Sprite::from_color_rect(
         @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
@@ -1461,27 +1463,27 @@ test "character slot visibility follows joined state for carousel portraits" {
     ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
     ready_text_ui,
   )
-  if @sprite.sprites.get(center_portrait) is Some(sprite) {
+  if @sprite.sprites().get(center_portrait) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing center portrait sprite")
   }
-  if @sprite.sprites.get(left_portrait) is Some(sprite) {
+  if @sprite.sprites().get(left_portrait) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing left portrait sprite")
   }
-  if @sprite.sprites.get(right_portrait) is Some(sprite) {
+  if @sprite.sprites().get(right_portrait) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing right portrait sprite")
   }
-  if @sprite.sprites.get(join_prompt_ui) is Some(sprite) {
+  if @sprite.sprites().get(join_prompt_ui) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing join prompt sprite")
   }
-  if @sprite.sprites.get(ready_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(ready_text_ui) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing ready text sprite")
@@ -1493,27 +1495,27 @@ test "character slot visibility follows joined state for carousel portraits" {
     ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
     ready_text_ui,
   )
-  if @sprite.sprites.get(center_portrait) is Some(sprite) {
+  if @sprite.sprites().get(center_portrait) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing center portrait sprite")
   }
-  if @sprite.sprites.get(left_portrait) is Some(sprite) {
+  if @sprite.sprites().get(left_portrait) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing left portrait sprite")
   }
-  if @sprite.sprites.get(right_portrait) is Some(sprite) {
+  if @sprite.sprites().get(right_portrait) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing right portrait sprite")
   }
-  if @sprite.sprites.get(join_prompt_ui) is Some(sprite) {
+  if @sprite.sprites().get(join_prompt_ui) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing join prompt sprite")
   }
-  if @sprite.sprites.get(ready_text_ui) is Some(sprite) {
+  if @sprite.sprites().get(ready_text_ui) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing ready text sprite")

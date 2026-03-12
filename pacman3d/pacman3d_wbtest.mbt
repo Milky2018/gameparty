@@ -112,7 +112,7 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   ghosts.clear()
 
   let ghost_marker = @entity.Entity::new()
-  @sprite.sprites.set(
+  @sprite.sprites().set(
     ghost_marker,
     @sprite.Sprite::from_color_rect(
       @sprite.ColorRect::new(@math.Vec2D(2.0, 2.0), "white"),
@@ -150,16 +150,16 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   player_state.x = world_x_for_tile(1)
   player_state.z = world_z_for_tile(1)
 
-  minimap_system(0.0)
-  if @sprite.sprites.get(ghost_marker) is Some(sprite) {
+  minimap_system(@ecs.require_current_world())
+  if @sprite.sprites().get(ghost_marker) is Some(sprite) {
     assert_true(!sprite.visible)
   } else {
     fail("missing ghost marker sprite")
   }
 
   dots[0] = { ..dots[0], collected: true }
-  minimap_system(0.0)
-  if @sprite.sprites.get(ghost_marker) is Some(sprite) {
+  minimap_system(@ecs.require_current_world())
+  if @sprite.sprites().get(ghost_marker) is Some(sprite) {
     assert_true(sprite.visible)
   } else {
     fail("missing ghost marker sprite")
@@ -184,7 +184,7 @@ test "hud strings follow upstream content" {
 
   current_level.val = 1
   completed_all_levels.val = false
-  assert_eq(hud_level_text(), "Level: 2")
+  assert_eq(hud_level_text(), "المستوى: 2")
   assert_eq(hud_completion_title(), "")
   assert_eq(hud_completion_body(), "")
 

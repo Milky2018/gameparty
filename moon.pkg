@@ -1,6 +1,7 @@
 import {
   "Milky2018/gameparty/angryrabbits",
   "Milky2018/gameparty/pacman3d",
+  "Milky2018/selene/app",
   "Milky2018/selene/asset",
   "Milky2018/selene/camera3d",
   "Milky2018/selene/entity",

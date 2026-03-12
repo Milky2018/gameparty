@@ -267,10 +267,10 @@ fn debug_status_text() -> String {
   let base = "DBG scene=\{scene_name} light=\{mode} freeze=\{freeze_name} bob=\{bob_name} mat=\{material_name} rays=\{ray_name} origin=\{origin_name}"
   match tracked_ghost() {
     Some(ghost) => {
-      let light_transform = @transform3d.transforms3d
+      let light_transform = @transform3d.transforms3d()
         .get(ghost.light_entity)
         .unwrap_or_default()
-      let local_spot_direction = @render3d.spot_lights3d
+      let local_spot_direction = @render3d.spot_lights3d()
         .get(ghost.light_entity)
         .map(fn(light) { light.direction })
         .unwrap_or(@math.Vec3::new(0.0, -GHOST_SPOT_LIGHT_DOWNWARD, -1.0))
@@ -297,7 +297,7 @@ fn debug_help_text() -> String {
 
 ///|
 fn sync_debug_light_state() -> Unit {
-  @render3d.directional_lights3d.set(light_entity, {
+  @render3d.directional_lights3d().set(light_entity, {
     ..@render3d.default_directional_light3d(),
     direction: @math.Vec3::new(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
@@ -319,7 +319,7 @@ fn sync_debug_light_state() -> Unit {
   )
   for dot in dots {
     if !dot.collected && dot.entity.is_alive() {
-      @render3d.point_lights3d.set(dot.entity, {
+      @render3d.point_lights3d().set(dot.entity, {
         ..@render3d.default_point_light3d(),
         color: color_rgba(245U, 227U, 92U, 1.0),
         intensity: if debug_mode_allows_dot_light() {
@@ -334,7 +334,7 @@ fn sync_debug_light_state() -> Unit {
 }
 
 ///|
-fn lighting_debug_system(_delta : Double) -> Unit {
+fn lighting_debug_system(_world : @ecs.World) -> Unit {
   sync_debug_light_state()
   sync_camera_transform()
   for ghost in ghosts {

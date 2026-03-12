@@ -4,10 +4,10 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
-const PACMAN_UPSTREAM_FONT_FAMILY : String = "ThaleahFat"
+const PACMAN_UPSTREAM_FONT_FAMILY : String = "PacmanArabic"
 
 ///|
-const PACMAN_UPSTREAM_FONT_PATH : String = "pacman3d/assets/ThaleahFat.ttf"
+const PACMAN_UPSTREAM_FONT_PATH : String = "pacman3d/assets/SFArabic-37c57b4a237b.ttf"
 
 ///|
 const CEILING_TILE_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile.png"
@@ -66,8 +66,8 @@ fn setup_text_entity(
     baseline=Top,
     align=Left,
   )
-  @sprite.sprites.set(entity, @sprite.Sprite::from_text(text, 200))
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 200))
+  @transform.positions().set(entity, position)
 }
 
 ///|
@@ -83,8 +83,8 @@ fn setup_color_rect_entity(
     @sprite.ColorRect::new(size, color),
     zindex,
   )
-  @sprite.sprites.set(entity, sprite)
-  @transform.positions.set(entity, position)
+  @sprite.sprites().set(entity, sprite)
+  @transform.positions().set(entity, position)
 }
 
 ///|
@@ -469,14 +469,14 @@ fn spawn_mesh_entity(
   receive_shadows? : Bool = true,
 ) -> @entity.Entity {
   let entity = @entity.Entity::new()
-  @render3d.mesh3d_renderers.set(entity, {
+  @render3d.mesh3d_renderers().set(entity, {
     mesh,
     material,
     visible: true,
     cast_shadows,
     receive_shadows,
   })
-  @transform3d.transforms3d.set(entity, {
+  @transform3d.transforms3d().set(entity, {
     translation,
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -679,7 +679,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let ghost_y = MAP_GHOST_Y + bob_offset
   let rotation = ghost_rotation(ghost.direction)
   let (forward_x, forward_z) = ghost_forward_vector_from_rotation(rotation)
-  @transform3d.transforms3d.set(ghost.entity, {
+  @transform3d.transforms3d().set(ghost.entity, {
     translation: @math.Vec3::new(ghost.x, ghost_y, ghost.z),
     rotation,
     scale: @math.Vec3::one(),
@@ -702,12 +702,12 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let world_spot_direction = rotation
     .rotate_vec3(local_spot_direction)
     .normalize()
-  @transform3d.transforms3d.set(ghost.light_entity, {
+  @transform3d.transforms3d().set(ghost.light_entity, {
     translation: light_translation,
     rotation,
     scale: @math.Vec3::one(),
   })
-  @render3d.point_lights3d.set(ghost.light_entity, {
+  @render3d.point_lights3d().set(ghost.light_entity, {
     ..@render3d.default_point_light3d(),
     color: ghost_light_color_for_type(ghost.ghost_type),
     intensity: if debug_mode_allows_ghost_point_light() {
@@ -717,7 +717,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     },
     range: GHOST_POINT_LIGHT_RANGE,
   })
-  @render3d.spot_lights3d.set(ghost.light_entity, {
+  @render3d.spot_lights3d().set(ghost.light_entity, {
     ..@render3d.default_spot_light3d(),
     direction: local_spot_direction,
     color: ghost_light_color_for_type(ghost.ghost_type),
@@ -730,20 +730,20 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     inner_angle: GHOST_SPOT_LIGHT_INNER_ANGLE,
     outer_angle: GHOST_SPOT_LIGHT_OUTER_ANGLE,
   })
-  @render3d.mesh3d_renderers.set(ghost.spot_ray_entity, {
+  @render3d.mesh3d_renderers().set(ghost.spot_ray_entity, {
     mesh: ghost_spot_ray_mesh.val.unwrap(),
     material: ghost_spot_ray_material_for_type(ghost.ghost_type),
     visible: lighting_debug.show_ghost_spot_rays,
     cast_shadows: false,
     receive_shadows: false,
   })
-  @transform3d.transforms3d.set(ghost.spot_ray_entity, {
+  @transform3d.transforms3d().set(ghost.spot_ray_entity, {
     translation: light_translation +
     world_spot_direction.scalar_mul(GHOST_SPOT_DEBUG_RAY_LENGTH * 0.5),
     rotation: quat_from_forward_direction(world_spot_direction),
     scale: @math.Vec3::one(),
   })
-  @transform3d.transforms3d.set(ghost.left_eye_entity, {
+  @transform3d.transforms3d().set(ghost.left_eye_entity, {
     translation: @math.Vec3::new(
       eye_base.x + side_x * GHOST_EYE_SIDE_OFFSET,
       eye_base.y,
@@ -752,7 +752,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
-  @transform3d.transforms3d.set(ghost.right_eye_entity, {
+  @transform3d.transforms3d().set(ghost.right_eye_entity, {
     translation: @math.Vec3::new(
       eye_base.x - side_x * GHOST_EYE_SIDE_OFFSET,
       eye_base.y,
@@ -798,15 +798,15 @@ fn clear_level_entities() -> Unit {
   minimap_tile_entities.clear()
 
   for dot in dots {
-    @render3d.point_lights3d.remove(dot.entity)
+    @render3d.point_lights3d().remove(dot.entity)
     dot.entity.destroy()
     dot.minimap_entity.destroy()
   }
   dots.clear()
 
   for ghost in ghosts {
-    @render3d.point_lights3d.remove(ghost.light_entity)
-    @render3d.spot_lights3d.remove(ghost.light_entity)
+    @render3d.point_lights3d().remove(ghost.light_entity)
+    @render3d.spot_lights3d().remove(ghost.light_entity)
     ghost.entity.destroy()
     ghost.light_entity.destroy()
     ghost.spot_ray_entity.destroy()
@@ -822,14 +822,14 @@ fn sync_camera_transform() -> Unit {
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(player_light_entity)
   let yaw = -(player_state.yaw + @cmath.PI / 2.0)
-  @transform3d.transforms3d.set(camera_entity, {
+  @transform3d.transforms3d().set(camera_entity, {
     translation: @math.Vec3::new(player_state.x, PLAYER_HEIGHT, player_state.z),
     rotation: @math.Quat::from_axis_angle(@math.Vec3::new(0.0, 1.0, 0.0), yaw),
     scale: @math.Vec3::one(),
   })
   let forward_x = @cmath.cos(player_state.yaw)
   let forward_z = @cmath.sin(player_state.yaw)
-  @transform3d.transforms3d.set(player_light_entity, {
+  @transform3d.transforms3d().set(player_light_entity, {
     translation: @math.Vec3::new(
       player_state.x + forward_x * 0.45,
       PLAYER_HEIGHT + 0.2,
@@ -838,7 +838,7 @@ fn sync_camera_transform() -> Unit {
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
-  @render3d.point_lights3d.set(player_light_entity, {
+  @render3d.point_lights3d().set(player_light_entity, {
     ..@render3d.default_point_light3d(),
     color: color_rgba(255U, 240U, 214U, 1.0),
     intensity: if debug_mode_allows_player_light() {
@@ -911,7 +911,7 @@ fn reset_level_entities() -> Unit {
           active_dot_material(),
           @math.Vec3::new(world_x, MAP_DOT_Y, world_z),
         )
-        @render3d.point_lights3d.set(dot_entity, {
+        @render3d.point_lights3d().set(dot_entity, {
           ..@render3d.default_point_light3d(),
           color: color_rgba(245U, 227U, 92U, 1.0),
           intensity: DOT_LIGHT_INTENSITY,
@@ -1016,7 +1016,7 @@ fn reset_run() -> Unit {
 }
 
 ///|
-pub fn startup_system(_delta : Double) -> Unit {
+pub fn startup_system(_world : @ecs.World) -> Unit {
   register_pacman_upstream_font_once()
   install_embedded_assets()
   ensure_entity_alive(camera_entity)
@@ -1029,7 +1029,7 @@ pub fn startup_system(_delta : Double) -> Unit {
   ensure_entity_alive(hud_debug_ui)
   ensure_entity_alive(minimap_player_entity)
 
-  @camera3d.cameras3d.set(camera_entity, {
+  @camera3d.cameras3d().set(camera_entity, {
     ..@camera3d.Camera3DComponent::default(),
     fov_y: 60.0,
     near: 0.01,
@@ -1043,13 +1043,13 @@ pub fn startup_system(_delta : Double) -> Unit {
     order: 10,
     enabled: true,
   })
-  @render3d.directional_lights3d.set(light_entity, {
+  @render3d.directional_lights3d().set(light_entity, {
     ..@render3d.default_directional_light3d(),
     direction: @math.Vec3::new(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
     intensity: DIRECTIONAL_LIGHT_INTENSITY,
   })
-  @render3d.point_lights3d.set(player_light_entity, {
+  @render3d.point_lights3d().set(player_light_entity, {
     ..@render3d.default_point_light3d(),
     color: color_rgba(255U, 240U, 214U, 1.0),
     intensity: PLAYER_LIGHT_INTENSITY,

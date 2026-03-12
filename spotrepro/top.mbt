@@ -217,12 +217,12 @@ fn spawn_mesh(
   translation : @math.Vec3,
 ) -> @entity.Entity {
   let entity = @entity.Entity::new()
-  @transform3d.transforms3d.set(entity, {
+  @transform3d.transforms3d().set(entity, {
     translation,
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
-  @render3d.mesh3d_renderers.set(entity, {
+  @render3d.mesh3d_renderers().set(entity, {
     visible: true,
     mesh,
     material,
@@ -287,7 +287,7 @@ fn load_selected_stage() -> Stage {
 ///|
 fn update_stage_visuals() -> Unit {
   let stage = selected_stage.val.unwrap()
-  @transform3d.transforms3d.set(light_entity, {
+  @transform3d.transforms3d().set(light_entity, {
     translation: @math.Vec3::new(
       stage.forward.x * LIGHT_FORWARD_OFFSET,
       LIGHT_HEIGHT,
@@ -299,8 +299,8 @@ fn update_stage_visuals() -> Unit {
     ),
     scale: @math.Vec3::one(),
   })
-  @render3d.point_lights3d.remove(light_entity)
-  @render3d.spot_lights3d.set(light_entity, {
+  @render3d.point_lights3d().remove(light_entity)
+  @render3d.spot_lights3d().set(light_entity, {
     ..@render3d.default_spot_light3d(),
     direction: @math.Vec3::new(0.0, -LIGHT_DOWNWARD, -LIGHT_FORWARD).normalize(),
     color: color_rgba(48U, 96U, 255U, 1.0),
@@ -317,8 +317,8 @@ fn update_stage_visuals() -> Unit {
     baseline=Top,
     align=Left,
   )
-  @sprite.sprites.set(label_entity, @sprite.Sprite::from_text(label, 400))
-  @transform.positions.set(label_entity, @math.Vec2D(12.0, 12.0))
+  @sprite.sprites().set(label_entity, @sprite.Sprite::from_text(label, 400))
+  @transform.positions().set(label_entity, @math.Vec2D(12.0, 12.0))
 }
 
 ///|
@@ -328,7 +328,7 @@ fn capture_file_name(stage : Stage) -> String {
 
 ///|
 fn setup_camera() -> Unit {
-  @camera3d.cameras3d.set(camera_entity, {
+  @camera3d.cameras3d().set(camera_entity, {
     ..@camera3d.Camera3DComponent::default(),
     projection: Orthographic,
     orthographic_size: Some(@math.Vec2D(16.0, 16.0)),
@@ -338,7 +338,7 @@ fn setup_camera() -> Unit {
     order: 10,
     enabled: true,
   })
-  @transform3d.transforms3d.set(camera_entity, {
+  @transform3d.transforms3d().set(camera_entity, {
     translation: @math.Vec3::new(0.0, 18.0, 0.0),
     rotation: @math.Quat::from_axis_angle(
       @math.Vec3::new(1.0, 0.0, 0.0),
@@ -380,14 +380,14 @@ fn runtime_system(_delta : Double) -> Unit {
 
 ///|
 pub fn run() -> Unit {
-  let app = @system.App::new()
+  let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(1.0)
     .with_fps(FPS)
     .with_image_smooth(true)
     .add_plugin(@plugins.default_3d_plugin)
-    .add_system(startup_system, schedule=Startup)
-    .add_system(runtime_system)
+    .add_system(fn(_world, delta) { startup_system(delta) }, schedule=Startup)
+    .add_system(fn(_world, delta) { runtime_system(delta) })
   app.run()
 }
