@@ -314,7 +314,7 @@ fn set_hud_text(
 
 ///|
 fn hud_level_text() -> String {
-  "المستوى: \{current_level.val + 1}"
+  "Level: \{current_level.val + 1}"
 }
 
 ///|

@@ -184,7 +184,7 @@ test "hud strings follow upstream content" {
 
   current_level.val = 1
   completed_all_levels.val = false
-  assert_eq(hud_level_text(), "المستوى: 2")
+  assert_eq(hud_level_text(), "Level: 2")
   assert_eq(hud_completion_title(), "")
   assert_eq(hud_completion_body(), "")
 
