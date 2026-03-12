@@ -29,29 +29,11 @@ pub fn enter_from_host() -> Unit {
 ///|
 pub fn add_runtime_systems(app : @app.App, run_if : () -> Bool) -> @app.App {
   app
-  .add_system(fn(world, _delta) { player_input_system(world) }, run_if=fn(
-    _world,
-  ) {
-    run_if()
-  })
-  .add_system(fn(world, _delta) { ghost_update_system(world) }, run_if=fn(
-    _world,
-  ) {
-    run_if()
-  })
-  .add_system(fn(world, _delta) { lighting_debug_system(world) }, run_if=fn(
-    _world,
-  ) {
-    run_if()
-  })
-  .add_system(fn(world, _delta) { minimap_system(world) }, run_if=fn(_world) {
-    run_if()
-  })
-  .add_system(fn(world, _delta) { hud_system(world) }, schedule=Render, run_if=fn(
-    _world,
-  ) {
-    run_if()
-  })
+  .add_system(Update, player_input_system, run_if=fn(_world) { run_if() })
+  .add_system(Update, ghost_update_system, run_if=fn(_world) { run_if() })
+  .add_system(Update, lighting_debug_system, run_if=fn(_world) { run_if() })
+  .add_system(Update, minimap_system, run_if=fn(_world) { run_if() })
+  .add_system(Render, hud_system, run_if=fn(_world) { run_if() })
 }
 
 ///|
@@ -64,7 +46,7 @@ pub fn run() -> Unit {
     .with_fps(FPS)
     .with_image_smooth(true)
     .add_plugin(@plugins.default_3d_plugin)
-    .add_system(fn(world, _delta) { startup_system(world) }, schedule=Startup)
+    .add_system(Startup, startup_system)
   let app = add_runtime_systems(app, fn() { true })
   app.run()
 }

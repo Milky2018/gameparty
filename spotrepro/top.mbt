@@ -349,7 +349,7 @@ fn setup_camera() -> Unit {
 }
 
 ///|
-fn startup_system(_delta : Double) -> Unit {
+fn startup_system(_world : @ecs.World) -> Unit {
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(light_entity)
   ensure_entity_alive(label_entity)
@@ -366,7 +366,7 @@ fn startup_system(_delta : Double) -> Unit {
 }
 
 ///|
-fn runtime_system(_delta : Double) -> Unit {
+fn runtime_system(_world : @ecs.World) -> Unit {
   if screenshot_taken.val {
     return
   }
@@ -387,7 +387,7 @@ pub fn run() -> Unit {
     .with_fps(FPS)
     .with_image_smooth(true)
     .add_plugin(@plugins.default_3d_plugin)
-    .add_system(fn(_world, delta) { startup_system(delta) }, schedule=Startup)
-    .add_system(fn(_world, delta) { runtime_system(delta) })
+    .add_system(Startup, startup_system)
+    .add_system(Update, runtime_system)
   app.run()
 }

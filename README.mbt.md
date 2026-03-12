@@ -2,19 +2,20 @@
 
 A MoonBit game collection built on top of [Selene](https://github.com/moonbit-community/selene) and the raylib backend.
 
-This repository currently contains a launcher menu plus two playable games:
+This repository currently contains three playable games:
 
 - `thetawave`: an ongoing MoonBit/Selene port of the upstream Thetawave project.
 - `pacman3d`: a native 3D Pac-Man-style game built with Selene `render3d`.
+- `angryrabbits`: a simple physics-based slingshot prototype.
 
 ## Included Packages
 
-- [gameparty.mbt](/Users/zhengyu/Documents/projects/gameparty/gameparty.mbt): top-level launcher/menu state machine.
-- `cmd/gameparty`: run the game collection menu.
 - `cmd/thetawave`: run Thetawave directly.
 - `cmd/pacman3d`: run Pacman 3D directly.
+- `cmd/angryrabbits`: run Angry Rabbits directly.
 - `thetawave/`: Thetawave port package and assets.
 - `pacman3d/`: Pacman 3D package and assets.
+- `angryrabbits/`: Angry Rabbits package and assets.
 
 ## Requirements
 
@@ -24,17 +25,12 @@ This repository currently contains a launcher menu plus two playable games:
 
 ## Run
 
-Run the game collection menu:
-
-```bash
-moon run cmd/gameparty
-```
-
 Run an individual game directly:
 
 ```bash
 moon run cmd/thetawave
 moon run cmd/pacman3d
+moon run cmd/angryrabbits
 ```
 
 ## Check
@@ -58,7 +54,7 @@ The generated embedded asset blobs are excluded from module publishing in [moon.
 
 ### Thetawave
 
-- Ported into the shared `gameparty` repository and runnable through the launcher.
+- Ported into the shared `gameparty` repository.
 - Uses embedded assets in `release` mode and local assets in `debug` mode.
 - Remaining Selene-vs-upstream parity gaps are tracked in [PORTING_BLOCKERS.md](/Users/zhengyu/Documents/projects/gameparty/thetawave/PORTING_BLOCKERS.md).
 
@@ -66,9 +62,9 @@ The generated embedded asset blobs are excluded from module publishing in [moon.
 
 - Runs as a true 3D game using Selene `render3d`.
 - Uses textured floor, wall, and ceiling tiles sourced from the Pac-Man tileset.
-- Shares the launcher font stack and release embedded asset flow with the rest of the repository.
+- Shares the release embedded asset flow with the rest of the repository.
 
 ## Notes
 
 - The module `preferred-target` is `native`.
-- The launcher and both games currently assume a desktop/native runtime.
+- The games currently assume a desktop/native runtime.
