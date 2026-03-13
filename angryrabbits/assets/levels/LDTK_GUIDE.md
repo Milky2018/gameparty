@@ -6,6 +6,7 @@ This package reads level data from an LDtk project file via `selene/ldtk`.
 
 - Default level file: `angryrabbits/assets/levels/level_01.ldtk`
 - Loader behavior: use the first level from `project.indexed_levels()`
+- Keep `externalLevels` disabled in LDtk for now. AngryRabbits currently loads a single in-file `.ldtk` project.
 
 ## Coordinate System
 
@@ -33,7 +34,7 @@ Use one `Entities` layer. Entity `identifier` values are parsed as follows.
 1. `BackgroundRect`
 - Uses `px` as top-left position.
 - Uses `width/height` as size.
-- Optional fields:
+- Required fields:
   - `color` (`String`, e.g. `rgb(183, 225, 255)`)
   - `zindex` (`Int`)
 
@@ -42,26 +43,24 @@ Use one `Entities` layer. Entity `identifier` values are parsed as follows.
 
 3. `HillCircle`
 - Uses entity bounds to derive center/radius.
-- Optional fields:
+- Required fields:
   - `color` (`String`)
   - `zindex` (`Int`)
-  - `radius` (`Float`, fallback only when bounds are zero)
 
 ### Gameplay entities
 
 1. `Block`
 - Uses entity bounds for center/size.
-- Optional fields:
+- Required fields:
   - `color` (`String`)
 
 2. `Target`
 - Uses entity bounds for center/radius.
-- Optional fields:
+- Required fields:
   - `color` (`String`)
-  - `radius` (`Float`, fallback only when bounds are zero)
 
-## Fallback Behavior
+## Validation Behavior
 
-- Invalid/empty LDtk file: fall back to built-in default level.
-- Missing entities for blocks/targets: built-in default blocks/targets are used.
-- Missing decor/meta entities: built-in default decor/spawn values are used.
+- Invalid JSON, unreadable asset bytes, non-UTF-8 text, missing required fields, or missing required entities: the game enters its in-game error scene and prints the exact load error.
+- No silent fallback values are applied during level loading.
+- `Block` and `Target` entities are read only from the visible `Entities` layer.

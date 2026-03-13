@@ -44,173 +44,215 @@ priv struct LevelDef {
 }
 
 ///|
-fn default_level_def() -> LevelDef {
-  {
-    slingshot_anchor: @math.Vec2D(142.0, GROUND_Y - 88.0),
-    rabbit_spawn: @math.Vec2D(142.0, GROUND_Y - 88.0),
-    max_shots: MAX_SHOTS,
-    background_rect: {
-      position: @math.Vec2D::zero(),
-      size: @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-      color: SKY_COLOR,
-      zindex: 0,
-    },
-    ground_rect: {
-      position: @math.Vec2D(0.0, GROUND_Y),
-      size: @math.Vec2D(VIEWPORT_WIDTH, GROUND_HEIGHT),
-      color: GROUND_COLOR,
-      zindex: 2,
-    },
-    hill_circle: {
-      center: @math.Vec2D(620.0, GROUND_Y),
-      radius: 120.0,
-      color: "rgb(154, 211, 132)",
-      zindex: 1,
-    },
-    blocks: [
-      {
-        center: @math.Vec2D(486.0, GROUND_Y - 42.0),
-        size: @math.Vec2D(28.0, 84.0),
-        color: "rgb(191,132,78)",
-      },
-      {
-        center: @math.Vec2D(544.0, GROUND_Y - 42.0),
-        size: @math.Vec2D(28.0, 84.0),
-        color: "rgb(169,115,67)",
-      },
-      {
-        center: @math.Vec2D(604.0, GROUND_Y - 34.0),
-        size: @math.Vec2D(32.0, 68.0),
-        color: "rgb(208,148,88)",
-      },
-      {
-        center: @math.Vec2D(646.0, GROUND_Y - 30.0),
-        size: @math.Vec2D(22.0, 60.0),
-        color: "rgb(160,107,65)",
-      },
-      {
-        center: @math.Vec2D(570.0, GROUND_Y - 10.0),
-        size: @math.Vec2D(132.0, 20.0),
-        color: "rgb(221,171,108)",
-      },
-    ],
-    targets: [
-      {
-        center: @math.Vec2D(446.0, GROUND_Y - TARGET_RADIUS - 4.0),
-        radius: TARGET_RADIUS,
-        color: "rgb(112, 209, 115)",
-      },
-      {
-        center: @math.Vec2D(571.0, GROUND_Y - TARGET_RADIUS - 4.0),
-        radius: TARGET_RADIUS,
-        color: "rgb(112, 209, 115)",
-      },
-      {
-        center: @math.Vec2D(632.0, GROUND_Y - TARGET_RADIUS - 4.0),
-        radius: TARGET_RADIUS,
-        color: "rgb(112, 209, 115)",
-      },
-    ],
-  }
+priv enum LoadResult[T] {
+  Ok(T)
+  Err(String)
 }
 
 ///|
-fn load_current_level() -> LevelDef {
+fn[T] load_level_error(path : String, detail : String) -> LoadResult[T] {
+  Err("Angry Rabbits level load failed for '\{path}': \{detail}")
+}
+
+///|
+fn load_current_level() -> LoadResult[LevelDef] {
   load_level_from_path(current_level_path.val)
 }
 
 ///|
-fn load_level_from_path(path : String) -> LevelDef {
-  let project = @ldtk.load_ldtk_project(path)
-  if project.indexed_levels().is_empty() {
-    return default_level_def()
+fn load_level_from_path(path : String) -> LoadResult[LevelDef] {
+  match load_ldtk_project_from_utf8_asset(path) {
+    Ok(project) =>
+      if project.indexed_levels().is_empty() {
+        load_level_error(
+          path, "no LDtk levels were loaded. Check that the file exists at runtime and that the working directory matches the project root.",
+        )
+      } else {
+        level_def_from_ldtk_project(project, path)
+      }
+    Err(message) => Err(message)
   }
-  level_def_from_ldtk_project(project)
 }
 
 ///|
-fn level_def_from_ldtk_project(project : @ldtk.LdtkProject) -> LevelDef {
+fn level_def_from_ldtk_project(
+  project : @ldtk.LdtkProject,
+  path : String,
+) -> LoadResult[LevelDef] {
   guard first_ldtk_level(project) is Some(level) else {
-    return default_level_def()
+    return load_level_error(path, "the project has no selectable level.")
   }
-  let fallback = default_level_def()
-  let slingshot_anchor : Ref[@math.Vec2D] = { val: fallback.slingshot_anchor }
-  let rabbit_spawn : Ref[@math.Vec2D] = { val: fallback.rabbit_spawn }
-  let background_rect : Ref[DecorRectDef] = { val: fallback.background_rect }
-  let ground_rect : Ref[DecorRectDef] = { val: fallback.ground_rect }
-  let hill_circle : Ref[DecorCircleDef] = { val: fallback.hill_circle }
-  let max_shots : Ref[Int] = {
-    val: level.field_int("max_shots").unwrap_or(fallback.max_shots),
+  if !has_visible_entities_layer(level) {
+    return load_level_error(
+      path,
+      "level '\{level.identifier}' has no visible 'Entities' layer.",
+    )
+  }
+  let slingshot_anchor : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let has_slingshot_anchor : Ref[Bool] = { val: false }
+  let rabbit_spawn : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let has_rabbit_spawn : Ref[Bool] = { val: false }
+  let background_rect : Ref[DecorRectDef] = {
+    val: {
+      position: @math.Vec2D::zero(),
+      size: @math.Vec2D::zero(),
+      color: "",
+      zindex: 0,
+    },
+  }
+  let has_background_rect : Ref[Bool] = { val: false }
+  let ground_rect : Ref[DecorRectDef] = {
+    val: {
+      position: @math.Vec2D::zero(),
+      size: @math.Vec2D::zero(),
+      color: "",
+      zindex: 0,
+    },
+  }
+  let has_ground_rect : Ref[Bool] = { val: false }
+  let hill_circle : Ref[DecorCircleDef] = {
+    val: { center: @math.Vec2D::zero(), radius: 0.0, color: "", zindex: 0 },
+  }
+  let has_hill_circle : Ref[Bool] = { val: false }
+  let load_failure : Ref[String?] = { val: None }
+  guard level.field_int("max_shots") is Some(max_shots) else {
+    return load_level_error(
+      path,
+      "level '\{level.identifier}' is missing required level field max_shots.",
+    )
   }
   let blocks : Array[BlockDef] = []
   let targets : Array[TargetDef] = []
   with_scoped_ldtk_entity_registrations_for_level(level.iid, fn() {
-    @ldtk.add_ldtk_entity_registration("SlingshotAnchor", fn(event) {
-      if event.layer.visible {
-        slingshot_anchor.val = ldtk_entity_anchor(event.instance)
-      }
-    })
-    @ldtk.add_ldtk_entity_registration("RabbitSpawn", fn(event) {
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      "Entities",
+      "SlingshotAnchor",
+      fn(event) {
+        if event.layer.visible {
+          slingshot_anchor.val = ldtk_entity_anchor(event.instance)
+          has_slingshot_anchor.val = true
+        }
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "RabbitSpawn", fn(
+      event,
+    ) {
       if event.layer.visible {
         rabbit_spawn.val = ldtk_entity_anchor(event.instance)
+        has_rabbit_spawn.val = true
       }
     })
-    @ldtk.add_ldtk_entity_registration("BackgroundRect", fn(event) {
+    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "BackgroundRect", fn(
+      event,
+    ) {
       if event.layer.visible {
-        background_rect.val = decor_rect_def_from_ldtk_entity(
-          event.instance,
-          background_rect.val,
-        )
+        match decor_rect_def_from_ldtk_entity(event.instance, path) {
+          Ok(rect) => {
+            background_rect.val = rect
+            has_background_rect.val = true
+          }
+          Err(message) =>
+            if load_failure.val is None {
+              load_failure.val = Some(message)
+            }
+        }
       }
     })
-    @ldtk.add_ldtk_entity_registration("GroundRect", fn(event) {
+    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "GroundRect", fn(
+      event,
+    ) {
       if event.layer.visible {
-        ground_rect.val = decor_rect_def_from_ldtk_entity(
-          event.instance,
-          ground_rect.val,
-        )
+        match decor_rect_def_from_ldtk_entity(event.instance, path) {
+          Ok(rect) => {
+            ground_rect.val = rect
+            has_ground_rect.val = true
+          }
+          Err(message) =>
+            if load_failure.val is None {
+              load_failure.val = Some(message)
+            }
+        }
       }
     })
-    @ldtk.add_ldtk_entity_registration("HillCircle", fn(event) {
+    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "HillCircle", fn(
+      event,
+    ) {
       if event.layer.visible {
-        hill_circle.val = decor_circle_def_from_ldtk_entity(
-          event.instance,
-          hill_circle.val,
-        )
+        match decor_circle_def_from_ldtk_entity(event.instance, path) {
+          Ok(circle) => {
+            hill_circle.val = circle
+            has_hill_circle.val = true
+          }
+          Err(message) =>
+            if load_failure.val is None {
+              load_failure.val = Some(message)
+            }
+        }
       }
     })
-    @ldtk.add_ldtk_entity_registration("Block", fn(event) {
+    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "Block", fn(
+      event,
+    ) {
       if event.layer.visible {
-        blocks.push(block_def_from_ldtk_entity(event.instance))
+        match block_def_from_ldtk_entity(event.instance, path) {
+          Ok(block) => blocks.push(block)
+          Err(message) =>
+            if load_failure.val is None {
+              load_failure.val = Some(message)
+            }
+        }
       }
     })
-    @ldtk.add_ldtk_entity_registration("Target", fn(event) {
+    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "Target", fn(
+      event,
+    ) {
       if event.layer.visible {
-        targets.push(target_def_from_ldtk_entity(event.instance))
+        match target_def_from_ldtk_entity(event.instance, path) {
+          Ok(target) => targets.push(target)
+          Err(message) =>
+            if load_failure.val is None {
+              load_failure.val = Some(message)
+            }
+        }
       }
     })
     let world_entity = @ldtk.spawn_ldtk_world(project)
     @ldtk.despawn_ldtk_tree(world_entity)
   })
+  guard load_failure.val is None else { return Err(load_failure.val.unwrap()) }
+  let missing : Array[String] = []
+  if !has_slingshot_anchor.val {
+    missing.push("SlingshotAnchor")
+  }
+  if !has_rabbit_spawn.val {
+    missing.push("RabbitSpawn")
+  }
+  if !has_background_rect.val {
+    missing.push("BackgroundRect")
+  }
+  if !has_ground_rect.val {
+    missing.push("GroundRect")
+  }
+  if !has_hill_circle.val {
+    missing.push("HillCircle")
+  }
+  if !missing.is_empty() {
+    return load_level_error(
+      path,
+      "level '\{level.identifier}' is missing required entities \{missing}.",
+    )
+  }
 
-  {
+  Ok({
     slingshot_anchor: slingshot_anchor.val,
     rabbit_spawn: rabbit_spawn.val,
-    max_shots: max_shots.val,
+    max_shots,
     background_rect: background_rect.val,
     ground_rect: ground_rect.val,
     hill_circle: hill_circle.val,
-    blocks: if blocks.is_empty() {
-      fallback.blocks
-    } else {
-      blocks
-    },
-    targets: if targets.is_empty() {
-      fallback.targets
-    } else {
-      targets
-    },
-  }
+    blocks,
+    targets,
+  })
 }
 
 ///|
@@ -221,6 +263,38 @@ fn first_ldtk_level(project : @ldtk.LdtkProject) -> @ldtk.LdtkLevel? {
   } else {
     Some(levels[0].level)
   }
+}
+
+///|
+fn has_visible_entities_layer(level : @ldtk.LdtkLevel) -> Bool {
+  for layer in level.layer_instances {
+    if layer.identifier == "Entities" && layer.visible {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn load_ldtk_project_from_utf8_asset(
+  path : String,
+) -> LoadResult[@ldtk.LdtkProject] {
+  guard @asset.read_bytes(path) is Some(bytes) else {
+    return load_level_error(path, "asset bytes could not be read.")
+  }
+  let source = @utf8.decode(bytes, ignore_bom=true) catch {
+    _ => return load_level_error(path, "file is not valid UTF-8 text.")
+  }
+  let root_json = @json.parse(source.view()) catch {
+    err => return load_level_error(path, "JSON parse error \{err}.")
+  }
+  let project = @ldtk.LdtkProject::from_ldtk_json(root_json)
+  if project.external_levels {
+    return load_level_error(
+      path, "LDtk external levels are not supported by the local UTF-8 fallback loader. Disable LDtk external levels for this project.",
+    )
+  }
+  Ok(project)
 }
 
 ///|
@@ -257,111 +331,147 @@ fn ldtk_entity_center(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
 }
 
 ///|
-fn ldtk_entity_string_field(
+fn[T] load_level_entity_error(
+  path : String,
   entity : @ldtk.LdtkEntityInstance,
+  detail : String,
+) -> LoadResult[T] {
+  load_level_error(
+    path,
+    "entity '\{entity.identifier}' (\{entity.iid}) \{detail}",
+  )
+}
+
+///|
+fn required_ldtk_entity_size(
+  entity : @ldtk.LdtkEntityInstance,
+  path : String,
+) -> LoadResult[@math.Vec2D] {
+  if entity.width <= 0 || entity.height <= 0 {
+    load_level_entity_error(
+      path, entity, "must have positive width and height.",
+    )
+  } else {
+    Ok(ldtk_entity_size(entity))
+  }
+}
+
+///|
+fn required_ldtk_entity_string_field(
+  entity : @ldtk.LdtkEntityInstance,
+  path : String,
   field : String,
-  fallback : String,
-) -> String {
+) -> LoadResult[String] {
   match entity.field_string(field) {
-    Some(value) => value
-    None => entity.field_color(field).unwrap_or(fallback)
+    Some(value) => Ok(value)
+    None =>
+      load_level_entity_error(
+        path,
+        entity,
+        "is missing required String field '\{field}'.",
+      )
   }
 }
 
 ///|
-fn ldtk_entity_int_field(
+fn required_ldtk_entity_int_field(
   entity : @ldtk.LdtkEntityInstance,
+  path : String,
   field : String,
-  fallback : Int,
-) -> Int {
+) -> LoadResult[Int] {
   match entity.field_int(field) {
-    Some(value) => value
+    Some(value) => Ok(value)
     None =>
-      entity.field_number(field).map_or(fallback, fn(value) { value.to_int() })
-  }
-}
-
-///|
-fn ldtk_entity_number_field(
-  entity : @ldtk.LdtkEntityInstance,
-  field : String,
-  fallback : Double,
-) -> Double {
-  match entity.field_number(field) {
-    Some(value) => value
-    None =>
-      entity.field_int(field).map_or(fallback, fn(value) { value.to_double() })
+      load_level_entity_error(
+        path,
+        entity,
+        "is missing required Int field '\{field}'.",
+      )
   }
 }
 
 ///|
 fn decor_rect_def_from_ldtk_entity(
   entity : @ldtk.LdtkEntityInstance,
-  fallback : DecorRectDef,
-) -> DecorRectDef {
-  {
-    position: entity.px,
-    size: if entity.width > 0 && entity.height > 0 {
-      ldtk_entity_size(entity)
-    } else {
-      fallback.size
-    },
-    color: ldtk_entity_string_field(entity, "color", fallback.color),
-    zindex: ldtk_entity_int_field(entity, "zindex", fallback.zindex),
+  path : String,
+) -> LoadResult[DecorRectDef] {
+  match required_ldtk_entity_size(entity, path) {
+    Err(message) => Err(message)
+    Ok(size) =>
+      match required_ldtk_entity_string_field(entity, path, "color") {
+        Err(message) => Err(message)
+        Ok(color) =>
+          match required_ldtk_entity_int_field(entity, path, "zindex") {
+            Err(message) => Err(message)
+            Ok(zindex) => Ok({ position: entity.px, size, color, zindex })
+          }
+      }
   }
 }
 
 ///|
 fn decor_circle_def_from_ldtk_entity(
   entity : @ldtk.LdtkEntityInstance,
-  fallback : DecorCircleDef,
-) -> DecorCircleDef {
-  let radius = if entity.width > 0 && entity.height > 0 {
-    let size = ldtk_entity_size(entity)
-    let width_radius = size[X] / 2.0
-    let height_radius = size[Y] / 2.0
-    if width_radius < height_radius {
-      width_radius
-    } else {
-      height_radius
-    }
-  } else {
-    ldtk_entity_number_field(entity, "radius", fallback.radius)
-  }
-  {
-    center: ldtk_entity_center(entity),
-    radius,
-    color: ldtk_entity_string_field(entity, "color", fallback.color),
-    zindex: ldtk_entity_int_field(entity, "zindex", fallback.zindex),
-  }
-}
-
-///|
-fn block_def_from_ldtk_entity(entity : @ldtk.LdtkEntityInstance) -> BlockDef {
-  {
-    center: ldtk_entity_center(entity),
-    size: ldtk_entity_size(entity),
-    color: ldtk_entity_string_field(entity, "color", "rgb(191,132,78)"),
+  path : String,
+) -> LoadResult[DecorCircleDef] {
+  match required_ldtk_entity_size(entity, path) {
+    Err(message) => Err(message)
+    Ok(size) =>
+      match required_ldtk_entity_string_field(entity, path, "color") {
+        Err(message) => Err(message)
+        Ok(color) =>
+          match required_ldtk_entity_int_field(entity, path, "zindex") {
+            Err(message) => Err(message)
+            Ok(zindex) => {
+              let width_radius = size[X] / 2.0
+              let height_radius = size[Y] / 2.0
+              let radius = if width_radius < height_radius {
+                width_radius
+              } else {
+                height_radius
+              }
+              Ok({ center: ldtk_entity_center(entity), radius, color, zindex })
+            }
+          }
+      }
   }
 }
 
 ///|
-fn target_def_from_ldtk_entity(entity : @ldtk.LdtkEntityInstance) -> TargetDef {
-  let size = ldtk_entity_size(entity)
-  let radius = if entity.width > 0 && entity.height > 0 {
-    let width_radius = size[X] / 2.0
-    let height_radius = size[Y] / 2.0
-    if width_radius < height_radius {
-      width_radius
-    } else {
-      height_radius
-    }
-  } else {
-    ldtk_entity_number_field(entity, "radius", TARGET_RADIUS)
+fn block_def_from_ldtk_entity(
+  entity : @ldtk.LdtkEntityInstance,
+  path : String,
+) -> LoadResult[BlockDef] {
+  match required_ldtk_entity_size(entity, path) {
+    Err(message) => Err(message)
+    Ok(size) =>
+      match required_ldtk_entity_string_field(entity, path, "color") {
+        Err(message) => Err(message)
+        Ok(color) => Ok({ center: ldtk_entity_center(entity), size, color })
+      }
   }
-  {
-    center: ldtk_entity_center(entity),
-    radius,
-    color: ldtk_entity_string_field(entity, "color", "rgb(112, 209, 115)"),
+}
+
+///|
+fn target_def_from_ldtk_entity(
+  entity : @ldtk.LdtkEntityInstance,
+  path : String,
+) -> LoadResult[TargetDef] {
+  match required_ldtk_entity_size(entity, path) {
+    Err(message) => Err(message)
+    Ok(size) =>
+      match required_ldtk_entity_string_field(entity, path, "color") {
+        Err(message) => Err(message)
+        Ok(color) => {
+          let width_radius = size[X] / 2.0
+          let height_radius = size[Y] / 2.0
+          let radius = if width_radius < height_radius {
+            width_radius
+          } else {
+            height_radius
+          }
+          Ok({ center: ldtk_entity_center(entity), radius, color })
+        }
+      }
   }
 }

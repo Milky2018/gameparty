@@ -4,16 +4,6 @@ fn vec_length(vector : @math.Vec2D) -> Double {
 }
 
 ///|
-fn normalize_or_zero(vector : @math.Vec2D) -> @math.Vec2D {
-  vector.normalize()
-}
-
-///|
-fn scale_vec(vector : @math.Vec2D, scalar : Double) -> @math.Vec2D {
-  vector.scalar_mul(scalar)
-}
-
-///|
 fn clamp(value : Double, lower : Double, upper : Double) -> Double {
   if value < lower {
     lower
@@ -104,119 +94,52 @@ fn all_targets_cleared() -> Bool {
 fn begin_next_shot_or_end() -> Unit {
   rabbit_velocity.val = @math.Vec2D::zero()
   rabbit_flight_time.val = 0.0
+  rabbit_idle_time.val = 0.0
   if all_targets_cleared() {
     phase.val = Won
-    rabbit_visible.val = false
+    hide_rabbit_physics()
     return
   }
   if shots_remaining.val <= 0 {
     phase.val = Lost
-    rabbit_visible.val = false
+    hide_rabbit_physics()
     return
   }
   phase.val = Ready
-  rabbit_center.val = slingshot_anchor()
-  rabbit_visible.val = true
+  set_rabbit_ready_state(slingshot_anchor())
 }
 
 ///|
-fn resolve_rabbit_ground_collision() -> Unit {
-  let mut center = rabbit_center.val
-  let mut velocity = rabbit_velocity.val
-  let bottom = center[Y] + RABBIT_RADIUS
-  if bottom < GROUND_Y {
-    rabbit_center.val = center
-    rabbit_velocity.val = velocity
-    return
-  }
-  center = @math.Vec2D(center[X], GROUND_Y - RABBIT_RADIUS)
-  velocity = @math.Vec2D(
-    velocity[X] * GROUND_FRICTION,
-    -velocity[Y] * RABBIT_RESTITUTION,
-  )
-  if vec_length(velocity) < STOP_SPEED {
-    rabbit_center.val = center
-    rabbit_velocity.val = @math.Vec2D::zero()
-    begin_next_shot_or_end()
-    return
-  }
-  rabbit_center.val = center
-  rabbit_velocity.val = velocity
-}
-
-///|
-fn integrate_block(index : Int, delta : Double) -> Unit {
-  let block = blocks[index]
-  if !block.alive {
-    return
-  }
-  let mut velocity = @math.Vec2D(
-    block.velocity[X] * AIR_DRAG,
-    block.velocity[Y] + GRAVITY * delta,
-  )
-  let mut center = block.center + scale_vec(velocity, delta)
-  let floor = GROUND_Y - block.size[Y] / 2.0
-  if center[Y] > floor {
-    center = @math.Vec2D(center[X], floor)
-    velocity = @math.Vec2D(
-      velocity[X] * GROUND_FRICTION,
-      -velocity[Y] * BLOCK_RESTITUTION,
-    )
-    if vec_length(velocity) < STOP_SPEED * 0.4 {
-      velocity = @math.Vec2D::zero()
-    }
-  }
-  blocks[index] = { ..block, center, velocity }
-}
-
-///|
-fn integrate_target(index : Int, delta : Double) -> Unit {
+fn destroy_target(index : Int) -> Unit {
   let target = targets[index]
   if !target.alive {
     return
   }
-  let mut velocity = @math.Vec2D(
-    target.velocity[X] * AIR_DRAG,
-    target.velocity[Y] + GRAVITY * delta,
-  )
-  let mut center = target.center + scale_vec(velocity, delta)
-  let floor = GROUND_Y - target.radius
-  if center[Y] > floor {
-    center = @math.Vec2D(center[X], floor)
-    velocity = @math.Vec2D(velocity[X] * 0.88, -velocity[Y] * 0.20)
-    if vec_length(velocity) < STOP_SPEED * 0.35 {
-      velocity = @math.Vec2D::zero()
-    }
-  }
-  targets[index] = { ..target, center, velocity }
+  targets[index] = { ..target, alive: false }
+  destroy_target_body(target.entity)
 }
 
 ///|
-fn apply_rabbit_block_collisions() -> Unit {
-  for index in 0..<blocks.length() {
-    let block = blocks[index]
-    if !block.alive {
-      continue
-    }
-    if !circle_intersects_rect(
-        rabbit_center.val,
-        RABBIT_RADIUS,
-        block.center,
-        block.size,
-      ) {
-      continue
-    }
-    let push = normalize_or_zero(block.center - rabbit_center.val)
-    let rabbit_speed = vec_length(rabbit_velocity.val)
-    let transfer = rabbit_speed * BLOCK_HIT_TRANSFER
-    let next_block_velocity = block.velocity +
-      scale_vec(push, transfer) +
-      @math.Vec2D(0.0, -rabbit_speed * 0.10)
-    blocks[index] = { ..block, velocity: next_block_velocity }
-    rabbit_velocity.val = scale_vec(rabbit_velocity.val, -0.36) +
-      scale_vec(push, -transfer * 0.18)
-    rabbit_center.val = rabbit_center.val - scale_vec(push, 6.0)
+fn destroy_block(index : Int) -> Unit {
+  let block = blocks[index]
+  if !block.alive {
+    return
   }
+  blocks[index] = { ..block, alive: false, velocity: @math.Vec2D::zero() }
+  clear_physics_entity(block.entity)
+}
+
+///|
+fn rabbit_out_of_bounds() -> Bool {
+  rabbit_center.val[X] < -120.0 ||
+  rabbit_center.val[X] > VIEWPORT_WIDTH + 120.0 ||
+  rabbit_center.val[Y] > VIEWPORT_HEIGHT + 120.0
+}
+
+///|
+fn rabbit_has_settled() -> Bool {
+  rabbit_flight_time.val >= RABBIT_SETTLE_TIME &&
+  rabbit_idle_time.val >= RABBIT_IDLE_TIME
 }
 
 ///|
@@ -238,52 +161,55 @@ fn crush_targets_with_blocks() -> Unit {
         ) {
         continue
       }
-      let impact = vec_length(block.velocity)
-      if impact >= BLOCK_TARGET_CRUSH_SPEED {
-        targets[target_index] = {
-          ..target,
-          alive: false,
-          velocity: target.velocity +
-          scale_vec(
-            normalize_or_zero(target.center - block.center),
-            impact * 0.15,
-          ),
-        }
+      if vec_length(block.velocity) >= BLOCK_TARGET_CRUSH_SPEED {
+        destroy_target(target_index)
+        break
       }
     }
   }
 }
 
 ///|
-fn apply_rabbit_target_collisions() -> Unit {
-  let mut hit_any = false
+fn apply_rabbit_block_hits() -> Unit {
+  let rabbit_speed = vec_length(rabbit_velocity.val)
+  if rabbit_speed < BLOCK_BREAK_SPEED {
+    return
+  }
+  for index in 0..<blocks.length() {
+    let block = blocks[index]
+    if !block.alive {
+      continue
+    }
+    if circle_intersects_rect(
+        rabbit_center.val,
+        RABBIT_RADIUS,
+        block.center,
+        block.size,
+      ) {
+      destroy_block(index)
+    }
+  }
+}
+
+///|
+fn apply_rabbit_target_hits() -> Unit {
+  let rabbit_speed = vec_length(rabbit_velocity.val)
+  if rabbit_speed < TARGET_HIT_SPEED {
+    return
+  }
   for index in 0..<targets.length() {
     let target = targets[index]
     if !target.alive {
       continue
     }
-    if !circle_intersects_circle(
+    if circle_intersects_circle(
         rabbit_center.val,
         RABBIT_RADIUS,
         target.center,
         target.radius,
       ) {
-      continue
+      destroy_target(index)
     }
-    let rabbit_speed = vec_length(rabbit_velocity.val)
-    let push = normalize_or_zero(target.center - rabbit_center.val)
-    let next_velocity = target.velocity + scale_vec(push, rabbit_speed * 0.72)
-    targets[index] = {
-      ..target,
-      alive: rabbit_speed < TARGET_HIT_SPEED,
-      velocity: next_velocity,
-    }
-    rabbit_velocity.val = scale_vec(rabbit_velocity.val, -0.42)
-    hit_any = true
-  }
-  if hit_any && all_targets_cleared() {
-    phase.val = Won
-    rabbit_visible.val = false
   }
 }
 
@@ -294,7 +220,7 @@ fn input_system(_world : @ecs.World) -> Unit {
     return
   }
   if (@inputs.is_just_pressed(KeyR) || @inputs.is_just_pressed(Enter)) &&
-    (phase.val == Won || phase.val == Lost) {
+    (phase.val == Error || phase.val == Won || phase.val == Lost) {
     reset_level()
     return
   }
@@ -309,19 +235,22 @@ fn input_system(_world : @ecs.World) -> Unit {
 
   if phase.val == Dragging {
     if @inputs.is_mouse_pressed(Left) {
-      rabbit_center.val = clamp_drag_target(mouse_center)
+      let center = clamp_drag_target(mouse_center)
+      set_rabbit_ready_state(center)
     }
     if @inputs.just_release_mouse.left_button {
-      let release_center = clamp_drag_target(mouse_center)
-      rabbit_center.val = release_center
+      let release_center = rabbit_center.val
       if drag_distance(release_center) < MIN_LAUNCH_STRETCH {
         phase.val = Ready
-        rabbit_center.val = slingshot_anchor()
-        rabbit_velocity.val = @math.Vec2D::zero()
+        set_rabbit_ready_state(slingshot_anchor())
       } else {
         phase.val = Flying
-        rabbit_velocity.val = launch_velocity_from_rabbit(release_center)
+        launch_rabbit(
+          release_center,
+          launch_velocity_from_rabbit(release_center),
+        )
         rabbit_flight_time.val = 0.0
+        rabbit_idle_time.val = 0.0
         shots_remaining.val = shots_remaining.val - 1
       }
     }
@@ -330,36 +259,31 @@ fn input_system(_world : @ecs.World) -> Unit {
 
 ///|
 fn simulation_system(_world : @ecs.World) -> Unit {
+  if phase.val == Error {
+    return
+  }
   let delta = @time.delta()
+  sync_physics_snapshots()
   if phase.val == Flying {
     rabbit_flight_time.val = rabbit_flight_time.val + delta
-    rabbit_velocity.val = @math.Vec2D(
-      rabbit_velocity.val[X] * AIR_DRAG,
-      rabbit_velocity.val[Y] + GRAVITY * delta,
-    )
-    rabbit_center.val = rabbit_center.val +
-      scale_vec(rabbit_velocity.val, delta)
-    apply_rabbit_block_collisions()
-    apply_rabbit_target_collisions()
-    resolve_rabbit_ground_collision()
-    if rabbit_center.val[X] < -120.0 ||
-      rabbit_center.val[X] > VIEWPORT_WIDTH + 120.0 ||
-      rabbit_center.val[Y] > VIEWPORT_HEIGHT + 120.0 {
+    if vec_length(rabbit_velocity.val) < STOP_SPEED {
+      rabbit_idle_time.val = rabbit_idle_time.val + delta
+    } else {
+      rabbit_idle_time.val = 0.0
+    }
+    apply_rabbit_block_hits()
+    apply_rabbit_target_hits()
+    crush_targets_with_blocks()
+    if rabbit_out_of_bounds() || rabbit_has_settled() {
       begin_next_shot_or_end()
     }
+  } else {
+    crush_targets_with_blocks()
   }
-
-  for index in 0..<blocks.length() {
-    integrate_block(index, delta)
-  }
-  for index in 0..<targets.length() {
-    integrate_target(index, delta)
-  }
-  crush_targets_with_blocks()
 
   if phase.val != Won && all_targets_cleared() {
     phase.val = Won
-    rabbit_visible.val = false
+    hide_rabbit_physics()
   }
 }
 

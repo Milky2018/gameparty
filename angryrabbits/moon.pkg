@@ -6,10 +6,13 @@ import {
   "Milky2018/selene/entity",
   "Milky2018/selene/inputs",
   "Milky2018/selene/math",
+  "Milky2018/selene/physics2d",
   "Milky2018/selene/plugins",
   "Milky2018/selene/sprite",
   "Milky2018/selene/system",
   "Milky2018/selene/time",
   "Milky2018/selene/ldtk",
   "Milky2018/selene/transform",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/json",
 }

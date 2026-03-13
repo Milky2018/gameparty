@@ -57,6 +57,282 @@ fn rabbit_center_top_left() -> @math.Vec2D {
 }
 
 ///|
+fn physics_filter() -> @physics2d.CollisionFilter {
+  @physics2d.CollisionFilter::all(@physics2d.CollisionGroup::new())
+}
+
+///|
+fn rabbit_shape() -> @physics2d.CollisionShape {
+  Ball(radius=RABBIT_RADIUS, offset=@math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS))
+}
+
+///|
+fn rabbit_ready_body() -> @physics2d.RigidBody {
+  {
+    ..@physics2d.RigidBody::dynamic(),
+    gravity_scale: 0.0,
+    linear_damping: 1.0,
+    angular_damping: 1.0,
+    ccd_enabled: true,
+    lock_rotation: true,
+  }
+}
+
+///|
+fn rabbit_flying_body() -> @physics2d.RigidBody {
+  {
+    ..@physics2d.RigidBody::dynamic(),
+    gravity_scale: 1.0,
+    linear_damping: RABBIT_LINEAR_DAMPING,
+    angular_damping: 1.0,
+    ccd_enabled: true,
+    lock_rotation: true,
+  }
+}
+
+///|
+fn block_body() -> @physics2d.RigidBody {
+  {
+    ..@physics2d.RigidBody::dynamic(),
+    gravity_scale: 1.0,
+    linear_damping: BLOCK_LINEAR_DAMPING,
+    angular_damping: 1.0,
+    ccd_enabled: false,
+    lock_rotation: true,
+  }
+}
+
+///|
+fn target_body() -> @physics2d.RigidBody {
+  {
+    ..@physics2d.RigidBody::dynamic(),
+    gravity_scale: 1.0,
+    linear_damping: TARGET_LINEAR_DAMPING,
+    angular_damping: 1.0,
+    ccd_enabled: false,
+    lock_rotation: true,
+  }
+}
+
+///|
+fn clear_physics_entity(entity : @entity.Entity) -> Unit {
+  @physics2d.colliders().remove(entity)
+  @physics2d.shapes().remove(entity)
+  @physics2d.rigid_bodies().remove(entity)
+  @physics2d.velocities().remove(entity)
+  @physics2d.resolved_velocities().remove(entity)
+}
+
+///|
+fn clear_level_physics_entities() -> Unit {
+  clear_physics_entity(ground_entity)
+  clear_physics_entity(rabbit_entity)
+  for entity in block_entities {
+    clear_physics_entity(entity)
+  }
+  for entity in target_entities {
+    clear_physics_entity(entity)
+  }
+}
+
+///|
+fn set_rabbit_ready_state(center : @math.Vec2D) -> Unit {
+  let top_left = center_to_circle_position(center, RABBIT_RADIUS)
+  rabbit_center.val = center
+  rabbit_velocity.val = @math.Vec2D::zero()
+  rabbit_visible.val = true
+  @transform.positions().set(rabbit_entity, top_left)
+  @physics2d.shapes().set(rabbit_entity, rabbit_shape())
+  @physics2d.colliders().set(
+    rabbit_entity,
+    @physics2d.Collider::with_material(
+      physics_filter(),
+      friction=0.65,
+      restitution=RABBIT_RESTITUTION,
+      active=false,
+    ),
+  )
+  @physics2d.rigid_bodies().set(rabbit_entity, rabbit_ready_body())
+  @physics2d.set_rigid_body_translation(rabbit_entity, top_left)
+  @physics2d.set_rigid_body_linear_velocity(rabbit_entity, @math.Vec2D::zero())
+}
+
+///|
+fn launch_rabbit(center : @math.Vec2D, velocity : @math.Vec2D) -> Unit {
+  let top_left = center_to_circle_position(center, RABBIT_RADIUS)
+  rabbit_center.val = center
+  rabbit_velocity.val = velocity
+  rabbit_visible.val = true
+  @transform.positions().set(rabbit_entity, top_left)
+  @physics2d.shapes().set(rabbit_entity, rabbit_shape())
+  @physics2d.colliders().set(
+    rabbit_entity,
+    @physics2d.Collider::with_material(
+      physics_filter(),
+      friction=0.65,
+      restitution=RABBIT_RESTITUTION,
+      active=true,
+    ),
+  )
+  @physics2d.rigid_bodies().set(rabbit_entity, rabbit_flying_body())
+  @physics2d.set_rigid_body_translation(rabbit_entity, top_left)
+  @physics2d.set_rigid_body_linear_velocity(rabbit_entity, velocity)
+}
+
+///|
+fn hide_rabbit_physics() -> Unit {
+  rabbit_velocity.val = @math.Vec2D::zero()
+  rabbit_visible.val = false
+  @physics2d.colliders().set(
+    rabbit_entity,
+    @physics2d.Collider::with_material(
+      physics_filter(),
+      friction=0.65,
+      restitution=RABBIT_RESTITUTION,
+      active=false,
+    ),
+  )
+  @physics2d.rigid_bodies().set(rabbit_entity, rabbit_ready_body())
+  @physics2d.set_rigid_body_linear_velocity(rabbit_entity, @math.Vec2D::zero())
+}
+
+///|
+fn configure_level_physics(level : LevelDef) -> Unit {
+  @physics2d.configure_physics(
+    gravity=@math.Vec2D(0.0, GRAVITY),
+    pixels_per_meter=PHYSICS_PIXELS_PER_METER,
+    max_ccd_substeps=PHYSICS_MAX_CCD_SUBSTEPS,
+  )
+  clear_level_physics_entities()
+
+  @transform.positions().set(ground_entity, level.ground_rect.position)
+  @physics2d.shapes().set(
+    ground_entity,
+    Rect(size=level.ground_rect.size, offset=@math.Vec2D::zero()),
+  )
+  @physics2d.colliders().set(
+    ground_entity,
+    @physics2d.Collider::with_material(
+      physics_filter(),
+      friction=GROUND_FRICTION,
+      restitution=0.04,
+    ),
+  )
+  @physics2d.rigid_bodies().set(ground_entity, @physics2d.RigidBody::fixed())
+  @physics2d.set_rigid_body_translation(
+    ground_entity,
+    level.ground_rect.position,
+  )
+
+  for index, block in level.blocks {
+    let entity = block_entities[index]
+    let top_left = center_to_rect_position(block.center, block.size)
+    @transform.positions().set(entity, top_left)
+    @physics2d.shapes().set(
+      entity,
+      Rect(size=block.size, offset=@math.Vec2D::zero()),
+    )
+    @physics2d.colliders().set(
+      entity,
+      @physics2d.Collider::with_material(
+        physics_filter(),
+        friction=0.78,
+        restitution=BLOCK_RESTITUTION,
+      ),
+    )
+    @physics2d.rigid_bodies().set(entity, block_body())
+    @physics2d.set_rigid_body_translation(entity, top_left)
+    @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
+  }
+
+  for index, target in level.targets {
+    let entity = target_entities[index]
+    let top_left = center_to_circle_position(target.center, target.radius)
+    @transform.positions().set(entity, top_left)
+    @physics2d.shapes().set(
+      entity,
+      Ball(
+        radius=target.radius,
+        offset=@math.Vec2D(target.radius, target.radius),
+      ),
+    )
+    @physics2d.colliders().set(
+      entity,
+      @physics2d.Collider::with_material(
+        physics_filter(),
+        friction=0.52,
+        restitution=0.18,
+      ),
+    )
+    @physics2d.rigid_bodies().set(entity, target_body())
+    @physics2d.set_rigid_body_translation(entity, top_left)
+    @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
+  }
+
+  set_rabbit_ready_state(level.rabbit_spawn)
+}
+
+///|
+fn sync_rabbit_from_physics() -> Unit {
+  guard @physics2d.rigid_body_translation(rabbit_entity) is Some(top_left) else {
+    return
+  }
+  rabbit_center.val = top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS)
+  rabbit_velocity.val = @physics2d.rigid_body_linear_velocity(rabbit_entity).unwrap_or(
+    @math.Vec2D::zero(),
+  )
+}
+
+///|
+fn sync_blocks_from_physics() -> Unit {
+  for index in 0..<blocks.length() {
+    let block = blocks[index]
+    if !block.alive {
+      continue
+    }
+    guard @physics2d.rigid_body_translation(block.entity) is Some(top_left) else {
+      continue
+    }
+    blocks[index] = {
+      ..block,
+      center: top_left + block.size.scalar_mul(0.5),
+      velocity: @physics2d.rigid_body_linear_velocity(block.entity).unwrap_or(
+        @math.Vec2D::zero(),
+      ),
+    }
+  }
+}
+
+///|
+fn sync_targets_from_physics() -> Unit {
+  for index in 0..<targets.length() {
+    let target = targets[index]
+    if !target.alive {
+      continue
+    }
+    guard @physics2d.rigid_body_translation(target.entity) is Some(top_left) else {
+      continue
+    }
+    targets[index] = {
+      ..target,
+      center: top_left + @math.Vec2D(target.radius, target.radius),
+    }
+  }
+}
+
+///|
+fn sync_physics_snapshots() -> Unit {
+  sync_rabbit_from_physics()
+  sync_blocks_from_physics()
+  sync_targets_from_physics()
+}
+
+///|
+fn destroy_target_body(entity : @entity.Entity) -> Unit {
+  clear_physics_entity(entity)
+}
+
+///|
 fn register_scene_entities() -> Unit {
   for
     entity in [
@@ -78,11 +354,13 @@ fn register_level_entities(level : LevelDef) -> Unit {
 ///|
 fn hide_unused_level_entities(level : LevelDef) -> Unit {
   for index in level.blocks.length()..<block_entities.length() {
+    clear_physics_entity(block_entities[index])
     if @sprite.sprites().get(block_entities[index]) is Some(sprite) {
       sprite.visible = false
     }
   }
   for index in level.targets.length()..<target_entities.length() {
+    clear_physics_entity(target_entities[index])
     if @sprite.sprites().get(target_entities[index]) is Some(sprite) {
       sprite.visible = false
     }
@@ -108,7 +386,6 @@ fn instantiate_level(level : LevelDef) -> Unit {
       entity: target_entities[index],
       center: target.center,
       radius: target.radius,
-      velocity: @math.Vec2D::zero(),
       color: target.color,
       alive: true,
     })
@@ -180,9 +457,128 @@ fn set_text_entity(
 }
 
 ///|
+fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
+  if @sprite.sprites().get(entity) is Some(sprite) {
+    sprite.visible = visible
+  }
+}
+
+///|
+fn wrap_text_for_ui(
+  text : String,
+  max_chars_per_line : Int,
+  max_lines : Int,
+) -> String {
+  if text == "" || max_chars_per_line <= 0 || max_lines <= 0 {
+    return ""
+  }
+  let lines : Array[String] = []
+  let mut start = 0
+  while start < text.length() && lines.length() < max_lines {
+    let remaining = text.length() - start
+    let line_length = if remaining < max_chars_per_line {
+      remaining
+    } else {
+      max_chars_per_line
+    }
+    lines.push(text.unsafe_substring(start~, end=start + line_length))
+    start += line_length
+  }
+  if start < text.length() && !lines.is_empty() {
+    let last_index = lines.length() - 1
+    let last_line = lines[last_index]
+    if last_line.length() > 3 {
+      lines[last_index] = last_line.unsafe_substring(
+          start=0,
+          end=last_line.length() - 3,
+        ) +
+        "..."
+    } else {
+      lines[last_index] = "..."
+    }
+  }
+  let mut wrapped = ""
+  for index, line in lines {
+    if index > 0 {
+      wrapped = wrapped + "\n"
+    }
+    wrapped = wrapped + line
+  }
+  wrapped
+}
+
+///|
+fn hide_all_level_visuals() -> Unit {
+  for
+    entity in [
+      ground_entity, hill_entity, slingshot_left_entity, slingshot_right_entity,
+      slingshot_base_entity, rabbit_entity, rabbit_eye_entity,
+    ] {
+    set_entity_visibility(entity, false)
+  }
+  for entity in block_entities {
+    set_entity_visibility(entity, false)
+  }
+  for entity in target_entities {
+    set_entity_visibility(entity, false)
+  }
+  hide_aim_dots()
+}
+
+///|
+fn sync_error_visuals(message : String) -> Unit {
+  @sprite.sprites().set(
+    background_entity,
+    @sprite.Sprite::from_color_rect(
+      @sprite.ColorRect::new(
+        @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+        "rgb(29, 20, 24)",
+      ),
+      0,
+    ),
+  )
+  @transform.positions().set(background_entity, @math.Vec2D::zero())
+  set_entity_visibility(background_entity, true)
+  hide_all_level_visuals()
+
+  set_text_entity(
+    title_entity,
+    "ANGRY RABBITS",
+    @math.Vec2D(20.0, 20.0),
+    "32px \{ANGRYRABBITS_FONT_FAMILY}",
+    "rgb(255, 239, 222)",
+    220,
+  )
+  set_text_entity(
+    score_entity,
+    "LEVEL LOAD ERROR",
+    @math.Vec2D(20.0, 60.0),
+    "20px \{ANGRYRABBITS_FONT_FAMILY}",
+    "rgb(255, 132, 112)",
+    220,
+  )
+  set_text_entity(
+    status_entity,
+    wrap_text_for_ui(message, 56, 8),
+    @math.Vec2D(20.0, 98.0),
+    "16px \{ANGRYRABBITS_FONT_FAMILY}",
+    "rgb(246, 230, 220)",
+    220,
+  )
+  set_text_entity(
+    hint_entity,
+    "Press Enter or R to retry   ESC back",
+    @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
+    "16px \{ANGRYRABBITS_FONT_FAMILY}",
+    "rgb(205, 189, 176)",
+    220,
+  )
+}
+
+///|
 fn sync_static_visuals() -> Unit {
-  let anchor = slingshot_anchor()
-  let level = current_level.val
+  guard current_level.val is Some(level) else { return }
+  let anchor = level.slingshot_anchor
   let background = level.background_rect
   let ground = level.ground_rect
   let hill = level.hill_circle
@@ -256,6 +652,7 @@ fn sync_static_visuals() -> Unit {
 ///|
 fn sync_dynamic_visuals() -> Unit {
   let rabbit_color = match phase.val {
+    Error => "rgb(188, 188, 188)"
     Won => "rgb(250, 244, 230)"
     Lost => "rgb(188, 188, 188)"
     _ => "rgb(246, 244, 238)"
@@ -339,6 +736,8 @@ fn sync_dynamic_visuals() -> Unit {
 ///|
 fn status_text() -> String {
   match phase.val {
+    Error =>
+      "Level load failed. Fix the LDtk file and press Enter or R to retry."
     Ready => "Drag the rabbit backward with the mouse, then release."
     Dragging => "Release to launch. Rabbit speed scales with stretch."
     Flying => "Break every green target before you run out of rabbits."
@@ -355,6 +754,10 @@ fn score_text() -> String {
 
 ///|
 fn sync_ui() -> Unit {
+  if phase.val == Error {
+    sync_error_visuals(load_error_message.val)
+    return
+  }
   set_text_entity(
     title_entity,
     "ANGRY RABBITS",
@@ -397,21 +800,41 @@ fn sync_ui() -> Unit {
 
 ///|
 fn reset_level() -> Unit {
-  let level = load_current_level()
-  current_level.val = level
-  register_scene_entities()
-  register_level_entities(level)
   register_angryrabbits_font_once()
-  sync_static_visuals()
-  instantiate_level(level)
-  shots_remaining.val = level.max_shots
-  phase.val = Ready
-  rabbit_center.val = rabbit_spawn_point()
-  rabbit_velocity.val = @math.Vec2D::zero()
-  rabbit_visible.val = true
-  rabbit_flight_time.val = 0.0
-  sync_dynamic_visuals()
-  sync_ui()
+  match load_current_level() {
+    Err(message) => {
+      current_level.val = None
+      load_error_message.val = message
+      phase.val = Error
+      shots_remaining.val = 0
+      rabbit_center.val = @math.Vec2D::zero()
+      rabbit_velocity.val = @math.Vec2D::zero()
+      rabbit_visible.val = false
+      rabbit_flight_time.val = 0.0
+      rabbit_idle_time.val = 0.0
+      blocks.clear()
+      targets.clear()
+      clear_level_physics_entities()
+      register_scene_entities()
+      sync_error_visuals(message)
+    }
+    Ok(level) => {
+      current_level.val = Some(level)
+      load_error_message.val = ""
+      register_scene_entities()
+      register_level_entities(level)
+      sync_static_visuals()
+      instantiate_level(level)
+      configure_level_physics(level)
+      shots_remaining.val = level.max_shots
+      phase.val = Ready
+      rabbit_flight_time.val = 0.0
+      rabbit_idle_time.val = 0.0
+      sync_physics_snapshots()
+      sync_dynamic_visuals()
+      sync_ui()
+    }
+  }
 }
 
 ///|

@@ -1,102 +1,140 @@
 ///|
+/// Logical viewport width in world pixels.
 const VIEWPORT_WIDTH : Double = 640.0
 
 ///|
+/// Logical viewport height in world pixels.
 const VIEWPORT_HEIGHT : Double = 480.0
 
 ///|
+/// Target render/update frame rate.
 const FPS : UInt = 60
 
 ///|
+/// Pixel zoom factor from logical viewport to window size.
 const ZOOM : Double = 2.0
 
 ///|
-const SKY_COLOR : String = "rgb(183, 225, 255)"
-
-///|
-const GROUND_COLOR : String = "rgb(156, 198, 104)"
-
-///|
+/// Ground strip height from the bottom of the scene.
 const GROUND_HEIGHT : Double = 92.0
 
 ///|
+/// Derived top Y coordinate of the ground strip.
 const GROUND_Y : Double = VIEWPORT_HEIGHT - GROUND_HEIGHT
 
 ///|
 let current_level_path : Ref[String] = { val: DEFAULT_LEVEL_PATH }
 
 ///|
-let current_level : Ref[LevelDef] = { val: default_level_def() }
+let current_level : Ref[LevelDef?] = { val: None }
 
 ///|
 fn slingshot_anchor() -> @math.Vec2D {
-  current_level.val.slingshot_anchor
+  match current_level.val {
+    Some(level) => level.slingshot_anchor
+    None => @math.Vec2D::zero()
+  }
 }
 
 ///|
-fn rabbit_spawn_point() -> @math.Vec2D {
-  current_level.val.rabbit_spawn
-}
-
-///|
+/// Rabbit collision radius and rendered body size.
 const RABBIT_RADIUS : Double = 18.0
 
 ///|
-const TARGET_RADIUS : Double = 18.0
-
-///|
+/// Maximum slingshot stretch distance from the anchor.
 const MAX_DRAG_RADIUS : Double = 84.0
 
 ///|
+/// Minimum clearance between dragged rabbit and the ground.
 const DRAG_GROUND_CLEARANCE : Double = 12.0
 
 ///|
+/// Minimum stretch required before a release counts as a launch.
 const MIN_LAUNCH_STRETCH : Double = 12.0
 
 ///|
+/// Launch speed multiplier applied to slingshot stretch.
 const LAUNCH_SPEED_FACTOR : Double = 9.2
 
 ///|
+/// Downward gravity acceleration in pixels per second squared.
 const GRAVITY : Double = 980.0
 
 ///|
-const AIR_DRAG : Double = 0.997
-
-///|
+/// Friction coefficient for the static ground collider.
 const GROUND_FRICTION : Double = 0.90
 
 ///|
+/// Bounce factor for wooden blocks.
 const BLOCK_RESTITUTION : Double = 0.16
 
 ///|
+/// Bounce factor for the rabbit body.
 const RABBIT_RESTITUTION : Double = 0.28
 
 ///|
+/// Speed threshold below which the rabbit is considered almost stationary.
 const STOP_SPEED : Double = 62.0
 
 ///|
+/// Default number of rabbits available in a level.
 const MAX_SHOTS : Int = 5
 
 ///|
+/// Number of projected aim dots shown while dragging.
 const AIM_DOT_COUNT : Int = 10
 
 ///|
+/// Radius of each projected aim dot.
 const AIM_DOT_RADIUS : Double = 4.0
 
 ///|
+/// Time spacing between aim dots on the projected arc.
 const AIM_DOT_TIME_STEP : Double = 0.085
 
 ///|
-const BLOCK_HIT_TRANSFER : Double = 0.48
-
-///|
+/// Minimum rabbit impact speed required to pop a target directly.
 const TARGET_HIT_SPEED : Double = 165.0
 
 ///|
+/// Minimum block speed required to crush a target on contact.
 const BLOCK_TARGET_CRUSH_SPEED : Double = 150.0
 
 ///|
+/// Minimum rabbit impact speed required to break a wooden block.
+const BLOCK_BREAK_SPEED : Double = 220.0
+
+///|
+/// Physics world pixel-to-meter scale.
+const PHYSICS_PIXELS_PER_METER : Double = 100.0
+
+///|
+/// Maximum CCD substeps for fast-moving bodies.
+const PHYSICS_MAX_CCD_SUBSTEPS : Int = 4
+
+///|
+/// Linear damping applied to the rabbit while flying.
+const RABBIT_LINEAR_DAMPING : Double = 0.18
+
+///|
+/// Linear damping applied to wooden blocks.
+const BLOCK_LINEAR_DAMPING : Double = 0.22
+
+///|
+/// Linear damping applied to targets.
+const TARGET_LINEAR_DAMPING : Double = 0.30
+
+///|
+/// Minimum flight time before the rabbit is allowed to settle.
+const RABBIT_SETTLE_TIME : Double = 0.18
+
+///|
+/// Continuous low-speed time required before advancing to the next shot.
+const RABBIT_IDLE_TIME : Double = 0.35
+
+///|
 priv enum RoundPhase {
+  Error
   Ready
   Dragging
   Flying
@@ -119,7 +157,6 @@ priv struct TargetState {
   entity : @entity.Entity
   center : @math.Vec2D
   radius : Double
-  velocity : @math.Vec2D
   color : String
   alive : Bool
 }
@@ -134,7 +171,10 @@ let phase : Ref[RoundPhase] = { val: Ready }
 let shots_remaining : Ref[Int] = { val: MAX_SHOTS }
 
 ///|
-let rabbit_center : Ref[@math.Vec2D] = { val: rabbit_spawn_point() }
+let load_error_message : Ref[String] = { val: "" }
+
+///|
+let rabbit_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
 
 ///|
 let rabbit_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
@@ -144,6 +184,9 @@ let rabbit_visible : Ref[Bool] = { val: true }
 
 ///|
 let rabbit_flight_time : Ref[Double] = { val: 0.0 }
+
+///|
+let rabbit_idle_time : Ref[Double] = { val: 0.0 }
 
 ///|
 let blocks : Array[BlockState] = []
