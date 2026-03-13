@@ -11,7 +11,7 @@
 	"iid": "angryrabbits-project",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 300,
+	"nextUid": 302,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -48,6 +48,41 @@
 			"uid": 201,
 			"doc": null,
 			"uiColor": "#0099DB",
+			"gridSize": 4,
+			"guideGridWid": 0,
+			"guideGridHei": 0,
+			"displayOpacity": 1,
+			"inactiveOpacity": 0.45,
+			"hideInList": false,
+			"hideFieldsWhenInactive": false,
+			"canSelectWhenInactive": true,
+			"renderInWorldView": true,
+			"pxOffsetX": 0,
+			"pxOffsetY": 0,
+			"parallaxFactorX": 0,
+			"parallaxFactorY": 0,
+			"parallaxScaling": true,
+			"requiredTags": [],
+			"excludedTags": [],
+			"autoTilesKilledByOtherLayerUid": null,
+			"uiFilterTags": [],
+			"useAsyncRender": false,
+			"intGridValues": [],
+			"intGridValuesGroups": [],
+			"autoRuleGroups": [],
+			"autoSourceLayerDefUid": null,
+			"tilesetDefUid": null,
+			"tilePivotX": 0,
+			"tilePivotY": 0,
+			"biomeFieldUid": null
+		},
+		{
+			"__type": "Entities",
+			"identifier": "Decor",
+			"type": "Entities",
+			"uid": 202,
+			"doc": null,
+			"uiColor": "#7ACB7A",
 			"gridSize": 4,
 			"guideGridWid": 0,
 			"guideGridHei": 0,
@@ -659,8 +694,98 @@
 					"tilesetUid": null
 				}
 			]
+		},
+		{
+			"identifier": "SlingshotFrontStick",
+			"uid": 108,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 26,
+			"height": 94,
+			"resizableX": true,
+			"resizableY": true,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 0.3,
+			"lineOpacity": 0.65,
+			"hollow": false,
+			"color": "#FFB347",
+			"renderMode": "Rectangle",
+			"showName": true,
+			"tilesetId": null,
+			"tileRenderMode": "FitInside",
+			"tileRect": null,
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 0,
+			"limitScope": "PerWorld",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": []
+		},
+		{
+			"identifier": "SlingshotBackStick",
+			"uid": 109,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 26,
+			"height": 57,
+			"resizableX": true,
+			"resizableY": true,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 0.3,
+			"lineOpacity": 0.65,
+			"hollow": false,
+			"color": "#7AA2FF",
+			"renderMode": "Rectangle",
+			"showName": true,
+			"tilesetId": null,
+			"tileRenderMode": "FitInside",
+			"tileRect": null,
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 0,
+			"limitScope": "PerWorld",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": []
 		}
-	], "tilesets": [], "enums": [], "externalEnums": [], "levelFields": [
+	], "tilesets": [
+		{
+			"__cWid": 0,
+			"__cHei": 0,
+			"identifier": "Tileset",
+			"uid": 301,
+			"relPath": null,
+			"embedAtlas": null,
+			"pxWid": 0,
+			"pxHei": 0,
+			"tileGridSize": 16,
+			"spacing": 0,
+			"padding": 0,
+			"tags": [],
+			"tagsSourceEnumUid": null,
+			"enumTags": [],
+			"customData": [],
+			"savedSelections": [],
+			"cachedPixelData": null
+		}
+	], "enums": [], "externalEnums": [], "levelFields": [
 		{
 			"identifier": "max_shots",
 			"doc": null,
@@ -762,6 +887,38 @@
 							"__worldY": 300
 						},
 						{
+							"__identifier": "SlingshotFrontStick",
+							"__grid": [38,72],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#FFB347",
+							"iid": "entity-slingshot-front-stick",
+							"width": 20,
+							"height": 100,
+							"defUid": 108,
+							"px": [152,288],
+							"fieldInstances": [],
+							"__worldX": 152,
+							"__worldY": 288
+						},
+						{
+							"__identifier": "SlingshotBackStick",
+							"__grid": [37,72],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#7AA2FF",
+							"iid": "entity-slingshot-back-stick",
+							"width": 28,
+							"height": 60,
+							"defUid": 109,
+							"px": [148,288],
+							"fieldInstances": [],
+							"__worldX": 148,
+							"__worldY": 288
+						},
+						{
 							"__identifier": "RabbitSpawn",
 							"__grid": [35,75],
 							"__pivot": [0,0],
@@ -776,72 +933,6 @@
 							"fieldInstances": [],
 							"__worldX": 142,
 							"__worldY": 300
-						},
-						{
-							"__identifier": "BackgroundRect",
-							"__grid": [0,0],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#B7E1FF",
-							"iid": "entity-background",
-							"width": 640,
-							"height": 480,
-							"defUid": 103,
-							"px": [0,0],
-							"fieldInstances": [
-								{ "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)", "__tile": null, "defUid": 1001, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["rgb(183, 225, 255)"]
-								}] },
-								{ "__identifier": "zindex", "__type": "Int", "__value": 0, "__tile": null, "defUid": 1002, "realEditorValues": [{ "id": "V_Int", "params": [0] }] }
-							],
-							"__worldX": 0,
-							"__worldY": 0
-						},
-						{
-							"__identifier": "HillCircle",
-							"__grid": [125,67],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#9AD384",
-							"iid": "entity-hill",
-							"width": 240,
-							"height": 240,
-							"defUid": 105,
-							"px": [500,268],
-							"fieldInstances": [
-								{ "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)", "__tile": null, "defUid": 1005, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["rgb(154, 211, 132)"]
-								}] },
-								{ "__identifier": "zindex", "__type": "Int", "__value": 1, "__tile": null, "defUid": 1006, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }
-							],
-							"__worldX": 500,
-							"__worldY": 268
-						},
-						{
-							"__identifier": "GroundRect",
-							"__grid": [0,97],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#9CC668",
-							"iid": "entity-ground",
-							"width": 640,
-							"height": 92,
-							"defUid": 104,
-							"px": [0,388],
-							"fieldInstances": [
-								{ "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)", "__tile": null, "defUid": 1003, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["rgb(156, 198, 104)"]
-								}] },
-								{ "__identifier": "zindex", "__type": "Int", "__value": 2, "__tile": null, "defUid": 1004, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
-							],
-							"__worldX": 0,
-							"__worldY": 388
 						},
 						{
 							"__identifier": "Block",
@@ -1003,6 +1094,98 @@
 							],
 							"__worldX": 550,
 							"__worldY": 352
+						}
+					]
+				},
+				{
+					"__identifier": "Decor",
+					"__type": "Entities",
+					"__cWid": 160,
+					"__cHei": 120,
+					"__gridSize": 4,
+					"__opacity": 1,
+					"__pxTotalOffsetX": 0,
+					"__pxTotalOffsetY": 0,
+					"__tilesetDefUid": null,
+					"__tilesetRelPath": null,
+					"iid": "layer-decor",
+					"levelId": 1,
+					"layerDefUid": 202,
+					"pxOffsetX": 0,
+					"pxOffsetY": 0,
+					"visible": true,
+					"optionalRules": [],
+					"intGridCsv": [],
+					"autoLayerTiles": [],
+					"seed": 0,
+					"overrideTilesetUid": null,
+					"gridTiles": [],
+					"entityInstances": [
+						{
+							"__identifier": "BackgroundRect",
+							"__grid": [0,0],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#B7E1FF",
+							"iid": "entity-background",
+							"width": 640,
+							"height": 480,
+							"defUid": 103,
+							"px": [0,0],
+							"fieldInstances": [
+								{ "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)", "__tile": null, "defUid": 1001, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["rgb(183, 225, 255)"]
+								}] },
+								{ "__identifier": "zindex", "__type": "Int", "__value": 0, "__tile": null, "defUid": 1002, "realEditorValues": [{ "id": "V_Int", "params": [0] }] }
+							],
+							"__worldX": 0,
+							"__worldY": 0
+						},
+						{
+							"__identifier": "HillCircle",
+							"__grid": [125,67],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#9AD384",
+							"iid": "entity-hill",
+							"width": 240,
+							"height": 240,
+							"defUid": 105,
+							"px": [500,268],
+							"fieldInstances": [
+								{ "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)", "__tile": null, "defUid": 1005, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["rgb(154, 211, 132)"]
+								}] },
+								{ "__identifier": "zindex", "__type": "Int", "__value": 1, "__tile": null, "defUid": 1006, "realEditorValues": [{ "id": "V_Int", "params": [1] }] }
+							],
+							"__worldX": 500,
+							"__worldY": 268
+						},
+						{
+							"__identifier": "GroundRect",
+							"__grid": [0,97],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": null,
+							"__smartColor": "#9CC668",
+							"iid": "entity-ground",
+							"width": 640,
+							"height": 92,
+							"defUid": 104,
+							"px": [0,388],
+							"fieldInstances": [
+								{ "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)", "__tile": null, "defUid": 1003, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["rgb(156, 198, 104)"]
+								}] },
+								{ "__identifier": "zindex", "__type": "Int", "__value": 2, "__tile": null, "defUid": 1004, "realEditorValues": [{ "id": "V_Int", "params": [2] }] }
+							],
+							"__worldX": 0,
+							"__worldY": 388
 						}
 					]
 				}

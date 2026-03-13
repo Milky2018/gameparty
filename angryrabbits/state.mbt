@@ -93,6 +93,62 @@ const TARGET_SPRITE_SRC_WIDTH : Double = 50.0
 const TARGET_SPRITE_SRC_HEIGHT : Double = 48.0
 
 ///|
+/// Slingshot sprite source top-left X in `sprites.png`.
+const SLINGSHOT_SPRITE_SRC_X : Double = 1038.0
+
+///|
+/// Slingshot sprite source top-left Y in `sprites.png`.
+const SLINGSHOT_SPRITE_SRC_Y : Double = 318.0
+
+///|
+/// Slingshot sprite source width in `sprites.png`.
+const SLINGSHOT_SPRITE_SRC_WIDTH : Double = 60.0
+
+///|
+/// Slingshot sprite source height in `sprites.png`.
+const SLINGSHOT_SPRITE_SRC_HEIGHT : Double = 338.0
+
+///|
+/// Front slingshot layer source Y offset from the slingshot source origin.
+const SLINGSHOT_FRONT_SRC_OFFSET_Y : Double = 0.0
+
+///|
+/// Front slingshot layer source height from the slingshot source origin.
+const SLINGSHOT_FRONT_SRC_HEIGHT : Double = 210.0
+
+///|
+/// Back slingshot layer source Y offset from the slingshot source origin.
+const SLINGSHOT_BACK_SRC_OFFSET_Y : Double = 212.0
+
+///|
+/// Back slingshot layer source height from the slingshot source origin.
+const SLINGSHOT_BACK_SRC_HEIGHT : Double = 126.0
+
+///|
+/// Additional world-space X offset applied to front slingshot layer.
+const SLINGSHOT_FRONT_OFFSET_X : Double = 0.0
+
+///|
+/// Additional world-space Y offset applied to front slingshot layer.
+const SLINGSHOT_FRONT_OFFSET_Y : Double = 0.0
+
+///|
+/// Additional world-space X offset applied to back slingshot layer.
+const SLINGSHOT_BACK_OFFSET_X : Double = 0.0
+
+///|
+/// Additional world-space Y offset applied to back slingshot layer.
+const SLINGSHOT_BACK_OFFSET_Y : Double = 0.0
+
+///|
+/// Slingshot rendered width in world pixels.
+const SLINGSHOT_WORLD_WIDTH : Double = 26.0
+
+///|
+/// Slingshot rendered height in world pixels.
+const SLINGSHOT_WORLD_HEIGHT : Double = 152.0
+
+///|
 /// Maximum slingshot stretch distance from the anchor.
 const MAX_DRAG_RADIUS : Double = 84.0
 
@@ -173,8 +229,24 @@ const RABBIT_LINEAR_DAMPING : Double = 0.18
 const BLOCK_LINEAR_DAMPING : Double = 0.22
 
 ///|
+/// Angular damping for wooden blocks. Lower values make stacks topple easier.
+const BLOCK_ANGULAR_DAMPING : Double = 0.28
+
+///|
+/// Block surface friction. Lower values make blocks slide/tilt more easily.
+const BLOCK_FRICTION : Double = 0.52
+
+///|
 /// Linear damping applied to targets.
 const TARGET_LINEAR_DAMPING : Double = 0.30
+
+///|
+/// Angular damping for targets.
+const TARGET_ANGULAR_DAMPING : Double = 0.40
+
+///|
+/// Target surface friction.
+const TARGET_FRICTION : Double = 0.42
 
 ///|
 /// Minimum flight time before the rabbit is allowed to settle.

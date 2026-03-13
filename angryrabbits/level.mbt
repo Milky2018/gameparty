@@ -2,6 +2,12 @@
 const DEFAULT_LEVEL_PATH : String = "angryrabbits/assets/levels/level_01.ldtk"
 
 ///|
+const LDTK_ENTITIES_LAYER : String = "Entities"
+
+///|
+const LDTK_DECOR_LAYER : String = "Decor"
+
+///|
 priv struct DecorRectDef {
   position : @math.Vec2D
   size : @math.Vec2D
@@ -32,6 +38,8 @@ priv struct TargetDef {
 ///|
 priv struct LevelDef {
   slingshot_anchor : @math.Vec2D
+  slingshot_front_stick : @math.Vec2D
+  slingshot_back_stick : @math.Vec2D
   rabbit_spawn : @math.Vec2D
   max_shots : Int
   background_rect : DecorRectDef
@@ -88,6 +96,10 @@ fn level_def_from_ldtk_project(
   }
   let slingshot_anchor : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
   let has_slingshot_anchor : Ref[Bool] = { val: false }
+  let slingshot_front_stick : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let has_slingshot_front_stick : Ref[Bool] = { val: false }
+  let slingshot_back_stick : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let has_slingshot_back_stick : Ref[Bool] = { val: false }
   let rabbit_spawn : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
   let has_rabbit_spawn : Ref[Bool] = { val: false }
   let background_rect : Ref[DecorRectDef] = {
@@ -123,7 +135,7 @@ fn level_def_from_ldtk_project(
   let targets : Array[TargetDef] = []
   with_scoped_ldtk_entity_registrations_for_level(level.iid, fn() {
     @ldtk.add_ldtk_entity_registration_for_layer(
-      "Entities",
+      LDTK_ENTITIES_LAYER,
       "SlingshotAnchor",
       fn(event) {
         if event.layer.visible {
@@ -132,63 +144,91 @@ fn level_def_from_ldtk_project(
         }
       },
     )
-    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "RabbitSpawn", fn(
-      event,
-    ) {
-      if event.layer.visible {
-        rabbit_spawn.val = ldtk_entity_anchor(event.instance)
-        has_rabbit_spawn.val = true
-      }
-    })
-    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "BackgroundRect", fn(
-      event,
-    ) {
-      if event.layer.visible {
-        match decor_rect_def_from_ldtk_entity(event.instance, path) {
-          Ok(rect) => {
-            background_rect.val = rect
-            has_background_rect.val = true
-          }
-          Err(message) =>
-            if load_failure.val is None {
-              load_failure.val = Some(message)
-            }
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_ENTITIES_LAYER,
+      "SlingshotFrontStick",
+      fn(event) {
+        if event.layer.visible {
+          slingshot_front_stick.val = ldtk_entity_anchor(event.instance)
+          has_slingshot_front_stick.val = true
         }
-      }
-    })
-    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "GroundRect", fn(
-      event,
-    ) {
-      if event.layer.visible {
-        match decor_rect_def_from_ldtk_entity(event.instance, path) {
-          Ok(rect) => {
-            ground_rect.val = rect
-            has_ground_rect.val = true
-          }
-          Err(message) =>
-            if load_failure.val is None {
-              load_failure.val = Some(message)
-            }
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_ENTITIES_LAYER,
+      "SlingshotBackStick",
+      fn(event) {
+        if event.layer.visible {
+          slingshot_back_stick.val = ldtk_entity_anchor(event.instance)
+          has_slingshot_back_stick.val = true
         }
-      }
-    })
-    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "HillCircle", fn(
-      event,
-    ) {
-      if event.layer.visible {
-        match decor_circle_def_from_ldtk_entity(event.instance, path) {
-          Ok(circle) => {
-            hill_circle.val = circle
-            has_hill_circle.val = true
-          }
-          Err(message) =>
-            if load_failure.val is None {
-              load_failure.val = Some(message)
-            }
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_ENTITIES_LAYER,
+      "RabbitSpawn",
+      fn(event) {
+        if event.layer.visible {
+          rabbit_spawn.val = ldtk_entity_anchor(event.instance)
+          has_rabbit_spawn.val = true
         }
-      }
-    })
-    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "Block", fn(
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_DECOR_LAYER,
+      "BackgroundRect",
+      fn(event) {
+        if event.layer.visible {
+          match decor_rect_def_from_ldtk_entity(event.instance, path) {
+            Ok(rect) => {
+              background_rect.val = rect
+              has_background_rect.val = true
+            }
+            Err(message) =>
+              if load_failure.val is None {
+                load_failure.val = Some(message)
+              }
+          }
+        }
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_DECOR_LAYER,
+      "GroundRect",
+      fn(event) {
+        if event.layer.visible {
+          match decor_rect_def_from_ldtk_entity(event.instance, path) {
+            Ok(rect) => {
+              ground_rect.val = rect
+              has_ground_rect.val = true
+            }
+            Err(message) =>
+              if load_failure.val is None {
+                load_failure.val = Some(message)
+              }
+          }
+        }
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_DECOR_LAYER,
+      "HillCircle",
+      fn(event) {
+        if event.layer.visible {
+          match decor_circle_def_from_ldtk_entity(event.instance, path) {
+            Ok(circle) => {
+              hill_circle.val = circle
+              has_hill_circle.val = true
+            }
+            Err(message) =>
+              if load_failure.val is None {
+                load_failure.val = Some(message)
+              }
+          }
+        }
+      },
+    )
+    @ldtk.add_ldtk_entity_registration_for_layer(LDTK_ENTITIES_LAYER, "Block", fn(
       event,
     ) {
       if event.layer.visible {
@@ -201,19 +241,21 @@ fn level_def_from_ldtk_project(
         }
       }
     })
-    @ldtk.add_ldtk_entity_registration_for_layer("Entities", "Target", fn(
-      event,
-    ) {
-      if event.layer.visible {
-        match target_def_from_ldtk_entity(event.instance, path) {
-          Ok(target) => targets.push(target)
-          Err(message) =>
-            if load_failure.val is None {
-              load_failure.val = Some(message)
-            }
+    @ldtk.add_ldtk_entity_registration_for_layer(
+      LDTK_ENTITIES_LAYER,
+      "Target",
+      fn(event) {
+        if event.layer.visible {
+          match target_def_from_ldtk_entity(event.instance, path) {
+            Ok(target) => targets.push(target)
+            Err(message) =>
+              if load_failure.val is None {
+                load_failure.val = Some(message)
+              }
+          }
         }
-      }
-    })
+      },
+    )
     let world_entity = @ldtk.spawn_ldtk_world(project)
     @ldtk.despawn_ldtk_tree(world_entity)
   })
@@ -221,6 +263,12 @@ fn level_def_from_ldtk_project(
   let missing : Array[String] = []
   if !has_slingshot_anchor.val {
     missing.push("SlingshotAnchor")
+  }
+  if !has_slingshot_front_stick.val {
+    missing.push("SlingshotFrontStick")
+  }
+  if !has_slingshot_back_stick.val {
+    missing.push("SlingshotBackStick")
   }
   if !has_rabbit_spawn.val {
     missing.push("RabbitSpawn")
@@ -243,6 +291,8 @@ fn level_def_from_ldtk_project(
 
   Ok({
     slingshot_anchor: slingshot_anchor.val,
+    slingshot_front_stick: slingshot_front_stick.val,
+    slingshot_back_stick: slingshot_back_stick.val,
     rabbit_spawn: rabbit_spawn.val,
     max_shots,
     background_rect: background_rect.val,
@@ -266,7 +316,7 @@ fn first_ldtk_level(project : @ldtk.LdtkProject) -> @ldtk.LdtkLevel? {
 ///|
 fn has_visible_entities_layer(level : @ldtk.LdtkLevel) -> Bool {
   for layer in level.layer_instances {
-    if layer.identifier == "Entities" && layer.visible {
+    if layer.identifier == LDTK_ENTITIES_LAYER && layer.visible {
       return true
     }
   }

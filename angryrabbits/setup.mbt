@@ -117,9 +117,9 @@ fn block_body() -> @physics2d.RigidBody {
     ..@physics2d.RigidBody::dynamic(),
     gravity_scale: 1.0,
     linear_damping: BLOCK_LINEAR_DAMPING,
-    angular_damping: 1.0,
+    angular_damping: BLOCK_ANGULAR_DAMPING,
     ccd_enabled: false,
-    lock_rotation: true,
+    lock_rotation: false,
   }
 }
 
@@ -129,9 +129,9 @@ fn target_body() -> @physics2d.RigidBody {
     ..@physics2d.RigidBody::dynamic(),
     gravity_scale: 1.0,
     linear_damping: TARGET_LINEAR_DAMPING,
-    angular_damping: 1.0,
+    angular_damping: TARGET_ANGULAR_DAMPING,
     ccd_enabled: false,
-    lock_rotation: true,
+    lock_rotation: false,
   }
 }
 
@@ -257,7 +257,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
       entity,
       @physics2d.Collider::with_material(
         physics_filter(),
-        friction=0.78,
+        friction=BLOCK_FRICTION,
         restitution=BLOCK_RESTITUTION,
       ),
     )
@@ -281,7 +281,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
       entity,
       @physics2d.Collider::with_material(
         physics_filter(),
-        friction=0.52,
+        friction=TARGET_FRICTION,
         restitution=0.18,
       ),
     )
@@ -597,7 +597,6 @@ fn sync_error_visuals(message : String) -> Unit {
 ///|
 fn sync_static_visuals() -> Unit {
   guard current_level.val is Some(level) else { return }
-  let anchor = level.slingshot_anchor
   let background = level.background_rect
   let ground = level.ground_rect
   let hill = level.hill_circle
@@ -631,41 +630,50 @@ fn sync_static_visuals() -> Unit {
   )
   @transform.positions().set(ground_entity, ground.position)
 
+  let slingshot_scale_y = SLINGSHOT_WORLD_HEIGHT / SLINGSHOT_SPRITE_SRC_HEIGHT
+  let slingshot_front_world_height = SLINGSHOT_FRONT_SRC_HEIGHT *
+    slingshot_scale_y
+  let slingshot_back_world_height = SLINGSHOT_BACK_SRC_HEIGHT *
+    slingshot_scale_y
+
   @sprite.sprites().set(
     slingshot_left_entity,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(16.0, 96.0), "rgb(122, 76, 39)"),
+    sprite_from_atlas(
+      @math.Vec2D(
+        SLINGSHOT_SPRITE_SRC_X,
+        SLINGSHOT_SPRITE_SRC_Y + SLINGSHOT_BACK_SRC_OFFSET_Y,
+      ),
+      @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_BACK_SRC_HEIGHT),
+      @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_back_world_height),
       30,
     ),
   )
   @transform.positions().set(
     slingshot_left_entity,
-    anchor + @math.Vec2D(-26.0, -8.0),
+    level.slingshot_back_stick +
+    @math.Vec2D(SLINGSHOT_BACK_OFFSET_X, SLINGSHOT_BACK_OFFSET_Y),
   )
 
   @sprite.sprites().set(
     slingshot_right_entity,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(16.0, 112.0), "rgb(101, 61, 28)"),
-      31,
+    sprite_from_atlas(
+      @math.Vec2D(
+        SLINGSHOT_SPRITE_SRC_X,
+        SLINGSHOT_SPRITE_SRC_Y + SLINGSHOT_FRONT_SRC_OFFSET_Y,
+      ),
+      @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_FRONT_SRC_HEIGHT),
+      @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_front_world_height),
+      72,
     ),
   )
   @transform.positions().set(
     slingshot_right_entity,
-    anchor + @math.Vec2D(6.0, -24.0),
+    level.slingshot_front_stick +
+    @math.Vec2D(SLINGSHOT_FRONT_OFFSET_X, SLINGSHOT_FRONT_OFFSET_Y),
   )
-
-  @sprite.sprites().set(
-    slingshot_base_entity,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(54.0, 18.0), "rgb(133, 86, 45)"),
-      29,
-    ),
-  )
-  @transform.positions().set(
-    slingshot_base_entity,
-    anchor + @math.Vec2D(-38.0, 70.0),
-  )
+  set_entity_visibility(slingshot_right_entity, true)
+  set_entity_visibility(slingshot_left_entity, true)
+  set_entity_visibility(slingshot_base_entity, false)
 }
 
 ///|

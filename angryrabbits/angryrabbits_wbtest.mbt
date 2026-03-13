@@ -21,7 +21,19 @@ test "load ldtk level from asset bytes" {
     #|  "externalLevels": false,
     #|  "defs": {
     #|    "layers": [
-    #|      { "identifier": "Entities", "uid": 201, "type": "Entities", "intGridValues": [] }
+    #|      {
+    #|        "identifier": "Entities",
+    #|        "uid": 201,
+    #|        "type": "Entities",
+    #|        "intGridValues": []
+    #|      },
+    #|      {
+    #|        "identifier": "Decor",
+    #|        "uid": 202,
+    #|        "type": "Entities",
+    #|        "intGridValues": [],
+    #|        "uiColor": "#7ACB7A"
+    #|      }
     #|    ],
     #|    "entities": [],
     #|    "enums": [],
@@ -39,9 +51,131 @@ test "load ldtk level from asset bytes" {
     #|      "pxHei": 480,
     #|      "__neighbours": [],
     #|      "fieldInstances": [
-    #|        { "__identifier": "max_shots", "__type": "Int", "__value": 7 }
+    #|        {
+    #|          "__identifier": "max_shots",
+    #|          "__type": "Int",
+    #|          "__value": 7
+    #|        }
     #|      ],
     #|      "layerInstances": [
+    #|        {
+    #|          "iid": "layer-decor",
+    #|          "__identifier": "Decor",
+    #|          "__type": "Entities",
+    #|          "levelId": 1,
+    #|          "layerDefUid": 202,
+    #|          "__cWid": 160,
+    #|          "__cHei": 120,
+    #|          "__gridSize": 4,
+    #|          "__opacity": 1,
+    #|          "visible": true,
+    #|          "optionalRules": [],
+    #|          "__pxTotalOffsetX": 0,
+    #|          "__pxTotalOffsetY": 0,
+    #|          "intGridCsv": [],
+    #|          "autoLayerTiles": [],
+    #|          "seed": 0,
+    #|          "overrideTilesetUid": null,
+    #|          "gridTiles": [],
+    #|          "entityInstances": [
+    #|            {
+    #|              "iid": "background",
+    #|              "__identifier": "BackgroundRect",
+    #|              "defUid": 103,
+    #|              "width": 640,
+    #|              "height": 480,
+    #|              "px": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(183, 225, 255)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 0
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "ground",
+    #|              "__identifier": "GroundRect",
+    #|              "defUid": 104,
+    #|              "width": 640,
+    #|              "height": 92,
+    #|              "px": [
+    #|                0,
+    #|                388
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                97
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(156, 198, 104)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 2
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "hill",
+    #|              "__identifier": "HillCircle",
+    #|              "defUid": 105,
+    #|              "width": 200,
+    #|              "height": 200,
+    #|              "px": [
+    #|                440,
+    #|                188
+    #|              ],
+    #|              "__grid": [
+    #|                110,
+    #|                47
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(154, 211, 132)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 1
+    #|                }
+    #|              ]
+    #|            }
+    #|          ]
+    #|        },
     #|        {
     #|          "iid": "layer-entities",
     #|          "__identifier": "Entities",
@@ -62,27 +196,149 @@ test "load ldtk level from asset bytes" {
     #|          "overrideTilesetUid": null,
     #|          "gridTiles": [],
     #|          "entityInstances": [
-    #|            { "iid": "slingshot", "__identifier": "SlingshotAnchor", "defUid": 101, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "rabbit", "__identifier": "RabbitSpawn", "defUid": 102, "width": 0, "height": 0, "px": [140, 280], "__grid": [35, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "background", "__identifier": "BackgroundRect", "defUid": 103, "width": 640, "height": 480, "px": [0, 0], "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 0 }
-    #|            ] },
-    #|            { "iid": "ground", "__identifier": "GroundRect", "defUid": 104, "width": 640, "height": 92, "px": [0, 388], "__grid": [0, 97], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 2 }
-    #|            ] },
-    #|            { "iid": "hill", "__identifier": "HillCircle", "defUid": 105, "width": 200, "height": 200, "px": [440, 188], "__grid": [110, 47], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 1 }
-    #|            ] },
-    #|            { "iid": "block-1", "__identifier": "Block", "defUid": 106, "width": 32, "height": 64, "px": [400, 324], "__grid": [100, 81], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(191,132,78)" }
-    #|            ] },
-    #|            { "iid": "target-1", "__identifier": "Target", "defUid": 107, "width": 40, "height": 40, "px": [500, 348], "__grid": [125, 87], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(112, 209, 115)" },
-    #|              { "__identifier": "radius", "__type": "Float", "__value": 20 }
-    #|            ] }
+    #|            {
+    #|              "iid": "slingshot",
+    #|              "__identifier": "SlingshotAnchor",
+    #|              "defUid": 101,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "rabbit",
+    #|              "__identifier": "RabbitSpawn",
+    #|              "defUid": 102,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                140,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                35,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-front",
+    #|              "__identifier": "SlingshotFrontStick",
+    #|              "defUid": 108,
+    #|              "width": 26,
+    #|              "height": 94,
+    #|              "px": [
+    #|                127,
+    #|                197
+    #|              ],
+    #|              "__grid": [
+    #|                31,
+    #|                49
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-back",
+    #|              "__identifier": "SlingshotBackStick",
+    #|              "defUid": 109,
+    #|              "width": 26,
+    #|              "height": 57,
+    #|              "px": [
+    #|                127,
+    #|                293
+    #|              ],
+    #|              "__grid": [
+    #|                31,
+    #|                73
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "block-1",
+    #|              "__identifier": "Block",
+    #|              "defUid": 106,
+    #|              "width": 32,
+    #|              "height": 64,
+    #|              "px": [
+    #|                400,
+    #|                324
+    #|              ],
+    #|              "__grid": [
+    #|                100,
+    #|                81
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(191,132,78)"
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "target-1",
+    #|              "__identifier": "Target",
+    #|              "defUid": 107,
+    #|              "width": 40,
+    #|              "height": 40,
+    #|              "px": [
+    #|                500,
+    #|                348
+    #|              ],
+    #|              "__grid": [
+    #|                125,
+    #|                87
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(112, 209, 115)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "radius",
+    #|                  "__type": "Float",
+    #|                  "__value": 20
+    #|                }
+    #|              ]
+    #|            }
     #|          ]
     #|        }
     #|      ]
@@ -107,6 +363,10 @@ test "load ldtk level from asset bytes" {
     assert_eq(level.hill_circle.radius, 100.0)
     assert_eq(level.slingshot_anchor[X], 120.0)
     assert_eq(level.slingshot_anchor[Y], 280.0)
+    assert_eq(level.slingshot_front_stick[X], 127.0)
+    assert_eq(level.slingshot_front_stick[Y], 197.0)
+    assert_eq(level.slingshot_back_stick[X], 127.0)
+    assert_eq(level.slingshot_back_stick[Y], 293.0)
     assert_eq(level.rabbit_spawn[X], 140.0)
     assert_eq(level.rabbit_spawn[Y], 280.0)
     assert_eq(level.blocks[0].center[X], 416.0)
@@ -142,7 +402,19 @@ test "missing block color field still loads level" {
     #|  "externalLevels": false,
     #|  "defs": {
     #|    "layers": [
-    #|      { "identifier": "Entities", "uid": 201, "type": "Entities", "intGridValues": [] }
+    #|      {
+    #|        "identifier": "Entities",
+    #|        "uid": 201,
+    #|        "type": "Entities",
+    #|        "intGridValues": []
+    #|      },
+    #|      {
+    #|        "identifier": "Decor",
+    #|        "uid": 202,
+    #|        "type": "Entities",
+    #|        "intGridValues": [],
+    #|        "uiColor": "#7ACB7A"
+    #|      }
     #|    ],
     #|    "entities": [],
     #|    "enums": [],
@@ -160,9 +432,131 @@ test "missing block color field still loads level" {
     #|      "pxHei": 480,
     #|      "__neighbours": [],
     #|      "fieldInstances": [
-    #|        { "__identifier": "max_shots", "__type": "Int", "__value": 7 }
+    #|        {
+    #|          "__identifier": "max_shots",
+    #|          "__type": "Int",
+    #|          "__value": 7
+    #|        }
     #|      ],
     #|      "layerInstances": [
+    #|        {
+    #|          "iid": "layer-decor",
+    #|          "__identifier": "Decor",
+    #|          "__type": "Entities",
+    #|          "levelId": 1,
+    #|          "layerDefUid": 202,
+    #|          "__cWid": 160,
+    #|          "__cHei": 120,
+    #|          "__gridSize": 4,
+    #|          "__opacity": 1,
+    #|          "visible": true,
+    #|          "optionalRules": [],
+    #|          "__pxTotalOffsetX": 0,
+    #|          "__pxTotalOffsetY": 0,
+    #|          "intGridCsv": [],
+    #|          "autoLayerTiles": [],
+    #|          "seed": 0,
+    #|          "overrideTilesetUid": null,
+    #|          "gridTiles": [],
+    #|          "entityInstances": [
+    #|            {
+    #|              "iid": "background",
+    #|              "__identifier": "BackgroundRect",
+    #|              "defUid": 103,
+    #|              "width": 640,
+    #|              "height": 480,
+    #|              "px": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(183, 225, 255)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 0
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "ground",
+    #|              "__identifier": "GroundRect",
+    #|              "defUid": 104,
+    #|              "width": 640,
+    #|              "height": 92,
+    #|              "px": [
+    #|                0,
+    #|                388
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                97
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(156, 198, 104)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 2
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "hill",
+    #|              "__identifier": "HillCircle",
+    #|              "defUid": 105,
+    #|              "width": 200,
+    #|              "height": 200,
+    #|              "px": [
+    #|                440,
+    #|                188
+    #|              ],
+    #|              "__grid": [
+    #|                110,
+    #|                47
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(154, 211, 132)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 1
+    #|                }
+    #|              ]
+    #|            }
+    #|          ]
+    #|        },
     #|        {
     #|          "iid": "layer-entities",
     #|          "__identifier": "Entities",
@@ -183,21 +577,111 @@ test "missing block color field still loads level" {
     #|          "overrideTilesetUid": null,
     #|          "gridTiles": [],
     #|          "entityInstances": [
-    #|            { "iid": "slingshot", "__identifier": "SlingshotAnchor", "defUid": 101, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "rabbit", "__identifier": "RabbitSpawn", "defUid": 102, "width": 0, "height": 0, "px": [140, 280], "__grid": [35, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "background", "__identifier": "BackgroundRect", "defUid": 103, "width": 640, "height": 480, "px": [0, 0], "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 0 }
-    #|            ] },
-    #|            { "iid": "ground", "__identifier": "GroundRect", "defUid": 104, "width": 640, "height": 92, "px": [0, 388], "__grid": [0, 97], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 2 }
-    #|            ] },
-    #|            { "iid": "hill", "__identifier": "HillCircle", "defUid": 105, "width": 200, "height": 200, "px": [440, 188], "__grid": [110, 47], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 1 }
-    #|            ] },
-    #|            { "iid": "block-1", "__identifier": "Block", "defUid": 106, "width": 32, "height": 64, "px": [400, 324], "__grid": [100, 81], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] }
+    #|            {
+    #|              "iid": "slingshot",
+    #|              "__identifier": "SlingshotAnchor",
+    #|              "defUid": 101,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "rabbit",
+    #|              "__identifier": "RabbitSpawn",
+    #|              "defUid": 102,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                140,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                35,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-front",
+    #|              "__identifier": "SlingshotFrontStick",
+    #|              "defUid": 108,
+    #|              "width": 26,
+    #|              "height": 94,
+    #|              "px": [
+    #|                127,
+    #|                197
+    #|              ],
+    #|              "__grid": [
+    #|                31,
+    #|                49
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-back",
+    #|              "__identifier": "SlingshotBackStick",
+    #|              "defUid": 109,
+    #|              "width": 26,
+    #|              "height": 57,
+    #|              "px": [
+    #|                127,
+    #|                293
+    #|              ],
+    #|              "__grid": [
+    #|                31,
+    #|                73
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "block-1",
+    #|              "__identifier": "Block",
+    #|              "defUid": 106,
+    #|              "width": 32,
+    #|              "height": 64,
+    #|              "px": [
+    #|                400,
+    #|                324
+    #|              ],
+    #|              "__grid": [
+    #|                100,
+    #|                81
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            }
     #|          ]
     #|        }
     #|      ]
@@ -239,7 +723,19 @@ test "launch_rabbit preserves horizontal velocity through physics step" {
     #|  "externalLevels": false,
     #|  "defs": {
     #|    "layers": [
-    #|      { "identifier": "Entities", "uid": 201, "type": "Entities", "intGridValues": [] }
+    #|      {
+    #|        "identifier": "Entities",
+    #|        "uid": 201,
+    #|        "type": "Entities",
+    #|        "intGridValues": []
+    #|      },
+    #|      {
+    #|        "identifier": "Decor",
+    #|        "uid": 202,
+    #|        "type": "Entities",
+    #|        "intGridValues": [],
+    #|        "uiColor": "#7ACB7A"
+    #|      }
     #|    ],
     #|    "entities": [],
     #|    "enums": [],
@@ -257,9 +753,131 @@ test "launch_rabbit preserves horizontal velocity through physics step" {
     #|      "pxHei": 480,
     #|      "__neighbours": [],
     #|      "fieldInstances": [
-    #|        { "__identifier": "max_shots", "__type": "Int", "__value": 5 }
+    #|        {
+    #|          "__identifier": "max_shots",
+    #|          "__type": "Int",
+    #|          "__value": 5
+    #|        }
     #|      ],
     #|      "layerInstances": [
+    #|        {
+    #|          "iid": "layer-decor",
+    #|          "__identifier": "Decor",
+    #|          "__type": "Entities",
+    #|          "levelId": 1,
+    #|          "layerDefUid": 202,
+    #|          "__cWid": 160,
+    #|          "__cHei": 120,
+    #|          "__gridSize": 4,
+    #|          "__opacity": 1,
+    #|          "visible": true,
+    #|          "optionalRules": [],
+    #|          "__pxTotalOffsetX": 0,
+    #|          "__pxTotalOffsetY": 0,
+    #|          "intGridCsv": [],
+    #|          "autoLayerTiles": [],
+    #|          "seed": 0,
+    #|          "overrideTilesetUid": null,
+    #|          "gridTiles": [],
+    #|          "entityInstances": [
+    #|            {
+    #|              "iid": "background",
+    #|              "__identifier": "BackgroundRect",
+    #|              "defUid": 103,
+    #|              "width": 640,
+    #|              "height": 480,
+    #|              "px": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(183, 225, 255)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 0
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "ground",
+    #|              "__identifier": "GroundRect",
+    #|              "defUid": 104,
+    #|              "width": 640,
+    #|              "height": 92,
+    #|              "px": [
+    #|                0,
+    #|                388
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                97
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(156, 198, 104)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 2
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "hill",
+    #|              "__identifier": "HillCircle",
+    #|              "defUid": 105,
+    #|              "width": 200,
+    #|              "height": 200,
+    #|              "px": [
+    #|                440,
+    #|                188
+    #|              ],
+    #|              "__grid": [
+    #|                110,
+    #|                47
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(154, 211, 132)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 1
+    #|                }
+    #|              ]
+    #|            }
+    #|          ]
+    #|        },
     #|        {
     #|          "iid": "layer-entities",
     #|          "__identifier": "Entities",
@@ -280,20 +898,90 @@ test "launch_rabbit preserves horizontal velocity through physics step" {
     #|          "overrideTilesetUid": null,
     #|          "gridTiles": [],
     #|          "entityInstances": [
-    #|            { "iid": "slingshot", "__identifier": "SlingshotAnchor", "defUid": 101, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "rabbit", "__identifier": "RabbitSpawn", "defUid": 102, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "background", "__identifier": "BackgroundRect", "defUid": 103, "width": 640, "height": 480, "px": [0, 0], "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 0 }
-    #|            ] },
-    #|            { "iid": "ground", "__identifier": "GroundRect", "defUid": 104, "width": 640, "height": 92, "px": [0, 388], "__grid": [0, 97], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 2 }
-    #|            ] },
-    #|            { "iid": "hill", "__identifier": "HillCircle", "defUid": 105, "width": 200, "height": 200, "px": [440, 188], "__grid": [110, 47], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 1 }
-    #|            ] }
+    #|            {
+    #|              "iid": "slingshot",
+    #|              "__identifier": "SlingshotAnchor",
+    #|              "defUid": 101,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "rabbit",
+    #|              "__identifier": "RabbitSpawn",
+    #|              "defUid": 102,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-front",
+    #|              "__identifier": "SlingshotFrontStick",
+    #|              "defUid": 108,
+    #|              "width": 26,
+    #|              "height": 94,
+    #|              "px": [
+    #|                106,
+    #|                179
+    #|              ],
+    #|              "__grid": [
+    #|                26,
+    #|                44
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-back",
+    #|              "__identifier": "SlingshotBackStick",
+    #|              "defUid": 109,
+    #|              "width": 26,
+    #|              "height": 57,
+    #|              "px": [
+    #|                106,
+    #|                274
+    #|              ],
+    #|              "__grid": [
+    #|                26,
+    #|                68
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            }
     #|          ]
     #|        }
     #|      ]
@@ -328,7 +1016,19 @@ test "rabbit high-speed hit destroys block" {
     #|  "externalLevels": false,
     #|  "defs": {
     #|    "layers": [
-    #|      { "identifier": "Entities", "uid": 201, "type": "Entities", "intGridValues": [] }
+    #|      {
+    #|        "identifier": "Entities",
+    #|        "uid": 201,
+    #|        "type": "Entities",
+    #|        "intGridValues": []
+    #|      },
+    #|      {
+    #|        "identifier": "Decor",
+    #|        "uid": 202,
+    #|        "type": "Entities",
+    #|        "intGridValues": [],
+    #|        "uiColor": "#7ACB7A"
+    #|      }
     #|    ],
     #|    "entities": [],
     #|    "enums": [],
@@ -346,9 +1046,131 @@ test "rabbit high-speed hit destroys block" {
     #|      "pxHei": 480,
     #|      "__neighbours": [],
     #|      "fieldInstances": [
-    #|        { "__identifier": "max_shots", "__type": "Int", "__value": 5 }
+    #|        {
+    #|          "__identifier": "max_shots",
+    #|          "__type": "Int",
+    #|          "__value": 5
+    #|        }
     #|      ],
     #|      "layerInstances": [
+    #|        {
+    #|          "iid": "layer-decor",
+    #|          "__identifier": "Decor",
+    #|          "__type": "Entities",
+    #|          "levelId": 1,
+    #|          "layerDefUid": 202,
+    #|          "__cWid": 160,
+    #|          "__cHei": 120,
+    #|          "__gridSize": 4,
+    #|          "__opacity": 1,
+    #|          "visible": true,
+    #|          "optionalRules": [],
+    #|          "__pxTotalOffsetX": 0,
+    #|          "__pxTotalOffsetY": 0,
+    #|          "intGridCsv": [],
+    #|          "autoLayerTiles": [],
+    #|          "seed": 0,
+    #|          "overrideTilesetUid": null,
+    #|          "gridTiles": [],
+    #|          "entityInstances": [
+    #|            {
+    #|              "iid": "background",
+    #|              "__identifier": "BackgroundRect",
+    #|              "defUid": 103,
+    #|              "width": 640,
+    #|              "height": 480,
+    #|              "px": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(183, 225, 255)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 0
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "ground",
+    #|              "__identifier": "GroundRect",
+    #|              "defUid": 104,
+    #|              "width": 640,
+    #|              "height": 92,
+    #|              "px": [
+    #|                0,
+    #|                388
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                97
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(156, 198, 104)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 2
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "hill",
+    #|              "__identifier": "HillCircle",
+    #|              "defUid": 105,
+    #|              "width": 200,
+    #|              "height": 200,
+    #|              "px": [
+    #|                440,
+    #|                188
+    #|              ],
+    #|              "__grid": [
+    #|                110,
+    #|                47
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(154, 211, 132)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 1
+    #|                }
+    #|              ]
+    #|            }
+    #|          ]
+    #|        },
     #|        {
     #|          "iid": "layer-entities",
     #|          "__identifier": "Entities",
@@ -369,27 +1191,149 @@ test "rabbit high-speed hit destroys block" {
     #|          "overrideTilesetUid": null,
     #|          "gridTiles": [],
     #|          "entityInstances": [
-    #|            { "iid": "slingshot", "__identifier": "SlingshotAnchor", "defUid": 101, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "rabbit", "__identifier": "RabbitSpawn", "defUid": 102, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "background", "__identifier": "BackgroundRect", "defUid": 103, "width": 640, "height": 480, "px": [0, 0], "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 0 }
-    #|            ] },
-    #|            { "iid": "ground", "__identifier": "GroundRect", "defUid": 104, "width": 640, "height": 92, "px": [0, 388], "__grid": [0, 97], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 2 }
-    #|            ] },
-    #|            { "iid": "hill", "__identifier": "HillCircle", "defUid": 105, "width": 200, "height": 200, "px": [440, 188], "__grid": [110, 47], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 1 }
-    #|            ] },
-    #|            { "iid": "block-1", "__identifier": "Block", "defUid": 106, "width": 32, "height": 64, "px": [160, 248], "__grid": [40, 62], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(191,132,78)" }
-    #|            ] },
-    #|            { "iid": "target-1", "__identifier": "Target", "defUid": 107, "width": 40, "height": 40, "px": [500, 348], "__grid": [125, 87], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(112, 209, 115)" },
-    #|              { "__identifier": "radius", "__type": "Float", "__value": 20 }
-    #|            ] }
+    #|            {
+    #|              "iid": "slingshot",
+    #|              "__identifier": "SlingshotAnchor",
+    #|              "defUid": 101,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "rabbit",
+    #|              "__identifier": "RabbitSpawn",
+    #|              "defUid": 102,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-front",
+    #|              "__identifier": "SlingshotFrontStick",
+    #|              "defUid": 108,
+    #|              "width": 26,
+    #|              "height": 94,
+    #|              "px": [
+    #|                106,
+    #|                179
+    #|              ],
+    #|              "__grid": [
+    #|                26,
+    #|                44
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-back",
+    #|              "__identifier": "SlingshotBackStick",
+    #|              "defUid": 109,
+    #|              "width": 26,
+    #|              "height": 57,
+    #|              "px": [
+    #|                106,
+    #|                274
+    #|              ],
+    #|              "__grid": [
+    #|                26,
+    #|                68
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "block-1",
+    #|              "__identifier": "Block",
+    #|              "defUid": 106,
+    #|              "width": 32,
+    #|              "height": 64,
+    #|              "px": [
+    #|                160,
+    #|                248
+    #|              ],
+    #|              "__grid": [
+    #|                40,
+    #|                62
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(191,132,78)"
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "target-1",
+    #|              "__identifier": "Target",
+    #|              "defUid": 107,
+    #|              "width": 40,
+    #|              "height": 40,
+    #|              "px": [
+    #|                500,
+    #|                348
+    #|              ],
+    #|              "__grid": [
+    #|                125,
+    #|                87
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(112, 209, 115)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "radius",
+    #|                  "__type": "Float",
+    #|                  "__value": 20
+    #|                }
+    #|              ]
+    #|            }
     #|          ]
     #|        }
     #|      ]
@@ -421,7 +1365,19 @@ test "settled rabbit advances to next shot when targets remain" {
     #|  "externalLevels": false,
     #|  "defs": {
     #|    "layers": [
-    #|      { "identifier": "Entities", "uid": 201, "type": "Entities", "intGridValues": [] }
+    #|      {
+    #|        "identifier": "Entities",
+    #|        "uid": 201,
+    #|        "type": "Entities",
+    #|        "intGridValues": []
+    #|      },
+    #|      {
+    #|        "identifier": "Decor",
+    #|        "uid": 202,
+    #|        "type": "Entities",
+    #|        "intGridValues": [],
+    #|        "uiColor": "#7ACB7A"
+    #|      }
     #|    ],
     #|    "entities": [],
     #|    "enums": [],
@@ -439,9 +1395,131 @@ test "settled rabbit advances to next shot when targets remain" {
     #|      "pxHei": 480,
     #|      "__neighbours": [],
     #|      "fieldInstances": [
-    #|        { "__identifier": "max_shots", "__type": "Int", "__value": 5 }
+    #|        {
+    #|          "__identifier": "max_shots",
+    #|          "__type": "Int",
+    #|          "__value": 5
+    #|        }
     #|      ],
     #|      "layerInstances": [
+    #|        {
+    #|          "iid": "layer-decor",
+    #|          "__identifier": "Decor",
+    #|          "__type": "Entities",
+    #|          "levelId": 1,
+    #|          "layerDefUid": 202,
+    #|          "__cWid": 160,
+    #|          "__cHei": 120,
+    #|          "__gridSize": 4,
+    #|          "__opacity": 1,
+    #|          "visible": true,
+    #|          "optionalRules": [],
+    #|          "__pxTotalOffsetX": 0,
+    #|          "__pxTotalOffsetY": 0,
+    #|          "intGridCsv": [],
+    #|          "autoLayerTiles": [],
+    #|          "seed": 0,
+    #|          "overrideTilesetUid": null,
+    #|          "gridTiles": [],
+    #|          "entityInstances": [
+    #|            {
+    #|              "iid": "background",
+    #|              "__identifier": "BackgroundRect",
+    #|              "defUid": 103,
+    #|              "width": 640,
+    #|              "height": 480,
+    #|              "px": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(183, 225, 255)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 0
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "ground",
+    #|              "__identifier": "GroundRect",
+    #|              "defUid": 104,
+    #|              "width": 640,
+    #|              "height": 92,
+    #|              "px": [
+    #|                0,
+    #|                388
+    #|              ],
+    #|              "__grid": [
+    #|                0,
+    #|                97
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(156, 198, 104)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 2
+    #|                }
+    #|              ]
+    #|            },
+    #|            {
+    #|              "iid": "hill",
+    #|              "__identifier": "HillCircle",
+    #|              "defUid": 105,
+    #|              "width": 200,
+    #|              "height": 200,
+    #|              "px": [
+    #|                440,
+    #|                188
+    #|              ],
+    #|              "__grid": [
+    #|                110,
+    #|                47
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(154, 211, 132)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "zindex",
+    #|                  "__type": "Int",
+    #|                  "__value": 1
+    #|                }
+    #|              ]
+    #|            }
+    #|          ]
+    #|        },
     #|        {
     #|          "iid": "layer-entities",
     #|          "__identifier": "Entities",
@@ -462,24 +1540,122 @@ test "settled rabbit advances to next shot when targets remain" {
     #|          "overrideTilesetUid": null,
     #|          "gridTiles": [],
     #|          "entityInstances": [
-    #|            { "iid": "slingshot", "__identifier": "SlingshotAnchor", "defUid": 101, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "rabbit", "__identifier": "RabbitSpawn", "defUid": 102, "width": 0, "height": 0, "px": [120, 280], "__grid": [30, 70], "__pivot": [0, 0], "__tags": [], "fieldInstances": [] },
-    #|            { "iid": "background", "__identifier": "BackgroundRect", "defUid": 103, "width": 640, "height": 480, "px": [0, 0], "__grid": [0, 0], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(183, 225, 255)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 0 }
-    #|            ] },
-    #|            { "iid": "ground", "__identifier": "GroundRect", "defUid": 104, "width": 640, "height": 92, "px": [0, 388], "__grid": [0, 97], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(156, 198, 104)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 2 }
-    #|            ] },
-    #|            { "iid": "hill", "__identifier": "HillCircle", "defUid": 105, "width": 200, "height": 200, "px": [440, 188], "__grid": [110, 47], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(154, 211, 132)" },
-    #|              { "__identifier": "zindex", "__type": "Int", "__value": 1 }
-    #|            ] },
-    #|            { "iid": "target-1", "__identifier": "Target", "defUid": 107, "width": 40, "height": 40, "px": [320, 348], "__grid": [80, 87], "__pivot": [0, 0], "__tags": [], "fieldInstances": [
-    #|              { "__identifier": "color", "__type": "String", "__value": "rgb(112, 209, 115)" },
-    #|              { "__identifier": "radius", "__type": "Float", "__value": 20 }
-    #|            ] }
+    #|            {
+    #|              "iid": "slingshot",
+    #|              "__identifier": "SlingshotAnchor",
+    #|              "defUid": 101,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "rabbit",
+    #|              "__identifier": "RabbitSpawn",
+    #|              "defUid": 102,
+    #|              "width": 0,
+    #|              "height": 0,
+    #|              "px": [
+    #|                120,
+    #|                280
+    #|              ],
+    #|              "__grid": [
+    #|                30,
+    #|                70
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-front",
+    #|              "__identifier": "SlingshotFrontStick",
+    #|              "defUid": 108,
+    #|              "width": 26,
+    #|              "height": 94,
+    #|              "px": [
+    #|                106,
+    #|                179
+    #|              ],
+    #|              "__grid": [
+    #|                26,
+    #|                44
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "slingshot-back",
+    #|              "__identifier": "SlingshotBackStick",
+    #|              "defUid": 109,
+    #|              "width": 26,
+    #|              "height": 57,
+    #|              "px": [
+    #|                106,
+    #|                274
+    #|              ],
+    #|              "__grid": [
+    #|                26,
+    #|                68
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": []
+    #|            },
+    #|            {
+    #|              "iid": "target-1",
+    #|              "__identifier": "Target",
+    #|              "defUid": 107,
+    #|              "width": 40,
+    #|              "height": 40,
+    #|              "px": [
+    #|                320,
+    #|                348
+    #|              ],
+    #|              "__grid": [
+    #|                80,
+    #|                87
+    #|              ],
+    #|              "__pivot": [
+    #|                0,
+    #|                0
+    #|              ],
+    #|              "__tags": [],
+    #|              "fieldInstances": [
+    #|                {
+    #|                  "__identifier": "color",
+    #|                  "__type": "String",
+    #|                  "__value": "rgb(112, 209, 115)"
+    #|                },
+    #|                {
+    #|                  "__identifier": "radius",
+    #|                  "__type": "Float",
+    #|                  "__value": 20
+    #|                }
+    #|              ]
+    #|            }
     #|          ]
     #|        }
     #|      ]
