@@ -135,7 +135,7 @@ test "reset_level enters error scene when level load fails" {
 }
 
 ///|
-test "missing required block color field returns load error" {
+test "missing block color field still loads level" {
   let files : Map[String, Bytes] = Map::new()
   let level_json =
     #|{
@@ -207,10 +207,13 @@ test "missing required block color field returns load error" {
   files.set("levels/missing_block_color.ldtk", utf8_bytes(level_json))
   with_fake_asset_io(files, fn() raise {
     match load_level_from_path("levels/missing_block_color.ldtk") {
-      Ok(_) => abort("expected level load failure for missing Block.color")
-      Err(message) => {
-        assert_true(message.contains("Block"))
-        assert_true(message.contains("color"))
+      Err(message) =>
+        abort(
+          "expected level load success without Block.color, got: \{message}",
+        )
+      Ok(level) => {
+        assert_eq(level.blocks.length(), 1)
+        assert_eq(level.blocks[0].size, @math.Vec2D(32.0, 64.0))
       }
     }
   })

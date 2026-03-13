@@ -21,14 +21,12 @@ priv struct DecorCircleDef {
 priv struct BlockDef {
   center : @math.Vec2D
   size : @math.Vec2D
-  color : String
 }
 
 ///|
 priv struct TargetDef {
   center : @math.Vec2D
   radius : Double
-  color : String
 }
 
 ///|
@@ -444,11 +442,7 @@ fn block_def_from_ldtk_entity(
 ) -> LoadResult[BlockDef] {
   match required_ldtk_entity_size(entity, path) {
     Err(message) => Err(message)
-    Ok(size) =>
-      match required_ldtk_entity_string_field(entity, path, "color") {
-        Err(message) => Err(message)
-        Ok(color) => Ok({ center: ldtk_entity_center(entity), size, color })
-      }
+    Ok(size) => Ok({ center: ldtk_entity_center(entity), size })
   }
 }
 
@@ -459,19 +453,15 @@ fn target_def_from_ldtk_entity(
 ) -> LoadResult[TargetDef] {
   match required_ldtk_entity_size(entity, path) {
     Err(message) => Err(message)
-    Ok(size) =>
-      match required_ldtk_entity_string_field(entity, path, "color") {
-        Err(message) => Err(message)
-        Ok(color) => {
-          let width_radius = size[X] / 2.0
-          let height_radius = size[Y] / 2.0
-          let radius = if width_radius < height_radius {
-            width_radius
-          } else {
-            height_radius
-          }
-          Ok({ center: ldtk_entity_center(entity), radius, color })
-        }
+    Ok(size) => {
+      let width_radius = size[X] / 2.0
+      let height_radius = size[Y] / 2.0
+      let radius = if width_radius < height_radius {
+        width_radius
+      } else {
+        height_radius
       }
+      Ok({ center: ldtk_entity_center(entity), radius })
+    }
   }
 }

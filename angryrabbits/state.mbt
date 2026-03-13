@@ -41,6 +41,58 @@ fn slingshot_anchor() -> @math.Vec2D {
 const RABBIT_RADIUS : Double = 18.0
 
 ///|
+/// Atlas texture used by runtime sprite slicing.
+const ANGRYRABBITS_SPRITES_PATH : String = "angryrabbits/assets/sprites.png"
+
+///|
+/// Rabbit sprite source top-left X in `sprites.png`.
+const RABBIT_SPRITE_SRC_X : Double = 294.0
+
+///|
+/// Rabbit sprite source top-left Y in `sprites.png`.
+const RABBIT_SPRITE_SRC_Y : Double = 897.0
+
+///|
+/// Rabbit sprite source width in `sprites.png`.
+const RABBIT_SPRITE_SRC_WIDTH : Double = 83.0
+
+///|
+/// Rabbit sprite source height in `sprites.png`.
+const RABBIT_SPRITE_SRC_HEIGHT : Double = 95.0
+
+///|
+/// Block sprite source top-left X in `sprites.png`.
+const BLOCK_SPRITE_SRC_X : Double = 1244.0
+
+///|
+/// Block sprite source top-left Y in `sprites.png`.
+const BLOCK_SPRITE_SRC_Y : Double = 577.0
+
+///|
+/// Block sprite source width in `sprites.png`.
+const BLOCK_SPRITE_SRC_WIDTH : Double = 68.0
+
+///|
+/// Block sprite source height in `sprites.png`.
+const BLOCK_SPRITE_SRC_HEIGHT : Double = 89.0
+
+///|
+/// Target sprite source top-left X in `sprites.png`.
+const TARGET_SPRITE_SRC_X : Double = 561.0
+
+///|
+/// Target sprite source top-left Y in `sprites.png`.
+const TARGET_SPRITE_SRC_Y : Double = 899.0
+
+///|
+/// Target sprite source width in `sprites.png`.
+const TARGET_SPRITE_SRC_WIDTH : Double = 50.0
+
+///|
+/// Target sprite source height in `sprites.png`.
+const TARGET_SPRITE_SRC_HEIGHT : Double = 48.0
+
+///|
 /// Maximum slingshot stretch distance from the anchor.
 const MAX_DRAG_RADIUS : Double = 84.0
 
@@ -148,7 +200,6 @@ priv struct BlockState {
   center : @math.Vec2D
   size : @math.Vec2D
   velocity : @math.Vec2D
-  color : String
   alive : Bool
 }
 
@@ -157,7 +208,6 @@ priv struct TargetState {
   entity : @entity.Entity
   center : @math.Vec2D
   radius : Double
-  color : String
   alive : Bool
 }
 

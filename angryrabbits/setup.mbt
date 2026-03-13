@@ -52,8 +52,29 @@ fn center_to_circle_position(
 }
 
 ///|
-fn rabbit_center_top_left() -> @math.Vec2D {
-  center_to_circle_position(rabbit_center.val, RABBIT_RADIUS)
+fn sprite_from_atlas(
+  source_offset : @math.Vec2D,
+  source_size : @math.Vec2D,
+  world_size : @math.Vec2D,
+  zindex : Int,
+) -> @sprite.Sprite {
+  let scale_x = if source_size[X] <= 0.0 {
+    1.0
+  } else {
+    world_size[X] / source_size[X]
+  }
+  let scale_y = if source_size[Y] <= 0.0 {
+    1.0
+  } else {
+    world_size[Y] / source_size[Y]
+  }
+  let animation = @sprite.Animation::single_frame(
+    ANGRYRABBITS_SPRITES_PATH,
+    source_size,
+    transform=@math.Transform::from_scale(scale_x, scale_y),
+    offset=source_offset,
+  )
+  @sprite.Sprite::from_animation(animation, zindex)
 }
 
 ///|
@@ -377,7 +398,6 @@ fn instantiate_level(level : LevelDef) -> Unit {
       center: block.center,
       size: block.size,
       velocity: @math.Vec2D::zero(),
-      color: block.color,
       alive: true,
     })
   }
@@ -386,7 +406,6 @@ fn instantiate_level(level : LevelDef) -> Unit {
       entity: target_entities[index],
       center: target.center,
       radius: target.radius,
-      color: target.color,
       alive: true,
     })
   }
@@ -651,52 +670,33 @@ fn sync_static_visuals() -> Unit {
 
 ///|
 fn sync_dynamic_visuals() -> Unit {
-  let rabbit_color = match phase.val {
-    Error => "rgb(188, 188, 188)"
-    Won => "rgb(250, 244, 230)"
-    Lost => "rgb(188, 188, 188)"
-    _ => "rgb(246, 244, 238)"
-  }
+  let rabbit_size = @math.Vec2D(RABBIT_RADIUS * 2.0, RABBIT_RADIUS * 2.0)
   @sprite.sprites().set(
     rabbit_entity,
-    @sprite.Sprite::from_color_circle(
-      @sprite.ColorCircle::new(
-        RABBIT_RADIUS,
-        rabbit_color,
-        stroke_color="rgb(64, 48, 42)",
-      ),
+    sprite_from_atlas(
+      @math.Vec2D(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
+      @math.Vec2D(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
+      rabbit_size,
       70,
     ),
   )
-  @transform.positions().set(rabbit_entity, rabbit_center_top_left())
+  @transform.positions().set(
+    rabbit_entity,
+    center_to_rect_position(rabbit_center.val, rabbit_size),
+  )
   if @sprite.sprites().get(rabbit_entity) is Some(sprite) {
     sprite.visible = rabbit_visible.val
   }
 
-  @sprite.sprites().set(
-    rabbit_eye_entity,
-    @sprite.Sprite::from_color_circle(
-      @sprite.ColorCircle::new(3.2, "rgb(36, 32, 31)"),
-      71,
-    ),
-  )
-  @transform.positions().set(
-    rabbit_eye_entity,
-    center_to_circle_position(rabbit_center.val + @math.Vec2D(6.0, -3.0), 3.2),
-  )
-  if @sprite.sprites().get(rabbit_eye_entity) is Some(sprite) {
-    sprite.visible = rabbit_visible.val
-  }
+  set_entity_visibility(rabbit_eye_entity, false)
 
   for block in blocks {
     @sprite.sprites().set(
       block.entity,
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(
-          block.size,
-          block.color,
-          stroke_color="rgb(92, 58, 26)",
-        ),
+      sprite_from_atlas(
+        @math.Vec2D(BLOCK_SPRITE_SRC_X, BLOCK_SPRITE_SRC_Y),
+        @math.Vec2D(BLOCK_SPRITE_SRC_WIDTH, BLOCK_SPRITE_SRC_HEIGHT),
+        block.size,
         60,
       ),
     )
@@ -710,20 +710,19 @@ fn sync_dynamic_visuals() -> Unit {
   }
 
   for target in targets {
+    let target_size = @math.Vec2D(target.radius * 2.0, target.radius * 2.0)
     @sprite.sprites().set(
       target.entity,
-      @sprite.Sprite::from_color_circle(
-        @sprite.ColorCircle::new(
-          target.radius,
-          target.color,
-          stroke_color="rgb(54, 112, 45)",
-        ),
+      sprite_from_atlas(
+        @math.Vec2D(TARGET_SPRITE_SRC_X, TARGET_SPRITE_SRC_Y),
+        @math.Vec2D(TARGET_SPRITE_SRC_WIDTH, TARGET_SPRITE_SRC_HEIGHT),
+        target_size,
         65,
       ),
     )
     @transform.positions().set(
       target.entity,
-      center_to_circle_position(target.center, target.radius),
+      center_to_rect_position(target.center, target_size),
     )
     if @sprite.sprites().get(target.entity) is Some(sprite) {
       sprite.visible = target.alive
