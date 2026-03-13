@@ -58,6 +58,16 @@ fn circle_intersects_rect(
   rect_center : @math.Vec2D,
   rect_size : @math.Vec2D,
 ) -> Bool {
+  circle_rect_overlap_depth(center, radius, rect_center, rect_size) > 0.0
+}
+
+///|
+fn circle_rect_overlap_depth(
+  center : @math.Vec2D,
+  radius : Double,
+  rect_center : @math.Vec2D,
+  rect_size : @math.Vec2D,
+) -> Double {
   let nearest_x = clamp(
     center[X],
     rect_center[X] - rect_size[X] / 2.0,
@@ -69,7 +79,12 @@ fn circle_intersects_rect(
     rect_center[Y] + rect_size[Y] / 2.0,
   )
   let delta = center - @math.Vec2D(nearest_x, nearest_y)
-  delta[X] * delta[X] + delta[Y] * delta[Y] <= radius * radius
+  let separation = vec_length(delta)
+  if separation >= radius {
+    0.0
+  } else {
+    radius - separation
+  }
 }
 
 ///|
@@ -115,7 +130,7 @@ fn destroy_target(index : Int) -> Unit {
   if !target.alive {
     return
   }
-  targets[index] = { ..target, alive: false }
+  targets[index] = { ..target, alive: false, overlap_time: 0.0 }
   destroy_target_body(target.entity)
 }
 
@@ -143,28 +158,53 @@ fn rabbit_has_settled() -> Bool {
 }
 
 ///|
-fn crush_targets_with_blocks() -> Unit {
+fn crush_targets_with_blocks(delta : Double) -> Unit {
   for target_index in 0..<targets.length() {
     let target = targets[target_index]
     if !target.alive {
       continue
     }
+    let mut is_overlapping = false
+    let mut max_overlap_depth = 0.0
+    let mut fastest_impact_speed = 0.0
     for block in blocks {
       if !block.alive {
         continue
       }
-      if !circle_intersects_rect(
-          target.center,
-          target.radius,
-          block.center,
-          block.size,
-        ) {
+      let overlap_depth = circle_rect_overlap_depth(
+        target.center,
+        target.radius,
+        block.center,
+        block.size,
+      )
+      if overlap_depth <= 0.0 {
         continue
       }
-      if vec_length(block.velocity) >= BLOCK_TARGET_CRUSH_SPEED {
-        destroy_target(target_index)
-        break
+      is_overlapping = true
+      if overlap_depth > max_overlap_depth {
+        max_overlap_depth = overlap_depth
       }
+      let impact_speed = vec_length(block.velocity - target.velocity)
+      if impact_speed > fastest_impact_speed {
+        fastest_impact_speed = impact_speed
+      }
+    }
+    if !targets[target_index].alive {
+      continue
+    }
+    if is_overlapping {
+      let overlap_time = target.overlap_time + delta
+      if fastest_impact_speed >= BLOCK_TARGET_CRUSH_SPEED ||
+        (
+          max_overlap_depth >= TARGET_OVERLAP_CRUSH_DEPTH &&
+          overlap_time >= TARGET_OVERLAP_CRUSH_TIME
+        ) {
+        destroy_target(target_index)
+      } else {
+        targets[target_index] = { ..target, overlap_time, }
+      }
+    } else if target.overlap_time > 0.0 {
+      targets[target_index] = { ..target, overlap_time: 0.0 }
     }
   }
 }
@@ -193,10 +233,6 @@ fn apply_rabbit_block_hits() -> Unit {
 
 ///|
 fn apply_rabbit_target_hits() -> Unit {
-  let rabbit_speed = vec_length(rabbit_velocity.val)
-  if rabbit_speed < TARGET_HIT_SPEED {
-    return
-  }
   for index in 0..<targets.length() {
     let target = targets[index]
     if !target.alive {
@@ -273,12 +309,12 @@ fn simulation_system(_world : @ecs.World) -> Unit {
     }
     apply_rabbit_block_hits()
     apply_rabbit_target_hits()
-    crush_targets_with_blocks()
+    crush_targets_with_blocks(delta)
     if rabbit_out_of_bounds() || rabbit_has_settled() {
       begin_next_shot_or_end()
     }
   } else {
-    crush_targets_with_blocks()
+    crush_targets_with_blocks(delta)
   }
 
   if phase.val != Won && all_targets_cleared() {

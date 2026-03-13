@@ -337,6 +337,9 @@ fn sync_targets_from_physics() -> Unit {
     targets[index] = {
       ..target,
       center: top_left + @math.Vec2D(target.radius, target.radius),
+      velocity: @physics2d.rigid_body_linear_velocity(target.entity).unwrap_or(
+        @math.Vec2D::zero(),
+      ),
     }
   }
 }
@@ -406,6 +409,8 @@ fn instantiate_level(level : LevelDef) -> Unit {
       entity: target_entities[index],
       center: target.center,
       radius: target.radius,
+      velocity: @math.Vec2D::zero(),
+      overlap_time: 0.0,
       alive: true,
     })
   }

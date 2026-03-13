@@ -1683,3 +1683,53 @@ test "settled rabbit advances to next shot when targets remain" {
     })
   })
 }
+
+///|
+test "rabbit direct contact always destroys target" {
+  with_test_world(fn() raise {
+    targets.clear()
+    blocks.clear()
+    let target_entity = @entity.Entity::new()
+    targets.push({
+      entity: target_entity,
+      center: @math.Vec2D(200.0, 200.0),
+      radius: 18.0,
+      velocity: @math.Vec2D::zero(),
+      overlap_time: 0.0,
+      alive: true,
+    })
+    rabbit_center.val = @math.Vec2D(200.0, 200.0)
+    rabbit_velocity.val = @math.Vec2D(8.0, 0.0)
+    apply_rabbit_target_hits()
+    assert_true(!targets[0].alive)
+  })
+}
+
+///|
+test "overlap timer destroys trapped target in blocks" {
+  with_test_world(fn() raise {
+    targets.clear()
+    blocks.clear()
+    let block_entity = @entity.Entity::new()
+    let target_entity = @entity.Entity::new()
+    blocks.push({
+      entity: block_entity,
+      center: @math.Vec2D(320.0, 300.0),
+      size: @math.Vec2D(40.0, 40.0),
+      velocity: @math.Vec2D::zero(),
+      alive: true,
+    })
+    targets.push({
+      entity: target_entity,
+      center: @math.Vec2D(320.0, 300.0),
+      radius: 18.0,
+      velocity: @math.Vec2D::zero(),
+      overlap_time: 0.0,
+      alive: true,
+    })
+    crush_targets_with_blocks(TARGET_OVERLAP_CRUSH_TIME / 2.0)
+    assert_true(targets[0].alive)
+    crush_targets_with_blocks(TARGET_OVERLAP_CRUSH_TIME / 2.0 + 0.02)
+    assert_true(!targets[0].alive)
+  })
+}

@@ -201,12 +201,16 @@ const AIM_DOT_RADIUS : Double = 4.0
 const AIM_DOT_TIME_STEP : Double = 0.085
 
 ///|
-/// Minimum rabbit impact speed required to pop a target directly.
-const TARGET_HIT_SPEED : Double = 165.0
-
-///|
 /// Minimum block speed required to crush a target on contact.
 const BLOCK_TARGET_CRUSH_SPEED : Double = 150.0
+
+///|
+/// Minimum penetration depth required before overlap-time crushing starts.
+const TARGET_OVERLAP_CRUSH_DEPTH : Double = 2.0
+
+///|
+/// Continuous overlap duration required to crush a trapped target.
+const TARGET_OVERLAP_CRUSH_TIME : Double = 0.18
 
 ///|
 /// Minimum rabbit impact speed required to break a wooden block.
@@ -280,6 +284,8 @@ priv struct TargetState {
   entity : @entity.Entity
   center : @math.Vec2D
   radius : Double
+  velocity : @math.Vec2D
+  overlap_time : Double
   alive : Bool
 }
 
