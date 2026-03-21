@@ -32,6 +32,9 @@ pub fn add_runtime_systems(app : @app.App, run_if : () -> Bool) -> @app.App {
   app
   .add_system(Update, input_system, run_if=fn(_world) { run_if() })
   .add_system(Update, simulation_system, run_if=fn(_world) { run_if() })
+  .add_system(FixedPostUpdate, physics_debug_trace_system, run_if=fn(_world) {
+    run_if()
+  })
   .add_system(Update, render_sync_system, run_if=fn(_world) { run_if() })
 }
 

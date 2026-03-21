@@ -153,16 +153,22 @@ const SLINGSHOT_WORLD_HEIGHT : Double = 152.0
 const MAX_DRAG_RADIUS : Double = 84.0
 
 ///|
+/// Upstream slingshot clamps the bird to a radius of 1.5 world units.
+/// We map our pixel drag radius to the same gameplay distance instead of
+/// reusing the physics meter scale.
+const UPSTREAM_MAX_PULL_DISTANCE : Double = 1.5
+
+///|
 /// Minimum clearance between dragged rabbit and the ground.
 const DRAG_GROUND_CLEARANCE : Double = 12.0
 
 ///|
 /// Minimum stretch required before a release counts as a launch.
-const MIN_LAUNCH_STRETCH : Double = 12.0
+const MIN_LAUNCH_STRETCH : Double = 56.0
 
 ///|
-/// Launch speed multiplier applied to slingshot stretch.
-const LAUNCH_SPEED_FACTOR : Double = 9.2
+/// Upstream slingshot throw speed.
+const THROW_SPEED : Double = 10.0
 
 ///|
 /// Downward gravity acceleration in pixels per second squared.
@@ -174,15 +180,15 @@ const GROUND_FRICTION : Double = 0.90
 
 ///|
 /// Bounce factor for wooden blocks.
-const BLOCK_RESTITUTION : Double = 0.16
+const BLOCK_RESTITUTION : Double = 0.0
 
 ///|
 /// Bounce factor for the rabbit body.
-const RABBIT_RESTITUTION : Double = 0.28
+const RABBIT_RESTITUTION : Double = 0.0
 
 ///|
-/// Speed threshold below which the rabbit is considered almost stationary.
-const STOP_SPEED : Double = 62.0
+/// Speed threshold below which a rigid body is treated as stopped.
+const STOP_SPEED : Double = 22.4
 
 ///|
 /// Default number of rabbits available in a level.
@@ -201,20 +207,24 @@ const AIM_DOT_RADIUS : Double = 4.0
 const AIM_DOT_TIME_STEP : Double = 0.085
 
 ///|
-/// Minimum block speed required to crush a target on contact.
-const BLOCK_TARGET_CRUSH_SPEED : Double = 150.0
+/// Actual prefab health for wooden blocks in the shipped Unity scene.
+const BLOCK_HEALTH : Double = 100.0
 
 ///|
-/// Minimum penetration depth required before overlap-time crushing starts.
-const TARGET_OVERLAP_CRUSH_DEPTH : Double = 2.0
+/// Upstream-style health for targets.
+const TARGET_HEALTH : Double = 150.0
 
 ///|
-/// Continuous overlap duration required to crush a trapped target.
-const TARGET_OVERLAP_CRUSH_TIME : Double = 0.18
+/// Damage multiplier applied to the other body's speed in meters per second.
+const COLLISION_DAMAGE_FACTOR : Double = 10.0
 
 ///|
-/// Minimum rabbit impact speed required to break a wooden block.
-const BLOCK_BREAK_SPEED : Double = 220.0
+/// Time limit before the current shot advances even if some bodies still wobble.
+const SHOT_TIMEOUT : Double = 5.0
+
+///|
+/// Extra margin around the viewport used for out-of-bounds cleanup.
+const OUT_OF_BOUNDS_MARGIN : Double = 160.0
 
 ///|
 /// Physics world pixel-to-meter scale.
@@ -226,49 +236,108 @@ const PHYSICS_MAX_CCD_SUBSTEPS : Int = 4
 
 ///|
 /// Linear damping applied to the rabbit while flying.
-const RABBIT_LINEAR_DAMPING : Double = 0.18
+const RABBIT_LINEAR_DAMPING : Double = 0.0
+
+///|
+/// Angular damping applied to the rabbit while flying.
+const RABBIT_ANGULAR_DAMPING : Double = 5.0
 
 ///|
 /// Linear damping applied to wooden blocks.
-const BLOCK_LINEAR_DAMPING : Double = 0.22
+const BLOCK_LINEAR_DAMPING : Double = 0.0
 
 ///|
 /// Angular damping for wooden blocks. Lower values make stacks topple easier.
-const BLOCK_ANGULAR_DAMPING : Double = 0.28
+const BLOCK_ANGULAR_DAMPING : Double = 0.05
 
 ///|
 /// Block surface friction. Lower values make blocks slide/tilt more easily.
-const BLOCK_FRICTION : Double = 0.52
+const BLOCK_FRICTION : Double = 0.4
 
 ///|
 /// Linear damping applied to targets.
-const TARGET_LINEAR_DAMPING : Double = 0.30
+const TARGET_LINEAR_DAMPING : Double = 0.0
 
 ///|
 /// Angular damping for targets.
-const TARGET_ANGULAR_DAMPING : Double = 0.40
+const TARGET_ANGULAR_DAMPING : Double = 0.05
 
 ///|
 /// Target surface friction.
-const TARGET_FRICTION : Double = 0.42
+const TARGET_FRICTION : Double = 0.4
 
 ///|
-/// Minimum flight time before the rabbit is allowed to settle.
-const RABBIT_SETTLE_TIME : Double = 0.18
+/// Pickup radius while the rabbit is idle on the slingshot.
+const RABBIT_PICKUP_RADIUS : Double = 50.0
 
 ///|
-/// Continuous low-speed time required before advancing to the next shot.
-const RABBIT_IDLE_TIME : Double = 0.35
+/// Horizontal offset from the slingshot wait point to the first queued rabbit.
+const RABBIT_QUEUE_OFFSET_X : Double = -72.0
 
 ///|
-priv enum RoundPhase {
+/// Horizontal spacing between queued rabbits.
+const RABBIT_QUEUE_SPACING_X : Double = -48.0
+
+///|
+/// Speed used when animating a rabbit to or from the slingshot.
+const RABBIT_MOVE_SPEED : Double = 1000.0
+
+///|
+/// Speed used when animating the camera back to the start position.
+const CAMERA_RETURN_SPEED : Double = 1000.0
+
+///|
+/// Delay before a thrown rabbit is removed after it comes to rest.
+const THROWN_RABBIT_REMOVE_DELAY : Double = 2.0
+
+///|
+priv enum GameState {
   Error
-  Ready
-  Dragging
-  Flying
+  Start
+  BirdMovingToSlingshot
+  Playing
   Won
   Lost
 } derive(Eq)
+
+///|
+priv enum SlingshotState {
+  Idle
+  UserPulling
+  BirdFlying
+} derive(Eq)
+
+///|
+priv enum BirdState {
+  BeforeThrown
+  Thrown
+  Removed
+} derive(Eq)
+
+///|
+priv enum RabbitMotionKind {
+  RabbitMotionNone
+  RabbitMoveToSlingshot
+  RabbitReturnToSlingshot
+} derive(Eq)
+
+///|
+priv enum CameraMode {
+  CameraIdle
+  CameraFollowBird
+  CameraReturnToStart
+}
+
+///|
+priv struct RabbitState {
+  entity : @entity.Entity
+  center : @math.Vec2D
+  velocity : @math.Vec2D
+  visible : Bool
+  state : BirdState
+  alive : Bool
+  sleep_time : Double
+}
 
 ///|
 priv struct BlockState {
@@ -276,6 +345,7 @@ priv struct BlockState {
   center : @math.Vec2D
   size : @math.Vec2D
   velocity : @math.Vec2D
+  health : Double
   alive : Bool
 }
 
@@ -285,7 +355,7 @@ priv struct TargetState {
   center : @math.Vec2D
   radius : Double
   velocity : @math.Vec2D
-  overlap_time : Double
+  health : Double
   alive : Bool
 }
 
@@ -293,7 +363,10 @@ priv struct TargetState {
 let scene_initialized : Ref[Bool] = { val: false }
 
 ///|
-let phase : Ref[RoundPhase] = { val: Ready }
+let game_state : Ref[GameState] = { val: Start }
+
+///|
+let slingshot_state : Ref[SlingshotState] = { val: Idle }
 
 ///|
 let shots_remaining : Ref[Int] = { val: MAX_SHOTS }
@@ -315,6 +388,12 @@ let rabbit_flight_time : Ref[Double] = { val: 0.0 }
 
 ///|
 let rabbit_idle_time : Ref[Double] = { val: 0.0 }
+
+///|
+let current_rabbit_index : Ref[Int] = { val: 0 }
+
+///|
+let rabbits : Array[RabbitState] = []
 
 ///|
 let blocks : Array[BlockState] = []
@@ -341,10 +420,10 @@ let slingshot_right_entity : @entity.Entity = @entity.Entity::new()
 let slingshot_base_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
-let rabbit_entity : @entity.Entity = @entity.Entity::new()
+let rabbit_eye_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
-let rabbit_eye_entity : @entity.Entity = @entity.Entity::new()
+let camera_anchor_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let title_entity : @entity.Entity = @entity.Entity::new()
@@ -362,7 +441,85 @@ let score_entity : @entity.Entity = @entity.Entity::new()
 let aim_dot_entities : Array[@entity.Entity] = []
 
 ///|
+let rabbit_entities : Array[@entity.Entity] = []
+
+///|
 let block_entities : Array[@entity.Entity] = []
 
 ///|
 let target_entities : Array[@entity.Entity] = []
+
+///|
+let rabbit_motion_kind : Ref[RabbitMotionKind] = { val: RabbitMotionNone }
+
+///|
+let rabbit_motion_start : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let rabbit_motion_end : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let rabbit_motion_duration : Ref[Double] = { val: 0.0 }
+
+///|
+let rabbit_motion_elapsed : Ref[Double] = { val: 0.0 }
+
+///|
+let camera_mode : Ref[CameraMode] = { val: CameraIdle }
+
+///|
+let camera_start_position : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let camera_return_duration : Ref[Double] = { val: 0.0 }
+
+///|
+let camera_return_elapsed : Ref[Double] = { val: 0.0 }
+
+///|
+let camera_return_origin : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+const DEBUG_TRACE_FIXED_FRAMES : Int = 6
+
+///|
+let debug_text_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let debug_mouse_screen : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_mouse_world : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_drag_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_release_screen : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_release_mouse_world : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_release_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_launch_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_physics_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_physics_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+
+///|
+let debug_last_event : Ref[String] = { val: "startup" }
+
+///|
+let debug_trace_fixed_frames_remaining : Ref[Int] = { val: 0 }
+
+///|
+let debug_trace_update_frames_remaining : Ref[Int] = { val: 0 }
+
+///|
+let debug_tracked_rabbit_entity : Ref[@entity.Entity?] = { val: None }

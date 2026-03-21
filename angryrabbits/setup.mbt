@@ -52,6 +52,70 @@ fn center_to_circle_position(
 }
 
 ///|
+fn rabbit_queue_center(index : Int) -> @math.Vec2D {
+  guard current_level.val is Some(level) else { return @math.Vec2D::zero() }
+  level.rabbit_spawn +
+  @math.Vec2D(
+    RABBIT_QUEUE_OFFSET_X + index.to_double() * RABBIT_QUEUE_SPACING_X,
+    0.0,
+  )
+}
+
+///|
+fn current_rabbit() -> RabbitState? {
+  if current_rabbit_index.val < 0 ||
+    current_rabbit_index.val >= rabbits.length() {
+    None
+  } else {
+    Some(rabbits[current_rabbit_index.val])
+  }
+}
+
+///|
+fn sync_current_rabbit_refs() -> Unit {
+  guard current_rabbit() is Some(rabbit) else {
+    rabbit_center.val = @math.Vec2D::zero()
+    rabbit_velocity.val = @math.Vec2D::zero()
+    rabbit_visible.val = false
+    return
+  }
+  rabbit_center.val = rabbit.center
+  rabbit_velocity.val = rabbit.velocity
+  rabbit_visible.val = rabbit.visible
+}
+
+///|
+fn set_camera_anchor_position(position : @math.Vec2D) -> Unit {
+  @transform.positions().set(camera_anchor_entity, position)
+}
+
+///|
+fn camera_anchor_position() -> @math.Vec2D {
+  match @transform.positions().get(camera_anchor_entity) {
+    Some(position) => position.0
+    None => @math.Vec2D::zero()
+  }
+}
+
+///|
+fn camera_follow_max_x() -> Double {
+  guard current_level.val is Some(level) else { return 0.0 }
+  let right = level.background_rect.position[X] +
+    level.background_rect.size[X] -
+    VIEWPORT_WIDTH
+  if right < level.background_rect.position[X] {
+    level.background_rect.position[X]
+  } else {
+    right
+  }
+}
+
+///|
+fn camera_start_x() -> Double {
+  camera_start_position.val[X]
+}
+
+///|
 fn sprite_from_atlas(
   source_offset : @math.Vec2D,
   source_size : @math.Vec2D,
@@ -90,10 +154,10 @@ fn rabbit_shape() -> @physics2d.CollisionShape {
 ///|
 fn rabbit_ready_body() -> @physics2d.RigidBody {
   {
-    ..@physics2d.RigidBody::dynamic(),
+    ..@physics2d.RigidBody::kinematic_velocity_based(),
     gravity_scale: 0.0,
-    linear_damping: 1.0,
-    angular_damping: 1.0,
+    linear_damping: 0.0,
+    angular_damping: RABBIT_ANGULAR_DAMPING,
     ccd_enabled: true,
     lock_rotation: true,
   }
@@ -105,8 +169,10 @@ fn rabbit_flying_body() -> @physics2d.RigidBody {
     ..@physics2d.RigidBody::dynamic(),
     gravity_scale: 1.0,
     linear_damping: RABBIT_LINEAR_DAMPING,
-    angular_damping: 1.0,
+    angular_damping: RABBIT_ANGULAR_DAMPING,
     ccd_enabled: true,
+    // Selene 2D currently exposes translation-only transforms for sprites.
+    // Keep the physics body upright so the visible rabbit matches its collider.
     lock_rotation: true,
   }
 }
@@ -119,7 +185,9 @@ fn block_body() -> @physics2d.RigidBody {
     linear_damping: BLOCK_LINEAR_DAMPING,
     angular_damping: BLOCK_ANGULAR_DAMPING,
     ccd_enabled: false,
-    lock_rotation: false,
+    // Rectangular bodies visually cannot rotate independently in the current
+    // Selene 2D render path, so lock rotation to avoid sprite/collider drift.
+    lock_rotation: true,
   }
 }
 
@@ -131,7 +199,9 @@ fn target_body() -> @physics2d.RigidBody {
     linear_damping: TARGET_LINEAR_DAMPING,
     angular_damping: TARGET_ANGULAR_DAMPING,
     ccd_enabled: false,
-    lock_rotation: false,
+    // Keep targets visually aligned with their colliders in the current 2D
+    // renderer, which only syncs translation.
+    lock_rotation: true,
   }
 }
 
@@ -147,7 +217,9 @@ fn clear_physics_entity(entity : @entity.Entity) -> Unit {
 ///|
 fn clear_level_physics_entities() -> Unit {
   clear_physics_entity(ground_entity)
-  clear_physics_entity(rabbit_entity)
+  for entity in rabbit_entities {
+    clear_physics_entity(entity)
+  }
   for entity in block_entities {
     clear_physics_entity(entity)
   }
@@ -157,64 +229,123 @@ fn clear_level_physics_entities() -> Unit {
 }
 
 ///|
-fn set_rabbit_ready_state(center : @math.Vec2D) -> Unit {
+fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
+  let rabbit = rabbits[index]
+  let entity = rabbit.entity
   let top_left = center_to_circle_position(center, RABBIT_RADIUS)
-  rabbit_center.val = center
-  rabbit_velocity.val = @math.Vec2D::zero()
-  rabbit_visible.val = true
-  @transform.positions().set(rabbit_entity, top_left)
-  @physics2d.shapes().set(rabbit_entity, rabbit_shape())
+  @transform.positions().set(entity, top_left)
+  @physics2d.shapes().set(entity, rabbit_shape())
   @physics2d.colliders().set(
-    rabbit_entity,
+    entity,
     @physics2d.Collider::with_material(
       physics_filter(),
-      friction=0.65,
+      friction=0.4,
       restitution=RABBIT_RESTITUTION,
       active=false,
     ),
   )
-  @physics2d.rigid_bodies().set(rabbit_entity, rabbit_ready_body())
-  @physics2d.set_rigid_body_translation(rabbit_entity, top_left)
-  @physics2d.set_rigid_body_linear_velocity(rabbit_entity, @math.Vec2D::zero())
+  @physics2d.rigid_bodies().set(entity, rabbit_ready_body())
+  @physics2d.set_rigid_body_translation(entity, top_left)
+  @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
+  rabbits[index] = {
+    ..rabbit,
+    center,
+    velocity: @math.Vec2D::zero(),
+    visible: true,
+    state: BeforeThrown,
+    alive: true,
+    sleep_time: 0.0,
+  }
+  if index == current_rabbit_index.val {
+    sync_current_rabbit_refs()
+  }
 }
 
 ///|
-fn launch_rabbit(center : @math.Vec2D, velocity : @math.Vec2D) -> Unit {
+fn set_current_rabbit_ready_state(center : @math.Vec2D) -> Unit {
+  guard current_rabbit_index.val >= 0 &&
+    current_rabbit_index.val < rabbits.length() else {
+    return
+  }
+  set_rabbit_waiting_state(current_rabbit_index.val, center)
+}
+
+///|
+fn launch_rabbit_at(
+  index : Int,
+  center : @math.Vec2D,
+  velocity : @math.Vec2D,
+) -> Unit {
+  let rabbit = rabbits[index]
+  let entity = rabbit.entity
   let top_left = center_to_circle_position(center, RABBIT_RADIUS)
-  rabbit_center.val = center
-  rabbit_velocity.val = velocity
-  rabbit_visible.val = true
-  @transform.positions().set(rabbit_entity, top_left)
-  @physics2d.shapes().set(rabbit_entity, rabbit_shape())
+  @transform.positions().set(entity, top_left)
+  @physics2d.shapes().set(entity, rabbit_shape())
   @physics2d.colliders().set(
-    rabbit_entity,
+    entity,
     @physics2d.Collider::with_material(
       physics_filter(),
-      friction=0.65,
+      friction=0.4,
       restitution=RABBIT_RESTITUTION,
       active=true,
     ),
   )
-  @physics2d.rigid_bodies().set(rabbit_entity, rabbit_flying_body())
-  @physics2d.set_rigid_body_translation(rabbit_entity, top_left)
-  @physics2d.set_rigid_body_linear_velocity(rabbit_entity, velocity)
+  @physics2d.velocities().remove(entity)
+  @physics2d.resolved_velocities().remove(entity)
+  @physics2d.rigid_bodies().set(entity, rabbit_flying_body())
+  @physics2d.set_rigid_body_translation(entity, top_left)
+  @physics2d.set_rigid_body_linear_velocity(entity, velocity)
+  rabbits[index] = {
+    ..rabbit,
+    center,
+    velocity,
+    visible: true,
+    state: Thrown,
+    alive: true,
+    sleep_time: 0.0,
+  }
+  let immediate_center = @physics2d.rigid_body_translation(entity).unwrap_or(
+      top_left,
+    ) +
+    @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS)
+  let immediate_velocity = @physics2d.rigid_body_linear_velocity(entity).unwrap_or(
+    @math.Vec2D::zero(),
+  )
+  println(
+    "[angryrabbits][debug][launch_rabbit_at] index=\{index} center=\{debug_vec2_string(immediate_center)} getter_vel=\{debug_vec2_string(immediate_velocity)} arg_vel=\{debug_vec2_string(velocity)}",
+  )
+  if index == current_rabbit_index.val {
+    sync_current_rabbit_refs()
+  }
 }
 
 ///|
-fn hide_rabbit_physics() -> Unit {
-  rabbit_velocity.val = @math.Vec2D::zero()
-  rabbit_visible.val = false
-  @physics2d.colliders().set(
-    rabbit_entity,
-    @physics2d.Collider::with_material(
-      physics_filter(),
-      friction=0.65,
-      restitution=RABBIT_RESTITUTION,
-      active=false,
-    ),
-  )
-  @physics2d.rigid_bodies().set(rabbit_entity, rabbit_ready_body())
-  @physics2d.set_rigid_body_linear_velocity(rabbit_entity, @math.Vec2D::zero())
+fn launch_rabbit(center : @math.Vec2D, velocity : @math.Vec2D) -> Unit {
+  guard current_rabbit_index.val >= 0 &&
+    current_rabbit_index.val < rabbits.length() else {
+    return
+  }
+  launch_rabbit_at(current_rabbit_index.val, center, velocity)
+}
+
+///|
+fn remove_rabbit(index : Int) -> Unit {
+  let rabbit = rabbits[index]
+  if !rabbit.alive {
+    return
+  }
+  clear_physics_entity(rabbit.entity)
+  rabbits[index] = {
+    ..rabbit,
+    velocity: @math.Vec2D::zero(),
+    visible: false,
+    state: Removed,
+    alive: false,
+    sleep_time: 0.0,
+  }
+  if index == current_rabbit_index.val {
+    sync_current_rabbit_refs()
+  }
 }
 
 ///|
@@ -236,7 +367,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
     @physics2d.Collider::with_material(
       physics_filter(),
       friction=GROUND_FRICTION,
-      restitution=0.04,
+      restitution=0.0,
     ),
   )
   @physics2d.rigid_bodies().set(ground_entity, @physics2d.RigidBody::fixed())
@@ -282,7 +413,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
       @physics2d.Collider::with_material(
         physics_filter(),
         friction=TARGET_FRICTION,
-        restitution=0.18,
+        restitution=0.0,
       ),
     )
     @physics2d.rigid_bodies().set(entity, target_body())
@@ -290,18 +421,39 @@ fn configure_level_physics(level : LevelDef) -> Unit {
     @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
   }
 
-  set_rabbit_ready_state(level.rabbit_spawn)
+  for index in 0..<rabbits.length() {
+    set_rabbit_waiting_state(index, rabbits[index].center)
+  }
+  sync_current_rabbit_refs()
 }
 
 ///|
-fn sync_rabbit_from_physics() -> Unit {
-  guard @physics2d.rigid_body_translation(rabbit_entity) is Some(top_left) else {
-    return
+fn sync_rabbits_from_physics() -> Unit {
+  for index in 0..<rabbits.length() {
+    let rabbit = rabbits[index]
+    if !rabbit.alive {
+      continue
+    }
+    if rabbit.state != Thrown {
+      if index == current_rabbit_index.val {
+        sync_current_rabbit_refs()
+      }
+      continue
+    }
+    guard @physics2d.rigid_body_translation(rabbit.entity) is Some(top_left) else {
+      continue
+    }
+    rabbits[index] = {
+      ..rabbit,
+      center: top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS),
+      velocity: @physics2d.rigid_body_linear_velocity(rabbit.entity).unwrap_or(
+        @math.Vec2D::zero(),
+      ),
+    }
+    if index == current_rabbit_index.val {
+      sync_current_rabbit_refs()
+    }
   }
-  rabbit_center.val = top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS)
-  rabbit_velocity.val = @physics2d.rigid_body_linear_velocity(rabbit_entity).unwrap_or(
-    @math.Vec2D::zero(),
-  )
 }
 
 ///|
@@ -346,7 +498,7 @@ fn sync_targets_from_physics() -> Unit {
 
 ///|
 fn sync_physics_snapshots() -> Unit {
-  sync_rabbit_from_physics()
+  sync_rabbits_from_physics()
   sync_blocks_from_physics()
   sync_targets_from_physics()
 }
@@ -361,8 +513,8 @@ fn register_scene_entities() -> Unit {
   for
     entity in [
       background_entity, ground_entity, hill_entity, slingshot_left_entity, slingshot_right_entity,
-      slingshot_base_entity, rabbit_entity, rabbit_eye_entity, title_entity, hint_entity,
-      status_entity, score_entity,
+      slingshot_base_entity, rabbit_eye_entity, camera_anchor_entity, title_entity,
+      hint_entity, status_entity, score_entity, debug_text_entity,
     ] {
     ensure_entity_alive(entity)
   }
@@ -371,12 +523,19 @@ fn register_scene_entities() -> Unit {
 
 ///|
 fn register_level_entities(level : LevelDef) -> Unit {
+  ensure_entity_list(rabbit_entities, level.max_shots)
   ensure_entity_list(block_entities, level.blocks.length())
   ensure_entity_list(target_entities, level.targets.length())
 }
 
 ///|
 fn hide_unused_level_entities(level : LevelDef) -> Unit {
+  for index in level.max_shots..<rabbit_entities.length() {
+    clear_physics_entity(rabbit_entities[index])
+    if @sprite.sprites().get(rabbit_entities[index]) is Some(sprite) {
+      sprite.visible = false
+    }
+  }
   for index in level.blocks.length()..<block_entities.length() {
     clear_physics_entity(block_entities[index])
     if @sprite.sprites().get(block_entities[index]) is Some(sprite) {
@@ -393,14 +552,27 @@ fn hide_unused_level_entities(level : LevelDef) -> Unit {
 
 ///|
 fn instantiate_level(level : LevelDef) -> Unit {
+  rabbits.clear()
   blocks.clear()
   targets.clear()
+  for index in 0..<level.max_shots {
+    rabbits.push({
+      entity: rabbit_entities[index],
+      center: rabbit_queue_center(index),
+      velocity: @math.Vec2D::zero(),
+      visible: true,
+      state: BeforeThrown,
+      alive: true,
+      sleep_time: 0.0,
+    })
+  }
   for index, block in level.blocks {
     blocks.push({
       entity: block_entities[index],
       center: block.center,
       size: block.size,
       velocity: @math.Vec2D::zero(),
+      health: BLOCK_HEALTH,
       alive: true,
     })
   }
@@ -410,7 +582,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
       center: target.center,
       radius: target.radius,
       velocity: @math.Vec2D::zero(),
-      overlap_time: 0.0,
+      health: TARGET_HEALTH,
       alive: true,
     })
   }
@@ -428,12 +600,19 @@ fn hide_aim_dots() -> Unit {
 
 ///|
 fn launch_velocity_from_rabbit(center : @math.Vec2D) -> @math.Vec2D {
-  (slingshot_anchor() - center).scalar_mul(LAUNCH_SPEED_FACTOR)
+  let stretch = slingshot_anchor() - center
+  let distance = vec_length(stretch)
+  let distance_units = if MAX_DRAG_RADIUS <= 0.0 {
+    0.0
+  } else {
+    distance / MAX_DRAG_RADIUS * UPSTREAM_MAX_PULL_DISTANCE
+  }
+  stretch.scalar_mul(THROW_SPEED * distance_units)
 }
 
 ///|
 fn refresh_aim_dots() -> Unit {
-  if phase.val != Dragging {
+  if slingshot_state.val != UserPulling {
     hide_aim_dots()
     return
   }
@@ -488,6 +667,105 @@ fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 }
 
 ///|
+fn debug_game_state_name(state : GameState) -> String {
+  match state {
+    Error => "Error"
+    Start => "Start"
+    BirdMovingToSlingshot => "BirdMovingToSlingshot"
+    Playing => "Playing"
+    Won => "Won"
+    Lost => "Lost"
+  }
+}
+
+///|
+fn debug_slingshot_state_name(state : SlingshotState) -> String {
+  match state {
+    Idle => "Idle"
+    UserPulling => "UserPulling"
+    BirdFlying => "BirdFlying"
+  }
+}
+
+///|
+fn debug_camera_mode_name(mode : CameraMode) -> String {
+  match mode {
+    CameraIdle => "CameraIdle"
+    CameraFollowBird => "CameraFollowBird"
+    CameraReturnToStart => "CameraReturnToStart"
+  }
+}
+
+///|
+fn debug_bird_state_name(state : BirdState) -> String {
+  match state {
+    BeforeThrown => "BeforeThrown"
+    Thrown => "Thrown"
+    Removed => "Removed"
+  }
+}
+
+///|
+fn debug_scalar_string(value : Double) -> String {
+  let scaled = (value * 10.0).round().to_int()
+  let abs_scaled = if scaled < 0 { -scaled } else { scaled }
+  let sign = if scaled < 0 { "-" } else { "" }
+  let integer_part = abs_scaled / 10
+  let fraction_part = abs_scaled % 10
+  "\{sign}\{integer_part}.\{fraction_part}"
+}
+
+///|
+fn debug_vec2_string(value : @math.Vec2D) -> String {
+  "(\{debug_scalar_string(value[X])}, \{debug_scalar_string(value[Y])})"
+}
+
+///|
+fn current_rabbit_debug_line() -> String {
+  match current_rabbit() {
+    Some(rabbit) =>
+      "rabbit idx=\{current_rabbit_index.val} \{debug_bird_state_name(rabbit.state)} alive=\{rabbit.alive}"
+    None => "rabbit none"
+  }
+}
+
+///|
+fn debug_text() -> String {
+  let line1 = "DBG g=\{debug_game_state_name(game_state.val)} s=\{debug_slingshot_state_name(slingshot_state.val)} cam=\{debug_camera_mode_name(camera_mode.val)}"
+  let line2 = "mouse s=\{debug_vec2_string(debug_mouse_screen.val)} w=\{debug_vec2_string(debug_mouse_world.val)}"
+  let line3 = "drag=\{debug_vec2_string(debug_drag_center.val)} rel=\{debug_vec2_string(debug_release_center.val)}"
+  let line4 = "rel_mouse=\{debug_vec2_string(debug_release_mouse_world.val)} launch=\{debug_vec2_string(debug_launch_velocity.val)}"
+  let line5 = "phys center=\{debug_vec2_string(debug_physics_center.val)} vel=\{debug_vec2_string(debug_physics_velocity.val)}"
+  let line6 = "\{current_rabbit_debug_line()} trace=\{debug_trace_fixed_frames_remaining.val}"
+  let line7 = "evt: \{debug_last_event.val}"
+  line1 +
+  "\n" +
+  line2 +
+  "\n" +
+  line3 +
+  "\n" +
+  line4 +
+  "\n" +
+  line5 +
+  "\n" +
+  line6 +
+  "\n" +
+  line7
+}
+
+///|
+fn sync_debug_ui() -> Unit {
+  set_text_entity(
+    debug_text_entity,
+    debug_text(),
+    @math.Vec2D(20.0, 112.0),
+    "10px \{ANGRYRABBITS_FONT_FAMILY}",
+    "rgb(24, 68, 32)",
+    240,
+  )
+}
+
+///|
 fn wrap_text_for_ui(
   text : String,
   max_chars_per_line : Int,
@@ -536,8 +814,11 @@ fn hide_all_level_visuals() -> Unit {
   for
     entity in [
       ground_entity, hill_entity, slingshot_left_entity, slingshot_right_entity,
-      slingshot_base_entity, rabbit_entity, rabbit_eye_entity,
+      slingshot_base_entity, rabbit_eye_entity,
     ] {
+    set_entity_visibility(entity, false)
+  }
+  for entity in rabbit_entities {
     set_entity_visibility(entity, false)
   }
   for entity in block_entities {
@@ -684,21 +965,23 @@ fn sync_static_visuals() -> Unit {
 ///|
 fn sync_dynamic_visuals() -> Unit {
   let rabbit_size = @math.Vec2D(RABBIT_RADIUS * 2.0, RABBIT_RADIUS * 2.0)
-  @sprite.sprites().set(
-    rabbit_entity,
-    sprite_from_atlas(
-      @math.Vec2D(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
-      @math.Vec2D(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
-      rabbit_size,
-      70,
-    ),
-  )
-  @transform.positions().set(
-    rabbit_entity,
-    center_to_rect_position(rabbit_center.val, rabbit_size),
-  )
-  if @sprite.sprites().get(rabbit_entity) is Some(sprite) {
-    sprite.visible = rabbit_visible.val
+  for rabbit in rabbits {
+    @sprite.sprites().set(
+      rabbit.entity,
+      sprite_from_atlas(
+        @math.Vec2D(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
+        @math.Vec2D(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
+        rabbit_size,
+        70,
+      ),
+    )
+    @transform.positions().set(
+      rabbit.entity,
+      center_to_rect_position(rabbit.center, rabbit_size),
+    )
+    if @sprite.sprites().get(rabbit.entity) is Some(sprite) {
+      sprite.visible = rabbit.visible
+    }
   }
 
   set_entity_visibility(rabbit_eye_entity, false)
@@ -747,12 +1030,17 @@ fn sync_dynamic_visuals() -> Unit {
 
 ///|
 fn status_text() -> String {
-  match phase.val {
+  match game_state.val {
     Error =>
       "Level load failed. Fix the LDtk file and press Enter or R to retry."
-    Ready => "Drag the rabbit backward with the mouse, then release."
-    Dragging => "Release to launch. Rabbit speed scales with stretch."
-    Flying => "Break every green target before you run out of rabbits."
+    Start => "Tap the screen to start."
+    BirdMovingToSlingshot => "Preparing the next rabbit."
+    Playing =>
+      match slingshot_state.val {
+        Idle => "Drag the rabbit backward with the mouse, then release."
+        UserPulling => "Release to launch. Rabbit speed scales with stretch."
+        BirdFlying => "Break every green target before you run out of rabbits."
+      }
     Won => "Stage cleared. Press Enter or R to play again."
     Lost => "Out of rabbits. Press Enter or R to retry."
   }
@@ -765,9 +1053,27 @@ fn score_text() -> String {
 }
 
 ///|
+fn reset_debug_state(event : String) -> Unit {
+  debug_mouse_screen.val = @math.Vec2D::zero()
+  debug_mouse_world.val = @math.Vec2D::zero()
+  debug_drag_center.val = @math.Vec2D::zero()
+  debug_release_screen.val = @math.Vec2D::zero()
+  debug_release_mouse_world.val = @math.Vec2D::zero()
+  debug_release_center.val = @math.Vec2D::zero()
+  debug_launch_velocity.val = @math.Vec2D::zero()
+  debug_physics_center.val = @math.Vec2D::zero()
+  debug_physics_velocity.val = @math.Vec2D::zero()
+  debug_last_event.val = event
+  debug_trace_fixed_frames_remaining.val = 0
+  debug_trace_update_frames_remaining.val = 0
+  debug_tracked_rabbit_entity.val = None
+}
+
+///|
 fn sync_ui() -> Unit {
-  if phase.val == Error {
+  if game_state.val == Error {
     sync_error_visuals(load_error_message.val)
+    sync_debug_ui()
     return
   }
   set_text_entity(
@@ -780,7 +1086,7 @@ fn sync_ui() -> Unit {
   )
   set_text_entity(
     hint_entity,
-    "Mouse drag/release launch   R/Enter restart   ESC back",
+    "Click to start   Mouse drag/release launch   R/Enter restart   ESC back",
     @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
     "16px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(77, 74, 66)",
@@ -799,15 +1105,16 @@ fn sync_ui() -> Unit {
     status_text(),
     @math.Vec2D(20.0, 82.0),
     "18px \{ANGRYRABBITS_FONT_FAMILY}",
-    if phase.val == Won {
+    if game_state.val == Won {
       "rgb(32, 112, 48)"
-    } else if phase.val == Lost {
+    } else if game_state.val == Lost {
       "rgb(161, 54, 44)"
     } else {
       "rgb(72, 60, 44)"
     },
     220,
   )
+  sync_debug_ui()
 }
 
 ///|
@@ -815,15 +1122,21 @@ fn reset_level() -> Unit {
   register_angryrabbits_font_once()
   match load_current_level() {
     Err(message) => {
+      reset_debug_state("level load error")
       current_level.val = None
       load_error_message.val = message
-      phase.val = Error
+      game_state.val = Error
+      slingshot_state.val = Idle
       shots_remaining.val = 0
+      rabbits.clear()
+      current_rabbit_index.val = 0
       rabbit_center.val = @math.Vec2D::zero()
       rabbit_velocity.val = @math.Vec2D::zero()
       rabbit_visible.val = false
       rabbit_flight_time.val = 0.0
       rabbit_idle_time.val = 0.0
+      rabbit_motion_kind.val = RabbitMotionNone
+      camera_mode.val = CameraIdle
       blocks.clear()
       targets.clear()
       clear_level_physics_entities()
@@ -831,17 +1144,27 @@ fn reset_level() -> Unit {
       sync_error_visuals(message)
     }
     Ok(level) => {
+      reset_debug_state("level reset")
       current_level.val = Some(level)
       load_error_message.val = ""
       register_scene_entities()
       register_level_entities(level)
       sync_static_visuals()
+      current_rabbit_index.val = 0
       instantiate_level(level)
       configure_level_physics(level)
       shots_remaining.val = level.max_shots
-      phase.val = Ready
+      game_state.val = Start
+      slingshot_state.val = Idle
       rabbit_flight_time.val = 0.0
       rabbit_idle_time.val = 0.0
+      rabbit_motion_kind.val = RabbitMotionNone
+      camera_start_position.val = level.background_rect.position
+      set_camera_anchor_position(camera_start_position.val)
+      camera_mode.val = CameraIdle
+      camera_return_elapsed.val = 0.0
+      camera_return_duration.val = 0.0
+      camera_return_origin.val = camera_start_position.val
       sync_physics_snapshots()
       sync_dynamic_visuals()
       sync_ui()
@@ -853,6 +1176,11 @@ fn reset_level() -> Unit {
 fn setup_scene_if_needed() -> Unit {
   if !scene_initialized.val {
     register_scene_entities()
+    @transform.positions().set(camera_anchor_entity, @math.Vec2D::zero())
+    @camera.attach_entity(
+      camera_anchor_entity,
+      @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
+    )
     scene_initialized.val = true
   }
 }
