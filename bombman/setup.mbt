@@ -719,22 +719,8 @@ fn sync_playing_hud_visuals() -> Unit {
     HUD_TEXT_COLOR,
     200,
   )
-  set_text_entity(
-    status_entity,
-    status_text(),
-    @math.Vec2D(20.0, VIEWPORT_HEIGHT - 48.0),
-    "12px \{BOMBMAN_FONT_FAMILY}",
-    HUD_MUTED_TEXT_COLOR,
-    200,
-  )
-  set_text_entity(
-    hint_entity,
-    hint_text(),
-    @math.Vec2D(20.0, VIEWPORT_HEIGHT - 24.0),
-    "12px \{BOMBMAN_FONT_FAMILY}",
-    HUD_MUTED_TEXT_COLOR,
-    200,
-  )
+  hide_entity(status_entity)
+  hide_entity(hint_entity)
 }
 
 ///|
