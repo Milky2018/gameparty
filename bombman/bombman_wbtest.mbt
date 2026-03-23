@@ -198,7 +198,7 @@ test "bomb owner can leave just-placed bomb but other player cannot pass through
       desired_direction: Some(Right),
       direction: Some(Right),
     }
-    tick_players_motion(0.25)
+    tick_players_motion(1.0)
     assert_true(!bombs[0].passable_for_owner)
   })
 }

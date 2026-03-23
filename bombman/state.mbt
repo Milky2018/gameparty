@@ -32,7 +32,7 @@ const FLOOR_INSET : Double = 2.0
 const TURN_ASSIST_PX : Double = 10.0
 
 ///|
-const PLAYER_SPEED : Double = CELL_SIZE * 3.0
+const PLAYER_SPEED : Double = CELL_SIZE * 1.0
 
 ///|
 const ENEMY_SPEED : Double = CELL_SIZE * 2.5
@@ -56,10 +56,10 @@ const BOMB_FUSE_TIME : Double = 2.0
 const FLAME_DURATION : Double = 0.16
 
 ///|
-const PLAYER_START_BOMBS : Int = 2
+const PLAYER_START_BOMBS : Int = 1
 
 ///|
-const PLAYER_BLAST_RADIUS : Int = 2
+const PLAYER_BLAST_RADIUS : Int = 1
 
 ///|
 const FLOOR_COLOR : String = "rgb(36, 48, 56)"
