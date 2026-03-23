@@ -76,6 +76,13 @@ test "player movement is continuous and frame-driven" {
 }
 
 ///|
+test "character and bomb radii are almost full-cell sized" {
+  assert_eq(PLAYER_RADIUS, CELL_SIZE / 2.0 - 0.5)
+  assert_eq(ENEMY_RADIUS, CELL_SIZE / 2.0 - 0.5)
+  assert_eq(BOMB_RADIUS, CELL_SIZE / 2.0 - 0.5)
+}
+
+///|
 test "turn assist snaps aligned turns and rejects misaligned turns" {
   with_test_level(fn() raise {
     set_tile(1, 3, Empty)
@@ -111,7 +118,7 @@ test "player cannot pass through hard walls" {
 test "bomb placement snaps to the current tile and becomes solid after exit" {
   with_test_level(fn() raise {
     bombs.clear()
-    let off_center = cell_top_left(1, 1) + @math.Vec2D(31.0, 15.0)
+    let off_center = cell_center(1, 1) + @math.Vec2D(7.0, 0.0)
     set_player_state(off_center, None, None, true)
     player.val = { ..player.val, active_bombs: 0 }
     place_bomb()
@@ -174,20 +181,69 @@ test "exploding bomb removes soft wall and chained bombs" {
 }
 
 ///|
-test "flames and enemy contact use continuous overlap" {
+test "flames only hit when the center enters the flame cell" {
   with_test_level(fn() raise {
     flames.clear()
     enemies.clear()
-    let flame_cell = cell_bounds(4, 4)
-    let flame_overlap_center = @math.Vec2D(
-      flame_cell.right + PLAYER_RADIUS - 1.0,
-      cell_center(4, 4)[Y],
-    )
-    set_player_state(flame_overlap_center, None, None, true)
+    set_player_state(cell_center(5, 4), None, None, true)
     spawn_flame(4, 4)
     resolve_flame_hits()
-    assert_true(!player.val.alive)
+    assert_true(player.val.alive)
 
+    set_player_state(cell_center(4, 4), None, None, true)
+    resolve_flame_hits()
+    assert_true(!player.val.alive)
+  })
+}
+
+///|
+test "enemy next to a blasted soft wall survives until its center enters the flame cell" {
+  with_test_level(fn() raise {
+    flames.clear()
+    enemies.clear()
+    set_tile(3, 1, SoftWall)
+    bombs.clear()
+    bombs.push({
+      entity: @entity.Entity::new(),
+      cell_x: 2,
+      cell_y: 1,
+      timer: 0.0,
+      radius: 2,
+      passable_for_player: false,
+    })
+    player.val = { ..player.val, active_bombs: 1 }
+    let adjacent_center = cell_center(4, 1) +
+      @math.Vec2D(-PLAYER_RADIUS + 1.0, 0.0)
+    enemies.push({
+      entity: @entity.Entity::new(),
+      cell_x: 4,
+      cell_y: 1,
+      center: adjacent_center,
+      direction: Left,
+      desired_direction: Left,
+      speed: ENEMY_SPEED,
+      radius: ENEMY_RADIUS,
+      alive: true,
+    })
+    resolve_bomb_explosions()
+    resolve_flame_hits()
+    assert_true(tile_at(3, 1) == Empty)
+    assert_true(
+      flames.any(fn(flame) { flame.cell_x == 3 && flame.cell_y == 1 }),
+    )
+    assert_true(enemies[0].alive)
+
+    enemies[0].center = cell_center(3, 1)
+    resolve_enemy_contact()
+    resolve_flame_hits()
+    assert_true(!enemies[0].alive)
+  })
+}
+
+///|
+test "enemy contact still uses continuous overlap" {
+  with_test_level(fn() raise {
+    enemies.clear()
     let player_contact_center = cell_center(6, 4)
     set_player_state(player_contact_center, None, None, true)
     let enemy_center = player_contact_center +

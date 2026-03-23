@@ -38,13 +38,13 @@ const PLAYER_SPEED : Double = CELL_SIZE * 3.0
 const ENEMY_SPEED : Double = CELL_SIZE * 2.5
 
 ///|
-const PLAYER_RADIUS : Double = 14.0
+const PLAYER_RADIUS : Double = CELL_SIZE / 2.0 - 0.5
 
 ///|
-const ENEMY_RADIUS : Double = 14.0
+const ENEMY_RADIUS : Double = CELL_SIZE / 2.0 - 0.5
 
 ///|
-const BOMB_RADIUS : Double = 14.0
+const BOMB_RADIUS : Double = CELL_SIZE / 2.0 - 0.5
 
 ///|
 const COLLISION_EPSILON : Double = 0.001
@@ -53,7 +53,7 @@ const COLLISION_EPSILON : Double = 0.001
 const BOMB_FUSE_TIME : Double = 2.0
 
 ///|
-const FLAME_DURATION : Double = 0.42
+const FLAME_DURATION : Double = 0.16
 
 ///|
 const PLAYER_START_BOMBS : Int = 2

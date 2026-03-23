@@ -639,20 +639,14 @@ fn tick_enemies(delta : Double) -> Unit {
 }
 
 ///|
-fn flame_overlaps_circle(center : @math.Vec2D, radius : Double) -> Bool {
-  flames.any(fn(flame) {
-    circle_overlaps_rect(
-      center,
-      radius,
-      cell_bounds(flame.cell_x, flame.cell_y),
-    )
-  })
+fn flame_contains_center(center : @math.Vec2D) -> Bool {
+  let (cell_x, cell_y) = world_to_cell(center)
+  flames.any(fn(flame) { flame.cell_x == cell_x && flame.cell_y == cell_y })
 }
 
 ///|
 fn resolve_flame_hits() -> Unit {
-  if player.val.alive &&
-    flame_overlaps_circle(player.val.center, player.val.radius) {
+  if player.val.alive && flame_contains_center(player.val.center) {
     player.val = {
       ..player.val,
       alive: false,
@@ -661,7 +655,7 @@ fn resolve_flame_hits() -> Unit {
     }
   }
   for enemy in enemies {
-    if enemy.alive && flame_overlaps_circle(enemy.center, enemy.radius) {
+    if enemy.alive && flame_contains_center(enemy.center) {
       enemy.alive = false
       hide_entity(enemy.entity)
     }
