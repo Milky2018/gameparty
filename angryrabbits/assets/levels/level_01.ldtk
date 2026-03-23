@@ -888,7 +888,7 @@
 						},
 						{
 							"__identifier": "SlingshotFrontStick",
-							"__grid": [38,72],
+							"__grid": [38,74],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -897,14 +897,14 @@
 							"width": 20,
 							"height": 100,
 							"defUid": 108,
-							"px": [152,288],
+							"px": [152,296],
 							"fieldInstances": [],
 							"__worldX": 152,
-							"__worldY": 288
+							"__worldY": 296
 						},
 						{
 							"__identifier": "SlingshotBackStick",
-							"__grid": [37,72],
+							"__grid": [37,74],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": null,
@@ -913,10 +913,10 @@
 							"width": 28,
 							"height": 60,
 							"defUid": 109,
-							"px": [148,288],
+							"px": [148,296],
 							"fieldInstances": [],
 							"__worldX": 148,
-							"__worldY": 288
+							"__worldY": 296
 						},
 						{
 							"__identifier": "RabbitSpawn",

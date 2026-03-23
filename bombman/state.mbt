@@ -1,0 +1,406 @@
+///|
+const VIEWPORT_WIDTH : Double = 656.0
+
+///|
+const VIEWPORT_HEIGHT : Double = 616.0
+
+///|
+const ZOOM : Double = 1.5
+
+///|
+const FPS : UInt = 60
+
+///|
+const GRID_WIDTH : Int = 13
+
+///|
+const GRID_HEIGHT : Int = 11
+
+///|
+const CELL_SIZE : Double = 48.0
+
+///|
+const GRID_OFFSET_X : Double = 16.0
+
+///|
+const GRID_OFFSET_Y : Double = 84.0
+
+///|
+const FLOOR_INSET : Double = 2.0
+
+///|
+const TURN_ASSIST_PX : Double = 10.0
+
+///|
+const PLAYER_SPEED : Double = CELL_SIZE * 3.0
+
+///|
+const ENEMY_SPEED : Double = CELL_SIZE * 2.5
+
+///|
+const PLAYER_RADIUS : Double = 14.0
+
+///|
+const ENEMY_RADIUS : Double = 14.0
+
+///|
+const BOMB_RADIUS : Double = 14.0
+
+///|
+const COLLISION_EPSILON : Double = 0.001
+
+///|
+const BOMB_FUSE_TIME : Double = 2.0
+
+///|
+const FLAME_DURATION : Double = 0.42
+
+///|
+const PLAYER_START_BOMBS : Int = 2
+
+///|
+const PLAYER_BLAST_RADIUS : Int = 2
+
+///|
+const FLOOR_COLOR : String = "rgb(36, 48, 56)"
+
+///|
+const HARD_WALL_COLOR : String = "rgb(86, 113, 140)"
+
+///|
+const SOFT_WALL_COLOR : String = "rgb(163, 111, 58)"
+
+///|
+const PLAYER_COLOR : String = "rgb(70, 200, 255)"
+
+///|
+const PLAYER_DEAD_COLOR : String = "rgb(80, 98, 110)"
+
+///|
+const BOMB_COLOR : String = "rgb(28, 28, 32)"
+
+///|
+const FLAME_COLOR : String = "rgb(255, 170, 56)"
+
+///|
+const HUD_TEXT_COLOR : String = "rgb(239, 241, 244)"
+
+///|
+const HUD_MUTED_TEXT_COLOR : String = "rgb(166, 176, 184)"
+
+///|
+const BOMBMAN_FONT_FAMILY : String = "ThaleahFat"
+
+///|
+const BOMBMAN_FONT_PATH : String = "bombman/assets/ThaleahFat.ttf"
+
+///|
+priv enum TileKind {
+  Empty
+  HardWall
+  SoftWall
+} derive(Eq)
+
+///|
+priv enum GamePhase {
+  Start
+  Playing
+  Won
+  Lost
+} derive(Eq)
+
+///|
+priv enum Direction {
+  Up
+  Down
+  Left
+  Right
+} derive(Eq)
+
+///|
+priv struct Rect {
+  left : Double
+  top : Double
+  right : Double
+  bottom : Double
+}
+
+///|
+priv struct PlayerState {
+  center : @math.Vec2D
+  direction : Direction?
+  desired_direction : Direction?
+  speed : Double
+  radius : Double
+  alive : Bool
+  active_bombs : Int
+  max_bombs : Int
+  blast_radius : Int
+}
+
+///|
+priv struct EnemyState {
+  entity : @entity.Entity
+  mut cell_x : Int
+  mut cell_y : Int
+  mut center : @math.Vec2D
+  mut direction : Direction
+  mut desired_direction : Direction
+  speed : Double
+  radius : Double
+  mut alive : Bool
+}
+
+///|
+priv struct BombState {
+  entity : @entity.Entity
+  cell_x : Int
+  cell_y : Int
+  mut timer : Double
+  radius : Int
+  mut passable_for_player : Bool
+}
+
+///|
+priv struct FlameState {
+  entity : @entity.Entity
+  cell_x : Int
+  cell_y : Int
+  mut timer : Double
+}
+
+///|
+let phase : Ref[GamePhase] = { val: Start }
+
+///|
+let tiles : Array[TileKind] = []
+
+///|
+let enemies : Array[EnemyState] = []
+
+///|
+let bombs : Array[BombState] = []
+
+///|
+let flames : Array[FlameState] = []
+
+///|
+let player : Ref[PlayerState] = {
+  val: {
+    center: cell_center(1, 1),
+    direction: None,
+    desired_direction: None,
+    speed: PLAYER_SPEED,
+    radius: PLAYER_RADIUS,
+    alive: true,
+    active_bombs: 0,
+    max_bombs: PLAYER_START_BOMBS,
+    blast_radius: PLAYER_BLAST_RADIUS,
+  },
+}
+
+///|
+let input_press_sequence : Ref[Int] = { val: 0 }
+
+///|
+let up_press_stamp : Ref[Int] = { val: 0 }
+
+///|
+let down_press_stamp : Ref[Int] = { val: 0 }
+
+///|
+let left_press_stamp : Ref[Int] = { val: 0 }
+
+///|
+let right_press_stamp : Ref[Int] = { val: 0 }
+
+///|
+let tile_entities : Array[@entity.Entity] = []
+
+///|
+let background_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let player_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let title_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let hud_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let status_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let hint_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+fn cell_index(x : Int, y : Int) -> Int {
+  y * GRID_WIDTH + x
+}
+
+///|
+fn cell_in_bounds(x : Int, y : Int) -> Bool {
+  x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT
+}
+
+///|
+fn cell_center(x : Int, y : Int) -> @math.Vec2D {
+  @math.Vec2D(
+    GRID_OFFSET_X + x.to_double() * CELL_SIZE + CELL_SIZE / 2.0,
+    GRID_OFFSET_Y + y.to_double() * CELL_SIZE + CELL_SIZE / 2.0,
+  )
+}
+
+///|
+fn clamp_int(value : Int, min_ : Int, max_ : Int) -> Int {
+  if value < min_ {
+    min_
+  } else if value > max_ {
+    max_
+  } else {
+    value
+  }
+}
+
+///|
+fn clamp_double(value : Double, min_ : Double, max_ : Double) -> Double {
+  if value < min_ {
+    min_
+  } else if value > max_ {
+    max_
+  } else {
+    value
+  }
+}
+
+///|
+fn abs_double(value : Double) -> Double {
+  if value < 0.0 {
+    -value
+  } else {
+    value
+  }
+}
+
+///|
+fn cell_top_left(x : Int, y : Int) -> @math.Vec2D {
+  @math.Vec2D(
+    GRID_OFFSET_X + x.to_double() * CELL_SIZE,
+    GRID_OFFSET_Y + y.to_double() * CELL_SIZE,
+  )
+}
+
+///|
+fn cell_bounds(x : Int, y : Int) -> Rect {
+  let top_left = cell_top_left(x, y)
+  {
+    left: top_left[X],
+    top: top_left[Y],
+    right: top_left[X] + CELL_SIZE,
+    bottom: top_left[Y] + CELL_SIZE,
+  }
+}
+
+///|
+fn center_to_circle_position(
+  center : @math.Vec2D,
+  radius : Double,
+) -> @math.Vec2D {
+  @math.Vec2D(center[X] - radius, center[Y] - radius)
+}
+
+///|
+fn world_to_cell(center : @math.Vec2D) -> (Int, Int) {
+  let raw_x = @cmath.floor((center[X] - GRID_OFFSET_X) / CELL_SIZE).to_int()
+  let raw_y = @cmath.floor((center[Y] - GRID_OFFSET_Y) / CELL_SIZE).to_int()
+  (clamp_int(raw_x, 0, GRID_WIDTH - 1), clamp_int(raw_y, 0, GRID_HEIGHT - 1))
+}
+
+///|
+fn nearest_lane_center_x(x : Double) -> Double {
+  let raw = @cmath.round((x - GRID_OFFSET_X - CELL_SIZE / 2.0) / CELL_SIZE).to_int()
+  let cell_x = clamp_int(raw, 0, GRID_WIDTH - 1)
+  cell_center(cell_x, 0)[X]
+}
+
+///|
+fn nearest_lane_center_y(y : Double) -> Double {
+  let raw = @cmath.round((y - GRID_OFFSET_Y - CELL_SIZE / 2.0) / CELL_SIZE).to_int()
+  let cell_y = clamp_int(raw, 0, GRID_HEIGHT - 1)
+  cell_center(0, cell_y)[Y]
+}
+
+///|
+fn floor_tile_size() -> @math.Vec2D {
+  @math.Vec2D(CELL_SIZE - FLOOR_INSET * 2.0, CELL_SIZE - FLOOR_INSET * 2.0)
+}
+
+///|
+fn floor_tile_position(x : Int, y : Int) -> @math.Vec2D {
+  cell_top_left(x, y) + @math.Vec2D(FLOOR_INSET, FLOOR_INSET)
+}
+
+///|
+fn direction_delta(direction : Direction) -> (Int, Int) {
+  match direction {
+    Up => (0, -1)
+    Down => (0, 1)
+    Left => (-1, 0)
+    Right => (1, 0)
+  }
+}
+
+///|
+fn direction_vector(direction : Direction) -> @math.Vec2D {
+  match direction {
+    Up => @math.Vec2D(0.0, -1.0)
+    Down => @math.Vec2D(0.0, 1.0)
+    Left => @math.Vec2D(-1.0, 0.0)
+    Right => @math.Vec2D(1.0, 0.0)
+  }
+}
+
+///|
+fn is_horizontal(direction : Direction) -> Bool {
+  match direction {
+    Left | Right => true
+    Up | Down => false
+  }
+}
+
+///|
+fn are_perpendicular(a : Direction, b : Direction) -> Bool {
+  is_horizontal(a) != is_horizontal(b)
+}
+
+///|
+fn turn_left(direction : Direction) -> Direction {
+  match direction {
+    Up => Left
+    Down => Right
+    Left => Down
+    Right => Up
+  }
+}
+
+///|
+fn turn_right(direction : Direction) -> Direction {
+  match direction {
+    Up => Right
+    Down => Left
+    Left => Up
+    Right => Down
+  }
+}
+
+///|
+fn opposite_direction(direction : Direction) -> Direction {
+  match direction {
+    Up => Down
+    Down => Up
+    Left => Right
+    Right => Left
+  }
+}
