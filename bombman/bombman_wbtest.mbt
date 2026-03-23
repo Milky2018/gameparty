@@ -204,6 +204,124 @@ test "bomb owner can leave just-placed bomb but other player cannot pass through
 }
 
 ///|
+test "destroyed soft walls can drop items with configured chance" {
+  with_round(SinglePlayer, fn() raise {
+    bombs.clear()
+    flames.clear()
+    items.clear()
+    forced_drop_rolls.push(0.0)
+    forced_drop_kinds.push(PowerUp)
+    players[0] = { ..players[0], active_bombs: 1 }
+    set_tile(3, 1, SoftWall)
+    bombs.push({
+      entity: @entity.Entity::new(),
+      cell_x: 2,
+      cell_y: 1,
+      timer: 0.0,
+      radius: 1,
+      owner: P1,
+      passable_for_owner: false,
+    })
+    resolve_bomb_explosions()
+    assert_true(tile_at(3, 1) is Empty)
+    assert_eq(items.length(), 1)
+    assert_eq(items[0].cell_x, 3)
+    assert_eq(items[0].cell_y, 1)
+    assert_true(items[0].kind is PowerUp)
+  })
+}
+
+///|
+test "players pick up items with caps applied" {
+  with_round(SinglePlayer, fn() raise {
+    items.clear()
+    let base_speed = players[0].speed
+    let base_bombs = players[0].max_bombs
+    let base_radius = players[0].blast_radius
+    let pickup_cell = cell_center(2, 1)
+    players[0] = { ..players[0], center: pickup_cell }
+
+    spawn_item(2, 1, Shoes)
+    resolve_item_pickups()
+    assert_eq(items.length(), 0)
+    assert_eq(players[0].speed, base_speed + CELL_SIZE)
+
+    spawn_item(2, 1, BombUp)
+    resolve_item_pickups()
+    assert_eq(items.length(), 0)
+    assert_eq(players[0].max_bombs, base_bombs + 1)
+
+    spawn_item(2, 1, PowerUp)
+    resolve_item_pickups()
+    assert_eq(items.length(), 0)
+    assert_eq(players[0].blast_radius, base_radius + 1)
+
+    players[0] = {
+      ..players[0],
+      speed: PLAYER_MAX_SPEED,
+      max_bombs: PLAYER_MAX_BOMBS,
+      blast_radius: PLAYER_MAX_BLAST_RADIUS,
+    }
+    spawn_item(2, 1, Shoes)
+    spawn_item(3, 1, BombUp)
+    spawn_item(4, 1, PowerUp)
+    players[0] = { ..players[0], center: cell_center(2, 1) }
+    resolve_item_pickups()
+    players[0] = { ..players[0], center: cell_center(3, 1) }
+    resolve_item_pickups()
+    players[0] = { ..players[0], center: cell_center(4, 1) }
+    resolve_item_pickups()
+    assert_eq(players[0].speed, PLAYER_MAX_SPEED)
+    assert_eq(players[0].max_bombs, PLAYER_MAX_BOMBS)
+    assert_eq(players[0].blast_radius, PLAYER_MAX_BLAST_RADIUS)
+  })
+}
+
+///|
+test "drop candidates exclude fully maxed item kinds" {
+  with_round(SinglePlayer, fn() raise {
+    players[0] = {
+      ..players[0],
+      speed: PLAYER_MAX_SPEED,
+      max_bombs: PLAYER_MAX_BOMBS,
+      blast_radius: PLAYER_BLAST_RADIUS,
+    }
+    let candidates = available_drop_kinds()
+    assert_eq(candidates.length(), 1)
+    assert_true(candidates[0] is PowerUp)
+  })
+}
+
+///|
+test "enemy deaths can drop items with configured chance" {
+  with_round(SinglePlayer, fn() raise {
+    flames.clear()
+    items.clear()
+    enemies.clear()
+    forced_drop_rolls.push(0.0)
+    forced_drop_kinds.push(BombUp)
+    let center = cell_center(5, 5)
+    enemies.push({
+      entity: @entity.Entity::new(),
+      cell_x: 5,
+      cell_y: 5,
+      center,
+      direction: Down,
+      desired_direction: Down,
+      speed: ENEMY_SPEED,
+      radius: ENEMY_RADIUS,
+      alive: true,
+    })
+    spawn_flame(5, 5)
+    resolve_flame_hits()
+    assert_eq(items.length(), 1)
+    assert_eq(items[0].cell_x, 5)
+    assert_eq(items[0].cell_y, 5)
+    assert_true(items[0].kind is BombUp)
+  })
+}
+
+///|
 test "co-op win needs enemies gone and at least one survivor" {
   with_round(Coop, fn() raise {
     enemies.clear()

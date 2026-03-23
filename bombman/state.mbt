@@ -32,7 +32,10 @@ const FLOOR_INSET : Double = 2.0
 const TURN_ASSIST_PX : Double = 10.0
 
 ///|
-const PLAYER_SPEED : Double = CELL_SIZE * 1.0
+const PLAYER_SPEED : Double = CELL_SIZE * 4.0
+
+///|
+const PLAYER_MAX_SPEED : Double = CELL_SIZE * 9.0
 
 ///|
 const ENEMY_SPEED : Double = CELL_SIZE * 2.5
@@ -59,7 +62,19 @@ const FLAME_DURATION : Double = 0.16
 const PLAYER_START_BOMBS : Int = 1
 
 ///|
+const PLAYER_MAX_BOMBS : Int = 9
+
+///|
 const PLAYER_BLAST_RADIUS : Int = 1
+
+///|
+const PLAYER_MAX_BLAST_RADIUS : Int = 9
+
+///|
+const SOFT_WALL_ITEM_DROP_CHANCE : Double = 0.15
+
+///|
+const ENEMY_ITEM_DROP_CHANCE : Double = 0.5
 
 ///|
 const FLOOR_COLOR : String = "rgb(36, 48, 56)"
@@ -87,6 +102,15 @@ const BOMB_COLOR : String = "rgb(28, 28, 32)"
 
 ///|
 const FLAME_COLOR : String = "rgb(255, 170, 56)"
+
+///|
+const SHOES_ITEM_COLOR : String = "rgb(108, 232, 143)"
+
+///|
+const BOMB_ITEM_COLOR : String = "rgb(253, 236, 102)"
+
+///|
+const POWER_ITEM_COLOR : String = "rgb(176, 124, 255)"
 
 ///|
 const HUD_TEXT_COLOR : String = "rgb(239, 241, 244)"
@@ -163,6 +187,13 @@ priv enum RoundOutcome {
 }
 
 ///|
+priv enum ItemKind {
+  Shoes
+  BombUp
+  PowerUp
+} derive(Eq)
+
+///|
 priv enum PlayerId {
   P1
   P2
@@ -195,12 +226,12 @@ priv struct PlayerState {
   mut center : @math.Vec2D
   mut direction : Direction?
   mut desired_direction : Direction?
-  speed : Double
+  mut speed : Double
   radius : Double
   mut alive : Bool
   mut active_bombs : Int
-  max_bombs : Int
-  blast_radius : Int
+  mut max_bombs : Int
+  mut blast_radius : Int
 }
 
 ///|
@@ -236,6 +267,14 @@ priv struct FlameState {
 }
 
 ///|
+priv struct ItemState {
+  entity : @entity.Entity
+  cell_x : Int
+  cell_y : Int
+  kind : ItemKind
+}
+
+///|
 priv struct InputStamps {
   mut sequence : Int
   mut up : Int
@@ -267,6 +306,9 @@ let bombs : Array[BombState] = []
 
 ///|
 let flames : Array[FlameState] = []
+
+///|
+let items : Array[ItemState] = []
 
 ///|
 let players : Array[PlayerState] = [
@@ -408,6 +450,15 @@ let exit_request_count : Ref[Int] = { val: 0 }
 let suppress_exit_for_tests : Ref[Bool] = { val: false }
 
 ///|
+let drop_rng_state : Ref[Int] = { val: 987654321 }
+
+///|
+let forced_drop_rolls : Array[Double] = []
+
+///|
+let forced_drop_kinds : Array[ItemKind] = []
+
+///|
 fn cell_index(x : Int, y : Int) -> Int {
   y * GRID_WIDTH + x
 }
@@ -505,6 +556,24 @@ fn mode_label(mode : GameMode) -> String {
     SinglePlayer => "1 PLAYER"
     Coop => "2 PLAYERS A"
     Versus => "2 PLAYERS B"
+  }
+}
+
+///|
+fn item_label(kind : ItemKind) -> String {
+  match kind {
+    Shoes => "S"
+    BombUp => "B"
+    PowerUp => "P"
+  }
+}
+
+///|
+fn item_color(kind : ItemKind) -> String {
+  match kind {
+    Shoes => SHOES_ITEM_COLOR
+    BombUp => BOMB_ITEM_COLOR
+    PowerUp => POWER_ITEM_COLOR
   }
 }
 
@@ -670,4 +739,27 @@ fn alive_player_count() -> Int {
       acc
     }
   })
+}
+
+///|
+fn player_can_use_item(player : PlayerState, kind : ItemKind) -> Bool {
+  if !player.active {
+    return false
+  }
+  match kind {
+    Shoes => player.speed < PLAYER_MAX_SPEED
+    BombUp => player.max_bombs < PLAYER_MAX_BOMBS
+    PowerUp => player.blast_radius < PLAYER_MAX_BLAST_RADIUS
+  }
+}
+
+///|
+fn available_drop_kinds() -> Array[ItemKind] {
+  let kinds : Array[ItemKind] = []
+  for kind in [Shoes, BombUp, PowerUp] {
+    if players.any(fn(player) { player_can_use_item(player, kind) }) {
+      kinds.push(kind)
+    }
+  }
+  kinds
 }

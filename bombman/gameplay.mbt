@@ -599,6 +599,50 @@ fn update_bomb_passability() -> Unit {
 }
 
 ///|
+fn apply_item_to_player(player : PlayerState, kind : ItemKind) -> Unit {
+  match kind {
+    Shoes =>
+      player.speed = clamp_double(
+        player.speed + CELL_SIZE,
+        0.0,
+        PLAYER_MAX_SPEED,
+      )
+    BombUp =>
+      player.max_bombs = clamp_int(player.max_bombs + 1, 0, PLAYER_MAX_BOMBS)
+    PowerUp =>
+      player.blast_radius = clamp_int(
+        player.blast_radius + 1,
+        0,
+        PLAYER_MAX_BLAST_RADIUS,
+      )
+  }
+}
+
+///|
+fn resolve_item_pickups() -> Unit {
+  let mut index = items.length()
+  while index > 0 {
+    index -= 1
+    let item = items[index]
+    let mut picked_up = false
+    for player in players {
+      if player.active && player.alive {
+        let (cell_x, cell_y) = world_to_cell(player.center)
+        if cell_x == item.cell_x && cell_y == item.cell_y {
+          apply_item_to_player(player, item.kind)
+          picked_up = true
+          break
+        }
+      }
+    }
+    if picked_up {
+      hide_entity(item.entity)
+      ignore(items.remove(index))
+    }
+  }
+}
+
+///|
 fn tick_player_motion(index : Int, delta : Double) -> Unit {
   let player = players[index]
   if !player.active || !player.alive {
@@ -811,6 +855,8 @@ fn resolve_flame_hits() -> Unit {
     if enemy.alive && flame_contains_center(enemy.center) {
       enemy.alive = false
       hide_entity(enemy.entity)
+      let (cell_x, cell_y) = world_to_cell(enemy.center)
+      maybe_spawn_random_item(cell_x, cell_y, ENEMY_ITEM_DROP_CHANCE)
     }
   }
 }
@@ -874,6 +920,7 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
   }
   let delta = @time.delta()
   tick_players_motion(delta)
+  resolve_item_pickups()
   tick_bombs(delta)
   resolve_bomb_explosions()
   tick_flames(delta)

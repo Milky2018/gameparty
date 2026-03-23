@@ -128,6 +128,11 @@ fn has_bomb_at(x : Int, y : Int) -> Bool {
 }
 
 ///|
+fn has_item_at(x : Int, y : Int) -> Bool {
+  items.any(fn(item) { item.cell_x == x && item.cell_y == y })
+}
+
+///|
 fn tile_is_solid(x : Int, y : Int) -> Bool {
   match tile_at(x, y) {
     Empty => false
@@ -145,6 +150,8 @@ fn reset_direction_input_state() -> Unit {
     input_state.right = 0
   }
   p2_bomb_test_override.val = false
+  forced_drop_rolls.clear()
+  forced_drop_kinds.clear()
 }
 
 ///|
@@ -221,6 +228,9 @@ fn clear_dynamic_entities() -> Unit {
   for flame in flames {
     hide_entity(flame.entity)
   }
+  for item in items {
+    hide_entity(item.entity)
+  }
   for enemy in enemies {
     hide_entity(enemy.entity)
   }
@@ -229,6 +239,7 @@ fn clear_dynamic_entities() -> Unit {
   }
   bombs.clear()
   flames.clear()
+  items.clear()
   enemies.clear()
 }
 
@@ -407,6 +418,69 @@ fn spawn_flame(x : Int, y : Int) -> Unit {
 }
 
 ///|
+fn spawn_item(x : Int, y : Int, kind : ItemKind) -> Unit {
+  if has_item_at(x, y) {
+    return
+  }
+  items.push({ entity: @entity.Entity::new(), cell_x: x, cell_y: y, kind })
+}
+
+///|
+fn next_drop_roll() -> Double {
+  match forced_drop_rolls.pop() {
+    Some(value) => value
+    None => {
+      let seed = drop_rng_state.val
+      let next_seed = seed * 48271 % 2147483647
+      drop_rng_state.val = if next_seed <= 0 { 1 } else { next_seed }
+      drop_rng_state.val.to_double() / 2147483647.0
+    }
+  }
+}
+
+///|
+fn next_drop_kind(candidates : Array[ItemKind]) -> ItemKind? {
+  if candidates.is_empty() {
+    return None
+  }
+  match forced_drop_kinds.pop() {
+    Some(kind) =>
+      if candidates.any(fn(candidate) { candidate == kind }) {
+        Some(kind)
+      } else {
+        None
+      }
+    None => {
+      let roll = next_drop_roll()
+      let index = clamp_int(
+        @cmath.floor(roll * candidates.length().to_double()).to_int(),
+        0,
+        candidates.length() - 1,
+      )
+      Some(candidates[index])
+    }
+  }
+}
+
+///|
+fn maybe_spawn_random_item(x : Int, y : Int, chance : Double) -> Unit {
+  if has_item_at(x, y) {
+    return
+  }
+  let candidates = available_drop_kinds()
+  if candidates.is_empty() {
+    return
+  }
+  if next_drop_roll() >= chance {
+    return
+  }
+  match next_drop_kind(candidates) {
+    Some(kind) => spawn_item(x, y, kind)
+    None => ()
+  }
+}
+
+///|
 fn explode_bomb_at(index : Int) -> Unit {
   let bomb = bombs[index]
   hide_entity(bomb.entity)
@@ -422,6 +496,7 @@ fn explode_bomb_at(index : Int) -> Unit {
     let y = cell.1
     if tile_at(x, y) == SoftWall {
       set_tile(x, y, Empty)
+      maybe_spawn_random_item(x, y, SOFT_WALL_ITEM_DROP_CHANCE)
     }
     for chained in bombs {
       if chained.cell_x == x && chained.cell_y == y {
@@ -589,6 +664,21 @@ fn sync_flame_visuals() -> Unit {
 }
 
 ///|
+fn sync_item_visuals() -> Unit {
+  for item in items {
+    let center = cell_center(item.cell_x, item.cell_y)
+    set_text_entity_center(
+      item.entity,
+      item_label(item.kind),
+      @math.Vec2D(center[X], center[Y] - 10.0),
+      "18px \{BOMBMAN_FONT_FAMILY}",
+      item_color(item.kind),
+      63,
+    )
+  }
+}
+
+///|
 fn sync_enemy_visuals() -> Unit {
   for index, enemy in enemies {
     if enemy.alive {
@@ -629,6 +719,9 @@ fn hide_gameplay_visuals() -> Unit {
   }
   for flame in flames {
     hide_entity(flame.entity)
+  }
+  for item in items {
+    hide_entity(item.entity)
   }
   for enemy in enemies {
     hide_entity(enemy.entity)
@@ -741,6 +834,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
       sync_tile_visuals()
       sync_bomb_visuals()
       sync_flame_visuals()
+      sync_item_visuals()
       sync_enemy_visuals()
       sync_player_visuals()
       sync_playing_hud_visuals()
