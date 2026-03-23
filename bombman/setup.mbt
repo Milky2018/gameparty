@@ -150,64 +150,34 @@ fn active_enemy_count() -> Int {
 }
 
 ///|
-fn reset_tiles() -> Unit {
+fn tile_kind_for_level_code(code : Int) -> TileKind {
+  match code {
+    LEVEL_EMPTY | LEVEL_PLAYER_SPAWN | LEVEL_ENEMY_SPAWN => Empty
+    LEVEL_HARD_WALL => HardWall
+    LEVEL_SOFT_WALL => SoftWall
+    _ => abort("Unknown bombman level tile code: \{code}")
+  }
+}
+
+///|
+fn has_enemy_spawn_for_level_code(code : Int) -> Bool {
+  match code {
+    LEVEL_ENEMY_SPAWN => true
+    _ => false
+  }
+}
+
+///|
+fn clear_tile_grid() -> Unit {
   tiles.clear()
   let cell_count = GRID_WIDTH * GRID_HEIGHT
   for _ in 0..<cell_count {
     tiles.push(Empty)
   }
-  for y in 0..<GRID_HEIGHT {
-    for x in 0..<GRID_WIDTH {
-      if x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1 {
-        set_tile(x, y, HardWall)
-      } else if x % 2 == 0 && y % 2 == 0 {
-        set_tile(x, y, HardWall)
-      }
-    }
-  }
-  let soft_walls = [
-    (3, 1),
-    (5, 1),
-    (7, 1),
-    (9, 1),
-    (1, 3),
-    (3, 3),
-    (5, 3),
-    (7, 3),
-    (9, 3),
-    (11, 3),
-    (3, 5),
-    (5, 5),
-    (7, 5),
-    (9, 5),
-    (11, 5),
-    (1, 7),
-    (3, 7),
-    (5, 7),
-    (7, 7),
-    (9, 7),
-    (5, 9),
-    (7, 9),
-    (9, 9),
-    (11, 9),
-  ]
-  for pair in soft_walls {
-    let x = pair.0
-    let y = pair.1
-    if tile_at(x, y) == Empty {
-      set_tile(x, y, SoftWall)
-    }
-  }
-  for pair in [(1, 1), (2, 1), (1, 2), (11, 1), (11, 2), (10, 1)] {
-    let x = pair.0
-    let y = pair.1
-    set_tile(x, y, Empty)
-  }
 }
 
 ///|
-fn reset_player() -> Unit {
-  let start_center = cell_center(1, 1)
+fn reset_player(start_center : @math.Vec2D) -> Unit {
   player.val = {
     center: start_center,
     direction: None,
@@ -222,22 +192,61 @@ fn reset_player() -> Unit {
 }
 
 ///|
-fn reset_enemies() -> Unit {
+fn load_level(level_index : Int) -> Unit {
+  if level_index < 0 || level_index >= levels.length() {
+    abort("Bombman level index out of bounds: \{level_index}")
+  }
+  let level = levels[level_index]
+  if level.length() != GRID_HEIGHT {
+    abort(
+      "Bombman level \{level_index + 1} has \{level.length()} rows; expected \{GRID_HEIGHT}",
+    )
+  }
+  clear_tile_grid()
   enemies.clear()
-  let specs = [(11, 1, Left), (11, 9, Up), (9, 5, Down)]
-  for spec in specs {
-    let spawn_center = cell_center(spec.0, spec.1)
-    enemies.push({
-      entity: @entity.Entity::new(),
-      cell_x: spec.0,
-      cell_y: spec.1,
-      center: spawn_center,
-      direction: spec.2,
-      desired_direction: spec.2,
-      speed: ENEMY_SPEED,
-      radius: ENEMY_RADIUS,
-      alive: true,
-    })
+  let mut player_spawn : @math.Vec2D? = None
+  for y in 0..<GRID_HEIGHT {
+    let row = level[y]
+    if row.length() != GRID_WIDTH {
+      abort(
+        "Bombman level \{level_index + 1} row \{y} has \{row.length()} columns; expected \{GRID_WIDTH}",
+      )
+    }
+    for x in 0..<GRID_WIDTH {
+      let code = row[x]
+      set_tile(x, y, tile_kind_for_level_code(code))
+      if code == LEVEL_PLAYER_SPAWN {
+        if player_spawn is Some(_) {
+          abort("Bombman level \{level_index + 1} has multiple player spawns")
+        }
+        player_spawn = Some(cell_center(x, y))
+      }
+      if has_enemy_spawn_for_level_code(code) {
+        enemies.push({
+          entity: @entity.Entity::new(),
+          cell_x: x,
+          cell_y: y,
+          center: cell_center(x, y),
+          direction: default_enemy_direction(),
+          desired_direction: default_enemy_direction(),
+          speed: ENEMY_SPEED,
+          radius: ENEMY_RADIUS,
+          alive: true,
+        })
+      }
+    }
+  }
+  if player_spawn is Some(center) {
+    reset_player(center)
+  } else {
+    abort("Bombman level \{level_index + 1} is missing a player spawn")
+  }
+  for enemy in enemies {
+    if tile_at(enemy.cell_x, enemy.cell_y) != Empty {
+      abort(
+        "Bombman level \{level_index + 1} spawns an enemy on a solid tile at (\{enemy.cell_x}, \{enemy.cell_y})",
+      )
+    }
   }
 }
 
@@ -260,10 +269,8 @@ fn clear_dynamic_entities() -> Unit {
 fn reset_level() -> Unit {
   ensure_tile_entities()
   reset_direction_input_state()
-  reset_tiles()
-  reset_player()
   clear_dynamic_entities()
-  reset_enemies()
+  load_level(current_level.val)
   phase.val = Start
 }
 
@@ -363,18 +370,24 @@ fn place_bomb() -> Unit {
 
 ///|
 fn phase_status_text() -> String {
+  let level_text = "Level \{current_level_number()}/\{levels.length()}"
   match phase.val {
-    Start => "Press Enter or Space to start"
+    Start => "\{level_text}   Press Enter or Space to start"
     Playing => {
       let enemies_left = active_enemy_count()
       if player.val.alive {
-        "Bombs: \{player.val.max_bombs - player.val.active_bombs}/\{player.val.max_bombs}   Enemies: \{enemies_left}"
+        "\{level_text}   Bombs: \{player.val.max_bombs - player.val.active_bombs}/\{player.val.max_bombs}   Enemies: \{enemies_left}"
       } else {
-        "Boom. You were caught in the blast."
+        "\{level_text}   Boom. You were caught in the blast."
       }
     }
-    Won => "Stage clear. Press Enter or R to restart"
-    Lost => "You lost. Press Enter or R to restart"
+    Won =>
+      if current_level.val + 1 < levels.length() {
+        "\{level_text} clear. Press Enter or Space for the next level"
+      } else {
+        "All levels cleared. Press Enter or Space to loop back to level 1"
+      }
+    Lost => "\{level_text} failed. Press Enter or R to restart"
   }
 }
 
@@ -383,7 +396,7 @@ fn hint_text() -> String {
   match phase.val {
     Start => "Move: WASD / Arrows   Bomb: Space   ESC: Exit"
     Playing => "Move: WASD / Arrows   Bomb: Space   R: Restart   ESC: Exit"
-    Won => "Enter / R restart   ESC exit"
+    Won => "Enter / Space next level   R restart   ESC exit"
     Lost => "Enter / R restart   ESC exit"
   }
 }

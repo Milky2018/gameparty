@@ -25,6 +25,7 @@ fn set_player_state(
 ///|
 fn with_test_level(test_fn : () -> Unit raise) -> Unit raise {
   reset_test_input_state()
+  current_level.val = 0
   reset_level()
   phase.val = Playing
   test_fn()
@@ -61,6 +62,46 @@ test "latest held direction prefers the most recent pressed key" {
     @inputs.pressed_keys.remove(KeyD)
     assert_true(latest_held_direction() is Some(Up))
   })
+}
+
+///|
+test "space can start the game from the title screen" {
+  reset_test_input_state()
+  current_level.val = 0
+  reset_level()
+  phase.val = Start
+  @inputs.pressed_keys.add(Space)
+  @inputs.advanced_key_system(1.0 / FPS.to_double())
+  input_system(@ecs.require_current_world())
+  assert_true(phase.val == Playing)
+  @inputs.pressed_keys.clear()
+  @inputs.advanced_key_system(1.0 / FPS.to_double())
+}
+
+///|
+test "built-in levels load with one player spawn and empty enemy spawn cells" {
+  for level_index in 0..<levels.length() {
+    current_level.val = level_index
+    reset_level()
+    let (player_cell_x, player_cell_y) = world_to_cell(player.val.center)
+    assert_true(tile_at(player_cell_x, player_cell_y) == Empty)
+    assert_true(enemies.length() > 0)
+    for enemy in enemies {
+      assert_true(tile_at(enemy.cell_x, enemy.cell_y) == Empty)
+    }
+  }
+  current_level.val = 0
+}
+
+///|
+test "won phase advances to the next level" {
+  reset_test_input_state()
+  current_level.val = 0
+  reset_level()
+  phase.val = Won
+  request_start()
+  assert_eq(current_level.val, 1)
+  assert_true(phase.val == Playing)
 }
 
 ///|

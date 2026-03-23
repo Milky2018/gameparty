@@ -7,6 +7,10 @@ fn request_restart() -> Unit {
 fn request_start() -> Unit {
   if phase.val == Start {
     phase.val = Playing
+  } else if phase.val == Won {
+    current_level.val = (current_level.val + 1) % levels.length()
+    reset_level()
+    phase.val = Playing
   }
 }
 
@@ -28,8 +32,15 @@ fn handle_global_input() -> Unit {
 ///|
 fn handle_phase_input() -> Unit {
   match phase.val {
-    Start => if @inputs.is_just_pressed(Enter) { request_start() }
-    Won | Lost => if @inputs.is_just_pressed(Enter) { request_restart() }
+    Start =>
+      if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+        request_start()
+      }
+    Won =>
+      if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+        request_start()
+      }
+    Lost => if @inputs.is_just_pressed(Enter) { request_restart() }
     Playing => ()
   }
 }
