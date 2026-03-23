@@ -1,105 +1,192 @@
 ///|
-fn request_restart() -> Unit {
-  reset_level()
-}
-
-///|
-fn request_start() -> Unit {
-  if phase.val == Start {
-    phase.val = Playing
-  } else if phase.val == Won {
-    current_level.val = (current_level.val + 1) % levels.length()
-    reset_level()
-    phase.val = Playing
+fn request_exit() -> Unit {
+  exit_request_count.val += 1
+  if !suppress_exit_for_tests.val {
+    @system.exit()
   }
 }
 
 ///|
-fn request_exit() -> Unit {
-  @system.exit()
+fn request_restart_round() -> Unit {
+  if phase.val != MainMenu {
+    start_round(current_mode.val)
+  }
+}
+
+///|
+fn continue_after_round_over() -> Unit {
+  if phase.val != RoundOver {
+    return
+  }
+  match current_mode.val {
+    Versus => start_round(Versus)
+    SinglePlayer | Coop =>
+      match round_outcome.val {
+        LevelClear => {
+          current_level.val = (current_level.val + 1) % levels.length()
+          start_round(current_mode.val)
+        }
+        Defeat | P1Win | P2Win | Draw => start_round(current_mode.val)
+      }
+  }
+}
+
+///|
+fn activate_menu_option(option : MenuOption) -> Unit {
+  menu_selection.val = option
+  match option {
+    Exit => request_exit()
+    OnePlayer => start_round(SinglePlayer)
+    TwoPlayersA => start_round(Coop)
+    TwoPlayersB => start_round(Versus)
+  }
+}
+
+///|
+fn set_round_over(outcome : RoundOutcome) -> Unit {
+  round_outcome.val = outcome
+  phase.val = RoundOver
 }
 
 ///|
 fn handle_global_input() -> Unit {
-  if @inputs.is_just_pressed(Escape) {
-    request_exit()
-  }
   if @inputs.is_just_pressed(KeyR) {
-    request_restart()
+    request_restart_round()
+  }
+  if @inputs.is_just_pressed(Escape) {
+    match phase.val {
+      MainMenu => request_exit()
+      Playing | RoundOver => return_to_menu()
+    }
   }
 }
 
 ///|
-fn handle_phase_input() -> Unit {
-  match phase.val {
-    Start =>
-      if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
-        request_start()
+fn handle_menu_input() -> Unit {
+  if phase.val != MainMenu {
+    return
+  }
+  if @inputs.is_just_pressed(KeyW) || @inputs.is_just_pressed(ArrowUp) {
+    menu_selection.val = previous_menu_option(menu_selection.val)
+  }
+  if @inputs.is_just_pressed(KeyS) || @inputs.is_just_pressed(ArrowDown) {
+    menu_selection.val = next_menu_option(menu_selection.val)
+  }
+  if @inputs.is_just_pressed(KeyA) || @inputs.is_just_pressed(ArrowLeft) {
+    current_level.val = previous_level_index(current_level.val)
+  }
+  if @inputs.is_just_pressed(KeyD) || @inputs.is_just_pressed(ArrowRight) {
+    current_level.val = next_level_index(current_level.val)
+  }
+  if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+    activate_menu_option(menu_selection.val)
+  }
+}
+
+///|
+fn handle_round_over_input() -> Unit {
+  if phase.val == RoundOver &&
+    (@inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space)) {
+    continue_after_round_over()
+  }
+}
+
+///|
+fn input_mapping_pressed(player_id : PlayerId, direction : Direction) -> Bool {
+  match current_mode.val {
+    SinglePlayer =>
+      match direction {
+        Up => @inputs.is_pressed(KeyW) || @inputs.is_pressed(ArrowUp)
+        Down => @inputs.is_pressed(KeyS) || @inputs.is_pressed(ArrowDown)
+        Left => @inputs.is_pressed(KeyA) || @inputs.is_pressed(ArrowLeft)
+        Right => @inputs.is_pressed(KeyD) || @inputs.is_pressed(ArrowRight)
       }
-    Won =>
-      if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
-        request_start()
+    Coop | Versus =>
+      match player_id {
+        P1 =>
+          match direction {
+            Up => @inputs.is_pressed(KeyW)
+            Down => @inputs.is_pressed(KeyS)
+            Left => @inputs.is_pressed(KeyA)
+            Right => @inputs.is_pressed(KeyD)
+          }
+        P2 =>
+          match direction {
+            Up => @inputs.is_pressed(KeyI)
+            Down => @inputs.is_pressed(KeyK)
+            Left => @inputs.is_pressed(KeyJ)
+            Right => @inputs.is_pressed(KeyL)
+          }
       }
-    Lost => if @inputs.is_just_pressed(Enter) { request_restart() }
-    Playing => ()
   }
 }
 
 ///|
-fn record_direction_press(direction : Direction) -> Unit {
-  input_press_sequence.val += 1
-  let stamp = input_press_sequence.val
+fn record_direction_press(player_id : PlayerId, direction : Direction) -> Unit {
+  let state = direction_input_state[player_index(player_id)]
+  state.sequence += 1
+  let stamp = state.sequence
   match direction {
-    Up => up_press_stamp.val = stamp
-    Down => down_press_stamp.val = stamp
-    Left => left_press_stamp.val = stamp
-    Right => right_press_stamp.val = stamp
+    Up => state.up = stamp
+    Down => state.down = stamp
+    Left => state.left = stamp
+    Right => state.right = stamp
   }
 }
 
 ///|
-fn direction_press_stamp(direction : Direction) -> Int {
+fn direction_press_stamp(player_id : PlayerId, direction : Direction) -> Int {
+  let state = direction_input_state[player_index(player_id)]
   match direction {
-    Up => up_press_stamp.val
-    Down => down_press_stamp.val
-    Left => left_press_stamp.val
-    Right => right_press_stamp.val
-  }
-}
-
-///|
-fn is_direction_pressed(direction : Direction) -> Bool {
-  match direction {
-    Up => @inputs.is_pressed(KeyW) || @inputs.is_pressed(ArrowUp)
-    Down => @inputs.is_pressed(KeyS) || @inputs.is_pressed(ArrowDown)
-    Left => @inputs.is_pressed(KeyA) || @inputs.is_pressed(ArrowLeft)
-    Right => @inputs.is_pressed(KeyD) || @inputs.is_pressed(ArrowRight)
+    Up => state.up
+    Down => state.down
+    Left => state.left
+    Right => state.right
   }
 }
 
 ///|
 fn refresh_direction_press_stamps() -> Unit {
-  if @inputs.is_just_pressed(KeyW) || @inputs.is_just_pressed(ArrowUp) {
-    record_direction_press(Up)
+  let single = current_mode.val == SinglePlayer
+  if @inputs.is_just_pressed(KeyW) ||
+    (single && @inputs.is_just_pressed(ArrowUp)) {
+    record_direction_press(P1, Up)
   }
-  if @inputs.is_just_pressed(KeyS) || @inputs.is_just_pressed(ArrowDown) {
-    record_direction_press(Down)
+  if @inputs.is_just_pressed(KeyS) ||
+    (single && @inputs.is_just_pressed(ArrowDown)) {
+    record_direction_press(P1, Down)
   }
-  if @inputs.is_just_pressed(KeyA) || @inputs.is_just_pressed(ArrowLeft) {
-    record_direction_press(Left)
+  if @inputs.is_just_pressed(KeyA) ||
+    (single && @inputs.is_just_pressed(ArrowLeft)) {
+    record_direction_press(P1, Left)
   }
-  if @inputs.is_just_pressed(KeyD) || @inputs.is_just_pressed(ArrowRight) {
-    record_direction_press(Right)
+  if @inputs.is_just_pressed(KeyD) ||
+    (single && @inputs.is_just_pressed(ArrowRight)) {
+    record_direction_press(P1, Right)
+  }
+  if current_mode.val != SinglePlayer {
+    if @inputs.is_just_pressed(KeyI) {
+      record_direction_press(P2, Up)
+    }
+    if @inputs.is_just_pressed(KeyK) {
+      record_direction_press(P2, Down)
+    }
+    if @inputs.is_just_pressed(KeyJ) {
+      record_direction_press(P2, Left)
+    }
+    if @inputs.is_just_pressed(KeyL) {
+      record_direction_press(P2, Right)
+    }
   }
 }
 
 ///|
-fn latest_held_direction() -> Direction? {
+fn latest_held_direction(player_id : PlayerId) -> Direction? {
   let mut best_direction : Direction? = None
   let mut best_stamp = -1
   for direction in [Up, Down, Left, Right] {
-    if is_direction_pressed(direction) {
-      let stamp = direction_press_stamp(direction)
+    if input_mapping_pressed(player_id, direction) {
+      let stamp = direction_press_stamp(player_id, direction)
       if stamp > best_stamp || best_direction is None {
         best_direction = Some(direction)
         best_stamp = stamp
@@ -110,17 +197,52 @@ fn latest_held_direction() -> Direction? {
 }
 
 ///|
+fn p2_bomb_just_pressed() -> Bool {
+  let pressed = @raylib.is_key_pressed(@raylib.KeyApostrophe) ||
+    p2_bomb_test_override.val
+  p2_bomb_test_override.val = false
+  pressed
+}
+
+///|
+fn handle_player_inputs() -> Unit {
+  for player in players {
+    if !player.active || !player.alive {
+      player.desired_direction = None
+      player.direction = None
+      continue
+    }
+    player.desired_direction = latest_held_direction(player.id)
+  }
+  match current_mode.val {
+    SinglePlayer =>
+      if @inputs.is_just_pressed(Space) {
+        place_bomb_for_player(0)
+      }
+    Coop | Versus => {
+      if players[0].active && players[0].alive && @inputs.is_just_pressed(KeyG) {
+        place_bomb_for_player(0)
+      }
+      if players[1].active && players[1].alive && p2_bomb_just_pressed() {
+        place_bomb_for_player(1)
+      }
+    }
+  }
+}
+
+///|
 pub fn input_system(_world : @ecs.World) -> Unit {
-  refresh_direction_press_stamps()
   handle_global_input()
-  handle_phase_input()
-  if phase.val != Playing || !player.val.alive {
+  if phase.val == MainMenu {
+    handle_menu_input()
     return
   }
-  player.val = { ..player.val, desired_direction: latest_held_direction() }
-  if @inputs.is_just_pressed(Space) {
-    place_bomb()
+  if phase.val == RoundOver {
+    handle_round_over_input()
+    return
   }
+  refresh_direction_press_stamps()
+  handle_player_inputs()
 }
 
 ///|
@@ -188,10 +310,12 @@ fn solid_tile_rects_near(
 }
 
 ///|
-fn solid_bomb_centers_for_player() -> Array[@math.Vec2D] {
+fn solid_bomb_centers_for_player(index : Int) -> Array[@math.Vec2D] {
+  let player = players[index]
   let centers : Array[@math.Vec2D] = []
   for bomb in bombs {
-    if !bomb.passable_for_player {
+    let solid = bomb.owner != player.id || !bomb.passable_for_owner
+    if solid {
       centers.push(cell_center(bomb.cell_x, bomb.cell_y))
     }
   }
@@ -426,16 +550,17 @@ fn within_turn_assist(center : @math.Vec2D, direction : Direction) -> Bool {
 
 ///|
 fn move_player_in_direction(
+  player_index_ : Int,
   center : @math.Vec2D,
   direction : Direction,
   distance : Double,
 ) -> @math.Vec2D {
   move_circle_with_colliders(
     center,
-    player.val.radius,
+    players[player_index_].radius,
     direction,
     distance,
-    solid_bomb_centers_for_player(),
+    solid_bomb_centers_for_player(player_index_),
   )
 }
 
@@ -456,44 +581,45 @@ fn move_enemy_in_direction(
 }
 
 ///|
-fn update_player_bomb_passability() -> Unit {
+fn update_bomb_passability() -> Unit {
   for bomb in bombs {
-    if bomb.passable_for_player {
-      let overlaps = circle_overlaps_circle(
-        player.val.center,
-        player.val.radius,
-        cell_center(bomb.cell_x, bomb.cell_y),
-        BOMB_RADIUS,
-      )
-      if !overlaps {
-        bomb.passable_for_player = false
+    if bomb.passable_for_owner {
+      let owner = players[player_index(bomb.owner)]
+      if !owner.active ||
+        !circle_overlaps_circle(
+          owner.center,
+          owner.radius,
+          cell_center(bomb.cell_x, bomb.cell_y),
+          BOMB_RADIUS,
+        ) {
+        bomb.passable_for_owner = false
       }
     }
   }
 }
 
 ///|
-fn tick_player_motion(delta : Double) -> Unit {
-  if !player.val.alive {
+fn tick_player_motion(index : Int, delta : Double) -> Unit {
+  let player = players[index]
+  if !player.active || !player.alive {
+    player.direction = None
+    player.desired_direction = None
     return
   }
-  match player.val.desired_direction {
-    None => {
-      player.val = { ..player.val, direction: None }
-      update_player_bomb_passability()
-    }
+  match player.desired_direction {
+    None => player.direction = None
     Some(desired_direction) => {
-      let move_distance = player.val.speed * delta
-      let start_center = player.val.center
+      let move_distance = player.speed * delta
+      let start_center = player.center
       let mut next_center = start_center
       let mut next_direction : Direction? = None
       let mut moved = false
-      let needs_turn_snap = match player.val.direction {
+      let needs_turn_snap = match player.direction {
         Some(current_direction) =>
           are_perpendicular(current_direction, desired_direction)
         None => true
       }
-      let can_attempt_desired = match player.val.direction {
+      let can_attempt_desired = match player.direction {
         Some(current_direction) =>
           if are_perpendicular(current_direction, desired_direction) {
             within_turn_assist(start_center, desired_direction)
@@ -509,7 +635,7 @@ fn tick_player_motion(delta : Double) -> Unit {
           start_center
         }
         let desired_center = move_player_in_direction(
-          desired_start, desired_direction, move_distance,
+          index, desired_start, desired_direction, move_distance,
         )
         if distance_moved_in_direction(
             desired_start, desired_center, desired_direction,
@@ -521,10 +647,10 @@ fn tick_player_motion(delta : Double) -> Unit {
         }
       }
       if !moved {
-        match player.val.direction {
+        match player.direction {
           Some(current_direction) if current_direction != desired_direction => {
             let current_center = move_player_in_direction(
-              start_center, current_direction, move_distance,
+              index, start_center, current_direction, move_distance,
             )
             if distance_moved_in_direction(
                 start_center, current_center, current_direction,
@@ -535,17 +661,34 @@ fn tick_player_motion(delta : Double) -> Unit {
               moved = true
             }
           }
-          _ => ()
+          Some(current_direction) => {
+            let current_center = move_player_in_direction(
+              index, start_center, current_direction, move_distance,
+            )
+            if distance_moved_in_direction(
+                start_center, current_center, current_direction,
+              ) >
+              COLLISION_EPSILON {
+              next_center = current_center
+              next_direction = Some(current_direction)
+              moved = true
+            }
+          }
+          None => ()
         }
       }
-      player.val = {
-        ..player.val,
-        center: next_center,
-        direction: next_direction,
-      }
-      update_player_bomb_passability()
+      player.center = next_center
+      player.direction = next_direction
     }
   }
+}
+
+///|
+fn tick_players_motion(delta : Double) -> Unit {
+  for index in 0..<players.length() {
+    tick_player_motion(index, delta)
+  }
+  update_bomb_passability()
 }
 
 ///|
@@ -657,12 +800,11 @@ fn flame_contains_center(center : @math.Vec2D) -> Bool {
 
 ///|
 fn resolve_flame_hits() -> Unit {
-  if player.val.alive && flame_contains_center(player.val.center) {
-    player.val = {
-      ..player.val,
-      alive: false,
-      direction: None,
-      desired_direction: None,
+  for player in players {
+    if player.active && player.alive && flame_contains_center(player.center) {
+      player.alive = false
+      player.direction = None
+      player.desired_direction = None
     }
   }
   for enemy in enemies {
@@ -675,24 +817,26 @@ fn resolve_flame_hits() -> Unit {
 
 ///|
 fn resolve_enemy_contact() -> Unit {
-  if !player.val.alive {
+  if current_mode.val == Versus {
     return
   }
-  for enemy in enemies {
-    if enemy.alive &&
-      circle_overlaps_circle(
-        player.val.center,
-        player.val.radius,
-        enemy.center,
-        enemy.radius,
-      ) {
-      player.val = {
-        ..player.val,
-        alive: false,
-        direction: None,
-        desired_direction: None,
+  for player in players {
+    if !player.active || !player.alive {
+      continue
+    }
+    for enemy in enemies {
+      if enemy.alive &&
+        circle_overlaps_circle(
+          player.center,
+          player.radius,
+          enemy.center,
+          enemy.radius,
+        ) {
+        player.alive = false
+        player.direction = None
+        player.desired_direction = None
+        break
       }
-      break
     }
   }
 }
@@ -702,22 +846,34 @@ fn resolve_phase() -> Unit {
   if phase.val != Playing {
     return
   }
-  if !player.val.alive {
-    phase.val = Lost
-    return
-  }
-  if active_enemy_count() == 0 {
-    phase.val = Won
+  match current_mode.val {
+    Versus => {
+      let p1_alive = players[0].active && players[0].alive
+      let p2_alive = players[1].active && players[1].alive
+      if p1_alive && !p2_alive {
+        set_round_over(P1Win)
+      } else if p2_alive && !p1_alive {
+        set_round_over(P2Win)
+      } else if !p1_alive && !p2_alive {
+        set_round_over(Draw)
+      }
+    }
+    SinglePlayer | Coop =>
+      if active_enemy_count() == 0 && alive_player_count() > 0 {
+        set_round_over(LevelClear)
+      } else if alive_player_count() == 0 {
+        set_round_over(Defeat)
+      }
   }
 }
 
 ///|
 pub fn simulation_system(_world : @ecs.World) -> Unit {
-  let delta = @time.delta()
   if phase.val != Playing {
     return
   }
-  tick_player_motion(delta)
+  let delta = @time.delta()
+  tick_players_motion(delta)
   tick_bombs(delta)
   resolve_bomb_explosions()
   tick_flames(delta)

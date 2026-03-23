@@ -71,10 +71,16 @@ const HARD_WALL_COLOR : String = "rgb(86, 113, 140)"
 const SOFT_WALL_COLOR : String = "rgb(163, 111, 58)"
 
 ///|
-const PLAYER_COLOR : String = "rgb(70, 200, 255)"
+const P1_COLOR : String = "rgb(70, 200, 255)"
 
 ///|
-const PLAYER_DEAD_COLOR : String = "rgb(80, 98, 110)"
+const P1_DEAD_COLOR : String = "rgb(80, 98, 110)"
+
+///|
+const P2_COLOR : String = "rgb(255, 201, 84)"
+
+///|
+const P2_DEAD_COLOR : String = "rgb(124, 112, 82)"
 
 ///|
 const BOMB_COLOR : String = "rgb(28, 28, 32)"
@@ -87,6 +93,12 @@ const HUD_TEXT_COLOR : String = "rgb(239, 241, 244)"
 
 ///|
 const HUD_MUTED_TEXT_COLOR : String = "rgb(166, 176, 184)"
+
+///|
+const MENU_SELECTED_COLOR : String = "rgb(255, 220, 120)"
+
+///|
+const MENU_NORMAL_COLOR : String = HUD_TEXT_COLOR
 
 ///|
 const BOMBMAN_FONT_FAMILY : String = "ThaleahFat"
@@ -104,10 +116,13 @@ const LEVEL_HARD_WALL : Int = 1
 const LEVEL_SOFT_WALL : Int = 2
 
 ///|
-const LEVEL_PLAYER_SPAWN : Int = 3
+const LEVEL_P1_SPAWN : Int = 3
 
 ///|
-const LEVEL_ENEMY_SPAWN : Int = 4
+const LEVEL_P2_SPAWN : Int = 4
+
+///|
+const LEVEL_ENEMY_SPAWN : Int = 5
 
 ///|
 priv enum TileKind {
@@ -118,10 +133,39 @@ priv enum TileKind {
 
 ///|
 priv enum GamePhase {
-  Start
+  MainMenu
   Playing
-  Won
-  Lost
+  RoundOver
+} derive(Eq)
+
+///|
+priv enum GameMode {
+  SinglePlayer
+  Coop
+  Versus
+} derive(Eq)
+
+///|
+priv enum MenuOption {
+  OnePlayer
+  TwoPlayersA
+  TwoPlayersB
+  Exit
+} derive(Eq)
+
+///|
+priv enum RoundOutcome {
+  LevelClear
+  Defeat
+  P1Win
+  P2Win
+  Draw
+}
+
+///|
+priv enum PlayerId {
+  P1
+  P2
 } derive(Eq)
 
 ///|
@@ -145,13 +189,16 @@ priv struct Rect {
 
 ///|
 priv struct PlayerState {
-  center : @math.Vec2D
-  direction : Direction?
-  desired_direction : Direction?
+  id : PlayerId
+  entity : @entity.Entity
+  active : Bool
+  mut center : @math.Vec2D
+  mut direction : Direction?
+  mut desired_direction : Direction?
   speed : Double
   radius : Double
-  alive : Bool
-  active_bombs : Int
+  mut alive : Bool
+  mut active_bombs : Int
   max_bombs : Int
   blast_radius : Int
 }
@@ -176,7 +223,8 @@ priv struct BombState {
   cell_y : Int
   mut timer : Double
   radius : Int
-  mut passable_for_player : Bool
+  owner : PlayerId
+  mut passable_for_owner : Bool
 }
 
 ///|
@@ -188,7 +236,25 @@ priv struct FlameState {
 }
 
 ///|
-let phase : Ref[GamePhase] = { val: Start }
+priv struct InputStamps {
+  mut sequence : Int
+  mut up : Int
+  mut down : Int
+  mut left : Int
+  mut right : Int
+}
+
+///|
+let phase : Ref[GamePhase] = { val: MainMenu }
+
+///|
+let current_mode : Ref[GameMode] = { val: SinglePlayer }
+
+///|
+let menu_selection : Ref[MenuOption] = { val: OnePlayer }
+
+///|
+let round_outcome : Ref[RoundOutcome] = { val: LevelClear }
 
 ///|
 let tiles : Array[TileKind] = []
@@ -203,8 +269,11 @@ let bombs : Array[BombState] = []
 let flames : Array[FlameState] = []
 
 ///|
-let player : Ref[PlayerState] = {
-  val: {
+let players : Array[PlayerState] = [
+  {
+    id: P1,
+    entity: @entity.Entity::new(),
+    active: true,
     center: cell_center(1, 1),
     direction: None,
     desired_direction: None,
@@ -215,7 +284,21 @@ let player : Ref[PlayerState] = {
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
   },
-}
+  {
+    id: P2,
+    entity: @entity.Entity::new(),
+    active: false,
+    center: cell_center(11, 9),
+    direction: None,
+    desired_direction: None,
+    speed: PLAYER_SPEED,
+    radius: PLAYER_RADIUS,
+    alive: true,
+    active_bombs: 0,
+    max_bombs: PLAYER_START_BOMBS,
+    blast_radius: PLAYER_BLAST_RADIUS,
+  },
+]
 
 ///|
 let level1 : Level = [
@@ -224,11 +307,11 @@ let level1 : Level = [
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
   [1, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 1],
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-  [1, 0, 0, 2, 0, 2, 0, 2, 0, 4, 0, 2, 1],
+  [1, 0, 0, 2, 0, 2, 0, 2, 0, 5, 0, 2, 1],
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
   [1, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 1],
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 4, 1],
+  [1, 0, 0, 0, 0, 2, 0, 2, 0, 0, 5, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -239,11 +322,11 @@ let level2 : Level = [
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
   [1, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 1],
   [1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1],
+  [1, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 1],
   [1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 0, 1],
   [1, 0, 0, 0, 2, 0, 2, 0, 2, 0, 0, 0, 1],
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-  [1, 4, 0, 0, 2, 0, 2, 0, 2, 0, 0, 0, 1],
+  [1, 0, 5, 0, 2, 0, 2, 0, 2, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -254,11 +337,11 @@ let level3 : Level = [
   [1, 0, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
   [1, 2, 0, 2, 0, 0, 0, 2, 0, 0, 0, 2, 1],
   [1, 0, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 1],
   [1, 0, 1, 2, 1, 0, 1, 0, 1, 2, 1, 0, 1],
   [1, 2, 0, 0, 0, 2, 0, 2, 0, 0, 0, 2, 1],
   [1, 0, 1, 2, 1, 0, 1, 0, 1, 2, 1, 0, 1],
-  [1, 4, 0, 0, 0, 2, 0, 2, 0, 0, 0, 4, 1],
+  [1, 0, 5, 0, 0, 2, 0, 2, 0, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -269,11 +352,11 @@ let level4 : Level = [
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
   [1, 0, 0, 2, 0, 2, 0, 2, 0, 2, 0, 0, 1],
   [1, 2, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1],
-  [1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 1],
+  [1, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 1],
   [1, 2, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 1],
   [1, 0, 0, 2, 0, 2, 0, 2, 0, 2, 0, 0, 1],
   [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-  [1, 4, 0, 0, 2, 0, 2, 0, 2, 0, 0, 4, 1],
+  [1, 0, 5, 0, 2, 0, 2, 0, 2, 0, 0, 0, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
@@ -284,19 +367,10 @@ let levels : ReadOnlyArray[Level] = [level1, level2, level3, level4]
 let current_level : Ref[Int] = { val: 0 }
 
 ///|
-let input_press_sequence : Ref[Int] = { val: 0 }
-
-///|
-let up_press_stamp : Ref[Int] = { val: 0 }
-
-///|
-let down_press_stamp : Ref[Int] = { val: 0 }
-
-///|
-let left_press_stamp : Ref[Int] = { val: 0 }
-
-///|
-let right_press_stamp : Ref[Int] = { val: 0 }
+let direction_input_state : Array[InputStamps] = [
+  { sequence: 0, up: 0, down: 0, left: 0, right: 0 },
+  { sequence: 0, up: 0, down: 0, left: 0, right: 0 },
+]
 
 ///|
 let tile_entities : Array[@entity.Entity] = []
@@ -305,10 +379,15 @@ let tile_entities : Array[@entity.Entity] = []
 let background_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
-let player_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let menu_entities : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
 
 ///|
 let hud_entity : @entity.Entity = @entity.Entity::new()
@@ -318,6 +397,15 @@ let status_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let hint_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let p2_bomb_test_override : Ref[Bool] = { val: false }
+
+///|
+let exit_request_count : Ref[Int] = { val: 0 }
+
+///|
+let suppress_exit_for_tests : Ref[Bool] = { val: false }
 
 ///|
 fn cell_index(x : Int, y : Int) -> Int {
@@ -365,6 +453,66 @@ fn abs_double(value : Double) -> Double {
     -value
   } else {
     value
+  }
+}
+
+///|
+fn player_index(id : PlayerId) -> Int {
+  match id {
+    P1 => 0
+    P2 => 1
+  }
+}
+
+///|
+fn menu_options() -> Array[MenuOption] {
+  [OnePlayer, TwoPlayersA, TwoPlayersB, Exit]
+}
+
+///|
+fn menu_option_label(option : MenuOption) -> String {
+  match option {
+    OnePlayer => "1 PLAYER"
+    TwoPlayersA => "2 PLAYERS A"
+    TwoPlayersB => "2 PLAYERS B"
+    Exit => "EXIT"
+  }
+}
+
+///|
+fn next_menu_option(option : MenuOption) -> MenuOption {
+  match option {
+    OnePlayer => TwoPlayersA
+    TwoPlayersA => TwoPlayersB
+    TwoPlayersB => Exit
+    Exit => OnePlayer
+  }
+}
+
+///|
+fn previous_menu_option(option : MenuOption) -> MenuOption {
+  match option {
+    OnePlayer => Exit
+    TwoPlayersA => OnePlayer
+    TwoPlayersB => TwoPlayersA
+    Exit => TwoPlayersB
+  }
+}
+
+///|
+fn mode_label(mode : GameMode) -> String {
+  match mode {
+    SinglePlayer => "1 PLAYER"
+    Coop => "2 PLAYERS A"
+    Versus => "2 PLAYERS B"
+  }
+}
+
+///|
+fn player_color(id : PlayerId, alive : Bool) -> String {
+  match id {
+    P1 => if alive { P1_COLOR } else { P1_DEAD_COLOR }
+    P2 => if alive { P2_COLOR } else { P2_DEAD_COLOR }
   }
 }
 
@@ -497,4 +645,29 @@ fn default_enemy_direction() -> Direction {
 ///|
 fn current_level_number() -> Int {
   current_level.val + 1
+}
+
+///|
+fn next_level_index(level_index : Int) -> Int {
+  (level_index + 1) % levels.length()
+}
+
+///|
+fn previous_level_index(level_index : Int) -> Int {
+  if level_index <= 0 {
+    levels.length() - 1
+  } else {
+    level_index - 1
+  }
+}
+
+///|
+fn alive_player_count() -> Int {
+  players.fold(init=0, fn(acc, player) {
+    if player.active && player.alive {
+      acc + 1
+    } else {
+      acc
+    }
+  })
 }

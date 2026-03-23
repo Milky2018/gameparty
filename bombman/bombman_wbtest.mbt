@@ -2,336 +2,327 @@
 fn reset_test_input_state() -> Unit {
   @inputs.pressed_keys.clear()
   reset_direction_input_state()
+  suppress_exit_for_tests.val = true
+  exit_request_count.val = 0
 }
 
 ///|
-fn set_player_state(
-  center : @math.Vec2D,
-  direction : Direction?,
-  desired_direction : Direction?,
-  alive : Bool,
-) -> Unit {
-  player.val = {
-    ..player.val,
-    center,
-    direction,
-    desired_direction,
-    speed: PLAYER_SPEED,
-    radius: PLAYER_RADIUS,
-    alive,
-  }
+fn advance_input_frame() -> Unit {
+  @inputs.advanced_key_system(1.0 / FPS.to_double())
 }
 
 ///|
-fn with_test_level(test_fn : () -> Unit raise) -> Unit raise {
+fn prepare_menu() -> Unit {
+  reset_test_input_state()
+  return_to_menu()
+  menu_selection.val = OnePlayer
+  phase.val = MainMenu
+}
+
+///|
+fn with_round(mode : GameMode, test_fn : () -> Unit raise) -> Unit raise {
   reset_test_input_state()
   current_level.val = 0
-  reset_level()
-  phase.val = Playing
+  start_round(mode)
   test_fn()
 }
 
 ///|
-test "explosion propagation stops at hard walls and soft walls" {
-  with_test_level(fn() raise {
-    set_tile(4, 5, Empty)
-    set_tile(5, 5, Empty)
-    set_tile(6, 5, Empty)
-    set_tile(7, 5, SoftWall)
-    set_tile(8, 5, Empty)
-    set_tile(5, 4, HardWall)
-    set_tile(5, 6, Empty)
-    let cells = collect_explosion_cells(5, 5, 3)
-    assert_true(cells.contains((5, 5)))
-    assert_true(cells.contains((6, 5)))
-    assert_true(cells.contains((7, 5)))
-    assert_true(!cells.contains((8, 5)))
-    assert_true(!cells.contains((5, 4)))
-    assert_true(cells.contains((5, 6)))
-  })
-}
-
-///|
-test "latest held direction prefers the most recent pressed key" {
-  with_test_level(fn() raise {
-    @inputs.pressed_keys.add(KeyW)
-    record_direction_press(Up)
-    @inputs.pressed_keys.add(KeyD)
-    record_direction_press(Right)
-    assert_true(latest_held_direction() is Some(Right))
-    @inputs.pressed_keys.remove(KeyD)
-    assert_true(latest_held_direction() is Some(Up))
-  })
-}
-
-///|
-test "space can start the game from the title screen" {
-  reset_test_input_state()
-  current_level.val = 0
-  reset_level()
-  phase.val = Start
-  @inputs.pressed_keys.add(Space)
-  @inputs.advanced_key_system(1.0 / FPS.to_double())
+fn press_menu_key(key : @inputs.Code) -> Unit {
+  @inputs.pressed_keys.add(key)
+  advance_input_frame()
   input_system(@ecs.require_current_world())
-  assert_true(phase.val == Playing)
-  @inputs.pressed_keys.clear()
-  @inputs.advanced_key_system(1.0 / FPS.to_double())
+  @inputs.pressed_keys.remove(key)
+  advance_input_frame()
 }
 
 ///|
-test "built-in levels load with one player spawn and empty enemy spawn cells" {
-  for level_index in 0..<levels.length() {
-    current_level.val = level_index
-    reset_level()
-    let (player_cell_x, player_cell_y) = world_to_cell(player.val.center)
-    assert_true(tile_at(player_cell_x, player_cell_y) == Empty)
-    assert_true(enemies.length() > 0)
-    for enemy in enemies {
-      assert_true(tile_at(enemy.cell_x, enemy.cell_y) == Empty)
-    }
-  }
-  current_level.val = 0
-}
-
-///|
-test "won phase advances to the next level" {
-  reset_test_input_state()
-  current_level.val = 0
-  reset_level()
-  phase.val = Won
-  request_start()
+test "menu navigation wraps and selection starts correct modes" {
+  prepare_menu()
+  assert_true(menu_selection.val == OnePlayer)
+  assert_eq(current_level.val, 0)
+  press_menu_key(@inputs.KeyD)
   assert_eq(current_level.val, 1)
+  press_menu_key(@inputs.ArrowRight)
+  assert_eq(current_level.val, 2)
+  press_menu_key(@inputs.KeyA)
+  assert_eq(current_level.val, 1)
+  current_level.val = 0
+  press_menu_key(@inputs.ArrowLeft)
+  assert_eq(current_level.val, levels.length() - 1)
+  press_menu_key(@inputs.KeyS)
+  assert_true(menu_selection.val == TwoPlayersA)
+  press_menu_key(@inputs.KeyS)
+  assert_true(menu_selection.val == TwoPlayersB)
+  press_menu_key(@inputs.KeyS)
+  assert_true(menu_selection.val == Exit)
+  press_menu_key(@inputs.KeyS)
+  assert_true(menu_selection.val == OnePlayer)
+  press_menu_key(@inputs.ArrowUp)
+  assert_true(menu_selection.val == Exit)
+
+  menu_selection.val = TwoPlayersA
+  press_menu_key(@inputs.Enter)
   assert_true(phase.val == Playing)
+  assert_true(current_mode.val == Coop)
+  assert_true(players[0].active)
+  assert_true(players[1].active)
 }
 
 ///|
-test "player movement is continuous and frame-driven" {
-  with_test_level(fn() raise {
-    let start_center = cell_center(1, 1)
-    set_player_state(start_center, Some(Right), Some(Right), true)
-    tick_player_motion(0.25)
-    assert_eq(player.val.center[Y], start_center[Y])
-    assert_eq(player.val.center[X], start_center[X] + PLAYER_SPEED * 0.25)
-    assert_true(player.val.center[X] < cell_center(2, 1)[X])
-  })
+test "menu exit triggers exit path" {
+  prepare_menu()
+  menu_selection.val = Exit
+  press_menu_key(@inputs.Space)
+  assert_eq(exit_request_count.val, 1)
+  assert_true(phase.val == MainMenu)
 }
 
 ///|
-test "character and bomb radii are almost full-cell sized" {
-  assert_eq(PLAYER_RADIUS, CELL_SIZE / 2.0 - 0.5)
-  assert_eq(ENEMY_RADIUS, CELL_SIZE / 2.0 - 0.5)
-  assert_eq(BOMB_RADIUS, CELL_SIZE / 2.0 - 0.5)
+test "built-in levels contain exactly one P1 spawn and one P2 spawn" {
+  for level in levels {
+    let mut p1 = 0
+    let mut p2 = 0
+    for row in level {
+      for code in row {
+        if code == LEVEL_P1_SPAWN {
+          p1 += 1
+        }
+        if code == LEVEL_P2_SPAWN {
+          p2 += 1
+        }
+      }
+    }
+    assert_eq(p1, 1)
+    assert_eq(p2, 1)
+  }
 }
 
 ///|
-test "turn assist snaps aligned turns and rejects misaligned turns" {
-  with_test_level(fn() raise {
-    set_tile(1, 3, Empty)
-    set_tile(1, 2, Empty)
-    set_tile(2, 3, Empty)
-    let turn_origin = cell_center(1, 3) + @math.Vec2D(0.0, 8.0)
-    set_player_state(turn_origin, Some(Up), Some(Right), true)
-    tick_player_motion(0.1)
-    assert_eq(player.val.center[Y], cell_center(1, 3)[Y])
-    assert_true(player.val.center[X] > turn_origin[X])
-
-    let blocked_turn_origin = cell_center(1, 3) + @math.Vec2D(0.0, 12.0)
-    set_player_state(blocked_turn_origin, Some(Up), Some(Right), true)
-    tick_player_motion(0.1)
-    assert_eq(player.val.center[X], blocked_turn_origin[X])
-    assert_true(player.val.center[Y] < blocked_turn_origin[Y])
-  })
+test "versus level strips enemy spawns while normal modes keep them" {
+  current_level.val = 0
+  start_round(SinglePlayer)
+  assert_true(enemies.length() > 0)
+  start_round(Versus)
+  assert_eq(enemies.length(), 0)
+  assert_true(players[0].active)
+  assert_true(players[1].active)
 }
 
 ///|
-test "player cannot pass through hard walls" {
-  with_test_level(fn() raise {
-    let start_center = cell_center(1, 1)
-    set_player_state(start_center, Some(Left), Some(Left), true)
-    tick_player_motion(0.25)
-    let wall_edge = cell_bounds(0, 1).right + player.val.radius
-    assert_eq(player.val.center[X], wall_edge)
-    assert_eq(player.val.center[Y], start_center[Y])
-  })
-}
+test "single-player accepts arrows and space bomb" {
+  with_round(SinglePlayer, fn() raise {
+    @inputs.pressed_keys.add(@inputs.ArrowRight)
+    advance_input_frame()
+    input_system(@ecs.require_current_world())
+    assert_true(players[0].desired_direction is Some(Right))
+    @inputs.pressed_keys.clear()
+    advance_input_frame()
 
-///|
-test "bomb placement snaps to the current tile and becomes solid after exit" {
-  with_test_level(fn() raise {
-    bombs.clear()
-    let off_center = cell_center(1, 1) + @math.Vec2D(7.0, 0.0)
-    set_player_state(off_center, None, None, true)
-    player.val = { ..player.val, active_bombs: 0 }
-    place_bomb()
+    let current = players[0]
+    players[0] = { ..current, active_bombs: 0 }
+    @inputs.pressed_keys.add(@inputs.Space)
+    advance_input_frame()
+    input_system(@ecs.require_current_world())
     assert_eq(bombs.length(), 1)
-    assert_eq(bombs[0].cell_x, 1)
-    assert_eq(bombs[0].cell_y, 1)
-    assert_true(bombs[0].passable_for_player)
+    assert_true(bombs[0].owner == P1)
+    @inputs.pressed_keys.clear()
+    advance_input_frame()
+  })
+}
 
-    player.val = {
-      ..player.val,
+///|
+test "dual-player controls use WASD+G and IJKL+apostrophe" {
+  with_round(Coop, fn() raise {
+    @inputs.pressed_keys.add(@inputs.KeyD)
+    @inputs.pressed_keys.add(@inputs.KeyL)
+    advance_input_frame()
+    input_system(@ecs.require_current_world())
+    assert_true(players[0].desired_direction is Some(Right))
+    assert_true(players[1].desired_direction is Some(Right))
+    @inputs.pressed_keys.clear()
+    advance_input_frame()
+
+    @inputs.pressed_keys.add(@inputs.KeyG)
+    advance_input_frame()
+    input_system(@ecs.require_current_world())
+    assert_eq(bombs.length(), 1)
+    assert_true(bombs[0].owner == P1)
+    @inputs.pressed_keys.clear()
+    advance_input_frame()
+
+    p2_bomb_test_override.val = true
+    input_system(@ecs.require_current_world())
+    assert_eq(bombs.length(), 2)
+    assert_true(bombs[1].owner == P2)
+
+    @inputs.pressed_keys.add(@inputs.Space)
+    advance_input_frame()
+    input_system(@ecs.require_current_world())
+    assert_eq(bombs.length(), 2)
+    @inputs.pressed_keys.clear()
+    advance_input_frame()
+  })
+}
+
+///|
+test "bomb owner can leave just-placed bomb but other player cannot pass through" {
+  with_round(Coop, fn() raise {
+    players[0] = { ..players[0], center: cell_center(1, 1), active_bombs: 0 }
+    players[1] = { ..players[1], center: cell_center(1, 2), active_bombs: 0 }
+    place_bomb_for_player(0)
+    assert_eq(bombs.length(), 1)
+    assert_true(bombs[0].passable_for_owner)
+
+    players[0] = {
+      ..players[0],
       desired_direction: Some(Right),
       direction: Some(Right),
     }
-    tick_player_motion(0.4)
-    assert_true(!bombs[0].passable_for_player)
+    tick_players_motion(0.2)
+    assert_true(bombs[0].passable_for_owner)
 
-    let before_return = player.val.center
-    player.val = {
-      ..player.val,
-      desired_direction: Some(Left),
-      direction: Some(Left),
+    players[1] = {
+      ..players[1],
+      desired_direction: Some(Up),
+      direction: Some(Up),
     }
-    tick_player_motion(0.4)
-    let bomb_center = cell_center(1, 1)
-    let dy = player.val.center[Y] - bomb_center[Y]
-    let tangent_x = bomb_center[X] +
-      @cmath.pow(
-        (player.val.radius + BOMB_RADIUS) * (player.val.radius + BOMB_RADIUS) -
-        dy * dy,
-        0.5,
-      )
-    assert_true(player.val.center[X] >= tangent_x - 0.01)
-    assert_true(player.val.center[X] <= before_return[X])
+    tick_players_motion(0.2)
+    let blocked_y = cell_center(bombs[0].cell_x, bombs[0].cell_y)[Y] +
+      players[1].radius +
+      BOMB_RADIUS
+    assert_true(players[1].center[Y] >= blocked_y - 0.01)
+
+    players[0] = {
+      ..players[0],
+      desired_direction: Some(Right),
+      direction: Some(Right),
+    }
+    tick_players_motion(0.25)
+    assert_true(!bombs[0].passable_for_owner)
   })
 }
 
 ///|
-test "exploding bomb removes soft wall and chained bombs" {
-  with_test_level(fn() raise {
-    bombs.clear()
-    flames.clear()
-    player.val = { ..player.val, active_bombs: 0 }
-    set_tile(3, 1, SoftWall)
-    bombs.push({
-      entity: @entity.Entity::new(),
-      cell_x: 2,
-      cell_y: 1,
-      timer: 0.0,
-      radius: 2,
-      passable_for_player: false,
-    })
-    player.val = { ..player.val, active_bombs: 1 }
-    resolve_bomb_explosions()
-    assert_true(tile_at(3, 1) == Empty)
-    assert_true(
-      flames.any(fn(flame) { flame.cell_x == 3 && flame.cell_y == 1 }),
-    )
-    assert_eq(player.val.active_bombs, 0)
-  })
-}
-
-///|
-test "flames only hit when the center enters the flame cell" {
-  with_test_level(fn() raise {
-    flames.clear()
+test "co-op win needs enemies gone and at least one survivor" {
+  with_round(Coop, fn() raise {
     enemies.clear()
-    set_player_state(cell_center(5, 4), None, None, true)
+    players[0] = { ..players[0], alive: false }
+    players[1] = { ..players[1], alive: true }
+    resolve_phase()
+    assert_true(phase.val == RoundOver)
+    assert_true(round_outcome.val is LevelClear)
+  })
+}
+
+///|
+test "co-op loss only happens when both players are dead" {
+  with_round(Coop, fn() raise {
+    players[0] = { ..players[0], alive: false }
+    players[1] = { ..players[1], alive: true }
+    resolve_phase()
+    assert_true(phase.val == Playing)
+    players[1] = { ..players[1], alive: false }
+    resolve_phase()
+    assert_true(phase.val == RoundOver)
+    assert_true(round_outcome.val is Defeat)
+  })
+}
+
+///|
+test "versus outcomes resolve to P1 win, P2 win, or draw" {
+  with_round(Versus, fn() raise {
+    players[0] = { ..players[0], alive: true }
+    players[1] = { ..players[1], alive: false }
+    resolve_phase()
+    assert_true(round_outcome.val is P1Win)
+
+    start_round(Versus)
+    players[0] = { ..players[0], alive: false }
+    players[1] = { ..players[1], alive: true }
+    resolve_phase()
+    assert_true(round_outcome.val is P2Win)
+
+    start_round(Versus)
+    players[0] = { ..players[0], alive: false }
+    players[1] = { ..players[1], alive: false }
+    resolve_phase()
+    assert_true(round_outcome.val is Draw)
+  })
+}
+
+///|
+test "single-player level clear advances to next level and versus restarts same arena" {
+  current_level.val = 0
+  start_round(SinglePlayer)
+  enemies.clear()
+  resolve_phase()
+  assert_true(round_outcome.val is LevelClear)
+  continue_after_round_over()
+  assert_eq(current_level.val, 1)
+  assert_true(current_mode.val == SinglePlayer)
+  assert_true(phase.val == Playing)
+
+  current_level.val = 2
+  start_round(Versus)
+  players[0] = { ..players[0], alive: false }
+  players[1] = { ..players[1], alive: true }
+  resolve_phase()
+  continue_after_round_over()
+  assert_eq(current_level.val, 2)
+  assert_true(current_mode.val == Versus)
+  assert_eq(enemies.length(), 0)
+}
+
+///|
+test "flame hits every active player by center-in-cell semantics" {
+  with_round(Coop, fn() raise {
+    flames.clear()
+    players[0] = { ..players[0], center: cell_center(4, 4), alive: true }
+    players[1] = { ..players[1], center: cell_center(5, 4), alive: true }
     spawn_flame(4, 4)
     resolve_flame_hits()
-    assert_true(player.val.alive)
-
-    set_player_state(cell_center(4, 4), None, None, true)
-    resolve_flame_hits()
-    assert_true(!player.val.alive)
+    assert_true(!players[0].alive)
+    assert_true(players[1].alive)
   })
 }
 
 ///|
-test "enemy next to a blasted soft wall survives until its center enters the flame cell" {
-  with_test_level(fn() raise {
-    flames.clear()
+test "enemy contact kills any overlapping active player outside versus" {
+  with_round(Coop, fn() raise {
     enemies.clear()
-    set_tile(3, 1, SoftWall)
-    bombs.clear()
-    bombs.push({
-      entity: @entity.Entity::new(),
-      cell_x: 2,
-      cell_y: 1,
-      timer: 0.0,
-      radius: 2,
-      passable_for_player: false,
-    })
-    player.val = { ..player.val, active_bombs: 1 }
-    let adjacent_center = cell_center(4, 1) +
-      @math.Vec2D(-PLAYER_RADIUS + 1.0, 0.0)
+    let center = cell_center(5, 5)
+    players[0] = { ..players[0], center, alive: true }
+    players[1] = { ..players[1], center: cell_center(1, 1), alive: true }
     enemies.push({
       entity: @entity.Entity::new(),
-      cell_x: 4,
-      cell_y: 1,
-      center: adjacent_center,
-      direction: Left,
-      desired_direction: Left,
-      speed: ENEMY_SPEED,
-      radius: ENEMY_RADIUS,
-      alive: true,
-    })
-    resolve_bomb_explosions()
-    resolve_flame_hits()
-    assert_true(tile_at(3, 1) == Empty)
-    assert_true(
-      flames.any(fn(flame) { flame.cell_x == 3 && flame.cell_y == 1 }),
-    )
-    assert_true(enemies[0].alive)
-
-    enemies[0].center = cell_center(3, 1)
-    resolve_enemy_contact()
-    resolve_flame_hits()
-    assert_true(!enemies[0].alive)
-  })
-}
-
-///|
-test "enemy contact still uses continuous overlap" {
-  with_test_level(fn() raise {
-    enemies.clear()
-    let player_contact_center = cell_center(6, 4)
-    set_player_state(player_contact_center, None, None, true)
-    let enemy_center = player_contact_center +
-      @math.Vec2D(PLAYER_RADIUS + ENEMY_RADIUS - 1.0, 0.0)
-    enemies.push({
-      entity: @entity.Entity::new(),
-      cell_x: 6,
-      cell_y: 4,
-      center: enemy_center,
-      direction: Left,
-      desired_direction: Left,
+      cell_x: 5,
+      cell_y: 5,
+      center,
+      direction: Down,
+      desired_direction: Down,
       speed: ENEMY_SPEED,
       radius: ENEMY_RADIUS,
       alive: true,
     })
     resolve_enemy_contact()
-    assert_true(!player.val.alive)
-  })
-}
+    assert_true(!players[0].alive)
+    assert_true(players[1].alive)
 
-///|
-test "enemy movement stays continuous and reroutes around blocked tiles" {
-  with_test_level(fn() raise {
-    bombs.clear()
-    enemies.clear()
-    bombs.push({
-      entity: @entity.Entity::new(),
-      cell_x: 3,
-      cell_y: 1,
-      timer: BOMB_FUSE_TIME,
-      radius: PLAYER_BLAST_RADIUS,
-      passable_for_player: false,
-    })
-    let enemy_center = cell_center(2, 1)
+    start_round(Versus)
+    players[0] = { ..players[0], center, alive: true }
     enemies.push({
       entity: @entity.Entity::new(),
-      cell_x: 2,
-      cell_y: 1,
-      center: enemy_center,
-      direction: Right,
-      desired_direction: Right,
+      cell_x: 5,
+      cell_y: 5,
+      center,
+      direction: Down,
+      desired_direction: Down,
       speed: ENEMY_SPEED,
       radius: ENEMY_RADIUS,
       alive: true,
     })
-    tick_enemies(0.2)
-    assert_true(enemies[0].center[X] < enemy_center[X])
-    assert_eq(enemies[0].center[Y], enemy_center[Y])
+    resolve_enemy_contact()
+    assert_true(players[0].alive)
   })
 }

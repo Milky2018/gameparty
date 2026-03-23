@@ -53,6 +53,26 @@ fn set_text_entity(
 }
 
 ///|
+fn set_text_entity_center(
+  entity : @entity.Entity,
+  text : String,
+  position : @math.Vec2D,
+  font : String,
+  color : String,
+  zindex : Int,
+) -> Unit {
+  ensure_entity_alive(entity)
+  @sprite.sprites().set(
+    entity,
+    @sprite.Sprite::from_text(
+      @sprite.Text::new(text, color~, font~, baseline=Top, align=Center),
+      zindex,
+    ),
+  )
+  @transform.positions().set(entity, position)
+}
+
+///|
 fn set_rect_entity(
   entity : @entity.Entity,
   position : @math.Vec2D,
@@ -117,11 +137,25 @@ fn tile_is_solid(x : Int, y : Int) -> Bool {
 
 ///|
 fn reset_direction_input_state() -> Unit {
-  input_press_sequence.val = 0
-  up_press_stamp.val = 0
-  down_press_stamp.val = 0
-  left_press_stamp.val = 0
-  right_press_stamp.val = 0
+  for input_state in direction_input_state {
+    input_state.sequence = 0
+    input_state.up = 0
+    input_state.down = 0
+    input_state.left = 0
+    input_state.right = 0
+  }
+  p2_bomb_test_override.val = false
+}
+
+///|
+fn active_enemy_count() -> Int {
+  enemies.fold(init=0, fn(acc, enemy) {
+    if enemy.alive {
+      acc + 1
+    } else {
+      acc
+    }
+  })
 }
 
 ///|
@@ -139,20 +173,9 @@ fn enemy_can_enter_cell(
 }
 
 ///|
-fn active_enemy_count() -> Int {
-  enemies.fold(init=0, fn(acc, enemy) {
-    if enemy.alive {
-      acc + 1
-    } else {
-      acc
-    }
-  })
-}
-
-///|
 fn tile_kind_for_level_code(code : Int) -> TileKind {
   match code {
-    LEVEL_EMPTY | LEVEL_PLAYER_SPAWN | LEVEL_ENEMY_SPAWN => Empty
+    LEVEL_EMPTY | LEVEL_P1_SPAWN | LEVEL_P2_SPAWN | LEVEL_ENEMY_SPAWN => Empty
     LEVEL_HARD_WALL => HardWall
     LEVEL_SOFT_WALL => SoftWall
     _ => abort("Unknown bombman level tile code: \{code}")
@@ -160,25 +183,24 @@ fn tile_kind_for_level_code(code : Int) -> TileKind {
 }
 
 ///|
-fn has_enemy_spawn_for_level_code(code : Int) -> Bool {
-  match code {
-    LEVEL_ENEMY_SPAWN => true
-    _ => false
-  }
-}
-
-///|
 fn clear_tile_grid() -> Unit {
   tiles.clear()
-  let cell_count = GRID_WIDTH * GRID_HEIGHT
-  for _ in 0..<cell_count {
+  for _ in 0..<(GRID_WIDTH * GRID_HEIGHT) {
     tiles.push(Empty)
   }
 }
 
 ///|
-fn reset_player(start_center : @math.Vec2D) -> Unit {
-  player.val = {
+fn reset_player_slot(
+  index : Int,
+  start_center : @math.Vec2D,
+  active : Bool,
+) -> Unit {
+  let id = if index == 0 { P1 } else { P2 }
+  players[index] = {
+    id,
+    entity: players[index].entity,
+    active,
     center: start_center,
     direction: None,
     desired_direction: None,
@@ -188,65 +210,6 @@ fn reset_player(start_center : @math.Vec2D) -> Unit {
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
-  }
-}
-
-///|
-fn load_level(level_index : Int) -> Unit {
-  if level_index < 0 || level_index >= levels.length() {
-    abort("Bombman level index out of bounds: \{level_index}")
-  }
-  let level = levels[level_index]
-  if level.length() != GRID_HEIGHT {
-    abort(
-      "Bombman level \{level_index + 1} has \{level.length()} rows; expected \{GRID_HEIGHT}",
-    )
-  }
-  clear_tile_grid()
-  enemies.clear()
-  let mut player_spawn : @math.Vec2D? = None
-  for y in 0..<GRID_HEIGHT {
-    let row = level[y]
-    if row.length() != GRID_WIDTH {
-      abort(
-        "Bombman level \{level_index + 1} row \{y} has \{row.length()} columns; expected \{GRID_WIDTH}",
-      )
-    }
-    for x in 0..<GRID_WIDTH {
-      let code = row[x]
-      set_tile(x, y, tile_kind_for_level_code(code))
-      if code == LEVEL_PLAYER_SPAWN {
-        if player_spawn is Some(_) {
-          abort("Bombman level \{level_index + 1} has multiple player spawns")
-        }
-        player_spawn = Some(cell_center(x, y))
-      }
-      if has_enemy_spawn_for_level_code(code) {
-        enemies.push({
-          entity: @entity.Entity::new(),
-          cell_x: x,
-          cell_y: y,
-          center: cell_center(x, y),
-          direction: default_enemy_direction(),
-          desired_direction: default_enemy_direction(),
-          speed: ENEMY_SPEED,
-          radius: ENEMY_RADIUS,
-          alive: true,
-        })
-      }
-    }
-  }
-  if player_spawn is Some(center) {
-    reset_player(center)
-  } else {
-    abort("Bombman level \{level_index + 1} is missing a player spawn")
-  }
-  for enemy in enemies {
-    if tile_at(enemy.cell_x, enemy.cell_y) != Empty {
-      abort(
-        "Bombman level \{level_index + 1} spawns an enemy on a solid tile at (\{enemy.cell_x}, \{enemy.cell_y})",
-      )
-    }
   }
 }
 
@@ -261,30 +224,147 @@ fn clear_dynamic_entities() -> Unit {
   for enemy in enemies {
     hide_entity(enemy.entity)
   }
+  for player in players {
+    hide_entity(player.entity)
+  }
   bombs.clear()
   flames.clear()
+  enemies.clear()
 }
 
 ///|
-fn reset_level() -> Unit {
+fn deactivate_all_players() -> Unit {
+  for index in 0..<players.length() {
+    let current = players[index]
+    players[index] = {
+      ..current,
+      active: false,
+      alive: false,
+      direction: None,
+      desired_direction: None,
+      active_bombs: 0,
+    }
+  }
+}
+
+///|
+fn load_level(level_index : Int, mode : GameMode) -> Unit {
+  if level_index < 0 || level_index >= levels.length() {
+    abort("Bombman level index out of bounds: \{level_index}")
+  }
+  let level = levels[level_index]
+  if level.length() != GRID_HEIGHT {
+    abort(
+      "Bombman level \{level_index + 1} has \{level.length()} rows; expected \{GRID_HEIGHT}",
+    )
+  }
+  clear_tile_grid()
+  enemies.clear()
+  let mut p1_spawn : @math.Vec2D? = None
+  let mut p2_spawn : @math.Vec2D? = None
+  for y in 0..<GRID_HEIGHT {
+    let row = level[y]
+    if row.length() != GRID_WIDTH {
+      abort(
+        "Bombman level \{level_index + 1} row \{y} has \{row.length()} columns; expected \{GRID_WIDTH}",
+      )
+    }
+    for x in 0..<GRID_WIDTH {
+      let code = row[x]
+      set_tile(x, y, tile_kind_for_level_code(code))
+      match code {
+        LEVEL_P1_SPAWN => {
+          if p1_spawn is Some(_) {
+            abort("Bombman level \{level_index + 1} has multiple P1 spawns")
+          }
+          p1_spawn = Some(cell_center(x, y))
+        }
+        LEVEL_P2_SPAWN => {
+          if p2_spawn is Some(_) {
+            abort("Bombman level \{level_index + 1} has multiple P2 spawns")
+          }
+          p2_spawn = Some(cell_center(x, y))
+        }
+        LEVEL_ENEMY_SPAWN =>
+          if mode != Versus {
+            enemies.push({
+              entity: @entity.Entity::new(),
+              cell_x: x,
+              cell_y: y,
+              center: cell_center(x, y),
+              direction: default_enemy_direction(),
+              desired_direction: default_enemy_direction(),
+              speed: ENEMY_SPEED,
+              radius: ENEMY_RADIUS,
+              alive: true,
+            })
+          }
+        _ => ()
+      }
+    }
+  }
+  match p1_spawn {
+    Some(center) => reset_player_slot(0, center, true)
+    None => abort("Bombman level \{level_index + 1} is missing a P1 spawn")
+  }
+  match p2_spawn {
+    Some(center) => reset_player_slot(1, center, mode != SinglePlayer)
+    None => abort("Bombman level \{level_index + 1} is missing a P2 spawn")
+  }
+  for enemy in enemies {
+    if tile_at(enemy.cell_x, enemy.cell_y) != Empty {
+      abort(
+        "Bombman level \{level_index + 1} spawns an enemy on a solid tile at (\{enemy.cell_x}, \{enemy.cell_y})",
+      )
+    }
+  }
+}
+
+///|
+fn start_round(mode : GameMode) -> Unit {
   ensure_tile_entities()
   reset_direction_input_state()
   clear_dynamic_entities()
-  load_level(current_level.val)
-  phase.val = Start
+  current_mode.val = mode
+  round_outcome.val = LevelClear
+  load_level(current_level.val, mode)
+  phase.val = Playing
+}
+
+///|
+fn return_to_menu() -> Unit {
+  reset_direction_input_state()
+  clear_dynamic_entities()
+  clear_tile_grid()
+  deactivate_all_players()
+  phase.val = MainMenu
+  round_outcome.val = LevelClear
+  menu_selection.val = match current_mode.val {
+    SinglePlayer => OnePlayer
+    Coop => TwoPlayersA
+    Versus => TwoPlayersB
+  }
 }
 
 ///|
 fn startup_system(_world : @ecs.World) -> Unit {
   register_bombman_font_once()
   ensure_entity_alive(background_entity)
-  ensure_entity_alive(player_entity)
   ensure_entity_alive(title_entity)
   ensure_entity_alive(hud_entity)
   ensure_entity_alive(status_entity)
   ensure_entity_alive(hint_entity)
+  for entity in menu_entities {
+    ensure_entity_alive(entity)
+  }
+  for player in players {
+    ensure_entity_alive(player.entity)
+  }
   ensure_tile_entities()
-  reset_level()
+  clear_tile_grid()
+  deactivate_all_players()
+  phase.val = MainMenu
+  exit_request_count.val = 0
   render_sync_system(@ecs.require_current_world())
 }
 
@@ -331,7 +411,11 @@ fn explode_bomb_at(index : Int) -> Unit {
   let bomb = bombs[index]
   hide_entity(bomb.entity)
   ignore(bombs.remove(index))
-  player.val = { ..player.val, active_bombs: player.val.active_bombs - 1 }
+  let owner_index = player_index(bomb.owner)
+  let owner = players[owner_index]
+  if owner.active_bombs > 0 {
+    owner.active_bombs -= 1
+  }
   let cells = collect_explosion_cells(bomb.cell_x, bomb.cell_y, bomb.radius)
   for cell in cells {
     let x = cell.0
@@ -349,11 +433,12 @@ fn explode_bomb_at(index : Int) -> Unit {
 }
 
 ///|
-fn place_bomb() -> Unit {
-  if player.val.active_bombs >= player.val.max_bombs {
+fn place_bomb_for_player(index : Int) -> Unit {
+  let player = players[index]
+  if !player.active || !player.alive || player.active_bombs >= player.max_bombs {
     return
   }
-  let (bomb_x, bomb_y) = world_to_cell(player.val.center)
+  let (bomb_x, bomb_y) = world_to_cell(player.center)
   if tile_at(bomb_x, bomb_y) != Empty || has_bomb_at(bomb_x, bomb_y) {
     return
   }
@@ -362,42 +447,94 @@ fn place_bomb() -> Unit {
     cell_x: bomb_x,
     cell_y: bomb_y,
     timer: BOMB_FUSE_TIME,
-    radius: player.val.blast_radius,
-    passable_for_player: true,
+    radius: player.blast_radius,
+    owner: player.id,
+    passable_for_owner: true,
   })
-  player.val = { ..player.val, active_bombs: player.val.active_bombs + 1 }
+  player.active_bombs += 1
+}
+
+///|
+fn round_outcome_text() -> String {
+  match round_outcome.val {
+    LevelClear => "LEVEL CLEAR"
+    Defeat => "DEFEAT"
+    P1Win => "P1 WINS"
+    P2Win => "P2 WINS"
+    Draw => "DRAW"
+  }
 }
 
 ///|
 fn phase_status_text() -> String {
-  let level_text = "Level \{current_level_number()}/\{levels.length()}"
   match phase.val {
-    Start => "\{level_text}   Press Enter or Space to start"
+    MainMenu => "LEVEL \{current_level_number()} / \{levels.length()}"
     Playing => {
-      let enemies_left = active_enemy_count()
-      if player.val.alive {
-        "\{level_text}   Bombs: \{player.val.max_bombs - player.val.active_bombs}/\{player.val.max_bombs}   Enemies: \{enemies_left}"
+      let base = "MODE: \{mode_label(current_mode.val)}   LEVEL: \{current_level_number()}/\{levels.length()}"
+      let p1 = players[0]
+      let mut suffix = if p1.active {
+        "   P1 BOMBS: \{p1.max_bombs - p1.active_bombs}/\{p1.max_bombs}"
       } else {
-        "\{level_text}   Boom. You were caught in the blast."
+        ""
       }
+      let p2 = players[1]
+      if p2.active {
+        suffix = suffix +
+          "   P2 BOMBS: \{p2.max_bombs - p2.active_bombs}/\{p2.max_bombs}"
+      }
+      if current_mode.val != Versus {
+        suffix = suffix + "   ENEMIES: \{active_enemy_count()}"
+      }
+      base + suffix
     }
-    Won =>
-      if current_level.val + 1 < levels.length() {
-        "\{level_text} clear. Press Enter or Space for the next level"
-      } else {
-        "All levels cleared. Press Enter or Space to loop back to level 1"
-      }
-    Lost => "\{level_text} failed. Press Enter or R to restart"
+    RoundOver => round_outcome_text()
   }
 }
 
 ///|
 fn hint_text() -> String {
   match phase.val {
-    Start => "Move: WASD / Arrows   Bomb: Space   ESC: Exit"
-    Playing => "Move: WASD / Arrows   Bomb: Space   R: Restart   ESC: Exit"
-    Won => "Enter / Space next level   R restart   ESC exit"
-    Lost => "Enter / R restart   ESC exit"
+    MainMenu =>
+      "W/S or Up/Down: Mode   A/D or Left/Right: Level   Enter/Space: Start   Esc: Exit"
+    Playing =>
+      match current_mode.val {
+        SinglePlayer =>
+          "Move: WASD / Arrows   Bomb: Space   R: Restart   Esc: Menu"
+        Coop | Versus => "P1: WASD + G   P2: IJKL + '   R: Restart   Esc: Menu"
+      }
+    RoundOver =>
+      match current_mode.val {
+        Versus => "Enter/Space: Rematch   R: Restart   Esc: Menu"
+        SinglePlayer | Coop => "Enter/Space: Continue   R: Restart   Esc: Menu"
+      }
+  }
+}
+
+///|
+fn status_text() -> String {
+  match phase.val {
+    MainMenu => "2 Players A = co-op, 2 Players B = versus with no enemies."
+    Playing =>
+      match current_mode.val {
+        SinglePlayer =>
+          "Soft walls break. Hard walls block. Flames travel in a cross."
+        Coop =>
+          "Friendly fire is enabled. Clear all enemies with at least one player alive."
+        Versus => "Friendly fire is enabled. Last survivor wins."
+      }
+    RoundOver =>
+      match round_outcome.val {
+        LevelClear =>
+          if current_mode.val == Versus {
+            "Press Enter or Space to restart the arena."
+          } else {
+            "Press Enter or Space to continue."
+          }
+        Defeat => "Both active players were eliminated."
+        P1Win => "P1 survived the round."
+        P2Win => "P2 survived the round."
+        Draw => "Both players were eliminated in the same round."
+      }
   }
 }
 
@@ -414,6 +551,13 @@ fn sync_tile_visuals() -> Unit {
       }
       set_rect_entity(entity, floor_tile_position(x, y), size, color, 20)
     }
+  }
+}
+
+///|
+fn hide_tile_visuals() -> Unit {
+  for entity in tile_entities {
+    hide_entity(entity)
   }
 }
 
@@ -462,18 +606,103 @@ fn sync_enemy_visuals() -> Unit {
 
 ///|
 fn sync_player_visuals() -> Unit {
-  let color = if player.val.alive { PLAYER_COLOR } else { PLAYER_DEAD_COLOR }
-  set_circle_entity(
-    player_entity,
-    player.val.center,
-    player.val.radius,
-    color,
-    66,
+  for player in players {
+    if player.active {
+      set_circle_entity(
+        player.entity,
+        player.center,
+        player.radius,
+        player_color(player.id, player.alive),
+        66,
+      )
+    } else {
+      hide_entity(player.entity)
+    }
+  }
+}
+
+///|
+fn hide_gameplay_visuals() -> Unit {
+  hide_tile_visuals()
+  for bomb in bombs {
+    hide_entity(bomb.entity)
+  }
+  for flame in flames {
+    hide_entity(flame.entity)
+  }
+  for enemy in enemies {
+    hide_entity(enemy.entity)
+  }
+  for player in players {
+    hide_entity(player.entity)
+  }
+}
+
+///|
+fn hide_menu_visuals() -> Unit {
+  for entity in menu_entities {
+    hide_entity(entity)
+  }
+}
+
+///|
+fn sync_menu_visuals() -> Unit {
+  let center_x = VIEWPORT_WIDTH / 2.0
+  set_text_entity_center(
+    title_entity,
+    "MoonBit Bombman",
+    @math.Vec2D(center_x, 26.0),
+    "42px \{BOMBMAN_FONT_FAMILY}",
+    HUD_TEXT_COLOR,
+    200,
+  )
+  set_text_entity_center(
+    hud_entity,
+    phase_status_text(),
+    @math.Vec2D(center_x, 104.0),
+    "18px \{BOMBMAN_FONT_FAMILY}",
+    MENU_SELECTED_COLOR,
+    200,
+  )
+  let options = menu_options()
+  for index in 0..<options.length() {
+    let option = options[index]
+    let prefix = if option == menu_selection.val { "> " } else { "  " }
+    let color = if option == menu_selection.val {
+      MENU_SELECTED_COLOR
+    } else {
+      MENU_NORMAL_COLOR
+    }
+    set_text_entity_center(
+      menu_entities[index],
+      prefix + menu_option_label(option),
+      @math.Vec2D(center_x, 210.0 + index.to_double() * 38.0),
+      "24px \{BOMBMAN_FONT_FAMILY}",
+      color,
+      200,
+    )
+  }
+  set_text_entity_center(
+    status_entity,
+    status_text(),
+    @math.Vec2D(center_x, VIEWPORT_HEIGHT - 60.0),
+    "12px \{BOMBMAN_FONT_FAMILY}",
+    HUD_MUTED_TEXT_COLOR,
+    200,
+  )
+  set_text_entity_center(
+    hint_entity,
+    hint_text(),
+    @math.Vec2D(center_x, VIEWPORT_HEIGHT - 32.0),
+    "12px \{BOMBMAN_FONT_FAMILY}",
+    HUD_MUTED_TEXT_COLOR,
+    200,
   )
 }
 
 ///|
-fn sync_hud_visuals() -> Unit {
+fn sync_playing_hud_visuals() -> Unit {
+  hide_menu_visuals()
   set_text_entity(
     title_entity,
     "BOMBMAN",
@@ -492,7 +721,7 @@ fn sync_hud_visuals() -> Unit {
   )
   set_text_entity(
     status_entity,
-    "Soft walls break. Hard walls block. Flames travel in a cross.",
+    status_text(),
     @math.Vec2D(20.0, VIEWPORT_HEIGHT - 48.0),
     "12px \{BOMBMAN_FONT_FAMILY}",
     HUD_MUTED_TEXT_COLOR,
@@ -517,10 +746,18 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     "rgb(18, 24, 30)",
     0,
   )
-  sync_tile_visuals()
-  sync_bomb_visuals()
-  sync_flame_visuals()
-  sync_enemy_visuals()
-  sync_player_visuals()
-  sync_hud_visuals()
+  match phase.val {
+    MainMenu => {
+      hide_gameplay_visuals()
+      sync_menu_visuals()
+    }
+    Playing | RoundOver => {
+      sync_tile_visuals()
+      sync_bomb_visuals()
+      sync_flame_visuals()
+      sync_enemy_visuals()
+      sync_player_visuals()
+      sync_playing_hud_visuals()
+    }
+  }
 }
