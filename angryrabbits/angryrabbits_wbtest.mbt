@@ -1044,13 +1044,13 @@ test "launch_rabbit preserves horizontal velocity through physics step" {
 }
 
 ///|
-test "dynamic bodies stay rotation locked for translation-only sprites" {
+test "dynamic bodies allow rotation like upstream prefabs" {
   let rabbit = rabbit_flying_body()
   let block = block_body()
   let target = target_body()
-  assert_true(rabbit.lock_rotation)
-  assert_true(block.lock_rotation)
-  assert_true(target.lock_rotation)
+  assert_true(!rabbit.lock_rotation)
+  assert_true(!block.lock_rotation)
+  assert_true(!target.lock_rotation)
 }
 
 ///|
@@ -1068,6 +1068,7 @@ test "launch transition preserves velocity after synced ready body exists" {
       entity,
       center: @math.Vec2D(120.0, 280.0),
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       visible: true,
       state: BeforeThrown,
       alive: true,
@@ -2017,6 +2018,7 @@ test "moving block keeps shot active until world settles" {
       center: @math.Vec2D(280.0, 300.0),
       size: @math.Vec2D(40.0, 40.0),
       velocity: @math.Vec2D(STOP_SPEED + 20.0, 0.0),
+      rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
@@ -2025,6 +2027,7 @@ test "moving block keeps shot active until world settles" {
       center: @math.Vec2D(420.0, 300.0),
       radius: 18.0,
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
     })
@@ -2045,6 +2048,7 @@ test "out-of-bounds targets and blocks are cleaned up" {
       center: @math.Vec2D(-OUT_OF_BOUNDS_MARGIN - 40.0, 200.0),
       size: @math.Vec2D(40.0, 40.0),
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
@@ -2053,6 +2057,7 @@ test "out-of-bounds targets and blocks are cleaned up" {
       center: @math.Vec2D(200.0, VIEWPORT_HEIGHT + OUT_OF_BOUNDS_MARGIN + 30.0),
       radius: 18.0,
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
     })
@@ -2074,6 +2079,7 @@ test "rabbit contact event always destroys target" {
       entity: rabbit_entity,
       center: @math.Vec2D(200.0, 200.0),
       velocity: @math.Vec2D(8.0, 0.0),
+      rotation: 0.0,
       visible: true,
       state: Thrown,
       alive: true,
@@ -2085,6 +2091,7 @@ test "rabbit contact event always destroys target" {
       center: @math.Vec2D(200.0, 200.0),
       radius: 18.0,
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
     })
@@ -2108,6 +2115,7 @@ test "target takes upstream-style damage from moving block" {
       center: @math.Vec2D(320.0, 300.0),
       size: @math.Vec2D(40.0, 40.0),
       velocity: @math.Vec2D(1600.0, 0.0),
+      rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
@@ -2116,6 +2124,7 @@ test "target takes upstream-style damage from moving block" {
       center: @math.Vec2D(320.0, 300.0),
       radius: 18.0,
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
     })

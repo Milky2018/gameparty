@@ -176,7 +176,11 @@ const GRAVITY : Double = 980.0
 
 ///|
 /// Friction coefficient for the static ground collider.
-const GROUND_FRICTION : Double = 0.90
+const GROUND_FRICTION : Double = 0.4
+
+///|
+/// Friction coefficient for the rabbit collider.
+const RABBIT_FRICTION : Double = 0.4
 
 ///|
 /// Bounce factor for wooden blocks.
@@ -333,6 +337,7 @@ priv struct RabbitState {
   entity : @entity.Entity
   center : @math.Vec2D
   velocity : @math.Vec2D
+  rotation : Double
   visible : Bool
   state : BirdState
   alive : Bool
@@ -345,6 +350,7 @@ priv struct BlockState {
   center : @math.Vec2D
   size : @math.Vec2D
   velocity : @math.Vec2D
+  rotation : Double
   health : Double
   alive : Bool
 }
@@ -355,6 +361,7 @@ priv struct TargetState {
   center : @math.Vec2D
   radius : Double
   velocity : @math.Vec2D
+  rotation : Double
   health : Double
   alive : Bool
 }

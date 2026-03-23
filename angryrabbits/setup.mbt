@@ -120,6 +120,7 @@ fn sprite_from_atlas(
   source_offset : @math.Vec2D,
   source_size : @math.Vec2D,
   world_size : @math.Vec2D,
+  rotation : Double,
   zindex : Int,
 ) -> @sprite.Sprite {
   let scale_x = if source_size[X] <= 0.0 {
@@ -132,10 +133,17 @@ fn sprite_from_atlas(
   } else {
     world_size[Y] / source_size[Y]
   }
+  let transform = @math.Transform::from_translation(
+      world_size[X] / 2.0,
+      world_size[Y] / 2.0,
+    )
+    .append_rotation_rad(rotation)
+    .append_scale(scale_x, scale_y)
+    .append_translation(-source_size[X] / 2.0, -source_size[Y] / 2.0)
   let animation = @sprite.Animation::single_frame(
     ANGRYRABBITS_SPRITES_PATH,
     source_size,
-    transform=@math.Transform::from_scale(scale_x, scale_y),
+    transform~,
     offset=source_offset,
   )
   @sprite.Sprite::from_animation(animation, zindex)
@@ -159,7 +167,7 @@ fn rabbit_ready_body() -> @physics2d.RigidBody {
     linear_damping: 0.0,
     angular_damping: RABBIT_ANGULAR_DAMPING,
     ccd_enabled: true,
-    lock_rotation: true,
+    lock_rotation: false,
   }
 }
 
@@ -171,9 +179,7 @@ fn rabbit_flying_body() -> @physics2d.RigidBody {
     linear_damping: RABBIT_LINEAR_DAMPING,
     angular_damping: RABBIT_ANGULAR_DAMPING,
     ccd_enabled: true,
-    // Selene 2D currently exposes translation-only transforms for sprites.
-    // Keep the physics body upright so the visible rabbit matches its collider.
-    lock_rotation: true,
+    lock_rotation: false,
   }
 }
 
@@ -185,9 +191,7 @@ fn block_body() -> @physics2d.RigidBody {
     linear_damping: BLOCK_LINEAR_DAMPING,
     angular_damping: BLOCK_ANGULAR_DAMPING,
     ccd_enabled: false,
-    // Rectangular bodies visually cannot rotate independently in the current
-    // Selene 2D render path, so lock rotation to avoid sprite/collider drift.
-    lock_rotation: true,
+    lock_rotation: false,
   }
 }
 
@@ -199,9 +203,7 @@ fn target_body() -> @physics2d.RigidBody {
     linear_damping: TARGET_LINEAR_DAMPING,
     angular_damping: TARGET_ANGULAR_DAMPING,
     ccd_enabled: false,
-    // Keep targets visually aligned with their colliders in the current 2D
-    // renderer, which only syncs translation.
-    lock_rotation: true,
+    lock_rotation: false,
   }
 }
 
@@ -239,7 +241,7 @@ fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
     entity,
     @physics2d.Collider::with_material(
       physics_filter(),
-      friction=0.4,
+      friction=RABBIT_FRICTION,
       restitution=RABBIT_RESTITUTION,
       active=false,
     ),
@@ -251,6 +253,7 @@ fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
     ..rabbit,
     center,
     velocity: @math.Vec2D::zero(),
+    rotation: 0.0,
     visible: true,
     state: BeforeThrown,
     alive: true,
@@ -285,7 +288,7 @@ fn launch_rabbit_at(
     entity,
     @physics2d.Collider::with_material(
       physics_filter(),
-      friction=0.4,
+      friction=RABBIT_FRICTION,
       restitution=RABBIT_RESTITUTION,
       active=true,
     ),
@@ -299,6 +302,7 @@ fn launch_rabbit_at(
     ..rabbit,
     center,
     velocity,
+    rotation: 0.0,
     visible: true,
     state: Thrown,
     alive: true,
@@ -338,6 +342,7 @@ fn remove_rabbit(index : Int) -> Unit {
   rabbits[index] = {
     ..rabbit,
     velocity: @math.Vec2D::zero(),
+    rotation: rabbit.rotation,
     visible: false,
     state: Removed,
     alive: false,
@@ -449,6 +454,9 @@ fn sync_rabbits_from_physics() -> Unit {
       velocity: @physics2d.rigid_body_linear_velocity(rabbit.entity).unwrap_or(
         @math.Vec2D::zero(),
       ),
+      rotation: @physics2d.rigid_body_rotation(rabbit.entity).unwrap_or(
+        rabbit.rotation,
+      ),
     }
     if index == current_rabbit_index.val {
       sync_current_rabbit_refs()
@@ -472,6 +480,9 @@ fn sync_blocks_from_physics() -> Unit {
       velocity: @physics2d.rigid_body_linear_velocity(block.entity).unwrap_or(
         @math.Vec2D::zero(),
       ),
+      rotation: @physics2d.rigid_body_rotation(block.entity).unwrap_or(
+        block.rotation,
+      ),
     }
   }
 }
@@ -491,6 +502,9 @@ fn sync_targets_from_physics() -> Unit {
       center: top_left + @math.Vec2D(target.radius, target.radius),
       velocity: @physics2d.rigid_body_linear_velocity(target.entity).unwrap_or(
         @math.Vec2D::zero(),
+      ),
+      rotation: @physics2d.rigid_body_rotation(target.entity).unwrap_or(
+        target.rotation,
       ),
     }
   }
@@ -560,6 +574,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
       entity: rabbit_entities[index],
       center: rabbit_queue_center(index),
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       visible: true,
       state: BeforeThrown,
       alive: true,
@@ -572,6 +587,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
       center: block.center,
       size: block.size,
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
@@ -582,6 +598,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
       center: target.center,
       radius: target.radius,
       velocity: @math.Vec2D::zero(),
+      rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
     })
@@ -931,6 +948,7 @@ fn sync_static_visuals() -> Unit {
       ),
       @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_BACK_SRC_HEIGHT),
       @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_back_world_height),
+      0.0,
       30,
     ),
   )
@@ -949,6 +967,7 @@ fn sync_static_visuals() -> Unit {
       ),
       @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_FRONT_SRC_HEIGHT),
       @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_front_world_height),
+      0.0,
       72,
     ),
   )
@@ -972,6 +991,7 @@ fn sync_dynamic_visuals() -> Unit {
         @math.Vec2D(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
         @math.Vec2D(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
         rabbit_size,
+        rabbit.rotation,
         70,
       ),
     )
@@ -993,6 +1013,7 @@ fn sync_dynamic_visuals() -> Unit {
         @math.Vec2D(BLOCK_SPRITE_SRC_X, BLOCK_SPRITE_SRC_Y),
         @math.Vec2D(BLOCK_SPRITE_SRC_WIDTH, BLOCK_SPRITE_SRC_HEIGHT),
         block.size,
+        block.rotation,
         60,
       ),
     )
@@ -1013,6 +1034,7 @@ fn sync_dynamic_visuals() -> Unit {
         @math.Vec2D(TARGET_SPRITE_SRC_X, TARGET_SPRITE_SRC_Y),
         @math.Vec2D(TARGET_SPRITE_SRC_WIDTH, TARGET_SPRITE_SRC_HEIGHT),
         target_size,
+        target.rotation,
         65,
       ),
     )
