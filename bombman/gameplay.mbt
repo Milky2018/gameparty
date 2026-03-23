@@ -637,6 +637,7 @@ fn resolve_item_pickups() -> Unit {
     }
     if picked_up {
       hide_entity(item.entity)
+      hide_entity(item.label_entity)
       ignore(items.remove(index))
     }
   }

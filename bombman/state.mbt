@@ -113,6 +113,12 @@ const BOMB_ITEM_COLOR : String = "rgb(253, 236, 102)"
 const POWER_ITEM_COLOR : String = "rgb(176, 124, 255)"
 
 ///|
+const ITEM_BUBBLE_COLOR : String = "rgba(244, 247, 250, 0.92)"
+
+///|
+const ITEM_BUBBLE_RADIUS : Double = 24.0
+
+///|
 const HUD_TEXT_COLOR : String = "rgb(239, 241, 244)"
 
 ///|
@@ -269,6 +275,7 @@ priv struct FlameState {
 ///|
 priv struct ItemState {
   entity : @entity.Entity
+  label_entity : @entity.Entity
   cell_x : Int
   cell_y : Int
   kind : ItemKind

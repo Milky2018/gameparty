@@ -230,6 +230,7 @@ fn clear_dynamic_entities() -> Unit {
   }
   for item in items {
     hide_entity(item.entity)
+    hide_entity(item.label_entity)
   }
   for enemy in enemies {
     hide_entity(enemy.entity)
@@ -422,7 +423,13 @@ fn spawn_item(x : Int, y : Int, kind : ItemKind) -> Unit {
   if has_item_at(x, y) {
     return
   }
-  items.push({ entity: @entity.Entity::new(), cell_x: x, cell_y: y, kind })
+  items.push({
+    entity: @entity.Entity::new(),
+    label_entity: @entity.Entity::new(),
+    cell_x: x,
+    cell_y: y,
+    kind,
+  })
 }
 
 ///|
@@ -667,11 +674,18 @@ fn sync_flame_visuals() -> Unit {
 fn sync_item_visuals() -> Unit {
   for item in items {
     let center = cell_center(item.cell_x, item.cell_y)
-    set_text_entity_center(
+    set_circle_entity(
       item.entity,
+      center,
+      ITEM_BUBBLE_RADIUS,
+      ITEM_BUBBLE_COLOR,
+      62,
+    )
+    set_text_entity_center(
+      item.label_entity,
       item_label(item.kind),
-      @math.Vec2D(center[X], center[Y] - 10.0),
-      "18px \{BOMBMAN_FONT_FAMILY}",
+      @math.Vec2D(center[X], center[Y] - 14.0),
+      "26px \{BOMBMAN_FONT_FAMILY}",
       item_color(item.kind),
       63,
     )
@@ -722,6 +736,7 @@ fn hide_gameplay_visuals() -> Unit {
   }
   for item in items {
     hide_entity(item.entity)
+    hide_entity(item.label_entity)
   }
   for enemy in enemies {
     hide_entity(enemy.entity)
