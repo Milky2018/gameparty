@@ -1,0 +1,123 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/block",
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+  "Milky2018/gameparty/mooncraft_core/item",
+  "Milky2018/gameparty/mooncraft_core/level",
+  "Milky2018/selene/asset_types",
+  "Milky2018/selene/ecs",
+  "Milky2018/selene/entity",
+  "Milky2018/selene/math",
+  "Milky2018/selene/render3d_types",
+}
+
+// Values
+pub const FPS : UInt = 60
+
+pub const VIEWPORT_HEIGHT : Double = 720.0
+
+pub const VIEWPORT_WIDTH : Double = 1280.0
+
+pub fn run() -> Unit
+
+pub fn update_system(@ecs.World) -> Unit
+
+// Errors
+
+// Types and methods
+pub(all) struct BlockHit {
+  wx : Int
+  wy : Int
+  wz : Int
+  place_wx : Int
+  place_wy : Int
+  place_wz : Int
+  face : @shape.FaceName
+  long_id : UInt
+  point : @math.Vec3
+  distance : Double
+}
+
+pub(all) struct CatalogEntry {
+  name : String
+  category : @item.Category
+  icon_texture : String
+  icon_path : String
+  icon_handle : @asset_types.ImageHandle
+  block_long_id : UInt?
+}
+
+pub(all) struct ChunkRecord {
+  chunk_x : Int
+  chunk_y : Int
+  chunk_z : Int
+  mut data : Array[UInt]
+  light : Bytes
+  mut dirty : Bool
+  mut loaded : Bool
+  mut opaque_entity : @entity.Entity?
+  mut cutout_entity : @entity.Entity?
+  mut translucent_entity : @entity.Entity?
+  mut opaque_mesh : @render3d_types.MeshHandle?
+  mut cutout_mesh : @render3d_types.MeshHandle?
+  mut translucent_mesh : @render3d_types.MeshHandle?
+}
+
+pub(all) struct ChunkStreamQueue {
+  mut to_generate : Array[String]
+  mut to_rebuild : Array[String]
+  mut to_unload : Array[String]
+}
+
+pub(all) struct DemoEntityState {
+  mut roots : Array[@entity.Entity]
+  mut rabbit_scene : @render3d_types.SceneHandle?
+  mut snowman_scene : @render3d_types.SceneHandle?
+  mut zombie_scene : @render3d_types.SceneHandle?
+}
+
+pub(all) struct HotbarSlot {
+  mut catalog_index : Int
+}
+
+pub(all) struct InventoryState {
+  mut open : Bool
+  mut cursor : @math.Vec2D
+  mut scroll_row : Int
+  catalog : Array[CatalogEntry]
+  mut hotbar : Array[HotbarSlot]
+}
+
+pub(all) struct PlayerController {
+  mut position : @math.Vec3
+  mut velocity : @math.Vec3
+  mut yaw : Double
+  mut pitch : Double
+  mut on_ground : Bool
+  mut selected_hotbar_index : Int
+}
+
+pub(all) struct SelectionState {
+  mut hit : BlockHit?
+  mut preview_long_id : UInt?
+  mut preview_valid : Bool
+}
+
+pub(all) struct WorldSession {
+  seed : UInt64
+  world_type : @level.WorldType
+  chunk_radius : Int
+  chunk_min_y : Int
+  chunk_max_y : Int
+  world : @level.World
+  registry : @block.BlockRegistry
+  texture_names : Array[String]
+  texture_name_to_index : Map[String, Int]
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,6 @@
+import {
+  "moonbitlang/core/math",
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+  "Milky2018/gameparty/mooncraft_core/util",
+  "Milky2018/gameparty/mooncraft_core/biome",
+}

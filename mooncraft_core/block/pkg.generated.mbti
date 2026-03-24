@@ -1,0 +1,159 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/block"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+  "Milky2018/gameparty/mooncraft_core/item",
+}
+
+// Values
+pub const AIR_LONG_ID : UInt = 0
+
+pub let blocks : Array[Block]
+
+pub fn build_chunk_colors(BlockRegistry, Array[UInt], Bytes, Int) -> Array[Float]
+
+pub fn build_chunk_colors_split(BlockRegistry, Array[UInt], Bytes, Int) -> MeshColorsSplit
+
+pub fn build_chunk_mesh(BlockRegistry, Array[UInt], Bytes, Int) -> MeshData
+
+pub fn build_chunk_mesh_split(BlockRegistry, Array[UInt], Bytes, Int) -> MeshSplit
+
+pub fn build_ui_item_mesh(BlockRegistry, UInt) -> MeshData
+
+pub fn build_world_mesh(BlockRegistry, Array[ChunkEntry], Int) -> MeshData
+
+pub fn build_world_mesh_split(BlockRegistry, Array[ChunkEntry], Int) -> MeshSplit
+
+pub fn collect_block_light_info() -> Array[Array[Int]]
+
+pub fn collect_texture_names() -> Array[String]
+
+pub fn compute_placement_state(UInt, Array[Int], Array[Int], player_pos? : Array[Double]) -> UInt
+
+pub let fallback_texture : String
+
+pub fn get_shape_desc(UInt) -> @shape.Source?
+
+pub fn lookup_by_long_id(UInt) -> Block?
+
+pub fn lookup_by_name(String) -> Block?
+
+pub fn name_to_long_id(String) -> UInt
+
+// Errors
+
+// Types and methods
+pub(all) enum AlphaMode {
+  Opaque
+  Cutout
+  Translucent
+}
+
+pub struct Block {
+  name : String
+  id : UInt
+  state : UInt
+  occlusion_cull : Bool
+  inter_cull : Bool
+  luminance : Int
+  opacity : Int
+  alpha_mode : AlphaMode
+  shape : Shape
+  facing : Facing
+  material : Material
+  category : @item.Category
+  faces : TextureNames
+}
+pub fn Block::is_air(Self) -> Bool
+pub fn Block::is_selectable(Self) -> Bool
+pub fn Block::long_id(Self, state? : UInt) -> UInt
+
+pub struct BlockRegistry {
+  by_name : Map[String, RenderBlock]
+  by_long_id : Map[UInt, RenderBlock]
+}
+pub fn BlockRegistry::create(Array[String], Array[Int]) -> Self
+pub fn BlockRegistry::get_by_long_id(Self, UInt) -> RenderBlock?
+pub fn BlockRegistry::get_by_name(Self, String) -> RenderBlock?
+
+pub(all) struct ChunkEntry {
+  x : Int
+  y : Int
+  z : Int
+  data : Array[UInt]
+  light : Bytes
+}
+
+pub enum Facing {
+  None
+  Axis
+  Horizontal
+  Six
+}
+
+pub(all) enum Material {
+  TintedLeaf
+  Normal
+  Tinted(Float, Float, Float, Float)
+}
+pub fn Material::tint(Self) -> (Float, Float, Float, Float)
+pub fn Material::tinted((Float, Float, Float, Float)) -> Self
+
+pub struct MeshColorsSplit {
+  normal : Array[Float]
+  leaf : Array[Float]
+  translucent : Array[Float]
+}
+
+pub struct MeshData {
+  positions : Array[Float]
+  uvs : Array[Float]
+  layers : Array[Float]
+  colors : Array[Float]
+  normals : Array[Float]
+  count : Int
+}
+
+pub struct MeshSplit {
+  normal : MeshData
+  leaf : MeshData
+  translucent : MeshData
+}
+
+pub struct RenderBlock {
+  block : Block
+  faces : @shape.FaceLayerIndices
+  long_id : UInt
+}
+
+pub enum Shape {
+  Air
+  Cube
+  GrassPath
+  Liquid
+  Cactus
+  Torch
+  RedstoneTorch
+  RedstoneTorchClassic
+}
+pub fn Shape::is_torch_genus(Self) -> Bool
+
+pub struct TextureNames {
+  pos_x : String?
+  neg_x : String?
+  pos_y : String?
+  neg_y : String?
+  pos_z : String?
+  neg_z : String?
+}
+pub fn TextureNames::axial(String, String) -> Self
+pub fn TextureNames::isotropic(String) -> Self
+pub fn TextureNames::new(pos_x? : String, neg_x? : String, pos_y? : String, neg_y? : String, pos_z? : String, neg_z? : String) -> Self
+pub fn TextureNames::top_bottom(String, String, String) -> Self
+
+// Type aliases
+pub type BlockId = UInt
+
+// Traits
+

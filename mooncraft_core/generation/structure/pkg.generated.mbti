@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/generation/structure"
+
+// Values
+pub const NETHER_SPIRE_HEIGHT : Int = 35
+
+pub const NETHER_SPIRE_LAYER_Y_MIN : Int = -4
+
+pub const NETHER_SPIRE_SIZE : Int = 17
+
+pub fn place_nether_spire((Int, Int, Int, UInt) -> Unit, Int, Int, Int, filler? : UInt) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

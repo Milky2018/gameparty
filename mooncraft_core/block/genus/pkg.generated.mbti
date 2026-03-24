@@ -1,0 +1,198 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/block/genus"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/biome",
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+  "Milky2018/gameparty/mooncraft_core/util",
+}
+
+// Values
+pub const CACTUS_MAX : Float = 0.9375
+
+pub const CACTUS_MIN : Float = 0.0625
+
+pub const GRASS_PATH_MAX_Y : Float = 0.9375
+
+pub const LIQUID_MAX_Y : Float = 0.9375
+
+pub const TORCH_MIN : Float = 0.4375
+
+pub let biome_lut_size : Int
+
+pub let cactus_data : CactusModelData
+
+pub let cactus_model : @shape.Model
+
+pub let cherry_grove_river_water_tint : (Float, Float, Float, Float)
+
+pub let classic_water_tint : (Float, Float, Float, Float)
+
+pub let cold_ocean_water_tint : (Float, Float, Float, Float)
+
+pub let default_model : @shape.Model
+
+pub let default_tint : Array[Float]
+
+pub let default_water_tint : (Float, Float, Float, Float)
+
+pub let frozen_water_tint : (Float, Float, Float, Float)
+
+pub let grass_path_data : GrassPathModelData
+
+pub let grass_path_model : @shape.Model
+
+pub let horizontal_facing_model : @shape.Model
+
+pub let lava_tint : (Float, Float, Float, Float)
+
+pub let leaf_fragment_shader : String
+
+pub let leaf_vertex_shader : String
+
+pub let liquid_data : LiquidModelData
+
+pub let liquid_model : @shape.Model
+
+pub let log_model : @shape.Model
+
+pub let lukewarm_ocean_water_tint : (Float, Float, Float, Float)
+
+pub let mangrove_swamp_river_water_tint : (Float, Float, Float, Float)
+
+pub let meadow_water_tint : (Float, Float, Float, Float)
+
+pub let pale_garden_river_water_tint : (Float, Float, Float, Float)
+
+pub let redstone_torch_classic_model : @shape.Model
+
+pub let redstone_torch_glow_max : Float
+
+pub let redstone_torch_glow_min : Float
+
+pub let redstone_torch_glow_y_max : Float
+
+pub let redstone_torch_glow_y_min : Float
+
+pub let redstone_torch_model : @shape.Model
+
+pub let redstone_torch_uv_down : (Float, Float, Float, Float)
+
+pub let redstone_torch_uv_east : (Float, Float, Float, Float)
+
+pub let redstone_torch_uv_north : (Float, Float, Float, Float)
+
+pub let redstone_torch_uv_south : (Float, Float, Float, Float)
+
+pub let redstone_torch_uv_up : (Float, Float, Float, Float)
+
+pub let redstone_torch_uv_west : (Float, Float, Float, Float)
+
+pub let six_facing_model : @shape.Model
+
+pub let swamp_water_tint : (Float, Float, Float, Float)
+
+pub fn torch_bounds_index(UInt) -> Int
+
+pub let torch_max : Float
+
+pub let torch_min : Float
+
+pub let torch_model : @shape.Model
+
+pub let torch_offset : Float
+
+pub let torch_pivot : (Float, Float, Float)
+
+pub let torch_tilt : Float
+
+pub let torch_top : Float
+
+pub let torch_uv_bottom : (Float, Float, Float, Float)
+
+pub let torch_uv_side : (Float, Float, Float, Float)
+
+pub let torch_uv_top : (Float, Float, Float, Float)
+
+pub let torch_wall_y_offset : Float
+
+pub let warm_ocean_water_tint : (Float, Float, Float, Float)
+
+// Errors
+
+// Types and methods
+pub type Cactus
+pub fn Cactus::double_sided() -> Bool
+pub fn Cactus::face_box(@shape.FaceName) -> ((Float, Float, Float), (Float, Float, Float))?
+pub fn Cactus::uv_rect(@shape.FaceName) -> (Float, Float, Float, Float)
+
+pub struct CactusModelData {
+  min : Float
+  max : Float
+  double_sided : Bool
+}
+
+pub type GrassPath
+pub fn GrassPath::face_box(@shape.FaceName) -> ((Float, Float, Float), (Float, Float, Float))?
+pub fn GrassPath::uv_rect(@shape.FaceName) -> (Float, Float, Float, Float)
+
+pub struct GrassPathModelData {
+  max_y : Float
+  side_v0 : Float
+}
+
+pub type HorizontalFacing
+pub fn HorizontalFacing::face_layer(@shape.FaceLayerIndices, UInt, @shape.FaceName) -> Int
+pub fn HorizontalFacing::source_face_for_world_face(@shape.FaceName, UInt) -> @shape.FaceName
+pub fn HorizontalFacing::state_from_player(Array[Double], Int, Int) -> UInt
+pub fn HorizontalFacing::unique_name(String, UInt) -> String
+
+pub type Liquid
+pub fn Liquid::face_box(@shape.FaceName) -> ((Float, Float, Float), (Float, Float, Float))?
+pub fn Liquid::uv_rect(@shape.FaceName) -> (Float, Float, Float, Float)
+
+pub struct LiquidModelData {
+  max_y : Float
+  side_v0 : Float
+}
+
+pub type Log
+pub fn Log::axis_from_state(UInt) -> Int
+pub fn Log::log_state_from_placement(Array[Int], Array[Int]) -> UInt
+pub fn Log::rotate_uv(@shape.FaceGeom, UInt) -> Bool
+pub fn Log::unique_name(String, UInt) -> String
+
+pub type OakLeaves
+
+pub type SixFacing
+pub fn SixFacing::face_from_state(UInt) -> @shape.FaceName
+pub fn SixFacing::face_layer(@shape.FaceLayerIndices, UInt, @shape.FaceName) -> Int
+pub fn SixFacing::source_face_for_world_face(@shape.FaceName, UInt) -> @shape.FaceName
+pub fn SixFacing::state_from_face(@shape.FaceName) -> UInt
+pub fn SixFacing::state_from_hit(Array[Int], Array[Int]) -> UInt
+pub fn SixFacing::unique_name(String, UInt) -> String
+
+pub type Torch
+pub fn Torch::append_classic_colors((Int, Float) -> Unit) -> Unit
+pub fn Torch::append_classic_mesh(UInt, Float, Float, Float, Float, ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit, ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit) -> Unit
+pub fn Torch::append_colors((Int, Float) -> Unit) -> Unit
+pub fn Torch::append_mesh(UInt, Float, Float, Float, Float, ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit) -> Unit
+pub fn Torch::append_redstone_colors((Int, Float) -> Unit) -> Unit
+pub fn Torch::append_redstone_mesh(UInt, Float, Float, Float, Float, ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit) -> Unit
+pub fn Torch::collect_bounds() -> Array[Array[Float]]
+pub fn Torch::get_outline_pad() -> @util.AABB
+pub fn Torch::shape_box_by_state(UInt) -> @shape.Box
+pub fn Torch::torch_state_from_placement(Array[Int], Array[Int]) -> UInt
+pub fn Torch::unique_name(String, UInt) -> String
+
+type TorchTransform
+pub fn TorchTransform::apply(Self, (Float, Float, Float), Float, Float, Float) -> (Float, Float, Float)
+pub fn TorchTransform::from(Int) -> Self
+
+pub type Water
+pub fn Water::tint_for_sample(@biome.Biome, @biome.BiomeSample) -> (Float, Float, Float, Float)
+
+// Type aliases
+
+// Traits
+

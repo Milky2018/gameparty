@@ -1,0 +1,83 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/block/shape"
+
+// Values
+pub let faces : Array[FaceGeom]
+
+// Errors
+
+// Types and methods
+pub(all) struct Box {
+  min : Array[Float]
+  max : Array[Float]
+}
+
+pub struct FaceGeom {
+  name : FaceName
+  normal : (Int, Int, Int)
+  corners : Array[(Int, Int, Int)]
+}
+
+pub(all) struct FaceLayerIndices {
+  pos_x : Int
+  neg_x : Int
+  pos_y : Int
+  neg_y : Int
+  pos_z : Int
+  neg_z : Int
+}
+
+pub(all) enum FaceName {
+  PosX
+  NegX
+  PosY
+  NegY
+  PosZ
+  NegZ
+}
+
+pub(all) struct FaceOcclusion {
+  neighbor_occludes : Bool
+  same_block_cull : Bool
+}
+
+pub(all) struct FaceSource {
+  faces : FaceLayerIndices
+  state : UInt
+}
+
+pub(all) struct Model {
+  face_layer : (FaceSource, FaceName) -> Int
+  face_box : (FaceSource, FaceName) -> ((Float, Float, Float), (Float, Float, Float))?
+  uv_rect : (FaceSource, FaceName) -> (Float, Float, Float, Float)
+  rotate_uv : (FaceSource, FaceGeom) -> Bool
+  double_sided : (FaceSource) -> Bool
+  face_visible : (FaceSource, FaceGeom, FaceOcclusion) -> Bool
+  emit_mesh : (FaceSource, Float, Float, Float, ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit, ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit) -> Bool
+  emit_colors : (FaceSource, (Int, Float) -> Unit) -> Bool
+}
+
+pub(all) struct Source {
+  boxes : Array[Box]
+  facing : Int
+}
+
+// Type aliases
+pub type ColorEmitter = (Int, Float) -> Unit
+
+pub type ColorScale = Float
+
+pub type FaceEmitter = ((Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Float, Float, Float), (Int, Int, Int), Float, (Float, Float, Float, Float), Bool, Float) -> Unit
+
+pub type FaceLayer = Float
+
+pub type FaceNormal = (Int, Int, Int)
+
+pub type FlipV = Bool
+
+pub type UvRect = (Float, Float, Float, Float)
+
+pub type Vertex = (Float, Float, Float)
+
+// Traits
+

@@ -1,0 +1,9 @@
+import {
+  "moonbitlang/core/env",
+  "moonbitlang/core/strconv",
+  "Milky2018/gameparty/mooncraft_core/biome",
+  "Milky2018/gameparty/mooncraft_core/util",
+  "Milky2018/gameparty/mooncraft_core/block",
+  "Milky2018/gameparty/mooncraft_core/generation/structure",
+  "Milky2018/gameparty/mooncraft_core/generation/feature",
+}

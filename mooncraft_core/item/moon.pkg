@@ -1,0 +1,4 @@
+import {
+  "Milky2018/gameparty/mooncraft_core/util",
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+}

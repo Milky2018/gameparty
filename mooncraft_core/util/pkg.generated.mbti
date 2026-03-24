@@ -1,0 +1,135 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/util"
+
+import {
+  "moonbitlang/core/random",
+}
+
+// Values
+pub const EPSILON : Float = 0.00001
+
+pub const PIXEL_BLOCK_RATIO : Float = 16
+
+pub fn[T : Mul + Sub] det2(T, T, T, T) -> T
+
+pub fn face_shade_scale(Int, Int, Int) -> Float
+
+pub fn floor_div(Int, Int) -> Int
+
+pub fn generate_time_based_seed() -> Bytes
+
+pub fn light_level_scale(Int) -> Float
+
+pub fn offset_uv_pixels(Float, Float, Float, Float, texture_size? : Float) -> (Float, Float, Float, Float)
+
+pub fn p2b(Int) -> Float
+
+pub fn pack_long_id(UInt, UInt) -> UInt
+
+pub fn random_time_based() -> @random.Rand
+
+pub fn rect_uv_pixels(Float, Float, Float, Float, texture_size? : Float) -> (Float, Float, Float, Float)
+
+pub fn[T] repeat(T, Int) -> Array[T]
+
+pub fn rgba(String) -> (Float, Float, Float, Float)
+
+pub fn uint64_array_to_bytes(Array[UInt64]) -> Bytes
+
+pub fn unpack_long_id(UInt) -> (UInt, UInt)
+
+// Errors
+
+// Types and methods
+pub(all) struct AABB {
+  sx : Float
+  sy : Float
+  sz : Float
+  ex : Float
+  ey : Float
+  ez : Float
+}
+
+pub struct LCG {
+  // private fields
+}
+pub fn LCG::new(seed? : UInt64) -> Self
+pub fn LCG::next(Self, modulus? : UInt64) -> UInt64
+
+pub struct Noise {
+  seed : UInt64
+  permutations : Array[Int]
+}
+pub fn Noise::fade(Double) -> Double
+pub fn Noise::fade2(Double) -> Double
+pub fn Noise::fast(Int) -> Double
+pub fn Noise::lerp(Double, Double, Double) -> Double
+pub fn Noise::new(seed? : UInt64) -> Self
+
+pub struct PerlinNoise {
+  base : Noise
+  grad_p : Array[Vec3[Double]]
+}
+pub fn PerlinNoise::gen(Self, Double, Double, z? : Double) -> Double
+pub fn PerlinNoise::gen2d(Self, Double, Double) -> Double
+pub fn PerlinNoise::gen3d(Self, Double, Double, Double) -> Double
+pub fn PerlinNoise::new(seed? : UInt64) -> Self
+
+pub struct Vec2[T] {
+  x : T
+  y : T
+}
+pub fn Vec2::almost_equal(Self[Float], Self[Float]) -> Bool
+pub fn Vec2::angle(Self[Float], Self[Float]) -> Double
+pub fn[T : Mul + Sub] Vec2::cross(Self[T], Self[T]) -> T
+pub fn[T : Mul + Add] Vec2::dot(Self[T], Self[T]) -> T
+#alias(norm)
+pub fn Vec2::eulidian_norm(Self[Float]) -> Float
+pub fn Vec2::lerp(Self[Float], Self[Float], Float) -> Self[Float]
+pub fn[T] Vec2::new(T, T) -> Self[T]
+pub fn Vec2::normalize(Self[Float]) -> Self[Float]?
+pub fn Vec2::rotate(Self[Float], Float) -> Self[Float]
+pub fn[T : Mul] Vec2::scale(Self[T], T) -> Self[T]
+pub impl[T : Add] Add for Vec2[T]
+pub impl Eq for Vec2[Float]
+pub impl[T : Mul] Mul for Vec2[T]
+pub impl[T : Neg] Neg for Vec2[T]
+pub impl[T : Show] Show for Vec2[T]
+pub impl[T : Sub] Sub for Vec2[T]
+
+pub struct Vec3[T] {
+  x : T
+  y : T
+  z : T
+}
+pub fn Vec3::almost_equal(Self[Float], Self[Float]) -> Bool
+pub fn Vec3::as_block_position(Self[Float]) -> Self[Float]
+pub fn[T : Mul + Sub] Vec3::cross(Self[T], Self[T]) -> Self[T]
+pub fn[T : Mul + Add] Vec3::dot(Self[T], Self[T]) -> T
+#alias(norm)
+pub fn Vec3::eulidian_norm(Self[Float]) -> Float
+pub fn Vec3::lerp(Self[Float], Self[Float], Float) -> Self[Float]
+pub fn[T] Vec3::new(T, T, T) -> Self[T]
+pub fn Vec3::normalize(Self[Float]) -> Self[Float]?
+pub fn Vec3::rotate_x(Self[Float], Float) -> Self[Float]
+pub fn Vec3::rotate_y(Self[Float], Float) -> Self[Float]
+pub fn Vec3::rotate_z(Self[Float], Float) -> Self[Float]
+pub fn[T : Mul] Vec3::scale(Self[T], T) -> Self[T]
+pub impl[T : Add] Add for Vec3[T]
+pub impl Eq for Vec3[Float]
+pub impl[T : Mul] Mul for Vec3[T]
+pub impl[T : Neg] Neg for Vec3[T]
+pub impl[T : Show] Show for Vec3[T]
+pub impl[T : Sub] Sub for Vec3[T]
+
+// Type aliases
+pub type FVec2 = Vec2[Float]
+
+pub type FVec3 = Vec3[Float]
+
+pub type Rgba = (Float, Float, Float, Float)
+
+pub type UniqueName = String
+
+// Traits
+

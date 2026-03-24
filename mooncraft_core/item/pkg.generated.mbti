@@ -1,0 +1,76 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/item"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+}
+
+// Values
+pub let items : Array[Item]
+
+pub fn lookup_by_name(String) -> Item?
+
+pub fn shovel_use_on(ItemStack, Int, Int, Int, @shape.FaceName, (Float, Float, Float)) -> UseOnAction
+
+pub fn use_item(String, String, Array[Int]) -> UseAction
+
+pub fn use_item_on(String, String, Array[Int], Array[Int], (Float, Float, Float)) -> UseOnAction
+
+// Errors
+
+// Types and methods
+pub(all) enum Category {
+  Item
+  Block
+  None
+}
+pub impl Eq for Category
+
+pub struct Item {
+  name : String
+  id : UInt
+  texture : String
+  category : Category
+  archetype : ItemArchetype
+}
+pub fn Item::use_on(Self, ItemStack, Int, Int, Int, @shape.FaceName, (Float, Float, Float)) -> UseOnAction
+
+pub enum ItemArchetype {
+  Generic
+  Tool(kind~ : ToolKind, tier~ : ToolTier)
+}
+
+pub struct ItemStack {
+  item_id : UInt
+  count : Int
+}
+pub fn ItemStack::from_item(Item, count? : Int) -> Self
+
+pub enum ToolKind {
+  Shovel
+}
+
+pub enum ToolTier {
+  Iron
+}
+
+pub enum UseAction {
+  None
+  BreakBlock(wx~ : Int, wy~ : Int, wz~ : Int)
+  Batch(Array[UseAction])
+}
+
+pub enum UseOnAction {
+  None
+  ReplaceBlock(wx~ : Int, wy~ : Int, wz~ : Int, expected~ : (String) -> Bool, neo~ : (String) -> Bool, require_above_air~ : Bool)
+  PlaceBlock(target_wx~ : Int, target_wy~ : Int, target_wz~ : Int, place_wx~ : Int, place_wy~ : Int, place_wz~ : Int, name~ : String, require_air~ : Bool)
+  Batch(Array[UseOnAction])
+}
+
+// Type aliases
+pub type ItemId = UInt
+
+pub type UniqueNamePredicate = (String) -> Bool
+
+// Traits
+

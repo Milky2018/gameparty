@@ -1,0 +1,29 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/generation/feature"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/block",
+  "Milky2018/gameparty/mooncraft_core/util",
+}
+
+// Values
+pub let crop_circle_texts : Array[String]
+
+pub fn pick_stone_ore(@util.PerlinNoise, Int, Int, Int, Bool, UInt, UInt, UInt, UInt, UInt, UInt, UInt, UInt) -> UInt
+
+pub fn place_cactus((Int, Int, Int, UInt) -> Unit, Int, Int, Int, filler_cactus? : UInt) -> Unit
+
+pub fn place_crop_circle_texts_flat((Int, Int, Int, UInt) -> Unit, Int, Int, filler? : UInt) -> Unit
+
+pub fn place_fallen_oak_tree((Int, Int, Int, UInt) -> Unit, Int, Int, Int, filler_log? : @block.Block) -> Unit
+
+pub fn place_oak_tree_genus((Int, Int, Int, UInt) -> Unit, Int, Int, Int, filler_log? : @block.Block, filler_leaves? : UInt) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

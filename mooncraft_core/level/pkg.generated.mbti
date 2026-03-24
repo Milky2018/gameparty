@@ -1,0 +1,185 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/level"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/biome",
+  "Milky2018/gameparty/mooncraft_core/util",
+}
+
+// Values
+pub const CHUNK_X_SIZE : Int = 16
+
+pub const CHUNK_Y_SIZE : Int = 16
+
+pub const CHUNK_Z_SIZE : Int = 16
+
+pub const DESERT_SANDSTONE_DEPTH : Int = 4
+
+pub const FINITE_CHUNK_X_HALF : Int = 8
+
+pub const FINITE_CHUNK_Y_HALF : Int = 4
+
+pub const FINITE_CHUNK_Z_HALF : Int = 8
+
+pub const FINITE_MAX_Y : Int = 63
+
+pub const FINITE_MIN_Y : Int = -64
+
+pub const FINITE_WORLD_X_SIZE : Int = 256
+
+pub const FINITE_WORLD_Y_SIZE : Int = 128
+
+pub const FINITE_WORLD_Z_SIZE : Int = 256
+
+pub const INFINITE_MIN_Y : Int = -64
+
+pub const PRECLASSIC_CHUNK_X_HALF : Int = 8
+
+pub const PRECLASSIC_CHUNK_Y_HALF : Int = 2
+
+pub const PRECLASSIC_CHUNK_Z_HALF : Int = 8
+
+pub const PRECLASSIC_MAX_Y : Int = 31
+
+pub const PRECLASSIC_MIN_Y : Int = -32
+
+pub const PRECLASSIC_WORLD_X_SIZE : Int = 256
+
+pub const PRECLASSIC_WORLD_Y_SIZE : Int = 64
+
+pub const PRECLASSIC_WORLD_Z_SIZE : Int = 256
+
+pub const SEA_LEVEL : Int = 63
+
+pub const TREE_MIN_SPACE : Int = 4
+
+pub const WORLD_MAX_Y : Int = 127
+
+pub const WORLD_MIN_Y : Int = -64
+
+pub fn apply_pending_to_chunk(Chunk) -> Unit
+
+pub fn chunk_key_by_block_xyz(Int, Int, Int) -> String
+
+pub fn chunk_key_by_chunk_xyz(Int, Int, Int) -> String
+
+pub fn chunk_xyz_by_chunk_key(String) -> (Int, Int, Int)
+
+pub fn collect_render_chunk_keys(Int, Int, Int, Int, Int) -> Array[String]
+
+pub let desert_lakes_tree_params : PlacementParams
+
+pub let forest_tree_params : PlacementParams
+
+pub let frozen_river_tree_params : PlacementParams
+
+pub fn get_block_rxyz_by_linear_index(Int) -> (Int, Int, Int)
+
+pub fn get_linear_block_index(Int, Int, Int) -> Int
+
+pub fn get_relative_block_xyz(Int, Int, Int) -> (Int, Int, Int)
+
+pub let mountain_tree_params : PlacementParams
+
+pub fn place_biome_trees_in_chunk(World, Chunk, is_grass? : (UInt) -> Bool) -> Unit
+
+pub fn place_oak_trees_in_chunk(World, Chunk, params? : PlacementParams, is_grass? : (UInt) -> Bool) -> Unit
+
+pub let plains_tree_params : PlacementParams
+
+pub let river_tree_params : PlacementParams
+
+pub fn should_place_oak(@util.PerlinNoise, Int, Int, PlacementParams) -> Bool
+
+pub fn surface_height(World, Int, Int) -> Int
+
+pub fn world_type_from_name(String, fallback? : WorldType) -> WorldType
+
+pub fn world_type_name(WorldType) -> String
+
+// Errors
+
+// Types and methods
+pub struct BlockPlacement {
+  wx : Int
+  wy : Int
+  wz : Int
+  id : UInt
+}
+
+pub struct BlockPos {
+  x : Int
+  y : Int
+  z : Int
+}
+pub fn BlockPos::new(Int, Int, Int) -> Self
+pub impl Show for BlockPos
+
+pub struct Chunk {
+  x : Int
+  y : Int
+  z : Int
+  tile_map : Array[UInt]
+}
+pub fn Chunk::block_rxyz_to_block_xyz(Self, Int, Int, Int) -> (Int, Int, Int)
+pub fn Chunk::chunk_key(Self) -> String
+pub fn Chunk::get_tile(Self, Int, Int, Int) -> UInt
+pub fn Chunk::in_other_chunk(Int, Int, Int) -> Bool
+pub fn Chunk::new(Int, Int, Int) -> Self
+pub fn Chunk::set_block(Self, Int, Int, Int, UInt) -> Unit
+pub fn Chunk::update_tile_map(Self, Int, Int, Int, UInt) -> Unit
+
+pub struct ChunkBlockPos {
+  x : Int
+  y : Int
+  z : Int
+}
+pub fn ChunkBlockPos::from_block_pos(BlockPos) -> Self
+pub impl Show for ChunkBlockPos
+
+pub struct ChunkRegion {
+  chunk : Chunk
+}
+pub fn ChunkRegion::new(Chunk) -> Self
+pub fn ChunkRegion::set_block(Self, Int, Int, Int, UInt) -> Unit
+
+pub struct PlacementParams {
+  freq : Double
+  threshold : Double
+  min_spacing : Int
+}
+
+pub(all) struct TerrainColumn {
+  wx : Int
+  wz : Int
+  sample : @biome.BiomeSample
+  biome : @biome.Biome
+  surface_biome : @biome.Biome
+  plain : Int
+  surface : Int
+}
+
+pub struct World {
+  seed : UInt64
+  kind : WorldType
+  noise : @util.PerlinNoise
+}
+pub fn World::generate_chunk(Self, Int, Int, Int) -> Chunk
+pub fn World::max_y(Self) -> Int
+pub fn World::min_y(Self) -> Int
+pub fn World::new(seed? : UInt64, world_type? : WorldType) -> Self
+pub fn World::seed(Self) -> UInt64
+pub fn World::world_type(Self) -> WorldType
+pub fn World::world_type_name(Self) -> String
+
+pub(all) enum WorldType {
+  Flat
+  Infinite
+  PreClassic
+  Finite
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,6 @@
+import {
+  "Milky2018/gameparty/mooncraft_core/item",
+  "Milky2018/gameparty/mooncraft_core/util",
+  "Milky2018/gameparty/mooncraft_core/block/genus",
+  "Milky2018/gameparty/mooncraft_core/block/shape",
+}

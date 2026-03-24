@@ -1,0 +1,76 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/mooncraft_core/biome"
+
+import {
+  "Milky2018/gameparty/mooncraft_core/util",
+}
+
+// Values
+pub const BIOME_FREQ : Double = 0.0019
+
+pub const CONTINENTAL_FREQ : Double = 0.0012
+
+pub const EROSION_FREQ : Double = 0.0021
+
+pub const HUMIDITY_FREQ : Double = 0.0019
+
+pub const RIDGE_FREQ_A : Double = 0.0068
+
+pub const RIDGE_FREQ_B : Double = 0.014
+
+pub const RIVER_FREQ : Double = 0.0032
+
+pub const TEMP_FREQ : Double = 0.0019
+
+pub const WEIRDNESS_FREQ : Double = 0.0046
+
+pub fn biome_at(@util.PerlinNoise, Int, Int) -> Biome
+
+pub fn biome_from_sample(BiomeSample) -> Biome
+
+pub fn fbm2d(@util.PerlinNoise, Double, Double, Int, Double, Double) -> Double
+
+pub fn name(Biome) -> String
+
+pub fn params(Biome) -> BiomeParams
+
+pub fn sample(@util.PerlinNoise, Int, Int) -> BiomeSample
+
+// Errors
+
+// Types and methods
+pub(all) enum Biome {
+  Plains
+  Forest
+  Mountains
+  WindsweptHills
+  Desert
+  DesertLakes
+  Beach
+  River
+  FrozenRiver
+  Ocean
+  DeepOcean
+}
+
+pub struct BiomeParams {
+  base_offset : Double
+  mountain_amp : Double
+  max_height : Int
+  river_carve : Int
+}
+
+pub(all) struct BiomeSample {
+  temperature : Double
+  humidity : Double
+  continental : Double
+  erosion : Double
+  weirdness : Double
+  ridge : Double
+  river : Double
+}
+
+// Type aliases
+
+// Traits
+
