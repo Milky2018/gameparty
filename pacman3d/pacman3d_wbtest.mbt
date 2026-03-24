@@ -112,12 +112,12 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   ghosts.clear()
 
   let ghost_marker = @entity.Entity::new()
-  @sprite.sprites().set(
+  setup_color_rect_entity(
     ghost_marker,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(2.0, 2.0), "white"),
-      1,
-    ),
+    @math.Vec2D(2.0, 2.0),
+    @math.Vec2D::zero(),
+    "white",
+    1,
   )
   ghosts.push({
     entity: @entity.Entity::new(),
@@ -151,18 +151,18 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   player_state.z = world_z_for_tile(1)
 
   minimap_system(@ecs.require_current_world())
-  if @sprite.sprites().get(ghost_marker) is Some(sprite) {
-    assert_true(!sprite.visible)
+  if @visibility.visibilities().get(ghost_marker) is Some(visibility) {
+    assert_true(visibility is Hidden)
   } else {
-    fail("missing ghost marker sprite")
+    fail("missing ghost marker visibility")
   }
 
   dots[0] = { ..dots[0], collected: true }
   minimap_system(@ecs.require_current_world())
-  if @sprite.sprites().get(ghost_marker) is Some(sprite) {
-    assert_true(sprite.visible)
+  if @visibility.visibilities().get(ghost_marker) is Some(visibility) {
+    assert_true(visibility is Visible)
   } else {
-    fail("missing ghost marker sprite")
+    fail("missing ghost marker visibility")
   }
 
   dots.clear()

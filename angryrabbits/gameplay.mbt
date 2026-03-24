@@ -473,8 +473,7 @@ fn update_camera(delta : Double) -> Unit {
 
 ///|
 fn input_system(_world : @ecs.World) -> Unit {
-  let camera_pos = @camera.get_position()
-  let mouse_center = @system.screen_to_world(@inputs.mouse.pos, camera_pos)
+  let mouse_center = screen_to_world_position(@inputs.mouse.pos)
   debug_mouse_screen.val = @inputs.mouse.pos
   debug_mouse_world.val = mouse_center
 

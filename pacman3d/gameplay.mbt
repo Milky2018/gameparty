@@ -282,20 +282,24 @@ pub fn ghost_update_system(_world : @ecs.World) -> Unit {
 
 ///|
 pub fn minimap_system(_world : @ecs.World) -> Unit {
-  @transform.positions().set(
+  @transform.transforms().set(
     minimap_player_entity,
-    minimap_pos_for_world(player_state.x, player_state.z, MINIMAP_MARKER_SIZE),
+    transform_2d(
+      minimap_pos_for_world(player_state.x, player_state.z, MINIMAP_MARKER_SIZE),
+      1,
+    ),
   )
 
   let show_ghosts = half_dots_collected()
   for ghost in ghosts {
-    @transform.positions().set(
+    @transform.transforms().set(
       ghost.minimap_entity,
-      minimap_pos_for_world(ghost.x, ghost.z, MINIMAP_MARKER_SIZE),
+      transform_2d(
+        minimap_pos_for_world(ghost.x, ghost.z, MINIMAP_MARKER_SIZE),
+        1,
+      ),
     )
-    if @sprite.sprites().get(ghost.minimap_entity) is Some(sprite) {
-      sprite.visible = show_ghosts
-    }
+    set_entity_visibility(ghost.minimap_entity, show_ghosts)
   }
 }
 
@@ -307,9 +311,18 @@ fn set_hud_text(
   font : String,
   color : String,
 ) -> Unit {
-  let text = @sprite.Text::new(content, color~, font~, baseline=Top, align=Left)
-  @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 200))
-  @transform.positions().set(entity, position)
+  ensure_entity_alive(entity)
+  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+  )
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @transform.transforms().set(entity, transform_2d(position, 200))
+  set_entity_visibility(entity, true)
 }
 
 ///|
@@ -366,16 +379,13 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
     "white",
   )
   if lighting_debug.enabled {
-    let debug_text = debug_status_text() + "\n" + debug_help_text()
-    let text = @sprite.Text::new(
-      debug_text,
-      color="rgb(180,255,180)",
-      font="14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
-      baseline=Top,
-      align=Left,
+    set_hud_text(
+      hud_debug_ui,
+      debug_status_text() + "\n" + debug_help_text(),
+      @math.Vec2D(8.0, 8.0),
+      "14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
+      "rgb(180,255,180)",
     )
-    @sprite.sprites().set(hud_debug_ui, @sprite.Sprite::from_text(text, 220))
-    @transform.positions().set(hud_debug_ui, @math.Vec2D(8.0, 8.0))
   } else {
     set_hud_text(
       hud_debug_ui,

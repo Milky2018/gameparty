@@ -1,4 +1,22 @@
 ///|
+fn is_entity_visible(entity : @entity.Entity) -> Bool {
+  @visibility.visibilities().get(entity).unwrap_or(Visible) is Visible
+}
+
+///|
+fn assert_entity_visible(
+  entity : @entity.Entity,
+  expected : Bool,
+) -> Unit raise {
+  assert_eq(is_entity_visible(entity), expected)
+}
+
+///|
+fn setup_test_text_entity(entity : @entity.Entity, text : TextState) -> Unit {
+  setup_text_entity(entity, text, @math.Vec2D::zero())
+}
+
+///|
 test "clamp keeps value inside bounds" {
   assert_eq(clamp(5.0, 0.0, 10.0), 5.0)
   assert_eq(clamp(-1.0, 0.0, 10.0), 0.0)
@@ -457,39 +475,18 @@ test "tutorial stage hides top and bottom header labels" {
   game_state.phase = Playing
   game_state.stage_elapsed = 0.0
   game_state.tutorial_lesson = 0
-  @sprite.sprites().set(
-    game_state.score_ui,
-    @sprite.Sprite::from_text(game_state.score_text, 100),
-  )
-  @sprite.sprites().set(
-    game_state.stage_ui,
-    @sprite.Sprite::from_text(game_state.stage_text, 100),
-  )
-  @sprite.sprites().set(
-    game_state.timer_ui,
-    @sprite.Sprite::from_text(game_state.timer_text, 100),
-  )
+  setup_test_text_entity(game_state.score_ui, game_state.score_text)
+  setup_test_text_entity(game_state.stage_ui, game_state.stage_text)
+  setup_test_text_entity(game_state.timer_ui, game_state.timer_text)
 
   game_state.stage_index = 0
   ui_in_game()
   assert_eq(game_state.score_text.content, "")
   assert_eq(game_state.stage_text.content, "")
   assert_true(!show_tutorial_header_labels())
-  if @sprite.sprites().get(game_state.score_ui) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing score sprite")
-  }
-  if @sprite.sprites().get(game_state.stage_ui) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing stage sprite")
-  }
-  if @sprite.sprites().get(game_state.timer_ui) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing timer sprite")
-  }
+  assert_entity_visible(game_state.score_ui, false)
+  assert_entity_visible(game_state.stage_ui, false)
+  assert_entity_visible(game_state.timer_ui, false)
 
   game_state.stage_index = 1
   ui_in_game()
@@ -971,20 +968,16 @@ test "set_background game path binds stage-selected texture sprite" {
     assert_true(
       @render3d.mesh3d_renderers().get(background3d_quad_entity) is Some(_),
     )
-    if @sprite.sprites().get(game_state.background) is Some(sprite) {
-      assert_true(!sprite.visible)
+    if @sprite.sprites().get(game_state.background) is Some(_) {
+      assert_entity_visible(game_state.background, false)
     } else {
       fail("missing gameplay background sprite")
     }
   } else if @sprite.sprites().get(game_state.background) is Some(sprite) {
-    match sprite.sprite_type {
-      @sprite.SpriteType::Picture(picture) =>
-        assert_eq(
-          @asset.image_path(picture.image),
-          Some(game_background_texture_for_stage(0)),
-        )
-      _ => fail("expected picture sprite for gameplay background")
-    }
+    assert_eq(
+      sprite.image.bind(fn(image) { @asset.image_path(image) }),
+      Some(game_background_texture_for_stage(0)),
+    )
   } else {
     fail("missing gameplay background sprite")
   }
@@ -1104,7 +1097,7 @@ test "character selection text clipping respects lane width constraints" {
 ///|
 test "menu button text center uses button rect and fallback anchor" {
   let button = @entity.Entity::new()
-  @transform.positions().set(button, @math.Vec2D(100.0, 200.0))
+  set_entity_position(button, @math.Vec2D(100.0, 200.0))
   let center = text_center_for_menu_button(button)
   assert_eq(center[X], 100.0 + MENU_BUTTON_WIDTH / 2.0)
   assert_eq(
@@ -1126,13 +1119,13 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
   let old_just_pressed_left = @inputs.just_pressed_mouse.left_button
   let old_start_interaction = @ui.interactions().get(start_entity)
   let old_exit_interaction = @ui.interactions().get(exit_entity)
-  let old_start_position = @transform.positions().get(start_entity)
-  let old_exit_position = @transform.positions().get(exit_entity)
+  let old_start_position = entity_position(start_entity)
+  let old_exit_position = entity_position(exit_entity)
   let old_start_button = @ui.buttons().get(start_entity)
   let old_exit_button = @ui.buttons().get(exit_entity)
 
-  @transform.positions().set(start_entity, @math.Vec2D(160.0, 176.0))
-  @transform.positions().set(exit_entity, @math.Vec2D(160.0, 242.0))
+  set_entity_position(start_entity, @math.Vec2D(160.0, 176.0))
+  set_entity_position(exit_entity, @math.Vec2D(160.0, 242.0))
   @ui.buttons().set(start_entity, @ui.Button::new())
   @ui.buttons().set(exit_entity, @ui.Button::new())
   @ui.nodes().set(
@@ -1162,12 +1155,12 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
   @inputs.mouse.pos = old_mouse_pos
   @inputs.just_pressed_mouse.left_button = old_just_pressed_left
   match old_start_position {
-    Some(position) => @transform.positions().set(start_entity, position.0)
-    None => @transform.positions().remove(start_entity)
+    Some(position) => set_entity_position(start_entity, position)
+    None => remove_entity_position(start_entity)
   }
   match old_exit_position {
-    Some(position) => @transform.positions().set(exit_entity, position.0)
-    None => @transform.positions().remove(exit_entity)
+    Some(position) => set_entity_position(exit_entity, position)
+    None => remove_entity_position(exit_entity)
   }
   match old_start_button {
     Some(button) => @ui.buttons().set(start_entity, button)
@@ -1191,119 +1184,119 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
 test "apply_character_selection_layout keeps canonical anchor positions" {
   apply_character_selection_layout()
 
-  if @transform.positions().get(game_state.stage_ui) is Some(pos) {
-    assert_eq(pos.0[X], 240.0)
-    assert_eq(pos.0[Y], 8.0)
+  if entity_position(game_state.stage_ui) is Some(pos) {
+    assert_eq(pos[X], 240.0)
+    assert_eq(pos[Y], 8.0)
   } else {
     fail("missing position for stage ui")
   }
-  if @transform.positions().get(game_state.timer_ui) is Some(pos) {
-    assert_eq(pos.0[X], 240.0)
-    assert_eq(pos.0[Y], 20.0)
+  if entity_position(game_state.timer_ui) is Some(pos) {
+    assert_eq(pos[X], 240.0)
+    assert_eq(pos[Y], 20.0)
   } else {
     fail("missing position for timer ui")
   }
-  if @transform.positions().get(game_state.banner_ui) is Some(pos) {
-    assert_eq(pos.0[X], 240.0)
-    assert_eq(pos.0[Y], 302.0)
+  if entity_position(game_state.banner_ui) is Some(pos) {
+    assert_eq(pos[X], 240.0)
+    assert_eq(pos[Y], 302.0)
   } else {
     fail("missing position for banner ui")
   }
 
-  if @transform.positions().get(game_state.character_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X)
-    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  if entity_position(game_state.character_portrait_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P1_CAROUSEL_CENTER_X)
+    assert_eq(pos[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 portrait ui")
   }
-  if @transform.positions().get(character_left_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
-    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  if entity_position(character_left_portrait_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 left portrait ui")
   }
-  if @transform.positions().get(character_right_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
-    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  if entity_position(character_right_portrait_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p1 right portrait ui")
   }
-  if @transform.positions().get(character_name_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P1_CAROUSEL_CENTER_X)
-    assert_eq(pos.0[Y], CS_NAME_Y)
+  if entity_position(character_name_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P1_CAROUSEL_CENTER_X)
+    assert_eq(pos[Y], CS_NAME_Y)
   } else {
     fail("missing position for p1 name ui")
   }
-  if @transform.positions().get(character_ability_slot1_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_LEFT_ABILITY_SLOT_X)
-    assert_eq(pos.0[Y], 212.0)
+  if entity_position(character_ability_slot1_ui) is Some(pos) {
+    assert_eq(pos[X], CS_LEFT_ABILITY_SLOT_X)
+    assert_eq(pos[Y], 212.0)
   } else {
     fail("missing position for p1 ability slot1 ui")
   }
-  if @transform.positions().get(character_ability_slot2_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_LEFT_ABILITY_SLOT_X)
-    assert_eq(pos.0[Y], 246.0)
+  if entity_position(character_ability_slot2_ui) is Some(pos) {
+    assert_eq(pos[X], CS_LEFT_ABILITY_SLOT_X)
+    assert_eq(pos[Y], 246.0)
   } else {
     fail("missing position for p1 ability slot2 ui")
   }
-  if @transform.positions().get(character_ability_slot1_text_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_LEFT_ABILITY_TEXT_X)
-    assert_eq(pos.0[Y], 206.0)
+  if entity_position(character_ability_slot1_text_ui) is Some(pos) {
+    assert_eq(pos[X], CS_LEFT_ABILITY_TEXT_X)
+    assert_eq(pos[Y], 206.0)
   } else {
     fail("missing position for p1 ability text1 ui")
   }
-  if @transform.positions().get(character_ability_slot2_text_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_LEFT_ABILITY_TEXT_X)
-    assert_eq(pos.0[Y], 240.0)
+  if entity_position(character_ability_slot2_text_ui) is Some(pos) {
+    assert_eq(pos[X], CS_LEFT_ABILITY_TEXT_X)
+    assert_eq(pos[Y], 240.0)
   } else {
     fail("missing position for p1 ability text2 ui")
   }
 
-  if @transform.positions().get(character_p2_center_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X)
-    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  if entity_position(character_p2_center_portrait_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P2_CAROUSEL_CENTER_X)
+    assert_eq(pos[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 portrait ui")
   }
-  if @transform.positions().get(character_p2_left_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
-    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  if entity_position(character_p2_left_portrait_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 left portrait ui")
   }
-  if @transform.positions().get(character_p2_right_portrait_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
-    assert_eq(pos.0[Y], CS_PORTRAIT_CENTER_Y)
+  if entity_position(character_p2_right_portrait_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X)
+    assert_eq(pos[Y], CS_PORTRAIT_CENTER_Y)
   } else {
     fail("missing position for p2 right portrait ui")
   }
-  if @transform.positions().get(character_p2_name_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_P2_CAROUSEL_CENTER_X)
-    assert_eq(pos.0[Y], CS_NAME_Y)
+  if entity_position(character_p2_name_ui) is Some(pos) {
+    assert_eq(pos[X], CS_P2_CAROUSEL_CENTER_X)
+    assert_eq(pos[Y], CS_NAME_Y)
   } else {
     fail("missing position for p2 name ui")
   }
-  if @transform.positions().get(character_p2_ability_slot1_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_RIGHT_ABILITY_SLOT_X)
-    assert_eq(pos.0[Y], 212.0)
+  if entity_position(character_p2_ability_slot1_ui) is Some(pos) {
+    assert_eq(pos[X], CS_RIGHT_ABILITY_SLOT_X)
+    assert_eq(pos[Y], 212.0)
   } else {
     fail("missing position for p2 ability slot1 ui")
   }
-  if @transform.positions().get(character_p2_ability_slot2_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_RIGHT_ABILITY_SLOT_X)
-    assert_eq(pos.0[Y], 246.0)
+  if entity_position(character_p2_ability_slot2_ui) is Some(pos) {
+    assert_eq(pos[X], CS_RIGHT_ABILITY_SLOT_X)
+    assert_eq(pos[Y], 246.0)
   } else {
     fail("missing position for p2 ability slot2 ui")
   }
-  if @transform.positions().get(character_p2_ability_slot1_text_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_RIGHT_ABILITY_TEXT_X)
-    assert_eq(pos.0[Y], 206.0)
+  if entity_position(character_p2_ability_slot1_text_ui) is Some(pos) {
+    assert_eq(pos[X], CS_RIGHT_ABILITY_TEXT_X)
+    assert_eq(pos[Y], 206.0)
   } else {
     fail("missing position for p2 ability text1 ui")
   }
-  if @transform.positions().get(character_p2_ability_slot2_text_ui) is Some(pos) {
-    assert_eq(pos.0[X], CS_RIGHT_ABILITY_TEXT_X)
-    assert_eq(pos.0[Y], 240.0)
+  if entity_position(character_p2_ability_slot2_text_ui) is Some(pos) {
+    assert_eq(pos[X], CS_RIGHT_ABILITY_TEXT_X)
+    assert_eq(pos[Y], 240.0)
   } else {
     fail("missing position for p2 ability text2 ui")
   }
@@ -1375,26 +1368,15 @@ test "in-game left column lanes keep ability slots separated from health bars" {
 
 ///|
 test "sync_text_ui_sprites preserves explicit visibility flags" {
-  @sprite.sprites().set(
-    game_state.timer_ui,
-    @sprite.Sprite::from_text(game_state.timer_text, 100),
-  )
+  setup_test_text_entity(game_state.timer_ui, game_state.timer_text)
   set_ui_visible(game_state.timer_ui, false)
   game_state.timer_text.content = "Movement: 1/8"
   sync_text_ui_sprites()
-  if @sprite.sprites().get(game_state.timer_ui) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing timer sprite after sync")
-  }
+  assert_entity_visible(game_state.timer_ui, false)
 
   set_ui_visible(game_state.timer_ui, true)
   sync_text_ui_sprites()
-  if @sprite.sprites().get(game_state.timer_ui) is Some(sprite) {
-    assert_true(sprite.visible)
-  } else {
-    fail("missing timer sprite after second sync")
-  }
+  assert_entity_visible(game_state.timer_ui, true)
 }
 
 ///|
@@ -1423,37 +1405,25 @@ test "character slot visibility follows joined state for carousel portraits" {
   for entity in all_entities {
     @sprite.sprites().set(
       entity,
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
-        1,
-      ),
+      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
     )
   }
   for entity in stat_icon_uis {
     @sprite.sprites().set(
       entity,
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
-        1,
-      ),
+      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
     )
   }
   for entity in stat_bg_uis {
     @sprite.sprites().set(
       entity,
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
-        1,
-      ),
+      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
     )
   }
   for entity in stat_fill_uis {
     @sprite.sprites().set(
       entity,
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(1.0, 1.0), "white"),
-        1,
-      ),
+      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
     )
   }
 
@@ -1463,31 +1433,11 @@ test "character slot visibility follows joined state for carousel portraits" {
     ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
     ready_text_ui,
   )
-  if @sprite.sprites().get(center_portrait) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing center portrait sprite")
-  }
-  if @sprite.sprites().get(left_portrait) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing left portrait sprite")
-  }
-  if @sprite.sprites().get(right_portrait) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing right portrait sprite")
-  }
-  if @sprite.sprites().get(join_prompt_ui) is Some(sprite) {
-    assert_true(sprite.visible)
-  } else {
-    fail("missing join prompt sprite")
-  }
-  if @sprite.sprites().get(ready_text_ui) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing ready text sprite")
-  }
+  assert_entity_visible(center_portrait, false)
+  assert_entity_visible(left_portrait, false)
+  assert_entity_visible(right_portrait, false)
+  assert_entity_visible(join_prompt_ui, true)
+  assert_entity_visible(ready_text_ui, false)
 
   set_character_slot_joined_visibility(
     true, center_portrait, left_portrait, right_portrait, name_ui, ability_slot1_ui,
@@ -1495,29 +1445,9 @@ test "character slot visibility follows joined state for carousel portraits" {
     ability_slot2_text_ui, stat_icon_uis, stat_bg_uis, stat_fill_uis, join_prompt_ui,
     ready_text_ui,
   )
-  if @sprite.sprites().get(center_portrait) is Some(sprite) {
-    assert_true(sprite.visible)
-  } else {
-    fail("missing center portrait sprite")
-  }
-  if @sprite.sprites().get(left_portrait) is Some(sprite) {
-    assert_true(sprite.visible)
-  } else {
-    fail("missing left portrait sprite")
-  }
-  if @sprite.sprites().get(right_portrait) is Some(sprite) {
-    assert_true(sprite.visible)
-  } else {
-    fail("missing right portrait sprite")
-  }
-  if @sprite.sprites().get(join_prompt_ui) is Some(sprite) {
-    assert_true(!sprite.visible)
-  } else {
-    fail("missing join prompt sprite")
-  }
-  if @sprite.sprites().get(ready_text_ui) is Some(sprite) {
-    assert_true(sprite.visible)
-  } else {
-    fail("missing ready text sprite")
-  }
+  assert_entity_visible(center_portrait, true)
+  assert_entity_visible(left_portrait, true)
+  assert_entity_visible(right_portrait, true)
+  assert_entity_visible(join_prompt_ui, false)
+  assert_entity_visible(ready_text_ui, true)
 }

@@ -108,6 +108,87 @@ const MAX_PROJECTILE_COUNT : Int = 8
 const SCORE_PER_KILL : Int = 10
 
 ///|
+priv struct TextState {
+  mut content : String
+  mut color : String
+  mut font : String
+  mut baseline : @math.VAlign
+  mut align : @math.HAlign
+}
+
+///|
+fn text_state(
+  content : String,
+  color? : String = "white",
+  font? : String = UI_FONT_SMALL,
+  baseline? : @math.VAlign = Top,
+  align? : @math.HAlign = Left,
+) -> TextState {
+  { content, color, font, baseline, align }
+}
+
+///|
+fn text_anchor(text : TextState) -> @sprite.Anchor {
+  let x = match text.align {
+    Left => -0.5
+    Center => 0.0
+    Right => 0.5
+  }
+  let y = match text.baseline {
+    Top => 0.5
+    Center => 0.0
+    Bottom => -0.5
+  }
+  @sprite.Anchor(@math.Vec2D(x, y))
+}
+
+///|
+fn entity_transform_2d(
+  position : @math.Vec2D,
+  zindex? : Int = 0,
+) -> @transform.Transform {
+  {
+    translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  }
+}
+
+///|
+fn set_entity_position(entity : @entity.Entity, position : @math.Vec2D) -> Unit {
+  let transform = @transform.transforms()
+    .get(entity)
+    .unwrap_or(entity_transform_2d(position))
+  @transform.transforms().set(entity, {
+    ..transform,
+    translation: @math.Vec3::new(
+      position[X],
+      position[Y],
+      transform.translation.z,
+    ),
+  })
+}
+
+///|
+fn entity_position(entity : @entity.Entity) -> @math.Vec2D? {
+  @transform.transforms()
+  .get(entity)
+  .map(fn(transform) {
+    @math.Vec2D(transform.translation.x, transform.translation.y)
+  })
+}
+
+///|
+fn remove_entity_position(entity : @entity.Entity) -> Unit {
+  @transform.transforms().remove(entity)
+}
+
+///|
+fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
+  @visibility.visibilities().set(entity, if visible { Visible } else { Hidden })
+}
+
+///|
 enum ScreenState {
   MainMenu
   CharacterSelection
@@ -438,13 +519,13 @@ priv struct GameState {
   hud_slot2_bg_ui : @entity.Entity
   hud_slot2_icon_ui : @entity.Entity
   hud_slot2_fill_ui : @entity.Entity
-  score_text : @sprite.Text
-  hull_text : @sprite.Text
-  shield_text : @sprite.Text
-  defense_text : @sprite.Text
-  stage_text : @sprite.Text
-  timer_text : @sprite.Text
-  banner_text : @sprite.Text
+  score_text : TextState
+  hull_text : TextState
+  shield_text : TextState
+  defense_text : TextState
+  stage_text : TextState
+  timer_text : TextState
+  banner_text : TextState
   mut screen : ScreenState
   mut background_kind : BackgroundKind
   mut phase : RunPhase
@@ -554,49 +635,49 @@ let game_state : GameState = {
   hud_slot2_bg_ui: @entity.Entity::new(),
   hud_slot2_icon_ui: @entity.Entity::new(),
   hud_slot2_fill_ui: @entity.Entity::new(),
-  score_text: @sprite.Text::new(
+  score_text: text_state(
     "Score: 0",
     color="white",
     font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
-  hull_text: @sprite.Text::new(
+  hull_text: text_state(
     "Hull: 0",
     color="white",
     font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
-  shield_text: @sprite.Text::new(
+  shield_text: text_state(
     "Shield: 0",
     color="white",
     font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
-  defense_text: @sprite.Text::new(
+  defense_text: text_state(
     "Defense: 0",
     color="white",
     font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
-  stage_text: @sprite.Text::new(
+  stage_text: text_state(
     "Stage",
     color="white",
     font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
-  timer_text: @sprite.Text::new(
+  timer_text: text_state(
     "Time: 0",
     color="white",
     font=UI_FONT_SMALL,
     baseline=Top,
     align=Left,
   ),
-  banner_text: @sprite.Text::new(
+  banner_text: text_state(
     "Press Enter",
     color="skyblue",
     font=UI_FONT_MEDIUM,

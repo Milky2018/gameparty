@@ -267,7 +267,7 @@ fn debug_status_text() -> String {
   let base = "DBG scene=\{scene_name} light=\{mode} freeze=\{freeze_name} bob=\{bob_name} mat=\{material_name} rays=\{ray_name} origin=\{origin_name}"
   match tracked_ghost() {
     Some(ghost) => {
-      let light_transform = @transform3d.transforms3d()
+      let light_transform = @transform.transforms()
         .get(ghost.light_entity)
         .unwrap_or_default()
       let local_spot_direction = @render3d.spot_lights3d()

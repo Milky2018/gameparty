@@ -8,6 +8,15 @@ const ANGRYRABBITS_FONT_PATH : String = "angryrabbits/assets/ThaleahFat.ttf"
 let angryrabbits_font_registered : Ref[Bool] = { val: false }
 
 ///|
+let angryrabbits_spritesheet_handle : Ref[@asset.ImageHandle?] = { val: None }
+
+///|
+let circle_mesh_handles : Map[Int, @mesh2d.Mesh2dHandle] = Map::new()
+
+///|
+let circle_material_handles : Map[String, @material2d.ColorMaterialHandle] = Map::new()
+
+///|
 fn register_angryrabbits_font_once() -> Unit {
   if angryrabbits_font_registered.val {
     return
@@ -33,6 +42,58 @@ fn ensure_entity_list(entities : Array[@entity.Entity], count : Int) -> Unit {
   for entity in entities {
     ensure_entity_alive(entity)
   }
+}
+
+///|
+fn angryrabbits_spritesheet() -> @asset.ImageHandle {
+  match angryrabbits_spritesheet_handle.val {
+    Some(handle) => handle
+    None => {
+      let handle = @asset.load_image(ANGRYRABBITS_SPRITES_PATH)
+      angryrabbits_spritesheet_handle.val = Some(handle)
+      handle
+    }
+  }
+}
+
+///|
+fn entity_transform_2d(
+  position : @math.Vec2D,
+  zindex : Int,
+  rotation? : Double = 0.0,
+) -> @transform.Transform {
+  let transform = @transform.Transform::from_xyz(
+    position[X],
+    position[Y],
+    zindex.to_double(),
+  )
+  if rotation == 0.0 {
+    transform
+  } else {
+    transform.with_rotation(
+      @math.Quat::from_axis_angle(@math.Vec3::z_axis(), rotation),
+    )
+  }
+}
+
+///|
+fn show_entity(entity : @entity.Entity) -> Unit {
+  @visibility.visibilities().set(entity, Visible)
+}
+
+///|
+fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
+  let key = @cmath.round(radius * 1000.0).to_int()
+  circle_mesh_handles.get_or_init(key, fn() { @mesh2d.circle(radius) })
+}
+
+///|
+fn circle_material_handle(color : String) -> @material2d.ColorMaterialHandle {
+  circle_material_handles.get_or_init(color, fn() {
+    @material2d.register_color_material(
+      @material2d.ColorMaterial::from_color(@sprite.color_from_css(color)),
+    )
+  })
 }
 
 ///|
@@ -86,14 +147,51 @@ fn sync_current_rabbit_refs() -> Unit {
 
 ///|
 fn set_camera_anchor_position(position : @math.Vec2D) -> Unit {
-  @transform.positions().set(camera_anchor_entity, position)
+  @transform.transforms().set(
+    camera_anchor_entity,
+    entity_transform_2d(
+      position + @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
+      0,
+    ),
+  )
 }
 
 ///|
 fn camera_anchor_position() -> @math.Vec2D {
-  match @transform.positions().get(camera_anchor_entity) {
-    Some(position) => position.0
+  match @transform.transforms().get(camera_anchor_entity) {
+    Some(transform) =>
+      @math.Vec2D(transform.translation.x, transform.translation.y) -
+      @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0)
     None => @math.Vec2D::zero()
+  }
+}
+
+///|
+fn current_camera_view() -> (
+  @camera.Camera,
+  @transform.GlobalTransform,
+  @camera.OrthographicProjection,
+)? {
+  guard @camera.cameras().get(camera_anchor_entity) is Some(camera) else {
+    return None
+  }
+  let projection = @camera.orthographic_projections()
+    .get(camera_anchor_entity)
+    .unwrap_or_default()
+  let global = @transform.compute_global_transform(camera_anchor_entity).unwrap_or(
+    @transform.GlobalTransform::from_transform(
+      @transform.transforms().get(camera_anchor_entity).unwrap_or_default(),
+    ),
+  )
+  Some((camera, global, projection))
+}
+
+///|
+fn screen_to_world_position(screen : @math.Vec2D) -> @math.Vec2D {
+  match current_camera_view() {
+    Some((camera, global, projection)) =>
+      camera.viewport_to_world_2d(global, projection, screen)
+    None => @system.unscale_vec2(screen)
   }
 }
 
@@ -120,33 +218,13 @@ fn sprite_from_atlas(
   source_offset : @math.Vec2D,
   source_size : @math.Vec2D,
   world_size : @math.Vec2D,
-  rotation : Double,
-  zindex : Int,
 ) -> @sprite.Sprite {
-  let scale_x = if source_size[X] <= 0.0 {
-    1.0
-  } else {
-    world_size[X] / source_size[X]
-  }
-  let scale_y = if source_size[Y] <= 0.0 {
-    1.0
-  } else {
-    world_size[Y] / source_size[Y]
-  }
-  let transform = @math.Transform::from_translation(
-      world_size[X] / 2.0,
-      world_size[Y] / 2.0,
-    )
-    .append_rotation_rad(rotation)
-    .append_scale(scale_x, scale_y)
-    .append_translation(-source_size[X] / 2.0, -source_size[Y] / 2.0)
-  let animation = @sprite.Animation::single_frame(
-    ANGRYRABBITS_SPRITES_PATH,
-    source_size,
-    transform~,
-    offset=source_offset,
+  let sprite = @sprite.Sprite::from_image(
+    angryrabbits_spritesheet(),
+    custom_size=Some(world_size),
   )
-  @sprite.Sprite::from_animation(animation, zindex)
+  sprite.rect = Some({ position: source_offset, size: source_size })
+  sprite
 }
 
 ///|
@@ -235,7 +313,7 @@ fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
   let rabbit = rabbits[index]
   let entity = rabbit.entity
   let top_left = center_to_circle_position(center, RABBIT_RADIUS)
-  @transform.positions().set(entity, top_left)
+  @transform.transforms().set(entity, entity_transform_2d(top_left, 70))
   @physics2d.shapes().set(entity, rabbit_shape())
   @physics2d.colliders().set(
     entity,
@@ -282,7 +360,7 @@ fn launch_rabbit_at(
   let rabbit = rabbits[index]
   let entity = rabbit.entity
   let top_left = center_to_circle_position(center, RABBIT_RADIUS)
-  @transform.positions().set(entity, top_left)
+  @transform.transforms().set(entity, entity_transform_2d(top_left, 70))
   @physics2d.shapes().set(entity, rabbit_shape())
   @physics2d.colliders().set(
     entity,
@@ -362,7 +440,10 @@ fn configure_level_physics(level : LevelDef) -> Unit {
   )
   clear_level_physics_entities()
 
-  @transform.positions().set(ground_entity, level.ground_rect.position)
+  @transform.transforms().set(
+    ground_entity,
+    entity_transform_2d(level.ground_rect.position, level.ground_rect.zindex),
+  )
   @physics2d.shapes().set(
     ground_entity,
     Rect(size=level.ground_rect.size, offset=@math.Vec2D::zero()),
@@ -384,7 +465,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
   for index, block in level.blocks {
     let entity = block_entities[index]
     let top_left = center_to_rect_position(block.center, block.size)
-    @transform.positions().set(entity, top_left)
+    @transform.transforms().set(entity, entity_transform_2d(top_left, 60))
     @physics2d.shapes().set(
       entity,
       Rect(size=block.size, offset=@math.Vec2D::zero()),
@@ -405,7 +486,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
   for index, target in level.targets {
     let entity = target_entities[index]
     let top_left = center_to_circle_position(target.center, target.radius)
-    @transform.positions().set(entity, top_left)
+    @transform.transforms().set(entity, entity_transform_2d(top_left, 65))
     @physics2d.shapes().set(
       entity,
       Ball(
@@ -546,21 +627,15 @@ fn register_level_entities(level : LevelDef) -> Unit {
 fn hide_unused_level_entities(level : LevelDef) -> Unit {
   for index in level.max_shots..<rabbit_entities.length() {
     clear_physics_entity(rabbit_entities[index])
-    if @sprite.sprites().get(rabbit_entities[index]) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(rabbit_entities[index], false)
   }
   for index in level.blocks.length()..<block_entities.length() {
     clear_physics_entity(block_entities[index])
-    if @sprite.sprites().get(block_entities[index]) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(block_entities[index], false)
   }
   for index in level.targets.length()..<target_entities.length() {
     clear_physics_entity(target_entities[index])
-    if @sprite.sprites().get(target_entities[index]) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(target_entities[index], false)
   }
 }
 
@@ -609,9 +684,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
 ///|
 fn hide_aim_dots() -> Unit {
   for entity in aim_dot_entities {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
 }
 
@@ -638,21 +711,21 @@ fn refresh_aim_dots() -> Unit {
     let time = (index.to_double() + 1.0) * AIM_DOT_TIME_STEP
     let offset = velocity.scalar_mul(time) +
       @math.Vec2D(0.0, GRAVITY * 0.5 * time * time)
-    @transform.positions().set(
+    @mesh2d.mesh2ds().set(
       entity,
-      center_to_circle_position(rabbit_center.val + offset, AIM_DOT_RADIUS),
+      @mesh2d.Mesh2d::new(circle_mesh_handle(AIM_DOT_RADIUS)),
     )
-    @sprite.sprites().set(
+    @material2d.mesh_material2ds().set(
       entity,
-      @sprite.Sprite::from_color_circle(
-        @sprite.ColorCircle::new(
-          AIM_DOT_RADIUS,
-          "rgba(255,255,255,0.85)",
-          stroke_color="rgba(0,0,0,0.0)",
-        ),
-        120,
+      @material2d.MeshMaterial2d::from_color_material(
+        circle_material_handle("rgba(255,255,255,0.85)"),
       ),
     )
+    @transform.transforms().set(
+      entity,
+      entity_transform_2d(rabbit_center.val + offset, 120),
+    )
+    show_entity(entity)
   }
 }
 
@@ -666,21 +739,19 @@ fn set_text_entity(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @sprite.sprites().set(
-    entity,
-    @sprite.Sprite::from_text(
-      @sprite.Text::new(text, color~, font~, baseline=Top, align=Left),
-      zindex,
-    ),
-  )
-  @transform.positions().set(entity, position)
+  show_entity(entity)
+  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+  @ui.text_layouts().set(entity, @ui.TextLayout::new(align=Left, baseline=Top))
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
 ///|
 fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
-  if @sprite.sprites().get(entity) is Some(sprite) {
-    sprite.visible = visible
-  }
+  @visibility.visibilities().set(entity, if visible { Visible } else { Hidden })
 }
 
 ///|
@@ -849,18 +920,17 @@ fn hide_all_level_visuals() -> Unit {
 
 ///|
 fn sync_error_visuals(message : String) -> Unit {
-  @sprite.sprites().set(
-    background_entity,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
-        "rgb(29, 20, 24)",
-      ),
-      0,
-    ),
+  let background_sprite = @sprite.Sprite::from_color(
+    @sprite.color_from_css("rgb(29, 20, 24)"),
+    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
   )
-  @transform.positions().set(background_entity, @math.Vec2D::zero())
-  set_entity_visibility(background_entity, true)
+  background_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  @sprite.sprites().set(background_entity, background_sprite)
+  @transform.transforms().set(
+    background_entity,
+    entity_transform_2d(@math.Vec2D::zero(), 0),
+  )
+  show_entity(background_entity)
   hide_all_level_visuals()
 
   set_text_entity(
@@ -903,35 +973,42 @@ fn sync_static_visuals() -> Unit {
   let background = level.background_rect
   let ground = level.ground_rect
   let hill = level.hill_circle
-  @sprite.sprites().set(
+  let background_sprite = @sprite.Sprite::from_color(
+    @sprite.color_from_css(background.color),
+    background.size,
+  )
+  background_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  @sprite.sprites().set(background_entity, background_sprite)
+  @transform.transforms().set(
     background_entity,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(background.size, background.color),
-      background.zindex,
-    ),
-  )
-  @transform.positions().set(background_entity, background.position)
-
-  @sprite.sprites().set(
-    hill_entity,
-    @sprite.Sprite::from_color_circle(
-      @sprite.ColorCircle::new(hill.radius, hill.color),
-      hill.zindex,
-    ),
-  )
-  @transform.positions().set(
-    hill_entity,
-    center_to_circle_position(hill.center, hill.radius),
+    entity_transform_2d(background.position, background.zindex),
   )
 
-  @sprite.sprites().set(
+  @mesh2d.mesh2ds().set(
+    hill_entity,
+    @mesh2d.Mesh2d::new(circle_mesh_handle(hill.radius)),
+  )
+  @material2d.mesh_material2ds().set(
+    hill_entity,
+    @material2d.MeshMaterial2d::from_color_material(
+      circle_material_handle(hill.color),
+    ),
+  )
+  @transform.transforms().set(
+    hill_entity,
+    entity_transform_2d(hill.center, hill.zindex),
+  )
+
+  let ground_sprite = @sprite.Sprite::from_color(
+    @sprite.color_from_css(ground.color),
+    ground.size,
+  )
+  ground_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  @sprite.sprites().set(ground_entity, ground_sprite)
+  @transform.transforms().set(
     ground_entity,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(ground.size, ground.color),
-      ground.zindex,
-    ),
+    entity_transform_2d(ground.position, ground.zindex),
   )
-  @transform.positions().set(ground_entity, ground.position)
 
   let slingshot_scale_y = SLINGSHOT_WORLD_HEIGHT / SLINGSHOT_SPRITE_SRC_HEIGHT
   let slingshot_front_world_height = SLINGSHOT_FRONT_SRC_HEIGHT *
@@ -948,14 +1025,18 @@ fn sync_static_visuals() -> Unit {
       ),
       @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_BACK_SRC_HEIGHT),
       @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_back_world_height),
-      0.0,
-      30,
     ),
   )
-  @transform.positions().set(
+  if @sprite.sprites().get(slingshot_left_entity) is Some(sprite) {
+    sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  }
+  @transform.transforms().set(
     slingshot_left_entity,
-    level.slingshot_back_stick +
-    @math.Vec2D(SLINGSHOT_BACK_OFFSET_X, SLINGSHOT_BACK_OFFSET_Y),
+    entity_transform_2d(
+      level.slingshot_back_stick +
+      @math.Vec2D(SLINGSHOT_BACK_OFFSET_X, SLINGSHOT_BACK_OFFSET_Y),
+      30,
+    ),
   )
 
   @sprite.sprites().set(
@@ -967,14 +1048,18 @@ fn sync_static_visuals() -> Unit {
       ),
       @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_FRONT_SRC_HEIGHT),
       @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_front_world_height),
-      0.0,
-      72,
     ),
   )
-  @transform.positions().set(
+  if @sprite.sprites().get(slingshot_right_entity) is Some(sprite) {
+    sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  }
+  @transform.transforms().set(
     slingshot_right_entity,
-    level.slingshot_front_stick +
-    @math.Vec2D(SLINGSHOT_FRONT_OFFSET_X, SLINGSHOT_FRONT_OFFSET_Y),
+    entity_transform_2d(
+      level.slingshot_front_stick +
+      @math.Vec2D(SLINGSHOT_FRONT_OFFSET_X, SLINGSHOT_FRONT_OFFSET_Y),
+      72,
+    ),
   )
   set_entity_visibility(slingshot_right_entity, true)
   set_entity_visibility(slingshot_left_entity, true)
@@ -991,17 +1076,16 @@ fn sync_dynamic_visuals() -> Unit {
         @math.Vec2D(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
         @math.Vec2D(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
         rabbit_size,
-        rabbit.rotation,
-        70,
       ),
     )
-    @transform.positions().set(
+    @transform.transforms().set(
       rabbit.entity,
-      center_to_rect_position(rabbit.center, rabbit_size),
+      entity_transform_2d(rabbit.center, 70, rotation=rabbit.rotation),
     )
     if @sprite.sprites().get(rabbit.entity) is Some(sprite) {
-      sprite.visible = rabbit.visible
+      sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
     }
+    set_entity_visibility(rabbit.entity, rabbit.visible)
   }
 
   set_entity_visibility(rabbit_eye_entity, false)
@@ -1013,17 +1097,16 @@ fn sync_dynamic_visuals() -> Unit {
         @math.Vec2D(BLOCK_SPRITE_SRC_X, BLOCK_SPRITE_SRC_Y),
         @math.Vec2D(BLOCK_SPRITE_SRC_WIDTH, BLOCK_SPRITE_SRC_HEIGHT),
         block.size,
-        block.rotation,
-        60,
       ),
     )
-    @transform.positions().set(
+    @transform.transforms().set(
       block.entity,
-      center_to_rect_position(block.center, block.size),
+      entity_transform_2d(block.center, 60, rotation=block.rotation),
     )
     if @sprite.sprites().get(block.entity) is Some(sprite) {
-      sprite.visible = block.alive
+      sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
     }
+    set_entity_visibility(block.entity, block.alive)
   }
 
   for target in targets {
@@ -1034,17 +1117,16 @@ fn sync_dynamic_visuals() -> Unit {
         @math.Vec2D(TARGET_SPRITE_SRC_X, TARGET_SPRITE_SRC_Y),
         @math.Vec2D(TARGET_SPRITE_SRC_WIDTH, TARGET_SPRITE_SRC_HEIGHT),
         target_size,
-        target.rotation,
-        65,
       ),
     )
-    @transform.positions().set(
+    @transform.transforms().set(
       target.entity,
-      center_to_rect_position(target.center, target_size),
+      entity_transform_2d(target.center, 65, rotation=target.rotation),
     )
     if @sprite.sprites().get(target.entity) is Some(sprite) {
-      sprite.visible = target.alive
+      sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
     }
+    set_entity_visibility(target.entity, target.alive)
   }
 
   refresh_aim_dots()
@@ -1198,11 +1280,13 @@ fn reset_level() -> Unit {
 fn setup_scene_if_needed() -> Unit {
   if !scene_initialized.val {
     register_scene_entities()
-    @transform.positions().set(camera_anchor_entity, @math.Vec2D::zero())
-    @camera.attach_entity(
+    @camera.cameras().set(camera_anchor_entity, @camera.Camera::new())
+    @camera.camera2ds().set(camera_anchor_entity, @camera.Camera2d::new())
+    @camera.orthographic_projections().set(
       camera_anchor_entity,
-      @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
+      @camera.OrthographicProjection::new(),
     )
+    set_camera_anchor_position(@math.Vec2D::zero())
     scene_initialized.val = true
   }
 }

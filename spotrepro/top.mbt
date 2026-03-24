@@ -164,6 +164,15 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
+fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
+  {
+    translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  }
+}
+
+///|
 fn register_assets_once() -> Unit {
   if floor_mesh.val is Some(_) {
     return
@@ -217,7 +226,7 @@ fn spawn_mesh(
   translation : @math.Vec3,
 ) -> @entity.Entity {
   let entity = @entity.Entity::new()
-  @transform3d.transforms3d().set(entity, {
+  @transform.transforms().set(entity, {
     translation,
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -287,7 +296,7 @@ fn load_selected_stage() -> Stage {
 ///|
 fn update_stage_visuals() -> Unit {
   let stage = selected_stage.val.unwrap()
-  @transform3d.transforms3d().set(light_entity, {
+  @transform.transforms().set(light_entity, {
     translation: @math.Vec3::new(
       stage.forward.x * LIGHT_FORWARD_OFFSET,
       LIGHT_HEIGHT,
@@ -310,15 +319,23 @@ fn update_stage_visuals() -> Unit {
     inner_angle: LIGHT_SPOT_INNER_ANGLE,
     outer_angle: LIGHT_SPOT_OUTER_ANGLE,
   })
-  let label = @sprite.Text::new(
-    "spot repro: \{stage.name}",
-    color="white",
-    font="20px Arial",
-    baseline=Top,
-    align=Left,
+  @ui.texts().set(label_entity, @ui.Text::new("spot repro: \{stage.name}"))
+  @ui.text_fonts().set(label_entity, @ui.TextFont::from_css("20px Arial"))
+  @ui.text_colors().set(label_entity, @ui.TextColor::from_css("white"))
+  @ui.text_layouts().set(
+    label_entity,
+    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @sprite.sprites().set(label_entity, @sprite.Sprite::from_text(label, 400))
-  @transform.positions().set(label_entity, @math.Vec2D(12.0, 12.0))
+  @text2d.text2ds().set(label_entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(
+    label_entity,
+    @sprite.Anchor(@math.Vec2D(-0.5, 0.5)),
+  )
+  @transform.transforms().set(
+    label_entity,
+    transform_2d(@math.Vec2D(12.0, 12.0), 400),
+  )
+  @visibility.visibilities().set(label_entity, Visible)
 }
 
 ///|
@@ -338,7 +355,7 @@ fn setup_camera() -> Unit {
     order: 10,
     enabled: true,
   })
-  @transform3d.transforms3d().set(camera_entity, {
+  @transform.transforms().set(camera_entity, {
     translation: @math.Vec3::new(0.0, 18.0, 0.0),
     rotation: @math.Quat::from_axis_angle(
       @math.Vec3::new(1.0, 0.0, 0.0),

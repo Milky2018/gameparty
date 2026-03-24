@@ -52,6 +52,20 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 }
 
 ///|
+fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
+  {
+    translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
+    rotation: @math.Quat::identity(),
+    scale: @math.Vec3::one(),
+  }
+}
+
+///|
+fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
+  @visibility.visibilities().set(entity, if visible { Visible } else { Hidden })
+}
+
+///|
 fn setup_text_entity(
   entity : @entity.Entity,
   content : String,
@@ -59,15 +73,20 @@ fn setup_text_entity(
   color : String,
 ) -> Unit {
   ensure_entity_alive(entity)
-  let text = @sprite.Text::new(
-    content,
-    color~,
-    font="18px \{PACMAN_UPSTREAM_FONT_FAMILY}",
-    baseline=Top,
-    align=Left,
+  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.text_fonts().set(
+    entity,
+    @ui.TextFont::from_css("18px \{PACMAN_UPSTREAM_FONT_FAMILY}"),
   )
-  @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 200))
-  @transform.positions().set(entity, position)
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+  )
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @transform.transforms().set(entity, transform_2d(position, 200))
+  set_entity_visibility(entity, true)
 }
 
 ///|
@@ -79,12 +98,11 @@ fn setup_color_rect_entity(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  let sprite = @sprite.Sprite::from_color_rect(
-    @sprite.ColorRect::new(size, color),
-    zindex,
-  )
+  let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
-  @transform.positions().set(entity, position)
+  @transform.transforms().set(entity, transform_2d(position, zindex))
+  set_entity_visibility(entity, true)
 }
 
 ///|
@@ -476,7 +494,7 @@ fn spawn_mesh_entity(
     cast_shadows,
     receive_shadows,
   })
-  @transform3d.transforms3d().set(entity, {
+  @transform.transforms().set(entity, {
     translation,
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -679,7 +697,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let ghost_y = MAP_GHOST_Y + bob_offset
   let rotation = ghost_rotation(ghost.direction)
   let (forward_x, forward_z) = ghost_forward_vector_from_rotation(rotation)
-  @transform3d.transforms3d().set(ghost.entity, {
+  @transform.transforms().set(ghost.entity, {
     translation: @math.Vec3::new(ghost.x, ghost_y, ghost.z),
     rotation,
     scale: @math.Vec3::one(),
@@ -702,7 +720,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let world_spot_direction = rotation
     .rotate_vec3(local_spot_direction)
     .normalize()
-  @transform3d.transforms3d().set(ghost.light_entity, {
+  @transform.transforms().set(ghost.light_entity, {
     translation: light_translation,
     rotation,
     scale: @math.Vec3::one(),
@@ -737,13 +755,13 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     cast_shadows: false,
     receive_shadows: false,
   })
-  @transform3d.transforms3d().set(ghost.spot_ray_entity, {
+  @transform.transforms().set(ghost.spot_ray_entity, {
     translation: light_translation +
     world_spot_direction.scalar_mul(GHOST_SPOT_DEBUG_RAY_LENGTH * 0.5),
     rotation: quat_from_forward_direction(world_spot_direction),
     scale: @math.Vec3::one(),
   })
-  @transform3d.transforms3d().set(ghost.left_eye_entity, {
+  @transform.transforms().set(ghost.left_eye_entity, {
     translation: @math.Vec3::new(
       eye_base.x + side_x * GHOST_EYE_SIDE_OFFSET,
       eye_base.y,
@@ -752,7 +770,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
-  @transform3d.transforms3d().set(ghost.right_eye_entity, {
+  @transform.transforms().set(ghost.right_eye_entity, {
     translation: @math.Vec3::new(
       eye_base.x - side_x * GHOST_EYE_SIDE_OFFSET,
       eye_base.y,
@@ -822,14 +840,14 @@ fn sync_camera_transform() -> Unit {
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(player_light_entity)
   let yaw = -(player_state.yaw + @cmath.PI / 2.0)
-  @transform3d.transforms3d().set(camera_entity, {
+  @transform.transforms().set(camera_entity, {
     translation: @math.Vec3::new(player_state.x, PLAYER_HEIGHT, player_state.z),
     rotation: @math.Quat::from_axis_angle(@math.Vec3::new(0.0, 1.0, 0.0), yaw),
     scale: @math.Vec3::one(),
   })
   let forward_x = @cmath.cos(player_state.yaw)
   let forward_z = @cmath.sin(player_state.yaw)
-  @transform3d.transforms3d().set(player_light_entity, {
+  @transform.transforms().set(player_light_entity, {
     translation: @math.Vec3::new(
       player_state.x + forward_x * 0.45,
       PLAYER_HEIGHT + 0.2,

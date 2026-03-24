@@ -612,14 +612,6 @@ fn cell_bounds(x : Int, y : Int) -> Rect {
 }
 
 ///|
-fn center_to_circle_position(
-  center : @math.Vec2D,
-  radius : Double,
-) -> @math.Vec2D {
-  @math.Vec2D(center[X] - radius, center[Y] - radius)
-}
-
-///|
 fn world_to_cell(center : @math.Vec2D) -> (Int, Int) {
   let raw_x = @cmath.floor((center[X] - GRID_OFFSET_X) / CELL_SIZE).to_int()
   let raw_y = @cmath.floor((center[Y] - GRID_OFFSET_Y) / CELL_SIZE).to_int()

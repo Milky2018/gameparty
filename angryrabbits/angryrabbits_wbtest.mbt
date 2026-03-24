@@ -731,7 +731,7 @@ fn reset_mouse_state() -> Unit {
 
 ///|
 fn world_to_screen_for_test(world : @math.Vec2D) -> @math.Vec2D {
-  (world - @camera.get_position()).scalar_mul(ZOOM)
+  (world - camera_anchor_position()).scalar_mul(ZOOM)
 }
 
 ///|

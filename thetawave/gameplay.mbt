@@ -225,13 +225,7 @@ fn menu_button_hit_size(entity : @entity.Entity) -> @math.Vec2D {
 
 ///|
 fn menu_entity_virtual_position(entity : @entity.Entity) -> @math.Vec2D {
-  if entity.get_parent() is Some(parent) {
-    menu_entity_virtual_position(parent) + entity.get_offset()
-  } else {
-    @transform.positions()
-    .get(entity)
-    .map_or(@math.Vec2D::zero(), position => position.0)
-  }
+  entity_position(entity).unwrap_or(@math.Vec2D::zero())
 }
 
 ///|
@@ -344,15 +338,15 @@ pub fn player_input_system(_world : @ecs.World) -> Unit {
   if game_state.charge_time_left > 0.0 {
     return
   }
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
 
   let wasd = @inputs.key_vector(KeyW, KeyS, KeyA, KeyD)
   let arrows = @inputs.key_vector(ArrowUp, ArrowDown, ArrowLeft, ArrowRight)
   let gamepad = gamepad_left_stick_dir()
   let direction = (wasd + arrows + gamepad).normalize()
-  let next = player_position.0 +
+  let next = player_position +
     direction.scalar_mul(game_state.player_speed * delta)
-  @transform.positions().set(
+  set_entity_position(
     game_state.player,
     @math.Vec2D(
       clamp(next[X], PLAYER_HALF_SIZE, VIEWPORT_WIDTH - PLAYER_HALF_SIZE),
@@ -407,10 +401,10 @@ fn trigger_special_ability() -> Unit {
 
 ///|
 fn trigger_mega_blast() -> Unit {
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
   let base = @math.Vec2D(
-    player_position.0[X],
-    player_position.0[Y] - PLAYER_HALF_SIZE - 2.0,
+    player_position[X],
+    player_position[Y] - PLAYER_HALF_SIZE - 2.0,
   )
   let count = @cmp.maximum(
     1,
@@ -441,7 +435,7 @@ fn trigger_mega_blast() -> Unit {
 
 ///|
 fn trigger_charge() -> Unit {
-  guard @transform.positions().get(game_state.player) is Some(_player_position)
+  guard entity_position(game_state.player) is Some(_player_position)
   let wasd = @inputs.key_vector(KeyW, KeyS, KeyA, KeyD)
   let arrows = @inputs.key_vector(ArrowUp, ArrowDown, ArrowLeft, ArrowRight)
   let input_dir = (wasd + arrows + gamepad_left_stick_dir()).normalize()
@@ -908,9 +902,9 @@ fn tick_charge(delta : Double) -> Unit {
   if game_state.charge_time_left <= 0.0 {
     return
   }
-  guard @transform.positions().get(game_state.player) is Some(player_position)
-  let next = player_position.0 + game_state.charge_velocity.scalar_mul(delta)
-  @transform.positions().set(
+  guard entity_position(game_state.player) is Some(player_position)
+  let next = player_position + game_state.charge_velocity.scalar_mul(delta)
+  set_entity_position(
     game_state.player,
     @math.Vec2D(
       clamp(next[X], PLAYER_HALF_SIZE, VIEWPORT_WIDTH - PLAYER_HALF_SIZE),
@@ -924,12 +918,12 @@ fn tick_charge(delta : Double) -> Unit {
 fn move_bullets(delta : Double) -> Unit {
   let to_remove = []
   for bullet_entity, bullet in bullets {
-    guard @transform.positions().get(bullet_entity) is Some(position) else {
+    guard entity_position(bullet_entity) is Some(position) else {
       to_remove.push(bullet_entity)
       continue
     }
-    let next = position.0 + bullet.velocity.scalar_mul(delta)
-    @transform.positions().set(bullet_entity, next)
+    let next = position + bullet.velocity.scalar_mul(delta)
+    set_entity_position(bullet_entity, next)
     bullet.ttl -= delta
     if bullet.ttl <= 0.0 ||
       next[Y] < -bullet.radius ||
@@ -1059,15 +1053,15 @@ fn side_spawn_world_positions(phase : Int) -> (@math.Vec2D, @math.Vec2D) {
 ///|
 fn move_enemies(delta : Double) -> Unit {
   let to_remove = []
-  let player_pos = @transform.positions().get(game_state.player)
+  let player_pos = entity_position(game_state.player)
   for enemy_entity, enemy in enemies {
-    guard @transform.positions().get(enemy_entity) is Some(position) else {
+    guard entity_position(enemy_entity) is Some(position) else {
       to_remove.push((enemy_entity, 0, enemy.kind, false))
       continue
     }
 
     let radius = enemy_radius(enemy.kind)
-    let mut next = position.0
+    let mut next = position
     if is_ferritharax_family(enemy.kind) {
       enemy.boss_phase_elapsed += delta
       let mut step_duration = ferritharax_phase_duration(
@@ -1105,7 +1099,7 @@ fn move_enemies(delta : Double) -> Unit {
         }
         Homing =>
           if player_pos is Some(pp) {
-            let dir = (pp.0 - next).normalize()
+            let dir = (pp - next).normalize()
             let speed = @math.Vec2D(
               enemy.speed_x * dir[X],
               enemy.speed_y * dir[Y],
@@ -1137,7 +1131,7 @@ fn move_enemies(delta : Double) -> Unit {
         }
       }
     }
-    @transform.positions().set(enemy_entity, next)
+    set_entity_position(enemy_entity, next)
     sync_enemy_visual_parts(enemy_entity, next)
     if next[Y] > VIEWPORT_HEIGHT + radius ||
       next[X] < -80.0 ||
@@ -1169,7 +1163,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
   let enemy_spawns = []
 
   for enemy_entity, enemy in enemies {
-    guard @transform.positions().get(enemy_entity) is Some(position) else {
+    guard entity_position(enemy_entity) is Some(position) else {
       if enemy.shoot_interval > 0.0 {
         enemy.shoot_cooldown = enemy.shoot_interval
       }
@@ -1234,7 +1228,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
           enemy_spawns.push(
             (
               Missile,
-              position.0 + ferritharax_arm_missile_offset(enemy.kind, true),
+              position + ferritharax_arm_missile_offset(enemy.kind, true),
             ),
           )
         }
@@ -1249,7 +1243,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
           enemy_spawns.push(
             (
               Missile,
-              position.0 + ferritharax_arm_missile_offset(enemy.kind, false),
+              position + ferritharax_arm_missile_offset(enemy.kind, false),
             ),
           )
         }
@@ -1270,7 +1264,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
         enemy.boss_right_weapon_timer = next_right_weapon_timer
 
         for _ in 0..<left_weapon_count {
-          let origin = position.0 +
+          let origin = position +
             ferritharax_arm_weapon_offset(enemy.kind, true)
           match enemy.kind {
             MechaFerritharax =>
@@ -1295,7 +1289,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
         }
 
         for _ in 0..<right_weapon_count {
-          let origin = position.0 +
+          let origin = position +
             ferritharax_arm_weapon_offset(enemy.kind, false)
           match enemy.kind {
             MechaFerritharax =>
@@ -1336,16 +1330,16 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
         let dir1 = @math.Vec2D(-0.35, 0.94).normalize().scalar_mul(400.0)
         let dir2 = @math.Vec2D(0.35, 0.94).normalize().scalar_mul(400.0)
         projectile_spawns.push(
-          (position.0 + @math.Vec2D(-4.0, 12.0), dir1, 10, Blast, 1.0),
+          (position + @math.Vec2D(-4.0, 12.0), dir1, 10, Blast, 1.0),
         )
         projectile_spawns.push(
-          (position.0 + @math.Vec2D(4.0, 12.0), dir2, 10, Blast, 1.0),
+          (position + @math.Vec2D(4.0, 12.0), dir2, 10, Blast, 1.0),
         )
       }
       StraferBlaster =>
         projectile_spawns.push(
           (
-            position.0 + @math.Vec2D(0.0, 10.0),
+            position + @math.Vec2D(0.0, 10.0),
             @math.Vec2D(0.0, 400.0),
             8,
             Blast,
@@ -1369,14 +1363,14 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
           let dir = (base_dir + @math.Vec2D(jitter_x, jitter_y)).normalize()
           let speed = 300.0 * (0.75 + game_state.rand.double() * 0.5)
           projectile_spawns.push(
-            (position.0, dir.scalar_mul(speed), 10, Bullet, 0.3),
+            (position, dir.scalar_mul(speed), 10, Bullet, 0.3),
           )
         }
       }
       MissileLauncherSpawner =>
-        enemy_spawns.push((Missile, position.0 + @math.Vec2D(0.0, -35.0)))
+        enemy_spawns.push((Missile, position + @math.Vec2D(0.0, -35.0)))
       BossSpawner => {
-        let escort_y = position.0[Y] + 22.0
+        let escort_y = position[Y] + 22.0
         enemy_spawns.push((Pawn, @math.Vec2D(120.0, escort_y)))
         enemy_spawns.push((Pawn, @math.Vec2D(VIEWPORT_WIDTH - 120.0, escort_y)))
         if game_state.rand.double() < 0.7 {
@@ -1388,7 +1382,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
         for offset in [-0.9, -0.45, 0.0, 0.45, 0.9] {
           let dir = @math.Vec2D(offset, 1.0).normalize()
           projectile_spawns.push(
-            (position.0, dir.scalar_mul(360.0), 12, Blast, 1.1),
+            (position, dir.scalar_mul(360.0), 12, Blast, 1.1),
           )
         }
       }
@@ -1416,18 +1410,18 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
 ///|
 fn move_consumables(delta : Double) -> Unit {
   let to_remove = []
-  let player_pos = @transform.positions().get(game_state.player)
+  let player_pos = entity_position(game_state.player)
   for consumable_entity, consumable in consumables {
-    guard @transform.positions().get(consumable_entity) is Some(position) else {
+    guard entity_position(consumable_entity) is Some(position) else {
       to_remove.push(consumable_entity)
       continue
     }
     let mut next = @math.Vec2D(
-      position.0[X],
-      position.0[Y] + consumable.speed * delta,
+      position[X],
+      position[Y] + consumable.speed * delta,
     )
     if player_pos is Some(pp) {
-      let to_player = pp.0 - position.0
+      let to_player = pp - position
       let distance = to_player.distance()
       if distance > 0.0001 && distance <= game_state.attraction_distance {
         next = next +
@@ -1436,7 +1430,7 @@ fn move_consumables(delta : Double) -> Unit {
           .scalar_mul(game_state.attraction_acceleration * 15.0 * delta)
       }
     }
-    @transform.positions().set(consumable_entity, next)
+    set_entity_position(consumable_entity, next)
     if next[Y] > VIEWPORT_HEIGHT + CONSUMABLE_HALF_SIZE {
       to_remove.push(consumable_entity)
     }
@@ -1451,18 +1445,15 @@ fn move_consumables(delta : Double) -> Unit {
 ///|
 fn move_items(delta : Double) -> Unit {
   let to_remove = []
-  let player_pos = @transform.positions().get(game_state.player)
+  let player_pos = entity_position(game_state.player)
   for item_entity, item in items {
-    guard @transform.positions().get(item_entity) is Some(position) else {
+    guard entity_position(item_entity) is Some(position) else {
       to_remove.push(item_entity)
       continue
     }
-    let mut next = @math.Vec2D(
-      position.0[X],
-      position.0[Y] + item.speed * delta,
-    )
+    let mut next = @math.Vec2D(position[X], position[Y] + item.speed * delta)
     if player_pos is Some(pp) {
-      let to_player = pp.0 - position.0
+      let to_player = pp - position
       let distance = to_player.distance()
       if distance > 0.0001 && distance <= game_state.attraction_distance {
         next = next +
@@ -1471,7 +1462,7 @@ fn move_items(delta : Double) -> Unit {
           .scalar_mul(game_state.attraction_acceleration * 15.0 * delta)
       }
     }
-    @transform.positions().set(item_entity, next)
+    set_entity_position(item_entity, next)
     if next[Y] > VIEWPORT_HEIGHT + ITEM_HALF_SIZE {
       to_remove.push(item_entity)
     }
@@ -1502,7 +1493,7 @@ fn bullet_enemy_collision() -> Unit {
     if bullet.faction is Enemy {
       continue
     }
-    guard @transform.positions().get(bullet_entity) is Some(bullet_position) else {
+    guard entity_position(bullet_entity) is Some(bullet_position) else {
       dead_bullets.push(bullet_entity)
       continue
     }
@@ -1510,20 +1501,20 @@ fn bullet_enemy_collision() -> Unit {
       if enemy.kind is Hauler {
         continue
       }
-      guard @transform.positions().get(enemy_entity) is Some(enemy_position) else {
+      guard entity_position(enemy_entity) is Some(enemy_position) else {
         continue
       }
       if overlaps(
-          bullet_position.0,
+          bullet_position,
           bullet.radius,
-          enemy_position.0,
+          enemy_position,
           enemy_radius(enemy.kind),
         ) {
         dead_bullets.push(bullet_entity)
         game_state.shots_hit += 1
         enemy.hp -= bullet.damage
         if enemy.hp <= 0 {
-          defeated_enemies.push((enemy_entity, enemy.kind, enemy_position.0))
+          defeated_enemies.push((enemy_entity, enemy.kind, enemy_position))
         }
         break
       }
@@ -1552,20 +1543,20 @@ fn bullet_enemy_collision() -> Unit {
 
 ///|
 fn enemy_bullet_player_collision() -> Unit {
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
   let dead_bullets = []
   for bullet_entity, bullet in bullets {
     if bullet.faction is Ally {
       continue
     }
-    guard @transform.positions().get(bullet_entity) is Some(bullet_position) else {
+    guard entity_position(bullet_entity) is Some(bullet_position) else {
       dead_bullets.push(bullet_entity)
       continue
     }
     if overlaps(
-        bullet_position.0,
+        bullet_position,
         bullet.radius,
-        player_position.0,
+        player_position,
         PLAYER_HALF_SIZE,
       ) {
       dead_bullets.push(bullet_entity)
@@ -1674,19 +1665,19 @@ fn enemy_player_collision() -> Unit {
   if game_state.player_invulnerable > 0.0 {
     return
   }
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
   let mut collided : (@entity.Entity, EnemyKind, Int)? = None
   for enemy_entity, enemy in enemies {
     if enemy.kind is Hauler {
       continue
     }
-    guard @transform.positions().get(enemy_entity) is Some(enemy_position) else {
+    guard entity_position(enemy_entity) is Some(enemy_position) else {
       continue
     }
     if overlaps(
-        player_position.0,
+        player_position,
         PLAYER_HALF_SIZE,
-        enemy_position.0,
+        enemy_position,
         enemy_radius(enemy.kind),
       ) {
       collided = Some((enemy_entity, enemy.kind, enemy.collision_damage))
@@ -1703,17 +1694,17 @@ fn enemy_player_collision() -> Unit {
 
 ///|
 fn consumable_player_collision() -> Unit {
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
   let picked = []
   for entity, consumable in consumables {
-    guard @transform.positions().get(entity) is Some(consumable_position) else {
+    guard entity_position(entity) is Some(consumable_position) else {
       picked.push((entity, consumable.kind))
       continue
     }
     if overlaps(
-        player_position.0,
+        player_position,
         PLAYER_HALF_SIZE,
-        consumable_position.0,
+        consumable_position,
         CONSUMABLE_HALF_SIZE,
       ) {
       picked.push((entity, consumable.kind))
@@ -1731,17 +1722,17 @@ fn consumable_player_collision() -> Unit {
 
 ///|
 fn item_player_collision() -> Unit {
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
   let picked = []
   for entity, item in items {
-    guard @transform.positions().get(entity) is Some(item_position) else {
+    guard entity_position(entity) is Some(item_position) else {
       picked.push((entity, item.kind))
       continue
     }
     if overlaps(
-        player_position.0,
+        player_position,
         PLAYER_HALF_SIZE,
-        item_position.0,
+        item_position,
         ITEM_HALF_SIZE,
       ) {
       picked.push((entity, item.kind))
@@ -1878,9 +1869,7 @@ fn main_menu_button_text(index : Int, label : String) -> String {
 
 ///|
 fn set_ui_visible(entity : @entity.Entity, visible : Bool) -> Unit {
-  if @sprite.sprites().get(entity) is Some(sprite) {
-    sprite.visible = visible
-  }
+  set_entity_visibility(entity, visible)
 }
 
 ///|
@@ -1892,15 +1881,16 @@ fn set_ui_button_enabled(entity : @entity.Entity, enabled : Bool) -> Unit {
 }
 
 ///|
-fn sync_text_ui_sprite(entity : @entity.Entity, text : @sprite.Text) -> Unit {
-  let visible = if @sprite.sprites().get(entity) is Some(old_sprite) {
-    old_sprite.visible
-  } else {
-    true
-  }
-  let sprite = @sprite.Sprite::from_text(text, 100)
-  sprite.visible = visible
-  @sprite.sprites().set(entity, sprite)
+fn sync_text_ui_sprite(entity : @entity.Entity, text : TextState) -> Unit {
+  @ui.texts().set(entity, @ui.Text::new(text.content))
+  @ui.text_fonts().set(entity, @ui.TextFont::from_css(text.font))
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(text.color))
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::new(align=text.align, baseline=text.baseline),
+  )
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, text_anchor(text))
 }
 
 ///|
@@ -2024,15 +2014,13 @@ fn update_in_game_hud_widgets() -> Unit {
   let health_fill_h = 116.0 * health_ratio
   @sprite.sprites().set(
     game_state.hud_health_bar_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(10.0, health_fill_h),
-        "rgba(220, 20, 60, 0.85)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(10.0, health_fill_h),
+      "rgba(220, 20, 60, 0.85)",
       92,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.hud_health_bar_fill_ui,
     @math.Vec2D(HUD_HEALTH_BAR_FILL_X, 216.0 - health_fill_h),
   )
@@ -2049,15 +2037,13 @@ fn update_in_game_hud_widgets() -> Unit {
   let shield_fill_h = 116.0 * shield_ratio
   @sprite.sprites().set(
     game_state.hud_shield_bar_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(10.0, shield_fill_h),
-        "rgba(0, 255, 255, 0.75)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(10.0, shield_fill_h),
+      "rgba(0, 255, 255, 0.75)",
       92,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.hud_shield_bar_fill_ui,
     @math.Vec2D(HUD_SHIELD_BAR_FILL_X, 216.0 - shield_fill_h),
   )
@@ -2066,15 +2052,13 @@ fn update_in_game_hud_widgets() -> Unit {
   let defense_w = 120.0 * defense_ratio
   @sprite.sprites().set(
     game_state.hud_defense_bar_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(defense_w, 8.0),
-        "rgba(40, 110, 255, 0.9)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(defense_w, 8.0),
+      "rgba(40, 110, 255, 0.9)",
       94,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.hud_defense_bar_fill_ui,
     @math.Vec2D(180.0, 295.0),
   )
@@ -2087,15 +2071,13 @@ fn update_in_game_hud_widgets() -> Unit {
   let slot1_h = HUD_ABILITY_SLOT_SIZE * slot1_ratio
   @sprite.sprites().set(
     game_state.hud_slot1_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot1_h),
-        "rgba(0, 0, 0, 0.55)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot1_h),
+      "rgba(0, 0, 0, 0.55)",
       95,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.hud_slot1_fill_ui,
     @math.Vec2D(
       HUD_ABILITY_SLOT_LEFT_X,
@@ -2112,15 +2094,13 @@ fn update_in_game_hud_widgets() -> Unit {
   let slot2_h = HUD_ABILITY_SLOT_SIZE * slot2_ratio
   @sprite.sprites().set(
     game_state.hud_slot2_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot2_h),
-        "rgba(0, 0, 0, 0.55)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot2_h),
+      "rgba(0, 0, 0, 0.55)",
       95,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.hud_slot2_fill_ui,
     @math.Vec2D(
       HUD_ABILITY_SLOT_LEFT_X,
@@ -2231,14 +2211,32 @@ fn format_tutorial_progress(progress : Double) -> String {
 
 ///|
 fn text_with_font_width(text : String, font : String) -> Double {
-  let probe = @sprite.Text::new(
-    text,
-    color="white",
-    font~,
-    baseline=Top,
-    align=Left,
-  )
-  @sprite.measure_text_size(probe)[X]
+  let font_size = if font.contains("24px") {
+    24.0
+  } else if font.contains("20px") {
+    20.0
+  } else if font.contains("19px") {
+    19.0
+  } else if font.contains("18px") {
+    18.0
+  } else if font.contains("16px") {
+    16.0
+  } else if font.contains("14px") {
+    14.0
+  } else if font.contains("11px") {
+    11.0
+  } else if font.contains("10px") {
+    10.0
+  } else if font.contains("9px") {
+    9.0
+  } else if font.contains("8px") {
+    8.0
+  } else if font.contains("7px") {
+    7.0
+  } else {
+    12.0
+  }
+  text.length().to_double() * font_size * 0.62
 }
 
 ///|
@@ -2366,15 +2364,15 @@ fn update_tutorial_phase_data_lines() -> Bool {
         HUD_TOP_PANEL_WIDTH,
       )
       let color = if completed { "rgb(0,255,0)" } else { "white" }
-      let text = @sprite.Text::new(
+      let text = text_state(
         content,
         color~,
         font=TUTORIAL_PHASE_LINE_FONT,
         baseline=Top,
         align=Left,
       )
-      @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 100))
-      @transform.positions().set(
+      sync_text_ui_sprite(entity, text)
+      set_entity_position(
         entity,
         @math.Vec2D(
           HUD_TOP_RIGHT_PANEL_X,
@@ -2434,7 +2432,7 @@ fn update_border_gradient_widgets() -> Unit {
       game_state.warning_gradient_ui,
       border_gradient_sprite(WARNING_GRADIENT_TEXTURE, warning_h),
     )
-    @transform.positions().set(
+    set_entity_position(
       game_state.warning_gradient_ui,
       @math.Vec2D(0.0, VIEWPORT_HEIGHT - warning_h),
     )
@@ -2449,7 +2447,7 @@ fn update_border_gradient_widgets() -> Unit {
       game_state.defense_gradient_ui,
       border_gradient_sprite(DEFENSE_GRADIENT_TEXTURE, defense_h),
     )
-    @transform.positions().set(
+    set_entity_position(
       game_state.defense_gradient_ui,
       @math.Vec2D(0.0, VIEWPORT_HEIGHT - defense_h),
     )
@@ -2580,17 +2578,14 @@ fn update_character_selection_widgets_for_slot(
   join_prompt_content : String,
   ready_text_ui : @entity.Entity,
 ) -> Unit {
-  let join_prompt_text = @sprite.Text::new(
+  let join_prompt_text = text_state(
     join_prompt_content,
     color="white",
     font="8px Lunchds",
     baseline=Top,
     align=Center,
   )
-  @sprite.sprites().set(
-    join_prompt_ui,
-    @sprite.Sprite::from_text(join_prompt_text, 100),
-  )
+  sync_text_ui_sprite(join_prompt_ui, join_prompt_text)
 
   set_character_slot_joined_visibility(
     joined, center_portrait_ui, left_portrait_ui, right_portrait_ui, name_ui, ability_slot1_ui,
@@ -2627,19 +2622,16 @@ fn update_character_selection_widgets_for_slot(
     character_ability_icon_sprite(character, 2),
   )
 
-  let character_name_text = @sprite.Text::new(
+  let character_name_text = text_state(
     character_config(character).name,
     color="rgb(255, 215, 0)",
     font="9px Lunchds",
     baseline=Top,
     align=Center,
   )
-  @sprite.sprites().set(
-    name_ui,
-    @sprite.Sprite::from_text(character_name_text, 100),
-  )
+  sync_text_ui_sprite(name_ui, character_name_text)
 
-  let slot1_text = @sprite.Text::new(
+  let slot1_text = text_state(
     clip_text_to_width(
       character_slot_ability_description(character, 1),
       "7px Lunchds",
@@ -2650,12 +2642,9 @@ fn update_character_selection_widgets_for_slot(
     baseline=Top,
     align=Left,
   )
-  @sprite.sprites().set(
-    ability_slot1_text_ui,
-    @sprite.Sprite::from_text(slot1_text, 100),
-  )
+  sync_text_ui_sprite(ability_slot1_text_ui, slot1_text)
 
-  let slot2_text = @sprite.Text::new(
+  let slot2_text = text_state(
     clip_text_to_width(
       character_slot_ability_description(character, 2),
       "7px Lunchds",
@@ -2666,21 +2655,16 @@ fn update_character_selection_widgets_for_slot(
     baseline=Top,
     align=Left,
   )
-  @sprite.sprites().set(
-    ability_slot2_text_ui,
-    @sprite.Sprite::from_text(slot2_text, 100),
-  )
+  sync_text_ui_sprite(ability_slot2_text_ui, slot2_text)
 
   for i in 0..<character_stats_order.length() {
     let stat = character_stats_order[i]
     @sprite.sprites().set(stat_icon_uis[i], character_stat_icon_sprite(stat))
     @sprite.sprites().set(
       stat_bg_uis[i],
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(
-          @math.Vec2D(stat_fill_max_width + 8.0, 7.0),
-          "rgba(255,255,255,0.15)",
-        ),
+      color_rect_sprite(
+        @math.Vec2D(stat_fill_max_width + 8.0, 7.0),
+        "rgba(255,255,255,0.15)",
         89,
       ),
     )
@@ -2688,17 +2672,15 @@ fn update_character_selection_widgets_for_slot(
       character_stat_percent(character, stat)
     @sprite.sprites().set(
       stat_fill_uis[i],
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(
-          @math.Vec2D(fill_width, 5.0),
-          "rgba(255,255,255,0.95)",
-        ),
+      color_rect_sprite(
+        @math.Vec2D(fill_width, 5.0),
+        "rgba(255,255,255,0.95)",
         90,
       ),
     )
   }
 
-  let ready_text = @sprite.Text::new(
+  let ready_text = text_state(
     if ready {
       "Ready"
     } else {
@@ -2709,10 +2691,7 @@ fn update_character_selection_widgets_for_slot(
     baseline=Top,
     align=Center,
   )
-  @sprite.sprites().set(
-    ready_text_ui,
-    @sprite.Sprite::from_text(ready_text, 100),
-  )
+  sync_text_ui_sprite(ready_text_ui, ready_text)
 }
 
 ///|
@@ -2853,8 +2832,8 @@ const CS_RIGHT_ABILITY_TEXT_MAX_WIDTH : Double = CS_RIGHT_STAT_ICON_X -
 
 ///|
 fn text_center_for_menu_button(button : @entity.Entity) -> @math.Vec2D {
-  if @transform.positions().get(button) is Some(pos) {
-    let base = pos.0
+  if entity_position(button) is Some(pos) {
+    let base = pos
     @math.Vec2D(
       base[X] + MENU_BUTTON_WIDTH / 2.0,
       base[Y] + MENU_BUTTON_HEIGHT / 2.0 + MENU_BUTTON_TEXT_Y_TWEAK,
@@ -2866,170 +2845,161 @@ fn text_center_for_menu_button(button : @entity.Entity) -> @math.Vec2D {
 
 ///|
 fn apply_main_menu_layout() -> Unit {
-  @transform.positions().set(
+  set_entity_position(
     game_state.score_ui,
     text_center_for_menu_button(game_state.menu_button_start_ui),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.hull_ui,
     text_center_for_menu_button(game_state.menu_button_options_ui),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.shield_ui,
     text_center_for_menu_button(game_state.menu_button_compendium_ui),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.defense_ui,
     text_center_for_menu_button(game_state.menu_button_exit_ui),
   )
-  @transform.positions().set(game_state.stage_ui, @math.Vec2D(470.0, 8.0))
-  @transform.positions().set(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
-  @transform.positions().set(game_state.banner_ui, @math.Vec2D(240.0, 304.0))
+  set_entity_position(game_state.stage_ui, @math.Vec2D(470.0, 8.0))
+  set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 304.0))
 }
 
 ///|
 fn apply_character_selection_layout() -> Unit {
-  @transform.positions().set(game_state.score_ui, @math.Vec2D(8.0, 8.0))
-  @transform.positions().set(game_state.hull_ui, @math.Vec2D(8.0, 36.0))
-  @transform.positions().set(game_state.shield_ui, @math.Vec2D(8.0, 56.0))
-  @transform.positions().set(game_state.defense_ui, @math.Vec2D(8.0, 76.0))
-  @transform.positions().set(game_state.stage_ui, @math.Vec2D(240.0, 8.0))
-  @transform.positions().set(game_state.timer_ui, @math.Vec2D(240.0, 20.0))
-  @transform.positions().set(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
-  @transform.positions().set(
+  set_entity_position(game_state.score_ui, @math.Vec2D(8.0, 8.0))
+  set_entity_position(game_state.hull_ui, @math.Vec2D(8.0, 36.0))
+  set_entity_position(game_state.shield_ui, @math.Vec2D(8.0, 56.0))
+  set_entity_position(game_state.defense_ui, @math.Vec2D(8.0, 76.0))
+  set_entity_position(game_state.stage_ui, @math.Vec2D(240.0, 8.0))
+  set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 20.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
+  set_entity_position(
     game_state.character_portrait_ui,
     @math.Vec2D(CS_P1_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_left_portrait_ui,
     @math.Vec2D(
       CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_right_portrait_ui,
     @math.Vec2D(
       CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_name_ui,
     @math.Vec2D(CS_P1_CAROUSEL_CENTER_X, CS_NAME_Y),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_ability_slot1_ui,
     @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_ability_slot1_icon_ui,
     @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_ability_slot1_text_ui,
     @math.Vec2D(CS_LEFT_ABILITY_TEXT_X, 206.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_ability_slot2_ui,
     @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 246.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_ability_slot2_icon_ui,
     @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 246.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_ability_slot2_text_ui,
     @math.Vec2D(CS_LEFT_ABILITY_TEXT_X, 240.0),
   )
   for i in 0..<character_stats_order.length() {
     let y = 206.0 + i.to_double() * 14.0
-    @transform.positions().set(
+    set_entity_position(
       character_stat_icon_uis[i],
       @math.Vec2D(CS_LEFT_STAT_ICON_X, y),
     )
-    @transform.positions().set(character_stat_bg_uis[i], @math.Vec2D(216.0, y))
-    @transform.positions().set(
-      character_stat_fill_uis[i],
-      @math.Vec2D(218.0, y + 1.0),
-    )
+    set_entity_position(character_stat_bg_uis[i], @math.Vec2D(216.0, y))
+    set_entity_position(character_stat_fill_uis[i], @math.Vec2D(218.0, y + 1.0))
   }
-  @transform.positions().set(
-    character_join_prompt_ui,
-    @math.Vec2D(120.0, 130.0),
-  )
-  @transform.positions().set(character_ready_text_ui, @math.Vec2D(120.0, 282.0))
+  set_entity_position(character_join_prompt_ui, @math.Vec2D(120.0, 130.0))
+  set_entity_position(character_ready_text_ui, @math.Vec2D(120.0, 282.0))
 
-  @transform.positions().set(
+  set_entity_position(
     character_p2_center_portrait_ui,
     @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_left_portrait_ui,
     @math.Vec2D(
       CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_right_portrait_ui,
     @math.Vec2D(
       CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_name_ui,
     @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, CS_NAME_Y),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ability_slot1_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ability_slot1_icon_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ability_slot1_text_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_TEXT_X, 206.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ability_slot2_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 246.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ability_slot2_icon_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 246.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ability_slot2_text_ui,
     @math.Vec2D(CS_RIGHT_ABILITY_TEXT_X, 240.0),
   )
   for i in 0..<character_stats_order.length() {
     let y = 206.0 + i.to_double() * 14.0
-    @transform.positions().set(
+    set_entity_position(
       character_p2_stat_icon_uis[i],
       @math.Vec2D(CS_RIGHT_STAT_ICON_X, y),
     )
-    @transform.positions().set(
-      character_p2_stat_bg_uis[i],
-      @math.Vec2D(456.0, y),
-    )
-    @transform.positions().set(
+    set_entity_position(character_p2_stat_bg_uis[i], @math.Vec2D(456.0, y))
+    set_entity_position(
       character_p2_stat_fill_uis[i],
       @math.Vec2D(458.0, y + 1.0),
     )
   }
-  @transform.positions().set(
+  set_entity_position(
     character_p2_join_prompt_ui,
     @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, 130.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     character_p2_ready_text_ui,
     @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, 282.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.character_description_ui,
     @math.Vec2D(240.0, 245.0),
   )
@@ -3038,41 +3008,35 @@ fn apply_character_selection_layout() -> Unit {
 ///|
 fn apply_in_game_layout() -> Unit {
   let bottom_row_center_y = VIEWPORT_HEIGHT - VIEWPORT_HEIGHT * 0.13 / 2.0
-  @transform.positions().set(
+  set_entity_position(
     game_state.score_ui,
     @math.Vec2D(HUD_CENTER_LEFT_X, bottom_row_center_y),
   )
-  @transform.positions().set(game_state.hull_ui, @math.Vec2D(8.0, 8.0))
-  @transform.positions().set(game_state.shield_ui, @math.Vec2D(8.0, 28.0))
-  @transform.positions().set(game_state.defense_ui, @math.Vec2D(8.0, 48.0))
-  @transform.positions().set(
+  set_entity_position(game_state.hull_ui, @math.Vec2D(8.0, 8.0))
+  set_entity_position(game_state.shield_ui, @math.Vec2D(8.0, 28.0))
+  set_entity_position(game_state.defense_ui, @math.Vec2D(8.0, 48.0))
+  set_entity_position(
     game_state.stage_ui,
     @math.Vec2D(HUD_TOP_LEFT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
   )
-  @transform.positions().set(
+  set_entity_position(
     game_state.timer_ui,
     @math.Vec2D(HUD_TOP_RIGHT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
   )
-  @transform.positions().set(game_state.banner_ui, @math.Vec2D(240.0, 145.0))
-  @transform.positions().set(
-    game_state.phase_prompt_ui,
-    @math.Vec2D(240.0, 244.0),
-  )
+  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 145.0))
+  set_entity_position(game_state.phase_prompt_ui, @math.Vec2D(240.0, 244.0))
 }
 
 ///|
 fn apply_end_screen_layout() -> Unit {
-  @transform.positions().set(game_state.stage_ui, @math.Vec2D(240.0, 36.0))
-  @transform.positions().set(game_state.score_ui, @math.Vec2D(120.0, 112.0))
-  @transform.positions().set(game_state.hull_ui, @math.Vec2D(120.0, 138.0))
-  @transform.positions().set(game_state.shield_ui, @math.Vec2D(120.0, 164.0))
-  @transform.positions().set(game_state.defense_ui, @math.Vec2D(120.0, 190.0))
-  @transform.positions().set(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
-  @transform.positions().set(game_state.banner_ui, @math.Vec2D(240.0, 306.0))
-  @transform.positions().set(
-    game_state.phase_prompt_ui,
-    @math.Vec2D(240.0, 244.0),
-  )
+  set_entity_position(game_state.stage_ui, @math.Vec2D(240.0, 36.0))
+  set_entity_position(game_state.score_ui, @math.Vec2D(120.0, 112.0))
+  set_entity_position(game_state.hull_ui, @math.Vec2D(120.0, 138.0))
+  set_entity_position(game_state.shield_ui, @math.Vec2D(120.0, 164.0))
+  set_entity_position(game_state.defense_ui, @math.Vec2D(120.0, 190.0))
+  set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 306.0))
+  set_entity_position(game_state.phase_prompt_ui, @math.Vec2D(240.0, 244.0))
 }
 
 ///|

@@ -317,9 +317,7 @@ fn uses_3d_background(kind : BackgroundKind) -> Bool {
 
 ///|
 fn set_background_sprite_visible(visible : Bool) -> Unit {
-  if @sprite.sprites().get(game_state.background) is Some(sprite) {
-    sprite.visible = visible
-  }
+  set_entity_visibility(game_state.background, visible)
 }
 
 ///|
@@ -443,7 +441,7 @@ fn refresh_background3d_assets() -> Unit {
     cast_shadows: false,
     receive_shadows: false,
   })
-  @transform3d.transforms3d().set(background3d_quad_entity, {
+  @transform.transforms().set(background3d_quad_entity, {
     translation: @math.Vec3::new(0.0, 0.0, BG3D_QUAD_Z),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::new(BG3D_QUAD_SCALE_X, BG3D_QUAD_SCALE_Y, 1.0),
@@ -457,7 +455,7 @@ fn refresh_background3d_assets() -> Unit {
       cast_shadows: false,
       receive_shadows: false,
     })
-    @transform3d.transforms3d().set(background3d_planet_entity, {
+    @transform.transforms().set(background3d_planet_entity, {
       translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
       rotation: @math.Quat::from_axis_angle(
         @math.Vec3::new(0.0, 1.0, 0.0),
@@ -480,7 +478,7 @@ fn refresh_background3d_assets() -> Unit {
       cast_shadows: false,
       receive_shadows: false,
     })
-    @transform3d.transforms3d().set(background3d_star_entity, {
+    @transform.transforms().set(background3d_star_entity, {
       translation: star_translation,
       rotation: @math.Quat::identity(),
       scale: @math.Vec3::one(),
@@ -498,7 +496,7 @@ fn refresh_background3d_assets() -> Unit {
   } else {
     @render3d.point_lights3d().remove(background3d_star_light_entity)
   }
-  @transform3d.transforms3d().set(background3d_star_light_entity, {
+  @transform.transforms().set(background3d_star_light_entity, {
     translation: star_translation,
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -543,7 +541,7 @@ fn ensure_background3d_initialized() -> Unit {
     background3d_camera_entity,
     @camera3d.Camera3DComponent::default(),
   )
-  @transform3d.transforms3d().set(background3d_camera_entity, {
+  @transform.transforms().set(background3d_camera_entity, {
     translation: @math.Vec3::new(0.0, 0.0, 60.0),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
@@ -704,7 +702,7 @@ fn set_background(kind : BackgroundKind) -> Unit {
     background_sprite(kind)
   }
   @sprite.sprites().set(game_state.background, sprite)
-  @transform.positions().set(game_state.background, @math.Vec2D(0.0, 0.0))
+  set_entity_position(game_state.background, @math.Vec2D(0.0, 0.0))
   set_background_sprite_visible(true)
 }
 
@@ -760,7 +758,7 @@ fn initialize_ui() -> Unit {
   for i in 0..<TUTORIAL_PHASE_DATA_LINE_COUNT {
     setup_text_entity(
       tutorial_phase_data_line_uis[i],
-      @sprite.Text::new(
+      text_state(
         "",
         color="white",
         font=TUTORIAL_PHASE_LINE_FONT,
@@ -832,7 +830,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_name_ui,
-    @sprite.Text::new(
+    text_state(
       "Captain",
       color="rgb(255, 215, 0)",
       font=UI_FONT_MEDIUM,
@@ -853,7 +851,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_ability_slot1_text_ui,
-    @sprite.Text::new(
+    text_state(
       "Fires energy blasts.",
       color="white",
       font="14px Lunchds",
@@ -874,7 +872,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_ability_slot2_text_ui,
-    @sprite.Text::new(
+    text_state(
       "Fires large, high damage, blasts.",
       color="white",
       font="14px Lunchds",
@@ -891,24 +889,18 @@ fn initialize_ui() -> Unit {
     )
     setup_picture_entity(
       character_stat_bg_uis[i],
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(72.0, 7.0), "rgba(255,255,255,0.15)"),
-        89,
-      ),
+      color_rect_sprite(@math.Vec2D(72.0, 7.0), "rgba(255,255,255,0.15)", 89),
       @math.Vec2D(388.0, 202.0 + i.to_double() * 18.0),
     )
     setup_picture_entity(
       character_stat_fill_uis[i],
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)"),
-        90,
-      ),
+      color_rect_sprite(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)", 90),
       @math.Vec2D(353.0, 203.0 + i.to_double() * 18.0),
     )
   }
   setup_text_entity(
     character_join_prompt_ui,
-    @sprite.Text::new(
+    text_state(
       "P1 Press Enter to Join",
       color="white",
       font=UI_FONT_SMALL,
@@ -919,7 +911,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_ready_text_ui,
-    @sprite.Text::new(
+    text_state(
       "Not Ready",
       color="rgb(220,220,220)",
       font=UI_FONT_SMALL,
@@ -946,7 +938,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_p2_name_ui,
-    @sprite.Text::new(
+    text_state(
       "Juggernaut",
       color="rgb(255, 215, 0)",
       font=UI_FONT_MEDIUM,
@@ -967,7 +959,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_p2_ability_slot1_text_ui,
-    @sprite.Text::new(
+    text_state(
       "Fires lead bullets.",
       color="white",
       font="14px Lunchds",
@@ -988,7 +980,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_p2_ability_slot2_text_ui,
-    @sprite.Text::new(
+    text_state(
       "Charge in a direction.",
       color="white",
       font="14px Lunchds",
@@ -1005,24 +997,18 @@ fn initialize_ui() -> Unit {
     )
     setup_picture_entity(
       character_p2_stat_bg_uis[i],
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(56.0, 7.0), "rgba(255,255,255,0.15)"),
-        89,
-      ),
+      color_rect_sprite(@math.Vec2D(56.0, 7.0), "rgba(255,255,255,0.15)", 89),
       @math.Vec2D(442.0, 202.0 + i.to_double() * 18.0),
     )
     setup_picture_entity(
       character_p2_stat_fill_uis[i],
-      @sprite.Sprite::from_color_rect(
-        @sprite.ColorRect::new(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)"),
-        90,
-      ),
+      color_rect_sprite(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)", 90),
       @math.Vec2D(414.0, 203.0 + i.to_double() * 18.0),
     )
   }
   setup_text_entity(
     character_p2_join_prompt_ui,
-    @sprite.Text::new(
+    text_state(
       "P2 Press A/Start to Join",
       color="white",
       font=UI_FONT_SMALL,
@@ -1033,7 +1019,7 @@ fn initialize_ui() -> Unit {
   )
   setup_text_entity(
     character_p2_ready_text_ui,
-    @sprite.Text::new(
+    text_state(
       "Not Ready",
       color="rgb(220,220,220)",
       font=UI_FONT_SMALL,
@@ -1064,43 +1050,22 @@ fn initialize_ui() -> Unit {
   )
   setup_picture_entity(
     game_state.hud_health_bar_bg_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(12.0, 120.0),
-        "rgba(128, 16, 24, 0.18)",
-      ),
-      91,
-    ),
+    color_rect_sprite(@math.Vec2D(12.0, 120.0), "rgba(128, 16, 24, 0.18)", 91),
     @math.Vec2D(HUD_HEALTH_BAR_BG_X, 98.0),
   )
   setup_picture_entity(
     game_state.hud_health_bar_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(10.0, 116.0),
-        "rgba(220, 20, 60, 0.85)",
-      ),
-      92,
-    ),
+    color_rect_sprite(@math.Vec2D(10.0, 116.0), "rgba(220, 20, 60, 0.85)", 92),
     @math.Vec2D(HUD_HEALTH_BAR_FILL_X, 100.0),
   )
   setup_picture_entity(
     game_state.hud_shield_bar_bg_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(12.0, 120.0), "rgba(0, 96, 128, 0.18)"),
-      91,
-    ),
+    color_rect_sprite(@math.Vec2D(12.0, 120.0), "rgba(0, 96, 128, 0.18)", 91),
     @math.Vec2D(HUD_SHIELD_BAR_BG_X, 98.0),
   )
   setup_picture_entity(
     game_state.hud_shield_bar_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(10.0, 116.0),
-        "rgba(0, 255, 255, 0.75)",
-      ),
-      92,
-    ),
+    color_rect_sprite(@math.Vec2D(10.0, 116.0), "rgba(0, 255, 255, 0.75)", 92),
     @math.Vec2D(HUD_SHIELD_BAR_FILL_X, 100.0),
   )
   setup_picture_entity(
@@ -1110,18 +1075,12 @@ fn initialize_ui() -> Unit {
   )
   setup_picture_entity(
     game_state.hud_defense_bar_bg_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(120.0, 8.0), "rgba(18, 24, 78, 0.55)"),
-      93,
-    ),
+    color_rect_sprite(@math.Vec2D(120.0, 8.0), "rgba(18, 24, 78, 0.55)", 93),
     @math.Vec2D(180.0, 295.0),
   )
   setup_picture_entity(
     game_state.hud_defense_bar_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(@math.Vec2D(120.0, 8.0), "rgba(40, 110, 255, 0.9)"),
-      94,
-    ),
+    color_rect_sprite(@math.Vec2D(120.0, 8.0), "rgba(40, 110, 255, 0.9)", 94),
     @math.Vec2D(180.0, 295.0),
   )
   setup_picture_entity(
@@ -1136,11 +1095,9 @@ fn initialize_ui() -> Unit {
   )
   setup_picture_entity(
     game_state.hud_slot1_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
-        "rgba(0, 0, 0, 0.55)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
+      "rgba(0, 0, 0, 0.55)",
       95,
     ),
     @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT1_FILL_BOTTOM_Y),
@@ -1157,189 +1114,98 @@ fn initialize_ui() -> Unit {
   )
   setup_picture_entity(
     game_state.hud_slot2_fill_ui,
-    @sprite.Sprite::from_color_rect(
-      @sprite.ColorRect::new(
-        @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
-        "rgba(0, 0, 0, 0.55)",
-      ),
+    color_rect_sprite(
+      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
+      "rgba(0, 0, 0, 0.55)",
       95,
     ),
     @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT2_FILL_BOTTOM_Y),
   )
-  if @sprite.sprites().get(game_state.character_portrait_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.character_description_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_left_portrait_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_right_portrait_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_name_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ability_slot1_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ability_slot1_icon_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ability_slot1_text_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ability_slot2_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ability_slot2_icon_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ability_slot2_text_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_join_prompt_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_ready_text_ui) is Some(sprite) {
-    sprite.visible = false
-  }
+  set_entity_visibility(game_state.character_portrait_ui, false)
+  set_entity_visibility(game_state.character_description_ui, false)
+  set_entity_visibility(character_left_portrait_ui, false)
+  set_entity_visibility(character_right_portrait_ui, false)
+  set_entity_visibility(character_name_ui, false)
+  set_entity_visibility(character_ability_slot1_ui, false)
+  set_entity_visibility(character_ability_slot1_icon_ui, false)
+  set_entity_visibility(character_ability_slot1_text_ui, false)
+  set_entity_visibility(character_ability_slot2_ui, false)
+  set_entity_visibility(character_ability_slot2_icon_ui, false)
+  set_entity_visibility(character_ability_slot2_text_ui, false)
+  set_entity_visibility(character_join_prompt_ui, false)
+  set_entity_visibility(character_ready_text_ui, false)
   for entity in character_stat_icon_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
   for entity in character_stat_bg_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
   for entity in character_stat_fill_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
-  if @sprite.sprites().get(character_p2_center_portrait_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_left_portrait_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_right_portrait_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_name_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ability_slot1_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ability_slot1_icon_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ability_slot1_text_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ability_slot2_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ability_slot2_icon_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ability_slot2_text_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_join_prompt_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(character_p2_ready_text_ui) is Some(sprite) {
-    sprite.visible = false
-  }
+  set_entity_visibility(character_p2_center_portrait_ui, false)
+  set_entity_visibility(character_p2_left_portrait_ui, false)
+  set_entity_visibility(character_p2_right_portrait_ui, false)
+  set_entity_visibility(character_p2_name_ui, false)
+  set_entity_visibility(character_p2_ability_slot1_ui, false)
+  set_entity_visibility(character_p2_ability_slot1_icon_ui, false)
+  set_entity_visibility(character_p2_ability_slot1_text_ui, false)
+  set_entity_visibility(character_p2_ability_slot2_ui, false)
+  set_entity_visibility(character_p2_ability_slot2_icon_ui, false)
+  set_entity_visibility(character_p2_ability_slot2_text_ui, false)
+  set_entity_visibility(character_p2_join_prompt_ui, false)
+  set_entity_visibility(character_p2_ready_text_ui, false)
   for entity in character_p2_stat_icon_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
   for entity in character_p2_stat_bg_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
   for entity in character_p2_stat_fill_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
-  if @sprite.sprites().get(game_state.phase_prompt_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.warning_gradient_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.defense_gradient_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_health_label_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_health_bar_bg_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_health_bar_fill_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_shield_bar_bg_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_shield_bar_fill_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_defense_label_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_defense_bar_bg_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_defense_bar_fill_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_slot1_bg_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_slot1_icon_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_slot1_fill_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_slot2_bg_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_slot2_icon_ui) is Some(sprite) {
-    sprite.visible = false
-  }
-  if @sprite.sprites().get(game_state.hud_slot2_fill_ui) is Some(sprite) {
-    sprite.visible = false
-  }
+  set_entity_visibility(game_state.phase_prompt_ui, false)
+  set_entity_visibility(game_state.warning_gradient_ui, false)
+  set_entity_visibility(game_state.defense_gradient_ui, false)
+  set_entity_visibility(game_state.hud_health_label_ui, false)
+  set_entity_visibility(game_state.hud_health_bar_bg_ui, false)
+  set_entity_visibility(game_state.hud_health_bar_fill_ui, false)
+  set_entity_visibility(game_state.hud_shield_bar_bg_ui, false)
+  set_entity_visibility(game_state.hud_shield_bar_fill_ui, false)
+  set_entity_visibility(game_state.hud_defense_label_ui, false)
+  set_entity_visibility(game_state.hud_defense_bar_bg_ui, false)
+  set_entity_visibility(game_state.hud_defense_bar_fill_ui, false)
+  set_entity_visibility(game_state.hud_slot1_bg_ui, false)
+  set_entity_visibility(game_state.hud_slot1_icon_ui, false)
+  set_entity_visibility(game_state.hud_slot1_fill_ui, false)
+  set_entity_visibility(game_state.hud_slot2_bg_ui, false)
+  set_entity_visibility(game_state.hud_slot2_icon_ui, false)
+  set_entity_visibility(game_state.hud_slot2_fill_ui, false)
   for entity in tutorial_phase_data_line_uis {
-    if @sprite.sprites().get(entity) is Some(sprite) {
-      sprite.visible = false
-    }
+    set_entity_visibility(entity, false)
   }
 }
 
 ///|
 fn setup_text_entity(
   entity : @entity.Entity,
-  text : @sprite.Text,
+  text : TextState,
   position : @math.Vec2D,
 ) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
   }
-  @sprite.sprites().set(entity, @sprite.Sprite::from_text(text, 100))
-  @transform.positions().set(entity, position)
+  @ui.texts().set(entity, @ui.Text::new(text.content))
+  @ui.text_fonts().set(entity, @ui.TextFont::from_css(text.font))
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(text.color))
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::new(align=text.align, baseline=text.baseline),
+  )
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, text_anchor(text))
+  set_entity_position(entity, position)
+  set_entity_visibility(entity, true)
 }
 
 ///|
@@ -1352,14 +1218,12 @@ fn setup_picture_entity(
     entity.respawn()
   }
   @sprite.sprites().set(entity, sprite)
-  @transform.positions().set(entity, position)
+  set_entity_position(entity, position)
 }
 
 ///|
 fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2D) -> Unit {
-  let position = @transform.positions()
-    .get(entity)
-    .map_or(@math.Vec2D::zero(), position => position.0)
+  let position = entity_position(entity).unwrap_or(@math.Vec2D::zero())
   @ui.nodes().set(entity, @ui.Node::absolute(position, size=hit_size))
   @ui.buttons().set(entity, @ui.Button::new())
   @ui.interactions().set(entity, @ui.None)
@@ -1526,7 +1390,7 @@ fn spawn_player() -> Unit {
     entity.respawn()
   }
   @sprite.sprites().set(entity, player_sprite(game_state.selected_character))
-  @transform.positions().set(entity, initial_player_position())
+  set_entity_position(entity, initial_player_position())
 }
 
 ///|
@@ -1544,8 +1408,9 @@ fn enemy_part_picture(
   size : @math.Vec2D,
   zindex : Int,
 ) -> @sprite.Sprite {
-  @sprite.Sprite::from_picture(
-    @sprite.Picture::new(size, texture),
+  image_sprite(
+    texture,
+    size,
     zindex,
     offset=@math.Vec2D(-size[X] / 2.0, -size[Y] / 2.0),
   )
@@ -1976,7 +1841,7 @@ fn spawn_enemy_visual_parts(
     let template = templates[i]
     let part_entity = @entity.Entity::new()
     @sprite.sprites().set(part_entity, template.sprite)
-    @transform.positions().set(part_entity, origin + template.offset)
+    set_entity_position(part_entity, origin + template.offset)
     links.push({
       entity: part_entity,
       role: enemy_part_role(kind, i),
@@ -2013,7 +1878,7 @@ fn sync_enemy_visual_parts(
       } else {
         @math.Vec2D(0.0, 0.0)
       }
-      @transform.positions().set(
+      set_entity_position(
         part.entity,
         origin + part.offset + pose_offset + @math.Vec2D(0.0, bob_y),
       )
@@ -2026,7 +1891,7 @@ fn despawn_enemy_visual_parts(enemy_entity : @entity.Entity) -> Unit {
   if enemy_visual_parts.get(enemy_entity) is Some(parts) {
     for part in parts {
       @sprite.sprites().remove(part.entity)
-      @transform.positions().remove(part.entity)
+      remove_entity_position(part.entity)
       if part.entity.is_alive() {
         part.entity.destroy()
       }
@@ -2066,7 +1931,7 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
     archetype.speed_y + speed_bonus
   }
   @sprite.sprites().set(enemy_entity, enemy_sprite(kind))
-  @transform.positions().set(enemy_entity, spawn_pos)
+  set_entity_position(enemy_entity, spawn_pos)
   spawn_enemy_visual_parts(enemy_entity, kind, spawn_pos)
   enemies.set(enemy_entity, {
     kind,
@@ -2103,11 +1968,11 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
 
 ///|
 fn spawn_player_burst() -> Unit {
-  guard @transform.positions().get(game_state.player) is Some(player_position)
+  guard entity_position(game_state.player) is Some(player_position)
   let projectile_count = @cmp.maximum(1, game_state.projectile_count)
   let base = @math.Vec2D(
-    player_position.0[X],
-    player_position.0[Y] - PLAYER_HALF_SIZE - 2.0,
+    player_position[X],
+    player_position[Y] - PLAYER_HALF_SIZE - 2.0,
   )
   match game_state.projectile_kind {
     Blast => {
@@ -2189,7 +2054,7 @@ fn spawn_projectile(
 ) -> Unit {
   let bullet_entity = @entity.Entity::new()
   @sprite.sprites().set(bullet_entity, projectile_sprite(kind, faction))
-  @transform.positions().set(bullet_entity, start_pos)
+  set_entity_position(bullet_entity, start_pos)
   let radius = if kind is Blast { 5.0 } else { 4.0 }
   bullets.set(bullet_entity, { ttl, velocity, damage, faction, radius })
 }
@@ -2198,7 +2063,7 @@ fn spawn_projectile(
 fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2D) -> Unit {
   let entity = @entity.Entity::new()
   @sprite.sprites().set(entity, consumable_sprite(kind))
-  @transform.positions().set(entity, position)
+  set_entity_position(entity, position)
   consumables.set(entity, { kind, speed: 105.0 })
 }
 
@@ -2206,7 +2071,7 @@ fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2D) -> Unit {
 fn spawn_item(kind : ItemKind, position : @math.Vec2D) -> Unit {
   let entity = @entity.Entity::new()
   @sprite.sprites().set(entity, item_sprite(kind))
-  @transform.positions().set(entity, position)
+  set_entity_position(entity, position)
   items.set(entity, { kind, speed: 105.0 })
 }
 
@@ -2215,7 +2080,7 @@ fn despawn_enemy(enemy_entity : @entity.Entity) -> Unit {
   despawn_enemy_visual_parts(enemy_entity)
   enemies.remove(enemy_entity)
   @sprite.sprites().remove(enemy_entity)
-  @transform.positions().remove(enemy_entity)
+  remove_entity_position(enemy_entity)
   if enemy_entity.is_alive() {
     enemy_entity.destroy()
   }
@@ -2225,7 +2090,7 @@ fn despawn_enemy(enemy_entity : @entity.Entity) -> Unit {
 fn despawn_bullet(bullet_entity : @entity.Entity) -> Unit {
   bullets.remove(bullet_entity)
   @sprite.sprites().remove(bullet_entity)
-  @transform.positions().remove(bullet_entity)
+  remove_entity_position(bullet_entity)
   if bullet_entity.is_alive() {
     bullet_entity.destroy()
   }
@@ -2235,7 +2100,7 @@ fn despawn_bullet(bullet_entity : @entity.Entity) -> Unit {
 fn despawn_consumable(entity : @entity.Entity) -> Unit {
   consumables.remove(entity)
   @sprite.sprites().remove(entity)
-  @transform.positions().remove(entity)
+  remove_entity_position(entity)
   if entity.is_alive() {
     entity.destroy()
   }
@@ -2245,7 +2110,7 @@ fn despawn_consumable(entity : @entity.Entity) -> Unit {
 fn despawn_item(entity : @entity.Entity) -> Unit {
   items.remove(entity)
   @sprite.sprites().remove(entity)
-  @transform.positions().remove(entity)
+  remove_entity_position(entity)
   if entity.is_alive() {
     entity.destroy()
   }

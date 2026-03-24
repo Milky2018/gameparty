@@ -2,6 +2,12 @@
 let bombman_font_registered : Ref[Bool] = { val: false }
 
 ///|
+let circle_mesh_handles : Map[Int, @mesh2d.Mesh2dHandle] = Map::new()
+
+///|
+let circle_material_handles : Map[String, @material2d.ColorMaterialHandle] = Map::new()
+
+///|
 fn register_bombman_font_once() -> Unit {
   if bombman_font_registered.val {
     return
@@ -26,10 +32,36 @@ fn ensure_tile_entities() -> Unit {
 }
 
 ///|
+fn entity_transform_2d(
+  position : @math.Vec2D,
+  zindex : Int,
+) -> @transform.Transform {
+  @transform.Transform::from_xyz(position[X], position[Y], zindex.to_double())
+}
+
+///|
+fn show_entity(entity : @entity.Entity) -> Unit {
+  @visibility.visibilities().set(entity, Visible)
+}
+
+///|
+fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
+  let key = @cmath.round(radius * 1000.0).to_int()
+  circle_mesh_handles.get_or_init(key, fn() { @mesh2d.circle(radius) })
+}
+
+///|
+fn circle_material_handle(color : String) -> @material2d.ColorMaterialHandle {
+  circle_material_handles.get_or_init(color, fn() {
+    @material2d.register_color_material(
+      @material2d.ColorMaterial::from_color(@sprite.color_from_css(color)),
+    )
+  })
+}
+
+///|
 fn hide_entity(entity : @entity.Entity) -> Unit {
-  if @sprite.sprites().get(entity) is Some(sprite) {
-    sprite.visible = false
-  }
+  @visibility.visibilities().set(entity, Hidden)
 }
 
 ///|
@@ -42,14 +74,14 @@ fn set_text_entity(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @sprite.sprites().set(
-    entity,
-    @sprite.Sprite::from_text(
-      @sprite.Text::new(text, color~, font~, baseline=Top, align=Left),
-      zindex,
-    ),
-  )
-  @transform.positions().set(entity, position)
+  show_entity(entity)
+  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+  @ui.text_layouts().set(entity, @ui.TextLayout::new(align=Left, baseline=Top))
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
 ///|
@@ -62,14 +94,17 @@ fn set_text_entity_center(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @sprite.sprites().set(
+  show_entity(entity)
+  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+  @ui.text_layouts().set(
     entity,
-    @sprite.Sprite::from_text(
-      @sprite.Text::new(text, color~, font~, baseline=Top, align=Center),
-      zindex,
-    ),
+    @ui.TextLayout::new(align=Center, baseline=Top),
   )
-  @transform.positions().set(entity, position)
+  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.5)))
+  @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
 ///|
@@ -81,11 +116,11 @@ fn set_rect_entity(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @sprite.sprites().set(
-    entity,
-    @sprite.Sprite::from_color_rect(@sprite.ColorRect::new(size, color), zindex),
-  )
-  @transform.positions().set(entity, position)
+  show_entity(entity)
+  let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  @sprite.sprites().set(entity, sprite)
+  @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
 ///|
@@ -97,14 +132,15 @@ fn set_circle_entity(
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @sprite.sprites().set(
+  show_entity(entity)
+  @mesh2d.mesh2ds().set(entity, @mesh2d.Mesh2d::new(circle_mesh_handle(radius)))
+  @material2d.mesh_material2ds().set(
     entity,
-    @sprite.Sprite::from_color_circle(
-      @sprite.ColorCircle::new(radius, color, stroke_color="rgba(0,0,0,0.18)"),
-      zindex,
+    @material2d.MeshMaterial2d::from_color_material(
+      circle_material_handle(color),
     ),
   )
-  @transform.positions().set(entity, center_to_circle_position(center, radius))
+  @transform.transforms().set(entity, entity_transform_2d(center, zindex))
 }
 
 ///|
