@@ -137,17 +137,22 @@ fn build_registry_and_texture_names() -> (
 
 ///|
 fn world_chunk_material(
-  _atlas_image : @render3d.ImageHandle,
+  atlas_image : @render3d.ImageHandle,
   alpha_mode : @render3d.AlphaMode3D,
 ) -> @render3d.StandardMaterial3D {
-  let base_color = match alpha_mode {
-    @render3d.AlphaMode3D::Opaque => color_rgba(142U, 146U, 152U, 1.0)
-    @render3d.AlphaMode3D::Mask => color_rgba(106U, 160U, 102U, 1.0)
-    @render3d.AlphaMode3D::Blend => color_rgba(96U, 130U, 168U, 0.72)
-  }
+  let base_color = color_rgba(255U, 255U, 255U, 1.0)
   {
     ..@render3d.default_standard_material3d(),
     base_color,
+    base_color_texture: Some(
+      @render3d.texture_binding3d(atlas_image, sampler={
+        wrap_u: @render3d.TextureWrap3D::ClampToEdge,
+        wrap_v: @render3d.TextureWrap3D::ClampToEdge,
+        min_filter: @render3d.TextureFilter3D::Nearest,
+        mag_filter: @render3d.TextureFilter3D::Nearest,
+        mipmap_filter: None,
+      }),
+    ),
     alpha_mode,
     alpha_cutoff: if alpha_mode is @render3d.AlphaMode3D::Mask {
       0.5

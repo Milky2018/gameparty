@@ -63,7 +63,7 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
   debug_first_mesh_logged.val = false
   // Work around backend sync order (materials submitted before images):
   // rebind textured world materials for a few early frames.
-  world_material_rebind_frames_left.val = 4
+  world_material_rebind_frames_left.val = 60
   let preserved_hotbar = inventory_state.val.hotbar.copy()
   let preserved_selection = wrap_hotbar_index(
     player_controller.val.selected_hotbar_index,
