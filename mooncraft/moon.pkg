@@ -23,6 +23,7 @@ import {
   "Milky2018/gameparty/mooncraft_core/block/shape",
   "Milky2018/gameparty/mooncraft_core/item",
   "Milky2018/gameparty/mooncraft_core/level",
+  "tonyfettes/raylib" @raylib,
   "moonbitlang/core/env",
   "moonbitlang/core/math" @cmath,
 }

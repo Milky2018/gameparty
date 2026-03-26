@@ -199,7 +199,29 @@ fn handle_interactions() -> Unit {
 }
 
 ///|
+fn refresh_world_material_bindings_if_needed() -> Unit {
+  if world_material_rebind_frames_left.val <= 0 {
+    return
+  }
+  refresh_world_material_bindings()
+  world_material_rebind_frames_left.val -= 1
+}
+
+///|
 pub fn update_system(_world : @ecs.World) -> Unit {
+  if DEBUG_FRAME_LOG_LIMIT > 0 &&
+    debug_update_counter.val < DEBUG_FRAME_LOG_LIMIT {
+    let position = player_controller.val.position
+    let wx = position.x.floor().to_int()
+    let wy = position.y.floor().to_int()
+    let wz = position.z.floor().to_int()
+    let below = get_block_long_id(wx, wy - 1, wz)
+    let feet = get_block_long_id(wx, wy, wz)
+    println(
+      "[mooncraft][frame \{debug_update_counter.val}] pos=\{position} vel=\{player_controller.val.velocity} on_ground=\{player_controller.val.on_ground} below=\{below} feet=\{feet}",
+    )
+    debug_update_counter.val += 1
+  }
   handle_world_shortcuts()
   handle_mouse_lock_and_exit()
   handle_hotbar_inputs()
@@ -208,6 +230,7 @@ pub fn update_system(_world : @ecs.World) -> Unit {
   handle_inventory_clicks()
   handle_player_look()
   handle_interactions()
+  refresh_world_material_bindings_if_needed()
   if !inventory_state.val.open {
     resolve_player_motion(@time.delta())
   }
@@ -218,4 +241,30 @@ pub fn update_system(_world : @ecs.World) -> Unit {
   sync_hud()
   sync_hotbar()
   sync_inventory()
+}
+
+///|
+pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
+  if !DEBUG_CAPTURE_ENABLED ||
+    debug_capture_taken.val ||
+    @time.elapsed() - debug_started_at.val < DEBUG_CAPTURE_DELAY {
+    return
+  }
+  let frame = @render3d.get_extracted_frame3d()
+  let camera_text = match frame.camera {
+    Some(camera) =>
+      "camera_pos=\{camera.position} camera_target=\{camera.target} items=\{frame.items.length()}"
+    None => "camera_pos=<none> items=\{frame.items.length()}"
+  }
+  let first_item_text = match frame.items.get(0) {
+    Some(item) =>
+      "first_item_translation=\{item.transform.translation} scale=\{item.transform.scale}"
+    None => "first_item_translation=<none>"
+  }
+  println("[mooncraft][capture] \{camera_text}")
+  println("[mooncraft][capture] \{first_item_text}")
+  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  println("[mooncraft][capture] path=\{DEBUG_CAPTURE_PATH}")
+  debug_capture_taken.val = true
+  @system.exit()
 }

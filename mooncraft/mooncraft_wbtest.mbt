@@ -21,13 +21,14 @@ test "default_hotbar_slots fills nine entries" {
 
 ///|
 test "build_registry_and_texture_names returns matching texture metadata" {
-  let (registry, texture_names, texture_name_to_index) = build_registry_and_texture_names()
+  let (registry, texture_names, texture_name_to_index, texture_colors) = build_registry_and_texture_names()
   ignore(registry)
   inspect(texture_names.length() > 0, content="true")
   inspect(
     texture_name_to_index.contains(@block.fallback_texture),
     content="true",
   )
+  inspect(texture_colors.length() == texture_names.length(), content="true")
 }
 
 ///|
@@ -37,13 +38,23 @@ test "create_world_session keeps requested world type" {
 }
 
 ///|
+test "create_world_session finds a safe spawn column" {
+  let session = create_world_session(1774433487UL, @level.WorldType::Infinite)
+  inspect(session.spawn_surface_y >= @level.SEA_LEVEL - 6, content="true")
+  inspect(session.spawn_surface_y <= @level.SEA_LEVEL + 28, content="true")
+  inspect(
+    @level.find_spawn_column(session.world).2 == session.spawn_surface_y,
+    content="true",
+  )
+}
+
+///|
 fn spawn_chunk_mesh_count(kind : @level.WorldType) -> Int {
   let session = create_world_session(17UL, kind)
-  let hint_y = @util.floor_div(
-    @level.surface_height(session.world, SPAWN_BLOCK_X, SPAWN_BLOCK_Z),
-    @level.CHUNK_Y_SIZE,
-  )
-  let chunk = session.world.generate_chunk(0, hint_y, 0)
+  let hint_y = @util.floor_div(session.spawn_surface_y, @level.CHUNK_Y_SIZE)
+  let hint_x = @util.floor_div(session.spawn_wx, @level.CHUNK_X_SIZE)
+  let hint_z = @util.floor_div(session.spawn_wz, @level.CHUNK_Z_SIZE)
+  let chunk = session.world.generate_chunk(hint_x, hint_y, hint_z)
   let light = Bytes::make(
     @level.CHUNK_X_SIZE * @level.CHUNK_Y_SIZE * @level.CHUNK_Z_SIZE,
     b'\x0f',
@@ -93,11 +104,89 @@ test "set_block_long_id marks self and neighbor chunks dirty at boundaries" {
 }
 
 ///|
-test "spawn_player_position finds a non-colliding spawn" {
+test "spawn_player_position uses surface offset" {
   reset_chunk_runtime()
   world_session.val = Some(create_world_session(13UL, @level.WorldType::Flat))
   let position = spawn_player_position()
-  inspect(player_collides_at(position), content="false")
+  let session = world_session.val.unwrap()
+  inspect(
+    position ==
+    vec3(
+      session.spawn_wx.to_double() + 0.5,
+      (session.spawn_surface_y + SPAWN_SURFACE_OFFSET).to_double(),
+      session.spawn_wz.to_double() + 0.5,
+    ),
+    content="true",
+  )
+}
+
+///|
+test "camera rotation forward matches look direction" {
+  player_controller.val = { ..player_controller.val, yaw: 0.37, pitch: -0.41 }
+  let look = look_direction()
+  let forward = camera_rotation().rotate_vec3(@math.Vec3::new(0.0, 0.0, -1.0))
+  inspect((look - forward).length() < 0.000001, content="true")
+}
+
+///|
+test "prime initial chunks loads player chunk column" {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  world_session.val = Some(create_world_session(7UL, @level.WorldType::Finite))
+  player_controller.val = {
+    position: spawn_player_position(),
+    velocity: @math.Vec3::zero(),
+    yaw: 0.0,
+    pitch: -0.22,
+    on_ground: false,
+    selected_hotbar_index: 0,
+  }
+  prime_initial_chunks()
+  inspect(player_chunk_column_loaded(), content="true")
+}
+
+///|
+fn startup_view_hits_ground(
+  world_type : @level.WorldType,
+  seed : UInt64,
+) -> Bool {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(world_type, seed)
+  raycast_blocks(player_eye_position(), look_direction(), INITIAL_VIEW_REACH)
+  is Some(_)
+}
+
+///|
+test "default finite startup view can see ground" {
+  inspect(
+    startup_view_hits_ground(@level.WorldType::Finite, 5UL),
+    content="true",
+  )
+}
+
+///|
+test "default infinite startup view can see ground for representative seeds" {
+  inspect(
+    startup_view_hits_ground(@level.WorldType::Infinite, 5UL),
+    content="true",
+  )
+  inspect(
+    startup_view_hits_ground(@level.WorldType::Infinite, 1774433487UL),
+    content="true",
+  )
+  inspect(
+    startup_view_hits_ground(@level.WorldType::Infinite, 23UL),
+    content="true",
+  )
+  inspect(
+    startup_view_hits_ground(@level.WorldType::Infinite, 67UL),
+    content="true",
+  )
 }
 
 ///|
@@ -144,4 +233,111 @@ test "sample_hit_to_hotbar swaps current slot to the selected block family" {
   sample_hit_to_hotbar()
   let entry = current_catalog_entry().unwrap()
   inspect(entry.name, content="glass")
+}
+
+///|
+test "player settles onto terrain after startup" {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(@level.WorldType::Infinite, 1774433487UL)
+  inspect(player_controller.val.on_ground, content="true")
+}
+
+///|
+test "reset runtime world keeps startup view within player reach after settling" {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(@level.WorldType::Infinite, 1774433487UL)
+  inspect(startup_reach_hit() is Some(_), content="true")
+}
+
+///|
+test "player remains supported for two seconds after startup" {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(@level.WorldType::Infinite, 1774433487UL)
+  let start_y = player_controller.val.position.y
+  for _ in 0..<120 {
+    resolve_player_motion(1.0 / 60.0)
+  }
+  inspect(player_controller.val.position.y >= start_y - 0.1, content="true")
+  inspect(player_controller.val.on_ground, content="true")
+}
+
+///|
+test "large frame delta does not tunnel player through ground" {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(@level.WorldType::Infinite, 1774433487UL)
+  let start_y = player_controller.val.position.y
+  resolve_player_motion(0.5)
+  inspect(player_controller.val.position.y >= start_y - 0.1, content="true")
+  inspect(player_controller.val.on_ground, content="true")
+}
+
+///|
+fn startup_view_hits_ground_with_reach(
+  world_type : @level.WorldType,
+  seed : UInt64,
+  reach : Double,
+) -> Bool {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(world_type, seed)
+  raycast_blocks(player_eye_position(), look_direction(), reach) is Some(_)
+}
+
+///|
+test "default infinite startup view can see nearby ground within player reach" {
+  inspect(
+    startup_view_hits_ground_with_reach(
+      @level.WorldType::Infinite,
+      1774433487UL,
+      PLAYER_REACH,
+    ),
+    content="true",
+  )
+}
+
+///|
+test "safe spawn works across multiple infinite seeds" {
+  let seeds : Array[UInt64] = [
+    1UL, 2UL, 3UL, 5UL, 23UL, 67UL, 97UL, 521UL, 4096UL, 65535UL, 20260325UL, 1774433487UL,
+    1774494186000UL,
+  ]
+  for seed in seeds {
+    inspect(
+      startup_view_hits_ground_with_reach(
+        @level.WorldType::Infinite,
+        seed,
+        PLAYER_REACH,
+      ),
+      content="true",
+    )
+  }
+}
+
+///|
+test "runtime screenshot seed remains supported for one second after startup" {
+  initialize_inventory_once()
+  register_world_materials_once()
+  load_demo_scene_handles_once()
+  reset_chunk_runtime()
+  reset_runtime_world(@level.WorldType::Infinite, 1774494186000UL)
+  let start_y = player_controller.val.position.y
+  for _ in 0..<60 {
+    resolve_player_motion(1.0 / 60.0)
+  }
+  inspect(player_controller.val.position.y >= start_y - 0.1, content="true")
+  inspect(player_controller.val.on_ground, content="true")
 }

@@ -10,24 +10,20 @@ fn padded_fullbright_chunk_light(size : Int) -> Bytes {
 }
 
 ///|
-fn surface_chunk_hint(world : @level.World) -> Int {
-  @util.floor_div(
-    @level.surface_height(world, SPAWN_BLOCK_X, SPAWN_BLOCK_Z),
-    @level.CHUNK_Y_SIZE,
-  )
-}
-
-///|
 fn create_world_session(
   seed : UInt64,
   world_type : @level.WorldType,
 ) -> WorldSession {
   let world = @level.World::new(seed~, world_type~)
-  let (registry, texture_names, texture_name_to_index) = build_registry_and_texture_names()
-  let hint_y = surface_chunk_hint(world)
+  let (registry, texture_names, texture_name_to_index, texture_colors) = build_registry_and_texture_names()
+  let (spawn_wx, spawn_wz, spawn_surface_y) = @level.find_spawn_column(world)
+  let hint_y = @util.floor_div(spawn_surface_y, @level.CHUNK_Y_SIZE)
   {
     seed,
     world_type,
+    spawn_wx,
+    spawn_wz,
+    spawn_surface_y,
     chunk_radius: CHUNK_RADIUS_XZ,
     chunk_min_y: hint_y - 2,
     chunk_max_y: hint_y + 2,
@@ -35,6 +31,7 @@ fn create_world_session(
     registry,
     texture_names,
     texture_name_to_index,
+    texture_colors,
   }
 }
 
@@ -258,8 +255,8 @@ fn update_chunk_layer(
     mesh: mesh_handle,
     material: material_handle,
     visible: true,
-    cast_shadows: true,
-    receive_shadows: true,
+    cast_shadows: false,
+    receive_shadows: false,
   })
   @visibility.visibilities().set(entity, Visible)
   release_chunk_mesh(mesh_ref)
@@ -273,6 +270,21 @@ fn rebuild_chunk_record(record : ChunkRecord) -> Unit {
   guard cutout_material_handle.val is Some(cutout_material) else { return }
   guard translucent_material_handle.val is Some(translucent_material) else {
     return
+  }
+  let world_opaque_material = match
+    (DEBUG_FORCE_WORLD_UNLIT, debug_marker_material_handle.val) {
+    (true, Some(handle)) => handle
+    _ => opaque_material
+  }
+  let world_cutout_material = match
+    (DEBUG_FORCE_WORLD_UNLIT, debug_marker_material_handle.val) {
+    (true, Some(handle)) => handle
+    _ => cutout_material
+  }
+  let world_trans_material = match
+    (DEBUG_FORCE_WORLD_UNLIT, debug_marker_material_handle.val) {
+    (true, Some(handle)) => handle
+    _ => translucent_material
   }
   let origin = chunk_world_origin(
     record.chunk_x,
@@ -288,21 +300,21 @@ fn rebuild_chunk_record(record : ChunkRecord) -> Unit {
   let (opaque_entity, opaque_mesh) = update_chunk_layer(
     record.opaque_entity,
     record.opaque_mesh,
-    opaque_material,
+    world_opaque_material,
     mesh.normal,
     origin,
   )
   let (cutout_entity, cutout_mesh) = update_chunk_layer(
     record.cutout_entity,
     record.cutout_mesh,
-    cutout_material,
+    world_cutout_material,
     mesh.leaf,
     origin,
   )
   let (trans_entity, trans_mesh) = update_chunk_layer(
     record.translucent_entity,
     record.translucent_mesh,
-    translucent_material,
+    world_trans_material,
     mesh.translucent,
     origin,
   )
@@ -331,7 +343,8 @@ fn queue_chunks_around_player() -> Unit {
     session.chunk_max_y,
   )
   let desired_map : Map[String, Bool] = Map::new()
-  for key in desired {
+  for idx in 0..<desired.length() {
+    let key = desired[desired.length() - 1 - idx]
     desired_map.set(key, true)
     match chunk_store.val.get(key) {
       Some(record) =>
@@ -346,6 +359,119 @@ fn queue_chunks_around_player() -> Unit {
       queue_push_unique(chunk_stream_queue.val.to_unload, key)
     }
   }
+}
+
+///|
+fn player_chunk_column_loaded() -> Bool {
+  guard world_session.val is Some(session) else { return false }
+  let center_wx = player_controller.val.position.x.floor().to_int()
+  let center_wz = player_controller.val.position.z.floor().to_int()
+  let center_chunk_x = @util.floor_div(center_wx, @level.CHUNK_X_SIZE)
+  let center_chunk_z = @util.floor_div(center_wz, @level.CHUNK_Z_SIZE)
+  for chunk_y in session.chunk_min_y..<=session.chunk_max_y {
+    let key = @level.chunk_key_by_chunk_xyz(
+      center_chunk_x, chunk_y, center_chunk_z,
+    )
+    guard chunk_store.val.get(key) is Some(record) else { return false }
+    if !record.loaded {
+      return false
+    }
+  }
+  true
+}
+
+///|
+fn player_chunk_neighborhood_loaded(radius_xz : Int) -> Bool {
+  guard world_session.val is Some(session) else { return false }
+  let center_wx = player_controller.val.position.x.floor().to_int()
+  let center_wz = player_controller.val.position.z.floor().to_int()
+  let center_chunk_x = @util.floor_div(center_wx, @level.CHUNK_X_SIZE)
+  let center_chunk_z = @util.floor_div(center_wz, @level.CHUNK_Z_SIZE)
+  for dx in -radius_xz..<=radius_xz {
+    for dz in -radius_xz..<=radius_xz {
+      for chunk_y in session.chunk_min_y..<=session.chunk_max_y {
+        let key = @level.chunk_key_by_chunk_xyz(
+          center_chunk_x + dx,
+          chunk_y,
+          center_chunk_z + dz,
+        )
+        guard chunk_store.val.get(key) is Some(record) else { return false }
+        if !record.loaded {
+          return false
+        }
+      }
+    }
+  }
+  true
+}
+
+///|
+fn rebuild_chunk_immediately(
+  chunk_x : Int,
+  chunk_y : Int,
+  chunk_z : Int,
+) -> Unit {
+  match ensure_chunk_record(chunk_x, chunk_y, chunk_z) {
+    Some(record) =>
+      if record.dirty || !record.loaded {
+        rebuild_chunk_record(record)
+      }
+    None => ()
+  }
+}
+
+///|
+fn prime_player_chunk_neighborhood(radius_xz : Int) -> Unit {
+  guard world_session.val is Some(session) else { return }
+  let center_wx = player_controller.val.position.x.floor().to_int()
+  let center_wz = player_controller.val.position.z.floor().to_int()
+  let center_chunk_x = @util.floor_div(center_wx, @level.CHUNK_X_SIZE)
+  let center_chunk_z = @util.floor_div(center_wz, @level.CHUNK_Z_SIZE)
+  for dx in -radius_xz..<=radius_xz {
+    for dz in -radius_xz..<=radius_xz {
+      for chunk_y in session.chunk_min_y..<=session.chunk_max_y {
+        rebuild_chunk_immediately(
+          center_chunk_x + dx,
+          chunk_y,
+          center_chunk_z + dz,
+        )
+      }
+    }
+  }
+}
+
+///|
+fn chunk_runtime_stats() -> (Int, Int) {
+  let mut loaded = 0
+  let total = chunk_store.val.length()
+  for _, record in chunk_store.val {
+    if record.loaded {
+      loaded += 1
+    }
+  }
+  (loaded, total)
+}
+
+///|
+fn player_chunk_mesh_counts() -> (Int, Int, Int)? {
+  guard world_session.val is Some(session) else { return None }
+  let center_wx = player_controller.val.position.x.floor().to_int()
+  let center_wy = player_controller.val.position.y.floor().to_int()
+  let center_wz = player_controller.val.position.z.floor().to_int()
+  let center_chunk_x = @util.floor_div(center_wx, @level.CHUNK_X_SIZE)
+  let center_chunk_y = @util.floor_div(center_wy, @level.CHUNK_Y_SIZE)
+  let center_chunk_z = @util.floor_div(center_wz, @level.CHUNK_Z_SIZE)
+  guard ensure_chunk_record(center_chunk_x, center_chunk_y, center_chunk_z)
+    is Some(record) else {
+    return None
+  }
+  let mesh = @block.build_chunk_mesh_split(
+    session.registry,
+    build_chunk_data_padded(record.chunk_x, record.chunk_y, record.chunk_z),
+    build_chunk_light_padded(record.chunk_x, record.chunk_y, record.chunk_z),
+    @level.CHUNK_X_SIZE,
+  )
+  Some((mesh.normal.count, mesh.leaf.count, mesh.translucent.count))
 }
 
 ///|

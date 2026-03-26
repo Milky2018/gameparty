@@ -53,6 +53,9 @@ const PLAYER_LOOK_SENSITIVITY : Double = 0.0024
 const PLAYER_REACH : Double = 6.0
 
 ///|
+const INITIAL_VIEW_REACH : Double = 24.0
+
+///|
 const PLAYER_JUMP_SPEED : Double = 6.8
 
 ///|
@@ -63,6 +66,12 @@ const PLAYER_MAX_FALL_SPEED : Double = 28.0
 
 ///|
 const MAX_PITCH : Double = 1.45
+
+///|
+const DEFAULT_PLAYER_YAW : Double = -@cmath.PI * 0.75
+
+///|
+const DEFAULT_PLAYER_PITCH : Double = -0.35
 
 ///|
 const HOTBAR_SIZE : Int = 9
@@ -128,9 +137,33 @@ const SPAWN_SURFACE_OFFSET : Int = 3
 const DEMO_ANIMATION_BLEND_DURATION : Double = 0.15
 
 ///|
+const DEBUG_FORCE_WORLD_UNLIT : Bool = false
+
+///|
+const DEBUG_CAPTURE_ENABLED : Bool = false
+
+///|
+const DEBUG_CAPTURE_DELAY : Double = 1.0
+
+///|
+const DEBUG_CAPTURE_PATH : String = "/tmp/mooncraft_capture.png"
+
+///|
+const DEBUG_FRAME_LOG_LIMIT : Int = 0
+
+///|
+const DEBUG_SHOW_MARKER : Bool = false
+
+///|
+const DEBUG_VERBOSE_STARTUP : Bool = false
+
+///|
 pub(all) struct WorldSession {
   seed : UInt64
   world_type : @level.WorldType
+  spawn_wx : Int
+  spawn_wz : Int
+  spawn_surface_y : Int
   chunk_radius : Int
   chunk_min_y : Int
   chunk_max_y : Int
@@ -138,6 +171,7 @@ pub(all) struct WorldSession {
   registry : @block.BlockRegistry
   texture_names : Array[String]
   texture_name_to_index : Map[String, Int]
+  texture_colors : Array[@render.Color]
 }
 
 ///|
@@ -242,7 +276,7 @@ let player_controller : Ref[PlayerController] = {
     position: @math.Vec3::new(0.5, 80.0, 0.5),
     velocity: @math.Vec3::zero(),
     yaw: 0.0,
-    pitch: -0.25,
+    pitch: DEFAULT_PLAYER_PITCH,
     on_ground: false,
     selected_hotbar_index: 0,
   },
@@ -296,6 +330,11 @@ let selection_material_handle : Ref[@render3d.MaterialHandle?] = { val: None }
 let preview_material_handle : Ref[@render3d.MaterialHandle?] = { val: None }
 
 ///|
+let debug_marker_material_handle : Ref[@render3d.MaterialHandle?] = {
+  val: None,
+}
+
+///|
 let cube_mesh_handle : Ref[@render3d.MeshHandle?] = { val: None }
 
 ///|
@@ -309,6 +348,9 @@ let selection_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let preview_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let debug_marker_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let hud_title_entity : @entity.Entity = @entity.Entity::new()
@@ -371,6 +413,18 @@ let last_inventory_title_text : Ref[String] = { val: "" }
 
 ///|
 let last_inventory_hint_text : Ref[String] = { val: "" }
+
+///|
+let debug_update_counter : Ref[Int] = { val: 0 }
+
+///|
+let debug_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_capture_taken : Ref[Bool] = { val: false }
+
+///|
+let world_material_rebind_frames_left : Ref[Int] = { val: 0 }
 
 ///|
 fn world_type_name(world_type : @level.WorldType) -> String {

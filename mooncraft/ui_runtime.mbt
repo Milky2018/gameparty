@@ -111,12 +111,24 @@ fn hud_info_text() -> String {
     Some(session) => world_type_name(session.world_type)
     None => "Unknown"
   }
+  let spawn_text = match world_session.val {
+    Some(session) =>
+      "Seed: \{session.seed}  Spawn: (\{session.spawn_wx}, \{session.spawn_surface_y}, \{session.spawn_wz})"
+    None => "Seed: unknown  Spawn: unknown"
+  }
   let hit_text = match selection_state.val.hit {
     Some(hit) =>
       "Hit: (\{hit.wx}, \{hit.wy}, \{hit.wz}) -> place (\{hit.place_wx}, \{hit.place_wy}, \{hit.place_wz})"
     None => "Hit: none"
   }
-  "Type: \{world_name}  Block: (\{block_x}, \{block_y}, \{block_z})  Chunk: (\{chunk_x}, \{chunk_y}, \{chunk_z})\n\{selected_entry_label()}\n\{hit_text}"
+  let (loaded_chunks, total_chunks) = chunk_runtime_stats()
+  let reach_text = if startup_reach_hit() is Some(_) {
+    "Reach hit: yes"
+  } else {
+    "Reach hit: no"
+  }
+  let controller = player_controller.val
+  "Type: \{world_name}  Block: (\{block_x}, \{block_y}, \{block_z})  Chunk: (\{chunk_x}, \{chunk_y}, \{chunk_z})\n\{spawn_text}\nPlayer: (\{position.x.to_int()}, \{position.y.to_int()}, \{position.z.to_int()})  Ground: \{controller.on_ground}  Yaw/Pitch: (\{controller.yaw.to_int()}, \{controller.pitch})\nChunks: \{loaded_chunks}/\{total_chunks}  Column ready: \{player_chunk_column_loaded()}  \{reach_text}\n\{selected_entry_label()}\n\{hit_text}"
 }
 
 ///|

@@ -69,6 +69,8 @@ pub fn collect_render_chunk_keys(Int, Int, Int, Int, Int) -> Array[String]
 
 pub let desert_lakes_tree_params : PlacementParams
 
+pub fn find_spawn_column(World) -> (Int, Int, Int)
+
 pub let forest_tree_params : PlacementParams
 
 pub let frozen_river_tree_params : PlacementParams

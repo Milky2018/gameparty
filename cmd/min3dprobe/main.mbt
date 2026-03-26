@@ -1,0 +1,4 @@
+///|
+fn main {
+  @probe.run()
+}

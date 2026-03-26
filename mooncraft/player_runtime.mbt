@@ -27,20 +27,34 @@ fn player_eye_position() -> @math.Vec3 {
 }
 
 ///|
-fn camera_rotation() -> @math.Quat {
-  @math.Quat::from_axis_angle(@math.Vec3::y_axis(), player_controller.val.yaw) *
-  @math.Quat::from_axis_angle(@math.Vec3::x_axis(), player_controller.val.pitch)
-}
-
-///|
-fn look_direction() -> @math.Vec3 {
-  let yaw = player_controller.val.yaw
-  let pitch = player_controller.val.pitch
+fn look_direction_for(yaw : Double, pitch : Double) -> @math.Vec3 {
   vec3(
     @cmath.cos(yaw) * @cmath.cos(pitch),
     @cmath.sin(pitch),
     @cmath.sin(yaw) * @cmath.cos(pitch),
   ).normalize()
+}
+
+///|
+fn camera_rotation_for(yaw : Double, pitch : Double) -> @math.Quat {
+  let forward = look_direction_for(yaw, pitch)
+  let right = forward.cross(@math.Vec3::y_axis()).normalize()
+  let up = right.cross(forward).normalize()
+  @math.Quat::from_basis(
+    right,
+    up,
+    @math.Vec3::new(-forward.x, -forward.y, -forward.z),
+  )
+}
+
+///|
+fn camera_rotation() -> @math.Quat {
+  camera_rotation_for(player_controller.val.yaw, player_controller.val.pitch)
+}
+
+///|
+fn look_direction() -> @math.Vec3 {
+  look_direction_for(player_controller.val.yaw, player_controller.val.pitch)
 }
 
 ///|
@@ -122,21 +136,68 @@ fn collect_block_boxes_at(
 }
 
 ///|
-fn player_collides_at(position : @math.Vec3) -> Bool {
-  let min = player_aabb_min(position)
-  let max = player_aabb_max(position)
-  let min_x = min.x.floor().to_int() - 1
-  let max_x = max.x.floor().to_int() + 1
-  let min_y = min.y.floor().to_int() - 1
-  let max_y = max.y.floor().to_int() + 1
-  let min_z = min.z.floor().to_int() - 1
-  let max_z = max.z.floor().to_int() + 1
+fn support_top_at_cell_center(wx : Int, wy : Int, wz : Int) -> Double? {
+  let local_x = 0.5
+  let local_z = 0.5
+  let mut best : Double? = None
+  for pair in collect_block_boxes_at(wx, wy, wz) {
+    let (block_min, block_max) = pair
+    let min_x = block_min.x - wx.to_double()
+    let max_x = block_max.x - wx.to_double()
+    let min_z = block_min.z - wz.to_double()
+    let max_z = block_max.z - wz.to_double()
+    if local_x >= min_x &&
+      local_x <= max_x &&
+      local_z >= min_z &&
+      local_z <= max_z {
+      let top = block_max.y
+      best = match best {
+        Some(current) => Some(if top > current { top } else { current })
+        None => Some(top)
+      }
+    }
+  }
+  best
+}
+
+///|
+fn settled_spawn_y() -> Double {
+  guard world_session.val is Some(session) else { return 32.0 }
+  let wx = session.spawn_wx
+  let wz = session.spawn_wz
+  settled_spawn_y_for(wx, wz, session.spawn_surface_y)
+}
+
+///|
+fn settled_spawn_y_for(wx : Int, wz : Int, surface_hint : Int) -> Double {
+  let max_y = surface_hint + SPAWN_SURFACE_OFFSET + 1
+  let min_y = surface_hint - 24
+  for idx in 0..<(max_y - min_y + 1) {
+    let wy = max_y - idx
+    match support_top_at_cell_center(wx, wy, wz) {
+      Some(top) => return top
+      None => ()
+    }
+  }
+  surface_hint.to_double() + 1.0
+}
+
+///|
+fn player_overlaps_world_at(position : @math.Vec3) -> Bool {
+  let candidate_min = player_aabb_min(position)
+  let candidate_max = player_aabb_max(position)
+  let min_x = candidate_min.x.floor().to_int() - 1
+  let max_x = candidate_max.x.floor().to_int() + 1
+  let min_y = candidate_min.y.floor().to_int() - 1
+  let max_y = candidate_max.y.floor().to_int() + 1
+  let min_z = candidate_min.z.floor().to_int() - 1
+  let max_z = candidate_max.z.floor().to_int() + 1
   for wx in min_x..<=max_x {
     for wy in min_y..<=max_y {
       for wz in min_z..<=max_z {
         for pair in collect_block_boxes_at(wx, wy, wz) {
           let (block_min, block_max) = pair
-          if aabb_intersects(min, max, block_min, block_max) {
+          if aabb_intersects(candidate_min, candidate_max, block_min, block_max) {
             return true
           }
         }
@@ -144,6 +205,51 @@ fn player_collides_at(position : @math.Vec3) -> Bool {
     }
   }
   false
+}
+
+///|
+fn try_spawn_position_at(wx : Int, wz : Int, surface_hint : Int) -> @math.Vec3? {
+  let position = vec3(
+    wx.to_double() + 0.5,
+    settled_spawn_y_for(wx, wz, surface_hint),
+    wz.to_double() + 0.5,
+  )
+  if player_overlaps_world_at(position) || !player_supported_at(position) {
+    None
+  } else {
+    Some(position)
+  }
+}
+
+///|
+fn player_supported_at(position : @math.Vec3) -> Bool {
+  let (next_y, collided_y) = move_player_axis(position, 1, -0.05)
+  collided_y && next_y >= position.y - 0.0001
+}
+
+///|
+fn safe_spawn_position_near(session : WorldSession) -> @math.Vec3 {
+  for radius in 0..<=4 {
+    for dx in -radius..<=radius {
+      for dz in -radius..<=radius {
+        if radius > 0 && dx.abs() != radius && dz.abs() != radius {
+          continue
+        }
+        let wx = session.spawn_wx + dx
+        let wz = session.spawn_wz + dz
+        let surface_hint = @level.surface_height(session.world, wx, wz)
+        match try_spawn_position_at(wx, wz, surface_hint) {
+          Some(position) => return position
+          None => ()
+        }
+      }
+    }
+  }
+  vec3(
+    session.spawn_wx.to_double() + 0.5,
+    settled_spawn_y(),
+    session.spawn_wz.to_double() + 0.5,
+  )
 }
 
 ///|
@@ -290,7 +396,10 @@ fn move_player_axis(
 }
 
 ///|
-fn resolve_player_motion(delta : Double) -> Unit {
+const PLAYER_MAX_STEP_DELTA : Double = 1.0 / 60.0
+
+///|
+fn resolve_player_motion_step(delta : Double) -> Unit {
   let mut move_x = 0.0
   let mut move_z = 0.0
   if @inputs.is_pressed(KeyW) {
@@ -369,6 +478,19 @@ fn resolve_player_motion(delta : Double) -> Unit {
 }
 
 ///|
+fn resolve_player_motion(delta : Double) -> Unit {
+  if delta <= 0.0 {
+    return
+  }
+  let clamped = delta.min(0.25)
+  let steps = (clamped / PLAYER_MAX_STEP_DELTA).ceil().to_int().max(1)
+  let step_delta = clamped / steps.to_double()
+  for _ in 0..<steps {
+    resolve_player_motion_step(step_delta)
+  }
+}
+
+///|
 fn spawn_player_position() -> @math.Vec3 {
   guard world_session.val is Some(session) else {
     return vec3(
@@ -377,29 +499,59 @@ fn spawn_player_position() -> @math.Vec3 {
       SPAWN_BLOCK_Z.to_double() + 0.5,
     )
   }
-  let base_x = SPAWN_BLOCK_X.to_double() + 0.5
-  let base_z = SPAWN_BLOCK_Z.to_double() + 0.5
-  let surface_y = @level.surface_height(
-    session.world,
-    SPAWN_BLOCK_X,
-    SPAWN_BLOCK_Z,
-  )
-  let mut position = vec3(
-    base_x,
-    surface_y.to_double() + SPAWN_SURFACE_OFFSET.to_double(),
-    base_z,
-  )
-  while player_collides_at(position) {
-    position = vec3(position.x, position.y + 1.0, position.z)
-  }
-  let step = 0.2
-  while !player_collides_at(vec3(position.x, position.y - step, position.z)) {
-    position = vec3(position.x, position.y - step, position.z)
-    if position.y < surface_y.to_double() - 8.0 {
-      break
+  safe_spawn_position_near(session)
+}
+
+///|
+fn choose_initial_view_angles() -> (Double, Double) {
+  let origin = player_eye_position()
+  let yaw_offsets : Array[Double] = [
+    0.0,
+    -@cmath.PI / 8.0,
+    @cmath.PI / 8.0,
+    -@cmath.PI / 4.0,
+    @cmath.PI / 4.0,
+    -3.0 * @cmath.PI / 8.0,
+    3.0 * @cmath.PI / 8.0,
+    -@cmath.PI / 2.0,
+    @cmath.PI / 2.0,
+    -5.0 * @cmath.PI / 8.0,
+    5.0 * @cmath.PI / 8.0,
+    -3.0 * @cmath.PI / 4.0,
+    3.0 * @cmath.PI / 4.0,
+    -7.0 * @cmath.PI / 8.0,
+    7.0 * @cmath.PI / 8.0,
+    @cmath.PI,
+  ]
+  let pitches : Array[Double] = [
+    DEFAULT_PLAYER_PITCH,
+    -0.5,
+    -0.65,
+    -0.8,
+    -0.95,
+    -1.1,
+    -1.2,
+    -1.3,
+    -1.4,
+  ]
+  let reaches : Array[Double] = [PLAYER_REACH, INITIAL_VIEW_REACH]
+  for reach in reaches {
+    for yaw_offset in yaw_offsets {
+      let yaw = DEFAULT_PLAYER_YAW + yaw_offset
+      for pitch in pitches {
+        let direction = look_direction_for(yaw, pitch)
+        if raycast_blocks(origin, direction, reach) is Some(_) {
+          return (yaw, pitch)
+        }
+      }
     }
   }
-  position
+  (DEFAULT_PLAYER_YAW, -1.3)
+}
+
+///|
+fn startup_reach_hit() -> BlockHit? {
+  raycast_blocks(player_eye_position(), look_direction(), PLAYER_REACH)
 }
 
 ///|
@@ -694,8 +846,12 @@ fn sync_selection_visuals() -> Unit {
     return
   }
   guard preview_material_handle.val is Some(preview_material) else { return }
+  guard debug_marker_material_handle.val is Some(debug_marker_material) else {
+    return
+  }
   ensure_entity_alive(selection_entity)
   ensure_entity_alive(preview_entity)
+  ensure_entity_alive(debug_marker_entity)
   match selection_state.val.hit {
     Some(hit) => {
       @transform.transforms().set(selection_entity, {
@@ -730,5 +886,29 @@ fn sync_selection_visuals() -> Unit {
     @visibility.visibilities().set(preview_entity, Visible)
   } else {
     @visibility.visibilities().set(preview_entity, Hidden)
+  }
+  if DEBUG_SHOW_MARKER {
+    let forward = look_direction()
+    let eye = player_eye_position()
+    let debug_position = vec3(
+      eye.x + forward.x * 4.0,
+      eye.y + forward.y * 4.0,
+      eye.z + forward.z * 4.0,
+    )
+    @transform.transforms().set(debug_marker_entity, {
+      translation: debug_position,
+      rotation: @math.Quat::identity(),
+      scale: vec3(0.5, 0.5, 0.5),
+    })
+    @render3d.mesh3d_renderers().set(debug_marker_entity, {
+      mesh: cube_mesh,
+      material: debug_marker_material,
+      visible: true,
+      cast_shadows: false,
+      receive_shadows: false,
+    })
+    @visibility.visibilities().set(debug_marker_entity, Visible)
+  } else {
+    @visibility.visibilities().set(debug_marker_entity, Hidden)
   }
 }
