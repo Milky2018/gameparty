@@ -434,9 +434,8 @@ pub fn build_chunk_mesh(
             block.long_id == neighbor.long_id,
           }
           let visible = (model.face_visible)(render_info, face, occlusion)
-          let boundary_transparent = is_chunk_boundary_face(
-              x, y, z, nx, ny, nz, size,
-            ) &&
+          let boundary_transparent = data_len == base_len &&
+            is_chunk_boundary_face(x, y, z, nx, ny, nz, size) &&
             !block.block.occlusion_cull
           if visible || boundary_transparent {
             let light = get_light(x + nx, y + ny, z + nz)
@@ -895,9 +894,8 @@ pub fn build_chunk_mesh_split(
             block.long_id == neighbor.long_id,
           }
           let visible = (model.face_visible)(render_info, face, occlusion)
-          let boundary_transparent = is_chunk_boundary_face(
-              x, y, z, nx, ny, nz, size,
-            ) &&
+          let boundary_transparent = data_len == base_len &&
+            is_chunk_boundary_face(x, y, z, nx, ny, nz, size) &&
             !block.block.occlusion_cull
           if visible || boundary_transparent {
             let light = get_light(x + nx, y + ny, z + nz)
@@ -1115,9 +1113,8 @@ pub fn build_chunk_colors_split(
             block.long_id == neighbor.long_id,
           }
           let visible = (model.face_visible)(render_info, face, occlusion)
-          let boundary_transparent = is_chunk_boundary_face(
-              x, y, z, nx, ny, nz, size,
-            ) &&
+          let boundary_transparent = data_len == base_len &&
+            is_chunk_boundary_face(x, y, z, nx, ny, nz, size) &&
             !block.block.occlusion_cull
           if visible || boundary_transparent {
             let light = get_light(x + nx, y + ny, z + nz)
@@ -1263,9 +1260,8 @@ pub fn build_chunk_colors(
             block.long_id == neighbor.long_id,
           }
           let visible = (model.face_visible)(render_info, face, occlusion)
-          let boundary_transparent = is_chunk_boundary_face(
-              x, y, z, nx, ny, nz, size,
-            ) &&
+          let boundary_transparent = data_len == base_len &&
+            is_chunk_boundary_face(x, y, z, nx, ny, nz, size) &&
             !block.block.occlusion_cull
           if visible || boundary_transparent {
             let light = get_light(x + nx, y + ny, z + nz)

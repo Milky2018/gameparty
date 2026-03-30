@@ -7,9 +7,23 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 fn atlas_uv(u : Float, v : Float, atlas_index : Int) -> @math.Vec2D {
   let col = atlas_index % ATLAS_COLUMNS
   let row = atlas_index / ATLAS_COLUMNS
+  let cols_f = ATLAS_COLUMNS.to_double()
+  let rows_f = ATLAS_ROWS.to_double()
+  let tile_min_u = col.to_double() / cols_f
+  let tile_max_u = (col + 1).to_double() / cols_f
+  let tile_min_v = row.to_double() / rows_f
+  let tile_max_v = (row + 1).to_double() / rows_f
+  let atlas_px_w = (ATLAS_COLUMNS * 16).to_double()
+  let atlas_px_h = (ATLAS_ROWS * 16).to_double()
+  let inset_u = 0.5 / atlas_px_w
+  let inset_v = 0.5 / atlas_px_h
+  let mapped_u = (col.to_double() + u.to_double().clamp(min=0.0, max=1.0)) /
+    cols_f
+  let mapped_v = (row.to_double() + v.to_double().clamp(min=0.0, max=1.0)) /
+    rows_f
   @math.Vec2D(
-    (col.to_double() + u.to_double()) / ATLAS_COLUMNS.to_double(),
-    (row.to_double() + v.to_double()) / ATLAS_ROWS.to_double(),
+    mapped_u.clamp(min=tile_min_u + inset_u, max=tile_max_u - inset_u),
+    mapped_v.clamp(min=tile_min_v + inset_v, max=tile_max_v - inset_v),
   )
 }
 
@@ -25,13 +39,13 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
   let colors : Array[@render.Color] = []
   let mut atlas_min = 1 << 30
   let mut atlas_max = -(1 << 30)
+  let center_offset = chunk_mesh_center_offset()
   let mut u_min = 1_000_000_000.0
   let mut u_max = -1_000_000_000.0
   let mut v_min = 1_000_000_000.0
   let mut v_max = -1_000_000_000.0
   for i in 0..<vertex_count {
     let pidx = i * 3
-    let cidx = i * 4
     let atlas_index = mesh.layers[i].round().to_int()
     if atlas_index < atlas_min {
       atlas_min = atlas_index
@@ -41,9 +55,9 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
     }
     positions.push(
       @math.Vec3::new(
-        mesh.positions[pidx].to_double(),
-        mesh.positions[pidx + 1].to_double(),
-        mesh.positions[pidx + 2].to_double(),
+        mesh.positions[pidx].to_double() - center_offset.x,
+        mesh.positions[pidx + 1].to_double() - center_offset.y,
+        mesh.positions[pidx + 2].to_double() - center_offset.z,
       ),
     )
     let uv = atlas_uv(mesh.uvs[i * 2], mesh.uvs[i * 2 + 1], atlas_index)
@@ -67,23 +81,15 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
         mesh.normals[pidx + 2].to_double(),
       ),
     )
+    let cidx = i * 4
+    let to_channel = fn(v : Float) -> UInt {
+      (v.to_double().clamp(min=0.0, max=1.0) * 255.0).round().to_uint()
+    }
     colors.push({
-      r: (mesh.colors[cidx].to_double() * 255.0)
-      .round()
-      .to_int()
-      .clamp(min=0, max=255)
-      .reinterpret_as_uint(),
-      g: (mesh.colors[cidx + 1].to_double() * 255.0)
-      .round()
-      .to_int()
-      .clamp(min=0, max=255)
-      .reinterpret_as_uint(),
-      b: (mesh.colors[cidx + 2].to_double() * 255.0)
-      .round()
-      .to_int()
-      .clamp(min=0, max=255)
-      .reinterpret_as_uint(),
-      a: mesh.colors[cidx + 3].to_double(),
+      r: to_channel(mesh.colors[cidx]),
+      g: to_channel(mesh.colors[cidx + 1]),
+      b: to_channel(mesh.colors[cidx + 2]),
+      a: mesh.colors[cidx + 3].to_double().clamp(min=0.0, max=1.0),
     })
   }
   if DEBUG_VERBOSE_STARTUP && !debug_first_mesh_logged.val {
@@ -100,7 +106,12 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
     )
     debug_first_mesh_logged.val = true
   }
-  @render3d.triangle_mesh(positions, uvs=Some(uvs), normals=Some(normals))
+  @render3d.triangle_mesh(
+    positions,
+    uvs=Some(uvs),
+    normals=Some(normals),
+    colors=Some(colors),
+  )
 }
 
 ///|
@@ -169,8 +180,9 @@ fn world_chunk_material(
 ///|
 fn register_world_materials_once() -> Unit {
   if atlas_image_handle.val is None {
+    let atlas_path = resolve_mooncraft_asset_path(ATLAS_PATH)
     atlas_image_handle.val = Some(
-      @render3d.register_image_asset({ path: ATLAS_PATH }),
+      @render3d.register_image_asset({ path: atlas_path }),
     )
   }
   if gui_window_image_handle.val is None {

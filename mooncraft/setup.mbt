@@ -46,13 +46,9 @@ fn initialize_camera_and_lighting() -> Unit {
 
 ///|
 fn prime_initial_chunks() -> Unit {
-  prime_player_chunk_neighborhood(1)
-  for _ in 0..<12 {
-    stream_chunks_step()
-    if player_chunk_neighborhood_loaded(1) {
-      return
-    }
-  }
+  // Keep startup responsive: do one minimal streaming step here, then let
+  // regular per-frame streaming finish the neighborhood in background.
+  stream_chunks_step()
 }
 
 ///|
@@ -61,9 +57,7 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
   debug_started_at.val = @time.elapsed()
   debug_capture_taken.val = false
   debug_first_mesh_logged.val = false
-  // Work around backend sync order (materials submitted before images):
-  // rebind textured world materials for a few early frames.
-  world_material_rebind_frames_left.val = 60
+  world_material_rebind_frames_left.val = 0
   let preserved_hotbar = inventory_state.val.hotbar.copy()
   let preserved_selection = wrap_hotbar_index(
     player_controller.val.selected_hotbar_index,
@@ -104,8 +98,13 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
   }
   if DEBUG_VERBOSE_STARTUP {
     let hit_text = match startup_reach_hit() {
-      Some(hit) =>
-        "hit=(\{hit.wx}, \{hit.wy}, \{hit.wz}) place=(\{hit.place_wx}, \{hit.place_wy}, \{hit.place_wz})"
+      Some(hit) => {
+        let block_text = match @block.lookup_by_long_id(hit.long_id) {
+          Some(block) => "\{block.name}#\{hit.long_id}"
+          None => "unknown#\{hit.long_id}"
+        }
+        "hit=(\{hit.wx}, \{hit.wy}, \{hit.wz}) place=(\{hit.place_wx}, \{hit.place_wy}, \{hit.place_wz}) block=\{block_text}"
+      }
       None => "hit=<none>"
     }
     println(

@@ -229,7 +229,8 @@ fn player_supported_at(position : @math.Vec3) -> Bool {
 
 ///|
 fn safe_spawn_position_near(session : WorldSession) -> @math.Vec3 {
-  for radius in 0..<=4 {
+  let mut best : (@math.Vec3, Int)? = None
+  for radius in 0..<=8 {
     for dx in -radius..<=radius {
       for dz in -radius..<=radius {
         if radius > 0 && dx.abs() != radius && dz.abs() != radius {
@@ -239,17 +240,31 @@ fn safe_spawn_position_near(session : WorldSession) -> @math.Vec3 {
         let wz = session.spawn_wz + dz
         let surface_hint = @level.surface_height(session.world, wx, wz)
         match try_spawn_position_at(wx, wz, surface_hint) {
-          Some(position) => return position
+          Some(position) => {
+            let surface_delta = (surface_hint - session.spawn_surface_y).abs()
+            let score = surface_delta * 16 +
+              (surface_hint - @level.SEA_LEVEL).abs() * 6 +
+              dx.abs() +
+              dz.abs()
+            best = match best {
+              Some((_, best_score)) if best_score <= score => best
+              _ => Some((position, score))
+            }
+          }
           None => ()
         }
       }
     }
   }
-  vec3(
-    session.spawn_wx.to_double() + 0.5,
-    settled_spawn_y(),
-    session.spawn_wz.to_double() + 0.5,
-  )
+  match best {
+    Some((position, _)) => position
+    None =>
+      vec3(
+        session.spawn_wx.to_double() + 0.5,
+        settled_spawn_y(),
+        session.spawn_wz.to_double() + 0.5,
+      )
+  }
 }
 
 ///|
@@ -505,6 +520,7 @@ fn spawn_player_position() -> @math.Vec3 {
 ///|
 fn choose_initial_view_angles() -> (Double, Double) {
   let origin = player_eye_position()
+  let player_floor_y = player_controller.val.position.y.floor().to_int()
   let yaw_offsets : Array[Double] = [
     0.0,
     -@cmath.PI / 8.0,
@@ -534,16 +550,30 @@ fn choose_initial_view_angles() -> (Double, Double) {
     -1.3,
     -1.4,
   ]
-  let reaches : Array[Double] = [PLAYER_REACH, INITIAL_VIEW_REACH]
+  let reaches : Array[Double] = [PLAYER_REACH]
+  let mut best : (Double, Double, Int)? = None
   for reach in reaches {
     for yaw_offset in yaw_offsets {
       let yaw = DEFAULT_PLAYER_YAW + yaw_offset
       for pitch in pitches {
         let direction = look_direction_for(yaw, pitch)
-        if raycast_blocks(origin, direction, reach) is Some(_) {
-          return (yaw, pitch)
+        match raycast_blocks(origin, direction, reach) {
+          Some(hit) if hit.distance >= 0.25 => {
+            let vertical_penalty = (hit.wy - player_floor_y).abs()
+            let distance_score = (hit.distance * 100.0).round().to_int()
+            let score = distance_score - vertical_penalty * 8
+            best = match best {
+              Some((_, _, best_score)) if best_score >= score => best
+              _ => Some((yaw, pitch, score))
+            }
+          }
+          _ => ()
         }
       }
+    }
+    match best {
+      Some((yaw, pitch, _)) => return (yaw, pitch)
+      None => ()
     }
   }
   (DEFAULT_PLAYER_YAW, -1.3)
@@ -852,25 +882,41 @@ fn sync_selection_visuals() -> Unit {
   ensure_entity_alive(selection_entity)
   ensure_entity_alive(preview_entity)
   ensure_entity_alive(debug_marker_entity)
+  let mouse_locked = @system.is_mouse_locked()
+  if !mouse_locked {
+    @visibility.visibilities().set(selection_entity, Hidden)
+    @visibility.visibilities().set(preview_entity, Hidden)
+  }
   match selection_state.val.hit {
-    Some(hit) => {
-      @transform.transforms().set(selection_entity, {
-        translation: block_center(hit.wx, hit.wy, hit.wz),
-        rotation: @math.Quat::identity(),
-        scale: vec3(SELECTION_BOX_SIZE, SELECTION_BOX_SIZE, SELECTION_BOX_SIZE),
-      })
-      @render3d.mesh3d_renderers().set(selection_entity, {
-        mesh: cube_mesh,
-        material: selection_material,
-        visible: true,
-        cast_shadows: false,
-        receive_shadows: false,
-      })
-      @visibility.visibilities().set(selection_entity, Visible)
-    }
+    Some(hit) =>
+      if !mouse_locked {
+        @visibility.visibilities().set(selection_entity, Hidden)
+        // Skip selection when unlocked.
+        // Keep debug marker rendering path active for startup diagnostics.
+      } else {
+        @transform.transforms().set(selection_entity, {
+          translation: block_center(hit.wx, hit.wy, hit.wz),
+          rotation: @math.Quat::identity(),
+          scale: vec3(
+            SELECTION_BOX_SIZE,
+            SELECTION_BOX_SIZE,
+            SELECTION_BOX_SIZE,
+          ),
+        })
+        @render3d.mesh3d_renderers().set(selection_entity, {
+          mesh: cube_mesh,
+          material: selection_material,
+          visible: true,
+          cast_shadows: false,
+          receive_shadows: false,
+        })
+        @visibility.visibilities().set(selection_entity, Visible)
+      }
     None => @visibility.visibilities().set(selection_entity, Hidden)
   }
-  if selection_state.val.preview_valid && selection_state.val.hit is Some(hit) {
+  if mouse_locked &&
+    selection_state.val.preview_valid &&
+    selection_state.val.hit is Some(hit) {
     @transform.transforms().set(preview_entity, {
       translation: block_center(hit.place_wx, hit.place_wy, hit.place_wz),
       rotation: @math.Quat::identity(),
@@ -900,9 +946,13 @@ fn sync_selection_visuals() -> Unit {
       rotation: @math.Quat::identity(),
       scale: vec3(0.5, 0.5, 0.5),
     })
+    let marker_material = match opaque_material_handle.val {
+      Some(material) => material
+      None => debug_marker_material
+    }
     @render3d.mesh3d_renderers().set(debug_marker_entity, {
       mesh: cube_mesh,
-      material: debug_marker_material,
+      material: marker_material,
       visible: true,
       cast_shadows: false,
       receive_shadows: false,

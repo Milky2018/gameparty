@@ -16,7 +16,11 @@ fn create_world_session(
 ) -> WorldSession {
   let world = @level.World::new(seed~, world_type~)
   let (registry, texture_names, texture_name_to_index, texture_colors) = build_registry_and_texture_names()
-  let (spawn_wx, spawn_wz, spawn_surface_y) = @level.find_spawn_column(world)
+  // Avoid expensive full-ring spawn probing on startup: use a fast surface
+  // sample near origin, then let runtime safe-spawn validation adjust locally.
+  let spawn_wx = 0
+  let spawn_wz = 0
+  let spawn_surface_y = @level.surface_height(world, spawn_wx, spawn_wz)
   let hint_y = @util.floor_div(spawn_surface_y, @level.CHUNK_Y_SIZE)
   {
     seed,
@@ -247,7 +251,7 @@ fn update_chunk_layer(
     None => @entity.Entity::new()
   }
   @transform.transforms().set(entity, {
-    translation: origin,
+    translation: origin + chunk_mesh_center_offset(),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
@@ -354,8 +358,8 @@ fn queue_chunks_around_player() -> Unit {
       None => queue_push_unique(chunk_stream_queue.val.to_generate, key)
     }
   }
-  for key, record in chunk_store.val {
-    if record.loaded && !desired_map.contains(key) {
+  for key, _ in chunk_store.val {
+    if !desired_map.contains(key) {
       queue_push_unique(chunk_stream_queue.val.to_unload, key)
     }
   }
@@ -378,66 +382,6 @@ fn player_chunk_column_loaded() -> Bool {
     }
   }
   true
-}
-
-///|
-fn player_chunk_neighborhood_loaded(radius_xz : Int) -> Bool {
-  guard world_session.val is Some(session) else { return false }
-  let center_wx = player_controller.val.position.x.floor().to_int()
-  let center_wz = player_controller.val.position.z.floor().to_int()
-  let center_chunk_x = @util.floor_div(center_wx, @level.CHUNK_X_SIZE)
-  let center_chunk_z = @util.floor_div(center_wz, @level.CHUNK_Z_SIZE)
-  for dx in -radius_xz..<=radius_xz {
-    for dz in -radius_xz..<=radius_xz {
-      for chunk_y in session.chunk_min_y..<=session.chunk_max_y {
-        let key = @level.chunk_key_by_chunk_xyz(
-          center_chunk_x + dx,
-          chunk_y,
-          center_chunk_z + dz,
-        )
-        guard chunk_store.val.get(key) is Some(record) else { return false }
-        if !record.loaded {
-          return false
-        }
-      }
-    }
-  }
-  true
-}
-
-///|
-fn rebuild_chunk_immediately(
-  chunk_x : Int,
-  chunk_y : Int,
-  chunk_z : Int,
-) -> Unit {
-  match ensure_chunk_record(chunk_x, chunk_y, chunk_z) {
-    Some(record) =>
-      if record.dirty || !record.loaded {
-        rebuild_chunk_record(record)
-      }
-    None => ()
-  }
-}
-
-///|
-fn prime_player_chunk_neighborhood(radius_xz : Int) -> Unit {
-  guard world_session.val is Some(session) else { return }
-  let center_wx = player_controller.val.position.x.floor().to_int()
-  let center_wz = player_controller.val.position.z.floor().to_int()
-  let center_chunk_x = @util.floor_div(center_wx, @level.CHUNK_X_SIZE)
-  let center_chunk_z = @util.floor_div(center_wz, @level.CHUNK_Z_SIZE)
-  for dx in -radius_xz..<=radius_xz {
-    for dz in -radius_xz..<=radius_xz {
-      for chunk_y in session.chunk_min_y..<=session.chunk_max_y {
-        rebuild_chunk_immediately(
-          center_chunk_x + dx,
-          chunk_y,
-          center_chunk_z + dz,
-        )
-      }
-    }
-  }
 }
 
 ///|
@@ -534,7 +478,10 @@ fn process_unload_queue() -> Unit {
     guard chunk_stream_queue.val.to_unload.pop() is Some(key) else { break }
     budget -= 1
     match chunk_store.val.get(key) {
-      Some(record) => unload_chunk_record(record)
+      Some(record) => {
+        unload_chunk_record(record)
+        chunk_store.val.remove(key)
+      }
       None => ()
     }
   }

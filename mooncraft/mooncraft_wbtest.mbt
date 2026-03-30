@@ -24,6 +24,13 @@ test "build_registry_and_texture_names returns matching texture metadata" {
   let (registry, texture_names, texture_name_to_index, texture_colors) = build_registry_and_texture_names()
   ignore(registry)
   inspect(texture_names.length() > 0, content="true")
+  inspect(texture_names.length() == 81, content="true")
+  inspect(texture_names.length() <= ATLAS_COLUMNS * ATLAS_ROWS, content="true")
+  inspect(texture_names[23] == "grass_carried", content="true")
+  inspect(texture_names[40] == "sand", content="true")
+  inspect(texture_names[52] == "glass", content="true")
+  inspect(texture_names[68] == "oak_leaves", content="true")
+  inspect(texture_names[72] == "torch", content="true")
   inspect(
     texture_name_to_index.contains(@block.fallback_texture),
     content="true",
@@ -69,6 +76,38 @@ fn spawn_chunk_mesh_count(kind : @level.WorldType) -> Int {
 }
 
 ///|
+fn spawn_chunk_layer_max(kind : @level.WorldType, seed : UInt64) -> Int {
+  let session = create_world_session(seed, kind)
+  let hint_y = @util.floor_div(session.spawn_surface_y, @level.CHUNK_Y_SIZE)
+  let hint_x = @util.floor_div(session.spawn_wx, @level.CHUNK_X_SIZE)
+  let hint_z = @util.floor_div(session.spawn_wz, @level.CHUNK_Z_SIZE)
+  let chunk = session.world.generate_chunk(hint_x, hint_y, hint_z)
+  let light = Bytes::make(
+    @level.CHUNK_X_SIZE * @level.CHUNK_Y_SIZE * @level.CHUNK_Z_SIZE,
+    b'\x0f',
+  )
+  let mesh = @block.build_chunk_mesh_split(
+    session.registry,
+    chunk.tile_map.copy(),
+    light,
+    @level.CHUNK_X_SIZE,
+  )
+  let mut max_layer = 0
+  let scan = fn(layers : Array[Float]) {
+    for value in layers {
+      let layer = value.round().to_int()
+      if layer > max_layer {
+        max_layer = layer
+      }
+    }
+  }
+  scan(mesh.normal.layers)
+  scan(mesh.leaf.layers)
+  scan(mesh.translucent.layers)
+  max_layer
+}
+
+///|
 test "surface height hint lands on non-empty spawn chunk for every world type" {
   inspect(
     spawn_chunk_mesh_count(@level.WorldType::Infinite) > 0,
@@ -80,6 +119,39 @@ test "surface height hint lands on non-empty spawn chunk for every world type" {
     spawn_chunk_mesh_count(@level.WorldType::PreClassic) > 0,
     content="true",
   )
+}
+
+///|
+test "spawn chunk texture layers stay within atlas capacity" {
+  let max_layer = spawn_chunk_layer_max(
+    @level.WorldType::Infinite,
+    1774494186000UL,
+  )
+  inspect(max_layer <= 80, content="true")
+}
+
+///|
+test "world chunk material uses nearest non-mipmap sampler" {
+  let atlas_image = @render3d.register_image_asset({ path: ATLAS_PATH })
+  let material = world_chunk_material(
+    atlas_image,
+    @render3d.AlphaMode3D::Opaque,
+  )
+  guard material.base_color_texture is Some(binding) else {
+    inspect(false, content="true")
+    return
+  }
+  inspect(binding.texcoord_set == 0, content="true")
+  inspect(
+    binding.sampler.min_filter is @render3d.TextureFilter3D::Nearest,
+    content="true",
+  )
+  inspect(
+    binding.sampler.mag_filter is @render3d.TextureFilter3D::Nearest,
+    content="true",
+  )
+  inspect(binding.sampler.mipmap_filter is None, content="true")
+  inspect(material.unlit, content="false")
 }
 
 ///|
@@ -104,20 +176,12 @@ test "set_block_long_id marks self and neighbor chunks dirty at boundaries" {
 }
 
 ///|
-test "spawn_player_position uses surface offset" {
+test "spawn_player_position returns a supported non-overlapping position" {
   reset_chunk_runtime()
   world_session.val = Some(create_world_session(13UL, @level.WorldType::Flat))
   let position = spawn_player_position()
-  let session = world_session.val.unwrap()
-  inspect(
-    position ==
-    vec3(
-      session.spawn_wx.to_double() + 0.5,
-      (session.spawn_surface_y + SPAWN_SURFACE_OFFSET).to_double(),
-      session.spawn_wz.to_double() + 0.5,
-    ),
-    content="true",
-  )
+  inspect(!player_overlaps_world_at(position), content="true")
+  inspect(player_supported_at(position), content="true")
 }
 
 ///|
@@ -129,7 +193,7 @@ test "camera rotation forward matches look direction" {
 }
 
 ///|
-test "prime initial chunks loads player chunk column" {
+test "prime initial chunks performs minimal startup prewarm" {
   initialize_inventory_once()
   register_world_materials_once()
   load_demo_scene_handles_once()
@@ -144,7 +208,9 @@ test "prime initial chunks loads player chunk column" {
     selected_hotbar_index: 0,
   }
   prime_initial_chunks()
-  inspect(player_chunk_column_loaded(), content="true")
+  let (loaded, total) = chunk_runtime_stats()
+  inspect(loaded > 0, content="true")
+  inspect(total > 0, content="true")
 }
 
 ///|
@@ -157,7 +223,7 @@ fn startup_view_hits_ground(
   load_demo_scene_handles_once()
   reset_chunk_runtime()
   reset_runtime_world(world_type, seed)
-  raycast_blocks(player_eye_position(), look_direction(), INITIAL_VIEW_REACH)
+  raycast_blocks(player_eye_position(), look_direction(), PLAYER_REACH)
   is Some(_)
 }
 

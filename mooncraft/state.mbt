@@ -20,6 +20,11 @@ const ATLAS_PATH : String = "mooncraft/assets/generated/block_item_atlas.png"
 const GUI_WINDOW_PATH : String = "mooncraft/assets/gui/window.png"
 
 ///|
+let mooncraft_asset_path_prefixes : Array[String] = [
+  "", "../", "../../", "../../../",
+]
+
+///|
 const CHUNK_RADIUS_XZ : Int = 2
 
 ///|
@@ -51,9 +56,6 @@ const PLAYER_LOOK_SENSITIVITY : Double = 0.0024
 
 ///|
 const PLAYER_REACH : Double = 6.0
-
-///|
-const INITIAL_VIEW_REACH : Double = 24.0
 
 ///|
 const PLAYER_JUMP_SPEED : Double = 6.8
@@ -441,6 +443,17 @@ fn category_name(category : @item.Category) -> String {
 }
 
 ///|
+fn resolve_mooncraft_asset_path(path : String) -> String {
+  for prefix in mooncraft_asset_path_prefixes {
+    let candidate = "\{prefix}\{path}"
+    if @asset.read_bytes(candidate) is Some(_) {
+      return candidate
+    }
+  }
+  path
+}
+
+///|
 fn empty_queue() -> ChunkStreamQueue {
   { to_generate: [], to_rebuild: [], to_unload: [] }
 }
@@ -455,6 +468,15 @@ fn chunk_world_origin(
     (chunk_x * CHUNK_WORLD_SIZE_X).to_double(),
     (chunk_y * CHUNK_WORLD_SIZE_Y).to_double(),
     (chunk_z * CHUNK_WORLD_SIZE_Z).to_double(),
+  )
+}
+
+///|
+fn chunk_mesh_center_offset() -> @math.Vec3 {
+  @math.Vec3::new(
+    CHUNK_WORLD_SIZE_X.to_double() * 0.5,
+    CHUNK_WORLD_SIZE_Y.to_double() * 0.5,
+    CHUNK_WORLD_SIZE_Z.to_double() * 0.5,
   )
 }
 

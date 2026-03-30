@@ -2,6 +2,7 @@ import {
   "Milky2018/gameparty/mooncraft_core/block" @block,
   "Milky2018/gameparty/mooncraft_core/level" @level,
   "Milky2018/selene/app",
+  "Milky2018/selene/asset",
   "Milky2018/selene/camera3d",
   "Milky2018/selene/ecs",
   "Milky2018/selene/entity",

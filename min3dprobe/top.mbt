@@ -29,6 +29,11 @@ const ATLAS_COLUMNS : Int = 8
 const ATLAS_ROWS : Int = 11
 
 ///|
+let probe_asset_path_prefixes : Array[String] = [
+  "", "../", "../../", "../../../",
+]
+
+///|
 let camera_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
@@ -85,6 +90,17 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
+fn resolve_probe_asset_path(path : String) -> String {
+  for prefix in probe_asset_path_prefixes {
+    let candidate = "\{prefix}\{path}"
+    if @asset.read_bytes(candidate) is Some(_) {
+      return candidate
+    }
+  }
+  path
+}
+
+///|
 fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -104,9 +120,23 @@ fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
 fn atlas_uv(u : Float, v : Float, atlas_index : Int) -> @math.Vec2D {
   let col = atlas_index % ATLAS_COLUMNS
   let row = atlas_index / ATLAS_COLUMNS
+  let cols_f = ATLAS_COLUMNS.to_double()
+  let rows_f = ATLAS_ROWS.to_double()
+  let tile_min_u = col.to_double() / cols_f
+  let tile_max_u = (col + 1).to_double() / cols_f
+  let tile_min_v = row.to_double() / rows_f
+  let tile_max_v = (row + 1).to_double() / rows_f
+  let atlas_px_w = (ATLAS_COLUMNS * 16).to_double()
+  let atlas_px_h = (ATLAS_ROWS * 16).to_double()
+  let inset_u = 0.5 / atlas_px_w
+  let inset_v = 0.5 / atlas_px_h
+  let mapped_u = (col.to_double() + u.to_double().clamp(min=0.0, max=1.0)) /
+    cols_f
+  let mapped_v = (row.to_double() + v.to_double().clamp(min=0.0, max=1.0)) /
+    rows_f
   @math.Vec2D(
-    (col.to_double() + u.to_double()) / ATLAS_COLUMNS.to_double(),
-    (row.to_double() + v.to_double()) / ATLAS_ROWS.to_double(),
+    mapped_u.clamp(min=tile_min_u + inset_u, max=tile_max_u - inset_u),
+    mapped_v.clamp(min=tile_min_v + inset_v, max=tile_max_v - inset_v),
   )
 }
 
@@ -119,7 +149,6 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
   let colors : Array[@render.Color] = []
   for i in 0..<vertex_count {
     let pidx = i * 3
-    let cidx = i * 4
     let atlas_index = mesh.layers[i].round().to_int()
     positions.push(
       @math.Vec3::new(
@@ -137,23 +166,15 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
         mesh.normals[pidx + 2].to_double(),
       ),
     )
+    let cidx = i * 4
+    let to_channel = fn(v : Float) -> UInt {
+      (v.to_double().clamp(min=0.0, max=1.0) * 255.0).round().to_uint()
+    }
     colors.push({
-      r: (mesh.colors[cidx].to_double() * 255.0)
-      .round()
-      .to_int()
-      .clamp(min=0, max=255)
-      .reinterpret_as_uint(),
-      g: (mesh.colors[cidx + 1].to_double() * 255.0)
-      .round()
-      .to_int()
-      .clamp(min=0, max=255)
-      .reinterpret_as_uint(),
-      b: (mesh.colors[cidx + 2].to_double() * 255.0)
-      .round()
-      .to_int()
-      .clamp(min=0, max=255)
-      .reinterpret_as_uint(),
-      a: mesh.colors[cidx + 3].to_double(),
+      r: to_channel(mesh.colors[cidx]),
+      g: to_channel(mesh.colors[cidx + 1]),
+      b: to_channel(mesh.colors[cidx + 2]),
+      a: mesh.colors[cidx + 3].to_double().clamp(min=0.0, max=1.0),
     })
   }
   let preview = if vertex_count < 8 { vertex_count } else { 8 }
@@ -170,6 +191,7 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
     positions,
     uvs=Some(uvs),
     normals=Some(normals),
+    colors=Some(colors),
   )
 }
 
@@ -227,7 +249,11 @@ fn register_assets_once() -> Unit {
       roughness: 0.25,
     }),
   )
-  atlas_image.val = Some(@render3d.register_image_asset({ path: ATLAS_PATH }))
+  atlas_image.val = Some(
+    @render3d.register_image_asset({
+      path: resolve_probe_asset_path(ATLAS_PATH),
+    }),
+  )
   atlas_cube_material.val = Some(
     @render3d.register_material_asset({
       ..@render3d.default_standard_material3d(),
