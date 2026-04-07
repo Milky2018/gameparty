@@ -161,19 +161,19 @@ const SPRITE_SOFT_WALL_COL : Int = 4
 const SPRITE_SOFT_WALL_ROW : Int = 3
 
 ///|
-const SPRITE_SHOES_COL : Int = 8
+const SPRITE_SHOES_COL : Int = 2
 
 ///|
 const SPRITE_SHOES_ROW : Int = 14
 
 ///|
-const SPRITE_BOMB_ITEM_COL : Int = 10
+const SPRITE_BOMB_ITEM_COL : Int = 0
 
 ///|
 const SPRITE_BOMB_ITEM_ROW : Int = 14
 
 ///|
-const SPRITE_POWER_ITEM_COL : Int = 12
+const SPRITE_POWER_ITEM_COL : Int = 1
 
 ///|
 const SPRITE_POWER_ITEM_ROW : Int = 14
