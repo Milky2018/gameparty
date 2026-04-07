@@ -36,14 +36,28 @@ fn activate_menu_option(option : MenuOption) -> Unit {
   menu_selection.val = option
   menu_error_message.val = ""
   match option {
-    Exit => request_exit()
-    OnePlayer => start_round(SinglePlayer)
-    TwoPlayersA => start_round(Coop)
-    TwoPlayersB => start_round(Versus)
+    Exit => {
+      netplay_join_mode_active.val = false
+      request_exit()
+    }
+    OnePlayer => {
+      netplay_join_mode_active.val = false
+      start_round(SinglePlayer)
+    }
+    TwoPlayersA => {
+      netplay_join_mode_active.val = false
+      start_round(Coop)
+    }
+    TwoPlayersB => {
+      netplay_join_mode_active.val = false
+      start_round(Versus)
+    }
     JoinGame =>
       if netplay_mode.val == Client {
+        netplay_join_mode_active.val = true
         start_round(Coop)
       } else {
+        netplay_join_mode_active.val = false
         menu_error_message.val = "JOIN GAME requires client mode (set BOMBMAN_NET_MODE=client)."
       }
   }
@@ -1020,7 +1034,7 @@ fn sync_player_playback(player : PlayerState) -> Unit {
   match player.direction {
     Some(direction) => {
       player.facing = direction
-      player.flip_x = direction == Left
+      player.flip_x = false
       set_playback_clip(
         player.anim,
         player.entity,
@@ -1029,11 +1043,7 @@ fn sync_player_playback(player : PlayerState) -> Unit {
       )
     }
     None => {
-      if player.facing == Left || player.facing == Right {
-        player.flip_x = player.facing == Left
-      } else {
-        player.flip_x = false
-      }
+      player.flip_x = false
       set_playback_clip(
         player.anim,
         player.entity,
@@ -1047,13 +1057,22 @@ fn sync_player_playback(player : PlayerState) -> Unit {
 ///|
 fn sync_enemy_playback(enemy : EnemyState) -> Unit {
   if !enemy.alive {
-    set_playback_clip(enemy.anim, enemy.entity, EnemyDeath, false)
+    set_playback_clip(
+      enemy.anim,
+      enemy.entity,
+      enemy_death_clip(enemy.skin),
+      false,
+    )
     tick_playback(enemy.anim, enemy.entity)
     return
   }
   enemy.death_animation_done = false
-  enemy.facing = enemy.direction
-  enemy.flip_x = enemy.facing == Left
+  if enemy.direction == Left || enemy.direction == Right {
+    enemy.facing = enemy.direction
+  } else if enemy.facing != Left && enemy.facing != Right {
+    enemy.facing = Right
+  }
+  enemy.flip_x = false
   set_playback_clip(
     enemy.anim,
     enemy.entity,
@@ -1083,7 +1102,12 @@ fn kill_enemy(enemy : EnemyState) -> Unit {
   enemy.alive = false
   enemy.flip_x = false
   enemy.death_animation_done = false
-  set_playback_clip(enemy.anim, enemy.entity, EnemyDeath, false)
+  set_playback_clip(
+    enemy.anim,
+    enemy.entity,
+    enemy_death_clip(enemy.skin),
+    false,
+  )
 }
 
 ///|
@@ -1438,12 +1462,14 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
   if phase.val == MainMenu {
     return
   }
-  if phase.val == Playing &&
-    current_mode.val != SinglePlayer &&
-    (netplay_mode.val == Host || netplay_mode.val == Client) {
+  if phase.val == Playing && current_mode.val != SinglePlayer {
     match netplay_session.val {
-      Some(session) => if !session.is_running() { return }
-      None => return
+      Some(session) =>
+        if (netplay_mode.val == Host || netplay_mode.val == Client) &&
+          !session.is_running() {
+          return
+        }
+      None => ()
     }
   }
   let delta = if netplay_mode.val == Host || netplay_mode.val == Client {

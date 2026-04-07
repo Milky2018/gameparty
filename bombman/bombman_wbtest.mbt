@@ -4,6 +4,7 @@ fn reset_test_input_state() -> Unit {
   reset_direction_input_state()
   reset_netplay_runtime()
   netplay_mode.val = Off
+  netplay_join_mode_active.val = false
   netplay_local_loop_enabled.val = false
   menu_error_message.val = ""
   suppress_exit_for_tests.val = true
@@ -99,6 +100,21 @@ test "join game is client-only on main menu" {
   press_menu_key(@inputs.Enter)
   assert_true(phase.val == Playing)
   assert_true(current_mode.val == Coop)
+  assert_true(netplay_join_mode_active.val)
+
+  return_to_menu()
+  menu_selection.val = TwoPlayersA
+  press_menu_key(@inputs.Enter)
+  assert_true(phase.val == Playing)
+  assert_true(current_mode.val == Coop)
+  assert_true(!netplay_join_mode_active.val)
+
+  return_to_menu()
+  menu_selection.val = TwoPlayersB
+  press_menu_key(@inputs.Enter)
+  assert_true(phase.val == Playing)
+  assert_true(current_mode.val == Versus)
+  assert_true(!netplay_join_mode_active.val)
 }
 
 ///|
@@ -237,10 +253,27 @@ test "single-player simulation still advances when netplay mode is client" {
 }
 
 ///|
+test "local coop simulation advances even when netplay mode is client" {
+  reset_test_input_state()
+  netplay_mode.val = Client
+  current_level.val = 0
+  start_round(Coop)
+  assert_true(enemies.length() > 0)
+  let before = enemies[0].center
+  for _ in 0..<20 {
+    simulation_system(@ecs.require_current_world())
+  }
+  let moved_x = abs_double(enemies[0].center[X] - before[X]) > 0.001
+  let moved_y = abs_double(enemies[0].center[Y] - before[Y]) > 0.001
+  assert_true(moved_x || moved_y)
+}
+
+///|
 test "remote client netplay mode survives repeated input ticks without host" {
   reset_test_input_state()
   netplay_local_loop_enabled.val = false
   netplay_mode.val = Client
+  netplay_join_mode_active.val = true
   netplay_remote_host.val = "127.0.0.1"
   netplay_remote_port.val = 39999
   current_level.val = 0
@@ -561,7 +594,7 @@ test "flame damage window is shorter than visual window" {
 }
 
 ///|
-test "player movement updates animation clip and mirror state" {
+test "player movement updates animation clip without mirror flip" {
   with_round(SinglePlayer, fn() raise {
     let player = players[0]
     player.direction = Some(Right)
@@ -574,13 +607,13 @@ test "player movement updates animation clip and mirror state" {
     player.desired_direction = Some(Left)
     tick_player_motion(0, 0.2)
     assert_true(player.anim.clip_id == player_move_clip(P1, Left))
-    assert_true(player.flip_x)
+    assert_true(!player.flip_x)
 
     player.direction = None
     player.desired_direction = None
     tick_player_motion(0, 0.2)
     assert_true(player.anim.clip_id == player_idle_clip(P1, Left))
-    assert_true(player.flip_x)
+    assert_true(!player.flip_x)
   })
 }
 
@@ -631,6 +664,21 @@ test "enemy contact kills any overlapping active player outside versus" {
     })
     resolve_enemy_contact()
     assert_true(players[0].alive)
+  })
+}
+
+///|
+test "enemy movement advances over simulation ticks" {
+  with_round(SinglePlayer, fn() raise {
+    assert_true(enemies.length() > 0)
+    let enemy = enemies[0]
+    let start = enemy.center
+    for _ in 0..<20 {
+      tick_enemies(1.0 / 60.0)
+    }
+    let moved_x = abs_double(enemy.center[X] - start[X]) > 0.001
+    let moved_y = abs_double(enemy.center[Y] - start[Y]) > 0.001
+    assert_true(moved_x || moved_y)
   })
 }
 

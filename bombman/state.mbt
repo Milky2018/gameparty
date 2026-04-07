@@ -107,10 +107,10 @@ const BOMB_ITEM_COLOR : String = "rgb(253, 236, 102)"
 const POWER_ITEM_COLOR : String = "rgb(176, 124, 255)"
 
 ///|
-const FLOOR_TILE_COLOR_A : String = "rgb(12, 20, 33)"
+const FLOOR_TILE_COLOR_A : String = "rgb(56, 135, 0)"
 
 ///|
-const FLOOR_TILE_COLOR_B : String = "rgb(16, 27, 42)"
+const FLOOR_TILE_COLOR_B : String = "rgb(56, 135, 0)"
 
 ///|
 const ITEM_BUBBLE_COLOR : String = "rgba(244, 247, 250, 0.92)"
@@ -148,6 +148,7 @@ const BOMBMAN_SPRITE_ATLAS_COLUMNS : Int = 16
 ///|
 const BOMBMAN_SPRITE_ATLAS_ROWS : Int = 24
 
+///|
 const SPRITE_HARD_WALL_COL : Int = 3
 
 ///|
@@ -298,29 +299,24 @@ priv enum FlameKind {
 
 ///|
 priv enum AnimClip {
-  PlayerP1IdleDown
-  PlayerP1IdleUp
-  PlayerP1IdleSide
-  PlayerP1MoveDown
-  PlayerP1MoveUp
-  PlayerP1MoveSide
-  PlayerP2IdleDown
-  PlayerP2IdleUp
-  PlayerP2IdleSide
-  PlayerP2MoveDown
-  PlayerP2MoveUp
-  PlayerP2MoveSide
+  PlayerIdleDown
+  PlayerIdleUp
+  PlayerIdleLeft
+  PlayerIdleRight
+  PlayerMoveDown
+  PlayerMoveUp
+  PlayerMoveLeft
+  PlayerMoveRight
   PlayerDeath
-  EnemyBlueMoveDown
-  EnemyBlueMoveUp
-  EnemyBlueMoveSide
-  EnemyPinkMoveDown
-  EnemyPinkMoveUp
-  EnemyPinkMoveSide
-  EnemyPeachMoveDown
-  EnemyPeachMoveUp
-  EnemyPeachMoveSide
-  EnemyDeath
+  EnemyBlueMoveRight
+  EnemyBlueMoveLeft
+  EnemyBlueDeath
+  EnemyPinkMoveRight
+  EnemyPinkMoveLeft
+  EnemyPinkDeath
+  EnemyPeachMoveRight
+  EnemyPeachMoveLeft
+  EnemyPeachDeath
   BombFuse
   FlameCenterActive
   FlameBodyHActive
@@ -491,7 +487,7 @@ let players : Array[PlayerState] = [
     radius: PLAYER_RADIUS,
     alive: true,
     death_animation_done: false,
-    anim: { clip_id: PlayerP1IdleDown, looping: true, finished: false },
+    anim: { clip_id: PlayerIdleDown, looping: true, finished: false },
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -509,7 +505,7 @@ let players : Array[PlayerState] = [
     radius: PLAYER_RADIUS,
     alive: true,
     death_animation_done: false,
-    anim: { clip_id: PlayerP2IdleDown, looping: true, finished: false },
+    anim: { clip_id: PlayerIdleDown, looping: true, finished: false },
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -716,6 +712,9 @@ let netplay_local_loop_enabled : Ref[Bool] = { val: false }
 
 ///|
 let netplay_mode : Ref[NetTransportMode] = { val: Off }
+
+///|
+let netplay_join_mode_active : Ref[Bool] = { val: false }
 
 ///|
 let netplay_host_session : Ref[@netplay.NetSession?] = { val: None }
@@ -1130,29 +1129,24 @@ fn anim_playback_new(clip_id : AnimClip, looping : Bool) -> AnimPlayback {
 
 ///|
 let all_anim_clips : ReadOnlyArray[AnimClip] = [
-  PlayerP1IdleDown,
-  PlayerP1IdleUp,
-  PlayerP1IdleSide,
-  PlayerP1MoveDown,
-  PlayerP1MoveUp,
-  PlayerP1MoveSide,
-  PlayerP2IdleDown,
-  PlayerP2IdleUp,
-  PlayerP2IdleSide,
-  PlayerP2MoveDown,
-  PlayerP2MoveUp,
-  PlayerP2MoveSide,
+  PlayerIdleDown,
+  PlayerIdleUp,
+  PlayerIdleLeft,
+  PlayerIdleRight,
+  PlayerMoveDown,
+  PlayerMoveUp,
+  PlayerMoveLeft,
+  PlayerMoveRight,
   PlayerDeath,
-  EnemyBlueMoveDown,
-  EnemyBlueMoveUp,
-  EnemyBlueMoveSide,
-  EnemyPinkMoveDown,
-  EnemyPinkMoveUp,
-  EnemyPinkMoveSide,
-  EnemyPeachMoveDown,
-  EnemyPeachMoveUp,
-  EnemyPeachMoveSide,
-  EnemyDeath,
+  EnemyBlueMoveRight,
+  EnemyBlueMoveLeft,
+  EnemyBlueDeath,
+  EnemyPinkMoveRight,
+  EnemyPinkMoveLeft,
+  EnemyPinkDeath,
+  EnemyPeachMoveRight,
+  EnemyPeachMoveLeft,
+  EnemyPeachDeath,
   BombFuse,
   FlameCenterActive,
   FlameBodyHActive,
@@ -1182,62 +1176,56 @@ fn enemy_skin_for_spawn(x : Int, y : Int, order : Int) -> EnemySkinKind {
 }
 
 ///|
-fn player_idle_clip(id : PlayerId, facing : Direction) -> AnimClip {
-  match id {
-    P1 =>
-      match facing {
-        Up => PlayerP1IdleUp
-        Left | Right => PlayerP1IdleSide
-        Down => PlayerP1IdleDown
-      }
-    P2 =>
-      match facing {
-        Up => PlayerP2IdleUp
-        Left | Right => PlayerP2IdleSide
-        Down => PlayerP2IdleDown
-      }
+fn player_idle_clip(_id : PlayerId, facing : Direction) -> AnimClip {
+  match facing {
+    Up => PlayerIdleUp
+    Left => PlayerIdleLeft
+    Right => PlayerIdleRight
+    Down => PlayerIdleDown
   }
 }
 
 ///|
-fn player_move_clip(id : PlayerId, direction : Direction) -> AnimClip {
-  match id {
-    P1 =>
-      match direction {
-        Up => PlayerP1MoveUp
-        Left | Right => PlayerP1MoveSide
-        Down => PlayerP1MoveDown
-      }
-    P2 =>
-      match direction {
-        Up => PlayerP2MoveUp
-        Left | Right => PlayerP2MoveSide
-        Down => PlayerP2MoveDown
-      }
+fn player_move_clip(_id : PlayerId, direction : Direction) -> AnimClip {
+  match direction {
+    Up => PlayerMoveUp
+    Left => PlayerMoveLeft
+    Right => PlayerMoveRight
+    Down => PlayerMoveDown
   }
 }
 
 ///|
 fn enemy_move_clip(skin : EnemySkinKind, direction : Direction) -> AnimClip {
+  let horizontal = if direction == Left { Left } else { Right }
   match skin {
     Blue =>
-      match direction {
-        Up => EnemyBlueMoveUp
-        Left | Right => EnemyBlueMoveSide
-        Down => EnemyBlueMoveDown
+      if horizontal == Left {
+        EnemyBlueMoveLeft
+      } else {
+        EnemyBlueMoveRight
       }
     Pink =>
-      match direction {
-        Up => EnemyPinkMoveUp
-        Left | Right => EnemyPinkMoveSide
-        Down => EnemyPinkMoveDown
+      if horizontal == Left {
+        EnemyPinkMoveLeft
+      } else {
+        EnemyPinkMoveRight
       }
     Peach =>
-      match direction {
-        Up => EnemyPeachMoveUp
-        Left | Right => EnemyPeachMoveSide
-        Down => EnemyPeachMoveDown
+      if horizontal == Left {
+        EnemyPeachMoveLeft
+      } else {
+        EnemyPeachMoveRight
       }
+  }
+}
+
+///|
+fn enemy_death_clip(skin : EnemySkinKind) -> AnimClip {
+  match skin {
+    Blue => EnemyBlueDeath
+    Pink => EnemyPinkDeath
+    Peach => EnemyPeachDeath
   }
 }
 
@@ -1270,29 +1258,16 @@ fn flame_tail_clip(kind : FlameKind) -> AnimClip {
 ///|
 fn anim_clip_frame_count(clip_id : AnimClip) -> Int {
   match clip_id {
-    PlayerP1IdleDown
-    | PlayerP1IdleUp
-    | PlayerP1IdleSide
-    | PlayerP2IdleDown
-    | PlayerP2IdleUp
-    | PlayerP2IdleSide => 1
-    PlayerP1MoveDown
-    | PlayerP1MoveUp
-    | PlayerP1MoveSide
-    | PlayerP2MoveDown
-    | PlayerP2MoveUp
-    | PlayerP2MoveSide => 4
+    PlayerIdleDown | PlayerIdleUp | PlayerIdleLeft | PlayerIdleRight => 1
+    PlayerMoveDown | PlayerMoveUp | PlayerMoveLeft | PlayerMoveRight => 3
     PlayerDeath => 7
-    EnemyBlueMoveDown
-    | EnemyBlueMoveUp
-    | EnemyBlueMoveSide
-    | EnemyPinkMoveDown
-    | EnemyPinkMoveUp
-    | EnemyPinkMoveSide
-    | EnemyPeachMoveDown
-    | EnemyPeachMoveUp
-    | EnemyPeachMoveSide => 4
-    EnemyDeath => 3
+    EnemyBlueMoveRight
+    | EnemyBlueMoveLeft
+    | EnemyPinkMoveRight
+    | EnemyPinkMoveLeft
+    | EnemyPeachMoveRight
+    | EnemyPeachMoveLeft => 3
+    EnemyBlueDeath | EnemyPinkDeath | EnemyPeachDeath => 5
     BombFuse => 3
     FlameCenterActive => 2
     FlameBodyHActive | FlameBodyVActive => 6
@@ -1310,30 +1285,28 @@ fn anim_clip_frame_count(clip_id : AnimClip) -> Int {
 ///|
 fn anim_clip_frame(clip_id : AnimClip, frame_index : Int) -> (Int, Int) {
   match clip_id {
-    PlayerP1IdleDown => (0, 0)
-    PlayerP1IdleUp => (4, 0)
-    PlayerP1IdleSide => (2, 0)
-    PlayerP1MoveDown => [(0, 0), (1, 0), (0, 0), (1, 0)][frame_index]
-    PlayerP1MoveUp => [(4, 0), (5, 0), (4, 0), (5, 0)][frame_index]
-    PlayerP1MoveSide => [(2, 0), (3, 0), (2, 0), (3, 0)][frame_index]
-    PlayerP2IdleDown => (0, 1)
-    PlayerP2IdleUp => (4, 1)
-    PlayerP2IdleSide => (2, 1)
-    PlayerP2MoveDown => [(0, 1), (1, 1), (0, 1), (1, 1)][frame_index]
-    PlayerP2MoveUp => [(4, 1), (5, 1), (4, 1), (5, 1)][frame_index]
-    PlayerP2MoveSide => [(2, 1), (3, 1), (2, 1), (3, 1)][frame_index]
+    PlayerIdleDown => (3, 0)
+    PlayerIdleUp => (3, 1)
+    PlayerIdleLeft => (0, 0)
+    PlayerIdleRight => (0, 1)
+    PlayerMoveDown => [(3, 0), (4, 0), (5, 0)][frame_index]
+    PlayerMoveUp => [(3, 1), (4, 1), (5, 1)][frame_index]
+    PlayerMoveLeft => [(0, 0), (1, 0), (2, 0)][frame_index]
+    PlayerMoveRight => [(0, 1), (1, 1), (2, 1)][frame_index]
     PlayerDeath =>
       [(0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2)][frame_index]
-    EnemyBlueMoveDown => [(0, 16), (1, 16), (2, 16), (3, 16)][frame_index]
-    EnemyBlueMoveUp => [(4, 16), (5, 16), (6, 16), (5, 16)][frame_index]
-    EnemyBlueMoveSide => [(0, 16), (2, 16), (4, 16), (2, 16)][frame_index]
-    EnemyPinkMoveDown => [(0, 17), (1, 17), (2, 17), (3, 17)][frame_index]
-    EnemyPinkMoveUp => [(4, 17), (5, 17), (6, 17), (5, 17)][frame_index]
-    EnemyPinkMoveSide => [(0, 17), (2, 17), (4, 17), (2, 17)][frame_index]
-    EnemyPeachMoveDown => [(0, 18), (1, 18), (2, 18), (3, 18)][frame_index]
-    EnemyPeachMoveUp => [(4, 18), (5, 18), (6, 18), (5, 18)][frame_index]
-    EnemyPeachMoveSide => [(0, 18), (2, 18), (4, 18), (2, 18)][frame_index]
-    EnemyDeath => [(12, 14), (13, 14), (12, 14)][frame_index]
+    EnemyBlueMoveRight => [(0, 19), (1, 19), (2, 19)][frame_index]
+    EnemyBlueMoveLeft => [(3, 19), (4, 19), (5, 19)][frame_index]
+    EnemyBlueDeath =>
+      [(7, 18), (8, 18), (9, 18), (10, 18), (11, 18)][frame_index]
+    EnemyPinkMoveRight => [(0, 20), (1, 20), (2, 20)][frame_index]
+    EnemyPinkMoveLeft => [(3, 20), (4, 20), (5, 20)][frame_index]
+    EnemyPinkDeath =>
+      [(7, 17), (8, 17), (9, 17), (10, 17), (11, 17)][frame_index]
+    EnemyPeachMoveRight => [(0, 21), (1, 21), (2, 21)][frame_index]
+    EnemyPeachMoveLeft => [(3, 21), (4, 21), (5, 21)][frame_index]
+    EnemyPeachDeath =>
+      [(7, 15), (8, 15), (9, 15), (10, 15), (11, 15)][frame_index]
     BombFuse => [(0, 3), (1, 3), (2, 3)][frame_index]
     FlameCenterActive => [(2, 6), (7, 6)][frame_index]
     FlameBodyHActive =>

@@ -90,29 +90,24 @@ fn anim_clip_first_tile_index(clip_id : AnimClip) -> Int {
 ///|
 fn anim_clip_name(clip_id : AnimClip) -> String {
   match clip_id {
-    PlayerP1IdleDown => "player.p1.idle.down"
-    PlayerP1IdleUp => "player.p1.idle.up"
-    PlayerP1IdleSide => "player.p1.idle.side"
-    PlayerP1MoveDown => "player.p1.move.down"
-    PlayerP1MoveUp => "player.p1.move.up"
-    PlayerP1MoveSide => "player.p1.move.side"
-    PlayerP2IdleDown => "player.p2.idle.down"
-    PlayerP2IdleUp => "player.p2.idle.up"
-    PlayerP2IdleSide => "player.p2.idle.side"
-    PlayerP2MoveDown => "player.p2.move.down"
-    PlayerP2MoveUp => "player.p2.move.up"
-    PlayerP2MoveSide => "player.p2.move.side"
+    PlayerIdleDown => "player.idle.down"
+    PlayerIdleUp => "player.idle.up"
+    PlayerIdleLeft => "player.idle.left"
+    PlayerIdleRight => "player.idle.right"
+    PlayerMoveDown => "player.move.down"
+    PlayerMoveUp => "player.move.up"
+    PlayerMoveLeft => "player.move.left"
+    PlayerMoveRight => "player.move.right"
     PlayerDeath => "player.death"
-    EnemyBlueMoveDown => "enemy.blue.move.down"
-    EnemyBlueMoveUp => "enemy.blue.move.up"
-    EnemyBlueMoveSide => "enemy.blue.move.side"
-    EnemyPinkMoveDown => "enemy.pink.move.down"
-    EnemyPinkMoveUp => "enemy.pink.move.up"
-    EnemyPinkMoveSide => "enemy.pink.move.side"
-    EnemyPeachMoveDown => "enemy.peach.move.down"
-    EnemyPeachMoveUp => "enemy.peach.move.up"
-    EnemyPeachMoveSide => "enemy.peach.move.side"
-    EnemyDeath => "enemy.death"
+    EnemyBlueMoveRight => "enemy.blue.move.right"
+    EnemyBlueMoveLeft => "enemy.blue.move.left"
+    EnemyBlueDeath => "enemy.blue.death"
+    EnemyPinkMoveRight => "enemy.pink.move.right"
+    EnemyPinkMoveLeft => "enemy.pink.move.left"
+    EnemyPinkDeath => "enemy.pink.death"
+    EnemyPeachMoveRight => "enemy.peach.move.right"
+    EnemyPeachMoveLeft => "enemy.peach.move.left"
+    EnemyPeachDeath => "enemy.peach.death"
     BombFuse => "bomb.fuse"
     FlameCenterActive => "flame.center.active"
     FlameBodyHActive => "flame.body_h.active"
@@ -729,6 +724,10 @@ fn configure_netplay_for_round(mode : GameMode) -> Unit {
   if mode == SinglePlayer || netplay_mode.val == Off {
     return
   }
+  // `BOMBMAN_NET_MODE=client` only affects Join Game.
+  if netplay_mode.val != Loopback && !netplay_join_mode_active.val {
+    return
+  }
   if netplay_mode.val == Loopback {
     let config = @netplay.NetConfig::default()
     let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
@@ -957,6 +956,7 @@ fn load_level(level_index : Int, mode : GameMode) -> Unit {
             let spawn_order = enemies.length()
             let skin = enemy_skin_for_spawn(x, y, spawn_order)
             let direction = default_enemy_direction()
+            let facing = Right
             enemies.push({
               entity: @entity.Entity::new(),
               cell_x: x,
@@ -964,14 +964,14 @@ fn load_level(level_index : Int, mode : GameMode) -> Unit {
               center: cell_center(x, y),
               direction,
               desired_direction: direction,
-              facing: direction,
+              facing,
               flip_x: false,
               speed: ENEMY_SPEED,
               radius: ENEMY_RADIUS,
               alive: true,
               skin,
               death_animation_done: false,
-              anim: anim_playback_new(enemy_move_clip(skin, direction), true),
+              anim: anim_playback_new(enemy_move_clip(skin, facing), true),
             })
           }
         _ => ()
@@ -1013,6 +1013,7 @@ fn start_round(mode : GameMode) -> Unit {
 fn return_to_menu() -> Unit {
   reset_direction_input_state()
   reset_netplay_runtime()
+  netplay_join_mode_active.val = false
   clear_dynamic_entities()
   clear_tile_grid()
   deactivate_all_players()
@@ -1087,6 +1088,7 @@ fn startup_system(_world : @ecs.World) -> Unit {
   netplay_local_loop_enabled.val = env_flag_enabled(NETPLAY_LOCAL_LOOP_ENV)
   configure_netplay_mode_from_env()
   reset_netplay_runtime()
+  netplay_join_mode_active.val = false
   let started_at = @time.elapsed_raw()
   profile_started_at.val = started_at
   profile_last_report_at.val = started_at
@@ -1468,61 +1470,79 @@ fn status_text() -> String {
         SinglePlayer =>
           "Soft walls break. Hard walls block. Flames travel in a cross."
         Coop => {
-          let net_suffix = match netplay_mode.val {
-            Host => {
-              let connected = match netplay_link.val {
-                Some(link) =>
-                  if link.is_connected() {
-                    "connected"
-                  } else {
-                    "waiting"
-                  }
-                None => "waiting"
+          let net_suffix = if netplay_session.val is Some(_) ||
+            (
+              netplay_mode.val == Loopback &&
+              netplay_host_session.val is Some(_) &&
+              netplay_client_session.val is Some(_)
+            ) {
+            match netplay_mode.val {
+              Host => {
+                let connected = match netplay_link.val {
+                  Some(link) =>
+                    if link.is_connected() {
+                      "connected"
+                    } else {
+                      "waiting"
+                    }
+                  None => "waiting"
+                }
+                let running = match netplay_session.val {
+                  Some(session) =>
+                    if session.is_running() {
+                      "running"
+                    } else {
+                      "syncing"
+                    }
+                  None => "syncing"
+                }
+                "   NET HOST \{connected}/\{running} port=\{netplay_port.val}"
               }
-              let running = match netplay_session.val {
-                Some(session) =>
-                  if session.is_running() {
-                    "running"
-                  } else {
-                    "syncing"
-                  }
-                None => "syncing"
+              Client => {
+                let connected = match netplay_link.val {
+                  Some(link) =>
+                    if link.is_connected() {
+                      "connected"
+                    } else {
+                      "waiting"
+                    }
+                  None => "waiting"
+                }
+                let running = match netplay_session.val {
+                  Some(session) =>
+                    if session.is_running() {
+                      "running"
+                    } else {
+                      "syncing"
+                    }
+                  None => "syncing"
+                }
+                "   NET CLIENT \{connected}/\{running} to \{netplay_remote_host.val}:\{netplay_remote_port.val}"
               }
-              "   NET HOST \{connected}/\{running} port=\{netplay_port.val}"
+              Loopback => "   NET LOOPBACK"
+              Off => ""
             }
-            Client => {
-              let connected = match netplay_link.val {
-                Some(link) =>
-                  if link.is_connected() {
-                    "connected"
-                  } else {
-                    "waiting"
-                  }
-                None => "waiting"
-              }
-              let running = match netplay_session.val {
-                Some(session) =>
-                  if session.is_running() {
-                    "running"
-                  } else {
-                    "syncing"
-                  }
-                None => "syncing"
-              }
-              "   NET CLIENT \{connected}/\{running} to \{netplay_remote_host.val}:\{netplay_remote_port.val}"
-            }
-            Loopback => "   NET LOOPBACK"
-            Off => ""
+          } else {
+            ""
           }
           "Friendly fire is enabled. Clear all enemies with at least one player alive." +
           net_suffix
         }
         Versus => {
-          let net_suffix = match netplay_mode.val {
-            Host => "   NET HOST"
-            Client => "   NET CLIENT"
-            Loopback => "   NET LOOPBACK"
-            Off => ""
+          let net_suffix = if netplay_session.val is Some(_) ||
+            (
+              netplay_mode.val == Loopback &&
+              netplay_host_session.val is Some(_) &&
+              netplay_client_session.val is Some(_)
+            ) {
+            match netplay_mode.val {
+              Host => "   NET HOST"
+              Client => "   NET CLIENT"
+              Loopback => "   NET LOOPBACK"
+              Off => ""
+            }
+          } else {
+            ""
           }
           "Friendly fire is enabled. Last survivor wins." + net_suffix
         }
@@ -1559,13 +1579,7 @@ fn sync_tile_visuals() -> Unit {
           } else {
             FLOOR_TILE_COLOR_B
           }
-          set_rect_entity(
-            entity,
-            floor_tile_position(x, y),
-            size,
-            color,
-            20,
-          )
+          set_rect_entity(entity, floor_tile_position(x, y), size, color, 20)
         }
         HardWall =>
           set_atlas_entity_top_left(
@@ -1694,7 +1708,10 @@ fn sync_player_visuals() -> Unit {
   for player in players {
     if player.active {
       if player.alive || !player.death_animation_done {
-        let tint = Some(player_color(player.id, player.alive))
+        let tint = match player.id {
+          P1 => None
+          P2 => Some(player_color(player.id, player.alive))
+        }
         set_animated_atlas_entity_center(
           player.entity,
           player.center,
