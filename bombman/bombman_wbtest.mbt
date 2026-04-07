@@ -343,6 +343,9 @@ test "destroyed soft walls can drop items with configured chance" {
     resolve_bomb_explosions()
     assert_true(tile_at(3, 1) is SoftWall)
     assert_eq(soft_wall_breaks.length(), 1)
+    assert_true(
+      !flames.any(fn(flame) { flame.cell_x == 3 && flame.cell_y == 1 }),
+    )
     assert_eq(items.length(), 0)
     tick_soft_wall_breaks(SOFT_WALL_BREAK_DURATION + 0.01)
     assert_true(tile_at(3, 1) is Empty)
@@ -411,6 +414,52 @@ test "drop candidates exclude fully maxed item kinds" {
     let candidates = available_drop_kinds()
     assert_eq(candidates.length(), 1)
     assert_true(candidates[0] is PowerUp)
+  })
+}
+
+///|
+test "drop rng advances between rolls after reseed" {
+  with_round(SinglePlayer, fn() raise {
+    let seed : UInt64 = 20260407
+    reseed_drop_rng(seed)
+    let roll1 = next_drop_roll()
+    let roll2 = next_drop_roll()
+    let roll3 = next_drop_roll()
+    assert_true(roll1 != roll2 || roll2 != roll3 || roll1 != roll3)
+  })
+}
+
+///|
+test "level1 soft-wall drops can be zero in some seeded runs" {
+  with_round(SinglePlayer, fn() raise {
+    let level = levels[0]
+    let soft_wall_cells : Array[(Int, Int)] = []
+    for y in 0..<GRID_HEIGHT {
+      for x in 0..<GRID_WIDTH {
+        if level[y][x] == LEVEL_SOFT_WALL {
+          soft_wall_cells.push((x, y))
+        }
+      }
+    }
+    assert_eq(soft_wall_cells.length(), 22)
+
+    let mut zero_drop_runs = 0
+    let mut non_zero_runs = 0
+    for trial in 1..<513 {
+      items.clear()
+      reseed_drop_rng(trial.to_uint64())
+      for cell in soft_wall_cells {
+        let (x, y) = cell
+        maybe_spawn_random_item(x, y, SOFT_WALL_ITEM_DROP_CHANCE)
+      }
+      if items.is_empty() {
+        zero_drop_runs += 1
+      } else {
+        non_zero_runs += 1
+      }
+    }
+    assert_true(zero_drop_runs > 0)
+    assert_true(non_zero_runs > 0)
   })
 }
 

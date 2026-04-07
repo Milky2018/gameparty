@@ -692,7 +692,7 @@ let exit_request_count : Ref[Int] = { val: 0 }
 let suppress_exit_for_tests : Ref[Bool] = { val: false }
 
 ///|
-let drop_rng_state : Ref[Int] = { val: 987654321 }
+let drop_rng : Ref[@random.Rand] = { val: @random.Rand::new() }
 
 ///|
 let forced_drop_rolls : Array[Double] = []

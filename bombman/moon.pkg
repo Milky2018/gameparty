@@ -20,6 +20,7 @@ import {
   "Milky2018/selene/visibility",
   "tonyfettes/raylib" @raylib,
   "moonbitlang/core/math" @cmath,
+  "moonbitlang/core/random" @random,
   "moonbitlang/core/string" @string,
   "moonbitlang/core/env",
 }

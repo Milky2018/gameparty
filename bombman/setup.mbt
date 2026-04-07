@@ -676,6 +676,37 @@ fn reset_netplay_runtime() -> Unit {
 }
 
 ///|
+fn uint64_array_to_seed_bytes(values : Array[UInt64]) -> Bytes {
+  Bytes::makei(32, fn(i) {
+    let value_index = i / 8
+    let byte_index = i % 8
+    let value = values[value_index]
+    match byte_index {
+      0 => value.to_byte()
+      1 => (value >> 8).to_byte()
+      2 => (value >> 16).to_byte()
+      3 => (value >> 24).to_byte()
+      4 => (value >> 32).to_byte()
+      5 => (value >> 40).to_byte()
+      6 => (value >> 48).to_byte()
+      7 => (value >> 56).to_byte()
+      _ => b'\x00'
+    }
+  })
+}
+
+///|
+fn reseed_drop_rng(seed : UInt64) -> Unit {
+  let part1 = seed - 25
+  let part2 = seed + 25
+  let part3 = seed - 41
+  let part4 = seed + 41
+  drop_rng.val = @random.Rand::chacha8(
+    seed=uint64_array_to_seed_bytes([part1, part2, part3, part4]),
+  )
+}
+
+///|
 fn reset_network_menu_state() -> Unit {
   menu_screen.val = MainRoot
   network_root_selection.val = CreateRoom
@@ -715,6 +746,7 @@ fn apply_remote_round_seed(seed : Int) -> Unit {
         tile_visuals_dirty.val = true
       }
       netplay_round_seed_applied.val = seed
+      reseed_drop_rng(seed.to_uint64())
     }
     None => ()
   }
@@ -821,6 +853,7 @@ fn begin_network_host_lobby(
   netplay_session.val = Some(session)
   netplay_link.val = Some(@netplay.TcpLink::new_host(port))
   netplay_round_seed_applied.val = round_seed
+  reseed_drop_rng(round_seed.to_uint64())
   current_mode.val = mode
   lobby_local_ip.val = @netplay.local_ipv4()
   lobby_mode_label.val = network_mode_short(mode)
@@ -1111,6 +1144,7 @@ fn startup_system(_world : @ecs.World) -> Unit {
   profile_enemies_total.val = 0.0
   profile_hits_total.val = 0.0
   profile_phase_total.val = 0.0
+  reseed_drop_rng(@env.now())
   capture_started_at.val = started_at
   capture_taken.val = false
   capture_perf_started_at.val = started_at
@@ -1302,12 +1336,7 @@ fn spawn_item(x : Int, y : Int, kind : ItemKind) -> Unit {
 fn next_drop_roll() -> Double {
   match forced_drop_rolls.pop() {
     Some(value) => value
-    None => {
-      let seed = drop_rng_state.val
-      let next_seed = seed * 48271 % 2147483647
-      drop_rng_state.val = if next_seed <= 0 { 1 } else { next_seed }
-      drop_rng_state.val.to_double() / 2147483647.0
-    }
+    None => drop_rng.val.double()
   }
 }
 
@@ -1369,6 +1398,7 @@ fn explode_bomb_at(index : Int) -> Unit {
     let y = spawn.cell_y
     if tile_at(x, y) == SoftWall {
       spawn_soft_wall_break(x, y)
+      continue
     }
     for chained in bombs {
       if chained.cell_x == x && chained.cell_y == y {
