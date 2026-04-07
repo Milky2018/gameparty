@@ -1,0 +1,30 @@
+///|
+pub fn run() -> Unit {
+  @raylib.set_trace_log_level(@raylib.LogError)
+  let runtime_qa = env_flag_enabled(DEBUG_CAPTURE_ENV) ||
+    env_flag_enabled(PROFILE_ENV)
+  let target_fps = if runtime_qa { 66U } else { FPS }
+  let app = @app.App::new()
+    .with_viewport_width(VIEWPORT_WIDTH)
+    .with_viewport_height(VIEWPORT_HEIGHT)
+    .with_zoom(1.0)
+    .with_fps(target_fps)
+    .with_image_smooth(false)
+    .add_plugin(@plugins.default_3d_plugin)
+    .add_system(Startup, startup_system)
+    .add_system(Update, input_system)
+    .add_system(Update, coin_spawn_system)
+    .add_system(Update, run_timer_system)
+    .add_system(Update, difficulty_ramp_system)
+    .add_system(Update, pusher_motion_system)
+    .add_system(Update, split_coin_system)
+    .add_system(Update, magnet_system)
+    .add_system(Update, lucky_bounce_system)
+    .add_system(Update, collector_system)
+    .add_system(Update, cleanup_system)
+    .add_system(Update, physics_sync_system)
+    .add_system(Render, chest_ui_system)
+    .add_system(Render, hud_system)
+    .add_system(RenderCleanup, capture_after_render_system)
+  app.run()
+}

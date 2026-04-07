@@ -1,5 +1,30 @@
 ///|
+let text_content_cache : Map[@entity.Entity, String] = Map::new()
+
+///|
+let text_style_cache : Map[@entity.Entity, String] = Map::new()
+
+///|
+fn align_key(align : @math.HAlign) -> String {
+  match align {
+    Left => "left"
+    Center => "center"
+    Right => "right"
+  }
+}
+
+///|
+fn baseline_key(baseline : @math.VAlign) -> String {
+  match baseline {
+    Top => "top"
+    Center => "center"
+    Bottom => "bottom"
+  }
+}
+
+///|
 pub fn menu_state_system(_world : @ecs.World) -> Unit {
+  ensure_debug_runtime_state()
   match game_state.screen {
     MainMenu => {
       if main_menu_hovered_index() is Some(hovered_index) {
@@ -149,6 +174,51 @@ pub fn menu_state_system(_world : @ecs.World) -> Unit {
         game_state.phase = Paused
       }
   }
+}
+
+///|
+pub fn debug_runtime_system(_world : @ecs.World) -> Unit {
+  ensure_debug_runtime_state()
+  maybe_report_profile()
+}
+
+///|
+fn maybe_report_profile() -> Unit {
+  if !debug_profile_enabled.val {
+    return
+  }
+  let now = @time.elapsed()
+  debug_profile_frame_count.val += 1
+  let window_s = now - debug_profile_last_report_at.val
+  if window_s < PROFILE_REPORT_SECONDS {
+    return
+  }
+  let frame_count = debug_profile_frame_count.val.to_double()
+  let sample_s = now - debug_profile_started_at.val
+  if sample_s < 1.5 {
+    debug_profile_last_report_at.val = now
+    debug_profile_frame_count.val = 0
+    return
+  }
+  let fps_avg = if window_s <= 0.0001 { 0.0 } else { frame_count / window_s }
+  let fps_window = fps_avg
+  let fps_frame_dt = if window_s <= 0.0001 {
+    0.0
+  } else {
+    frame_count / window_s
+  }
+  let fps = fps_avg.to_int()
+  let avg_ms = if frame_count <= 0.0 {
+    0.0
+  } else {
+    window_s * 1000.0 / frame_count
+  }
+  println(
+    "[thetawave][profile] fps_avg=\{fps_avg} fps_window=\{fps_window} fps_frame_dt=\{fps_frame_dt} fps=\{fps} avg_ms=\{avg_ms} window_s=\{window_s} sample_s=\{sample_s} phase=\{current_phase_name()} score=\{game_state.score} stage=\{game_state.stage_index + 1} enemies=\{enemies.length()} bullets=\{bullets.length()} items=\{items.length()}",
+  )
+  debug_profile_last_report_at.val = now
+  debug_profile_frame_count.val = 0
+  debug_profile_delta_accum.val = 0.0
 }
 
 ///|
@@ -1881,16 +1951,53 @@ fn set_ui_button_enabled(entity : @entity.Entity, enabled : Bool) -> Unit {
 }
 
 ///|
+pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
+  ensure_debug_runtime_state()
+  if !debug_capture_enabled.val || debug_capture_taken.val {
+    return
+  }
+  if @time.elapsed() - debug_capture_started_at.val <
+    DEBUG_CAPTURE_DELAY_SECONDS {
+    return
+  }
+  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  println("[thetawave][capture] path=\{DEBUG_CAPTURE_PATH}")
+  debug_capture_taken.val = true
+  request_exit()
+}
+
+///|
 fn sync_text_ui_sprite(entity : @entity.Entity, text : TextState) -> Unit {
-  @ui.texts().set(entity, @ui.Text::new(text.content))
-  @ui.text_fonts().set(entity, @ui.TextFont::from_css(text.font))
-  @ui.text_colors().set(entity, @ui.TextColor::from_css(text.color))
-  @ui.text_layouts().set(
-    entity,
-    @ui.TextLayout::new(align=text.align, baseline=text.baseline),
-  )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, text_anchor(text))
+  let style_key = text.font +
+    "|" +
+    text.color +
+    "|" +
+    align_key(text.align) +
+    "|" +
+    baseline_key(text.baseline)
+  let style_changed = match text_style_cache.get(entity) {
+    Some(previous_key) => previous_key != style_key
+    None => true
+  }
+  if style_changed {
+    @ui.text_fonts().set(entity, @ui.TextFont::from_css(text.font))
+    @ui.text_colors().set(entity, @ui.TextColor::from_css(text.color))
+    @ui.text_layouts().set(
+      entity,
+      @ui.TextLayout::new(align=text.align, baseline=text.baseline),
+    )
+    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text_anchors().set(entity, text_anchor(text))
+    text_style_cache.set(entity, style_key)
+  }
+  let content_changed = match text_content_cache.get(entity) {
+    Some(previous_content) => previous_content != text.content
+    None => true
+  }
+  if content_changed {
+    @ui.texts().set(entity, @ui.Text::new(text.content))
+    text_content_cache.set(entity, text.content)
+  }
 }
 
 ///|
@@ -2861,7 +2968,10 @@ fn apply_main_menu_layout() -> Unit {
     game_state.defense_ui,
     text_center_for_menu_button(game_state.menu_button_exit_ui),
   )
-  set_entity_position(game_state.stage_ui, @math.Vec2D(470.0, 8.0))
+  set_entity_position(
+    game_state.stage_ui,
+    @math.Vec2D(VIEWPORT_WIDTH - 150.0, 8.0),
+  )
   set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
   set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 304.0))
 }

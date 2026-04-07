@@ -1,0 +1,50 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/coinpusher3d"
+
+import {
+  "Milky2018/selene/ecs",
+}
+
+// Values
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
+pub fn chest_ui_system(@ecs.World) -> Unit
+
+pub fn cleanup_system(@ecs.World) -> Unit
+
+pub fn coin_spawn_system(@ecs.World) -> Unit
+
+pub fn collector_system(@ecs.World) -> Unit
+
+pub fn difficulty_ramp_system(@ecs.World) -> Unit
+
+pub fn hud_system(@ecs.World) -> Unit
+
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn lucky_bounce_system(@ecs.World) -> Unit
+
+pub fn magnet_system(@ecs.World) -> Unit
+
+pub fn physics_sync_system(@ecs.World) -> Unit
+
+pub fn pusher_motion_system(@ecs.World) -> Unit
+
+pub fn run() -> Unit
+
+pub fn run_timer_system(@ecs.World) -> Unit
+
+pub fn seed_board_coin_field() -> Unit
+
+pub fn split_coin_system(@ecs.World) -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

@@ -2,8 +2,181 @@
 let mouse_locked_last_frame : Ref[Bool] = { val: false }
 
 ///|
+const DEBUG_CAPTURE_ENV : String = "PACMAN3D_CAPTURE"
+
+///|
+const DEBUG_PROFILE_ENV : String = "PACMAN3D_PROFILE"
+
+///|
+const DEBUG_CAPTURE_PATH : String = "pacman3d_capture.png"
+
+///|
+const DEBUG_CAPTURE_DELAY_SECONDS : Double = 4.0
+
+///|
+const PROFILE_REPORT_SECONDS : Double = 1.0
+
+///|
+const WORLD_CULL_DISTANCE_DEFAULT : Double = 14.0
+
+///|
+const WORLD_CULL_DISTANCE_PERF : Double = 8.0
+
+///|
+let debug_bootstrapped : Ref[Bool] = { val: false }
+
+///|
+let debug_capture_enabled : Ref[Bool] = { val: false }
+
+///|
+let debug_capture_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_capture_taken : Ref[Bool] = { val: false }
+
+///|
+let debug_profile_enabled : Ref[Bool] = { val: false }
+
+///|
+let debug_profile_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_profile_last_report_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_profile_frame_count : Ref[Int] = { val: 0 }
+
+///|
+let debug_profile_delta_accum : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_perf_mode : Ref[Bool] = { val: false }
+
+///|
+fn env_flag_enabled(name : String) -> Bool {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      match raw {
+        "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
+fn ensure_debug_runtime_state() -> Unit {
+  if debug_bootstrapped.val {
+    return
+  }
+  let started_at = @time.elapsed()
+  debug_capture_enabled.val = env_flag_enabled(DEBUG_CAPTURE_ENV)
+  debug_capture_started_at.val = started_at
+  debug_capture_taken.val = false
+  debug_profile_enabled.val = env_flag_enabled(DEBUG_PROFILE_ENV)
+  debug_profile_started_at.val = started_at
+  debug_profile_last_report_at.val = started_at
+  debug_profile_frame_count.val = 0
+  debug_profile_delta_accum.val = 0.0
+  debug_perf_mode.val = debug_capture_enabled.val || debug_profile_enabled.val
+  debug_bootstrapped.val = true
+}
+
+///|
+fn maybe_report_profile() -> Unit {
+  if !debug_profile_enabled.val {
+    return
+  }
+  let now = @time.elapsed()
+  debug_profile_frame_count.val += 1
+  let window_s = now - debug_profile_last_report_at.val
+  if window_s < PROFILE_REPORT_SECONDS {
+    return
+  }
+  let frame_count = debug_profile_frame_count.val.to_double()
+  let sample_s = now - debug_profile_started_at.val
+  if sample_s < 1.5 {
+    debug_profile_last_report_at.val = now
+    debug_profile_frame_count.val = 0
+    return
+  }
+  let fps_avg = if window_s <= 0.0001 { 0.0 } else { frame_count / window_s }
+  let fps_window = fps_avg
+  let fps_frame_dt = if window_s <= 0.0001 {
+    0.0
+  } else {
+    frame_count / window_s
+  }
+  let fps = fps_avg.to_int()
+  let avg_ms = if frame_count <= 0.0 {
+    0.0
+  } else {
+    window_s * 1000.0 / frame_count
+  }
+  println(
+    "[pacman3d][profile] fps_avg=\{fps_avg} fps_window=\{fps_window} fps_frame_dt=\{fps_frame_dt} fps=\{fps} avg_ms=\{avg_ms} window_s=\{window_s} sample_s=\{sample_s} level=\{current_level.val + 1} dots=\{collected_dots_count()}/\{dots.length()} ghosts=\{ghosts.length()}",
+  )
+  debug_profile_last_report_at.val = now
+  debug_profile_frame_count.val = 0
+  debug_profile_delta_accum.val = 0.0
+}
+
+///|
 fn squared(value : Double) -> Double {
   value * value
+}
+
+///|
+fn update_world_visibility() -> Unit {
+  let cull_distance = if debug_perf_mode.val {
+    WORLD_CULL_DISTANCE_PERF
+  } else {
+    WORLD_CULL_DISTANCE_DEFAULT
+  }
+  let cull_distance_sq = squared(cull_distance)
+  let px = player_state.x
+  let pz = player_state.z
+  let is_visible = fn(x : Double, z : Double) -> Bool {
+    squared(x - px) + squared(z - pz) <= cull_distance_sq
+  }
+
+  for entity in floor_entities {
+    if @transform.transforms().get(entity) is Some(transform) {
+      set_entity_visibility(
+        entity,
+        is_visible(transform.translation.x, transform.translation.z),
+      )
+    }
+  }
+  for entity in ceiling_entities {
+    if debug_perf_mode.val {
+      set_entity_visibility(entity, false)
+    } else if @transform.transforms().get(entity) is Some(transform) {
+      set_entity_visibility(
+        entity,
+        is_visible(transform.translation.x, transform.translation.z),
+      )
+    }
+  }
+  for entity in wall_entities {
+    if @transform.transforms().get(entity) is Some(transform) {
+      set_entity_visibility(
+        entity,
+        is_visible(transform.translation.x, transform.translation.z),
+      )
+    }
+  }
+  for dot in dots {
+    if !dot.collected {
+      set_entity_visibility(dot.entity, is_visible(dot.x, dot.z))
+    }
+  }
+  for ghost in ghosts {
+    let visible = is_visible(ghost.x, ghost.z)
+    set_entity_visibility(ghost.entity, visible)
+    set_entity_visibility(ghost.left_eye_entity, visible)
+    set_entity_visibility(ghost.right_eye_entity, visible)
+  }
 }
 
 ///|
@@ -197,6 +370,7 @@ pub fn player_input_system(_world : @ecs.World) -> Unit {
 
   if lighting_debug.scene_enabled {
     sync_camera_transform()
+    update_world_visibility()
     mouse_locked_last_frame.val = @system.is_mouse_locked()
     return
   }
@@ -254,6 +428,7 @@ pub fn player_input_system(_world : @ecs.World) -> Unit {
     reset_level_entities()
   }
   sync_camera_transform()
+  update_world_visibility()
   mouse_locked_last_frame.val = @system.is_mouse_locked()
 }
 
@@ -282,6 +457,20 @@ pub fn ghost_update_system(_world : @ecs.World) -> Unit {
 
 ///|
 pub fn minimap_system(_world : @ecs.World) -> Unit {
+  if debug_perf_mode.val {
+    set_entity_visibility(minimap_player_entity, false)
+    for entity in minimap_tile_entities {
+      set_entity_visibility(entity, false)
+    }
+    for dot in dots {
+      set_entity_visibility(dot.minimap_entity, false)
+    }
+    for ghost in ghosts {
+      set_entity_visibility(ghost.minimap_entity, false)
+    }
+    return
+  }
+
   @transform.transforms().set(
     minimap_player_entity,
     transform_2d(
@@ -306,12 +495,17 @@ pub fn minimap_system(_world : @ecs.World) -> Unit {
 ///|
 fn set_hud_text(
   entity : @entity.Entity,
+  cache : Ref[String],
   content : String,
   position : @math.Vec2D,
   font : String,
   color : String,
 ) -> Unit {
   ensure_entity_alive(entity)
+  if cache.val == content {
+    return
+  }
+  cache.val = content
   @ui.texts().set(entity, @ui.Text::new(content))
   @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
@@ -352,6 +546,7 @@ fn hud_completion_body() -> String {
 pub fn hud_system(_world : @ecs.World) -> Unit {
   set_hud_text(
     hud_title_ui,
+    hud_title_text_cache,
     hud_level_text(),
     @math.Vec2D(VIEWPORT_WIDTH - 140.0, 40.0),
     "36px \{PACMAN_UPSTREAM_FONT_FAMILY}",
@@ -359,6 +554,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
   )
   set_hud_text(
     hud_line1_ui,
+    hud_line1_text_cache,
     hud_completion_title(),
     @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 170.0, 30.0),
     "32px \{PACMAN_UPSTREAM_FONT_FAMILY}",
@@ -366,6 +562,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
   )
   set_hud_text(
     hud_line2_ui,
+    hud_line2_text_cache,
     hud_completion_body(),
     @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 120.0, 70.0),
     "20px \{PACMAN_UPSTREAM_FONT_FAMILY}",
@@ -373,6 +570,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
   )
   set_hud_text(
     hud_line3_ui,
+    hud_line3_text_cache,
     "",
     @math.Vec2D(0.0, 0.0),
     "18px \{PACMAN_UPSTREAM_FONT_FAMILY}",
@@ -381,6 +579,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
   if lighting_debug.enabled {
     set_hud_text(
       hud_debug_ui,
+      hud_debug_text_cache,
       debug_status_text() + "\n" + debug_help_text(),
       @math.Vec2D(8.0, 8.0),
       "14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
@@ -389,10 +588,33 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
   } else {
     set_hud_text(
       hud_debug_ui,
+      hud_debug_text_cache,
       "",
       @math.Vec2D(0.0, 0.0),
       "14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
       "white",
     )
   }
+}
+
+///|
+pub fn debug_runtime_system(_world : @ecs.World) -> Unit {
+  ensure_debug_runtime_state()
+  maybe_report_profile()
+}
+
+///|
+pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
+  ensure_debug_runtime_state()
+  if !debug_capture_enabled.val || debug_capture_taken.val {
+    return
+  }
+  if @time.elapsed() - debug_capture_started_at.val <
+    DEBUG_CAPTURE_DELAY_SECONDS {
+    return
+  }
+  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  println("[pacman3d][capture] path=\{DEBUG_CAPTURE_PATH}")
+  debug_capture_taken.val = true
+  request_exit()
 }

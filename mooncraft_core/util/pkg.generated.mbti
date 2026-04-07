@@ -78,7 +78,7 @@ pub fn PerlinNoise::new(seed? : UInt64) -> Self
 pub struct Vec2[T] {
   x : T
   y : T
-}
+} derive(Show)
 pub fn Vec2::almost_equal(Self[Float], Self[Float]) -> Bool
 pub fn Vec2::angle(Self[Float], Self[Float]) -> Double
 pub fn[T : Mul + Sub] Vec2::cross(Self[T], Self[T]) -> T
@@ -94,14 +94,13 @@ pub impl[T : Add] Add for Vec2[T]
 pub impl Eq for Vec2[Float]
 pub impl[T : Mul] Mul for Vec2[T]
 pub impl[T : Neg] Neg for Vec2[T]
-pub impl[T : Show] Show for Vec2[T]
 pub impl[T : Sub] Sub for Vec2[T]
 
 pub struct Vec3[T] {
   x : T
   y : T
   z : T
-}
+} derive(Show)
 pub fn Vec3::almost_equal(Self[Float], Self[Float]) -> Bool
 pub fn Vec3::as_block_position(Self[Float]) -> Self[Float]
 pub fn[T : Mul + Sub] Vec3::cross(Self[T], Self[T]) -> Self[T]
@@ -119,7 +118,6 @@ pub impl[T : Add] Add for Vec3[T]
 pub impl Eq for Vec3[Float]
 pub impl[T : Mul] Mul for Vec3[T]
 pub impl[T : Neg] Neg for Vec3[T]
-pub impl[T : Show] Show for Vec3[T]
 pub impl[T : Sub] Sub for Vec3[T]
 
 // Type aliases

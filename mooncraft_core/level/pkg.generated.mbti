@@ -113,9 +113,8 @@ pub struct BlockPos {
   x : Int
   y : Int
   z : Int
-}
+} derive(Show)
 pub fn BlockPos::new(Int, Int, Int) -> Self
-pub impl Show for BlockPos
 
 pub struct Chunk {
   x : Int
@@ -135,9 +134,8 @@ pub struct ChunkBlockPos {
   x : Int
   y : Int
   z : Int
-}
+} derive(Show)
 pub fn ChunkBlockPos::from_block_pos(BlockPos) -> Self
-pub impl Show for ChunkBlockPos
 
 pub struct ChunkRegion {
   chunk : Chunk

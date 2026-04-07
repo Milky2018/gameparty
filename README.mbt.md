@@ -9,6 +9,13 @@ This repository currently contains these playable prototypes and ports:
 - `angryrabbits`: a physics-based slingshot prototype.
 - `bombman`: a Bomberman-style 2D prototype with single-player, co-op, and versus modes.
 - `mooncraft`: a Selene ECS rewrite of the Mooncraft prototype with chunk streaming and first-person block interaction.
+- `coinpusher3d`: a 3D roguelike coin-pusher run with chest upgrades and physics-driven scoring.
+- `tankbattle`: a 2D tank-battle prototype built with pure primitives and procedural audio.
+- `supermario`: a 2D side-scroller prototype built with pure primitives and procedural audio.
+- `plantvszombies`: a lane-defense prototype built with pure primitives and procedural audio.
+- `bejeweled`: a match-3 prototype built with pure primitives and procedural audio.
+- `jackal`: a top-down run-and-gun prototype built with pure primitives and procedural audio.
+- `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
 
 ## Included Packages
 
@@ -17,12 +24,26 @@ This repository currently contains these playable prototypes and ports:
 - `cmd/angryrabbits`: run Angry Rabbits directly.
 - `cmd/bombman`: run Bombman directly.
 - `cmd/mooncraft`: run Mooncraft directly.
+- `cmd/coinpusher3d`: run CoinPusher3D directly.
+- `cmd/tankbattle`: run TankBattle directly.
+- `cmd/supermario`: run SuperMario directly.
+- `cmd/plantvszombies`: run PlantVsZombies directly.
+- `cmd/bejeweled`: run Bejeweled directly.
+- `cmd/jackal`: run Jackal directly.
+- `cmd/kofarena`: run KOFArena directly.
 - `thetawave/`: Thetawave package and assets.
 - `pacman3d/`: Pacman 3D package and assets.
 - `angryrabbits/`: Angry Rabbits package and assets.
 - `bombman/`: Bombman package and assets.
 - `mooncraft_core/`: pure MoonBit world/block/item/generation core reused by Mooncraft.
 - `mooncraft/`: Selene ECS runtime, assets, and tests for Mooncraft.
+- `coinpusher3d/`: CoinPusher3D package, assets, and tests.
+- `tankbattle/`: TankBattle package and tests.
+- `supermario/`: SuperMario package and tests.
+- `plantvszombies/`: PlantVsZombies package and tests.
+- `bejeweled/`: Bejeweled package and tests.
+- `jackal/`: Jackal package and tests.
+- `kofarena/`: KOFArena package and tests.
 
 ## Requirements
 
@@ -40,6 +61,13 @@ moon run cmd/pacman3d
 moon run cmd/angryrabbits
 moon run cmd/bombman
 moon run cmd/mooncraft
+moon run cmd/coinpusher3d
+moon run cmd/tankbattle
+moon run cmd/supermario
+moon run cmd/plantvszombies
+moon run cmd/bejeweled
+moon run cmd/jackal
+moon run cmd/kofarena
 ```
 
 ## Check
@@ -48,6 +76,24 @@ moon run cmd/mooncraft
 moon check --debug
 moon check --release
 moon test
+```
+
+## Runtime QA Review
+
+Run the unified gameplay QA gate (run + capture + FPS + warning scan):
+
+```bash
+tools/review_all_games.sh
+```
+
+Useful overrides:
+
+```bash
+# Review subset only
+tools/review_all_games.sh mooncraft bombman pacman3d
+
+# Tune thresholds/timeouts
+FPS_MIN=58 FPS_MAX=64 RUN_TIMEOUT=60 PRECHECK=0 tools/review_all_games.sh
 ```
 
 ## Asset Loading
@@ -79,6 +125,16 @@ The generated embedded asset blobs are excluded from module publishing in [moon.
 - Reimplements the runtime in Selene ECS instead of reusing the upstream browser runtime.
 - Current scope is a first-person creative prototype with chunk streaming, block breaking/placing, a hotbar, an inventory catalog, and demo glTF entities.
 - No save system is implemented yet.
+
+### New Primitive-Only Prototypes
+
+- `tankbattle`, `supermario`, `plantvszombies`, `bejeweled`, `jackal`, and `kofarena` intentionally avoid external art assets.
+- Their runtime visuals are built from Selene/raylib primitive drawing and mesh/material paths.
+- Their runtime audio uses procedural synthesis (`Wave::load_sound` from generated sample buffers), not packaged music/sfx files.
+
+## Engine Issues
+
+- Known Selene/raylib integration issues and local workarounds are tracked in [ENGINE_BUGS.md](/Users/zhengyu/Documents/projects/gameparty/ENGINE_BUGS.md).
 
 ## Notes
 

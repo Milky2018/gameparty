@@ -1,0 +1,51 @@
+import {
+  "Milky2018/selene/app",
+  "Milky2018/selene/asset",
+  "Milky2018/selene/audio",
+  "Milky2018/selene/camera3d",
+  "Milky2018/selene/ecs",
+  "Milky2018/selene/entity",
+  "Milky2018/selene/inputs",
+  "Milky2018/selene/math",
+  "Milky2018/selene/physics3d",
+  "Milky2018/selene/plugins",
+  "Milky2018/selene/render",
+  "Milky2018/selene/render3d",
+  "Milky2018/selene/sprite",
+  "Milky2018/selene/system",
+  "Milky2018/selene/text2d",
+  "Milky2018/selene/time",
+  "Milky2018/selene/transform",
+  "Milky2018/selene/ui",
+  "Milky2018/selene/visibility",
+  "tonyfettes/raylib" @raylib,
+  "moonbitlang/core/env",
+  "moonbitlang/core/math" @cmath,
+  "moonbitlang/core/random",
+}
+
+options(
+  "pre-build": [
+    {
+      "command": "selene-embed-assets --assets-dir $input --pack-out $output --path-prefix coinpusher3d/assets",
+      "input": "assets",
+      "output": "_embedded_assets.pack",
+    },
+    {
+      "command": "selene-embed-assets --assets-dir $input --index-out $output --path-prefix coinpusher3d/assets --blob-name embedded_assets_blob --lookup-fn get_embedded_asset",
+      "input": "assets",
+      "output": "embedded_assets_index.mbt",
+    },
+    {
+      "command": ":embed --binary -i $input -o $output --name embedded_assets_blob",
+      "input": "_embedded_assets.pack",
+      "output": "embedded_assets_blob.mbt",
+    },
+  ],
+  targets: {
+    "embedded_assets_blob.mbt": [ "release" ],
+    "embedded_assets_bootstrap_debug.mbt": [ "debug" ],
+    "embedded_assets_bootstrap_release.mbt": [ "release" ],
+    "embedded_assets_index.mbt": [ "release" ],
+  },
+)

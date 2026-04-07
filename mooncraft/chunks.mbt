@@ -22,15 +22,31 @@ fn create_world_session(
   let spawn_wz = 0
   let spawn_surface_y = @level.surface_height(world, spawn_wx, spawn_wz)
   let hint_y = @util.floor_div(spawn_surface_y, @level.CHUNK_Y_SIZE)
+  let chunk_radius = if capture_enabled.val {
+    0
+  } else {
+    match world_type {
+      @level.WorldType::Flat => 1
+      _ => CHUNK_RADIUS_XZ
+    }
+  }
+  let (chunk_min_y, chunk_max_y) = if capture_enabled.val {
+    (hint_y, hint_y)
+  } else {
+    match world_type {
+      @level.WorldType::Flat => (hint_y - 1, hint_y + 1)
+      _ => (hint_y - 2, hint_y + 2)
+    }
+  }
   {
     seed,
     world_type,
     spawn_wx,
     spawn_wz,
     spawn_surface_y,
-    chunk_radius: CHUNK_RADIUS_XZ,
-    chunk_min_y: hint_y - 2,
-    chunk_max_y: hint_y + 2,
+    chunk_radius,
+    chunk_min_y,
+    chunk_max_y,
     world,
     registry,
     texture_names,
@@ -397,6 +413,13 @@ fn chunk_runtime_stats() -> (Int, Int) {
 }
 
 ///|
+fn chunk_stream_idle() -> Bool {
+  chunk_stream_queue.val.to_generate.is_empty() &&
+  chunk_stream_queue.val.to_rebuild.is_empty() &&
+  chunk_stream_queue.val.to_unload.is_empty()
+}
+
+///|
 fn player_chunk_mesh_counts() -> (Int, Int, Int)? {
   guard world_session.val is Some(session) else { return None }
   let center_wx = player_controller.val.position.x.floor().to_int()
@@ -419,8 +442,8 @@ fn player_chunk_mesh_counts() -> (Int, Int, Int)? {
 }
 
 ///|
-fn process_generate_queue() -> Unit {
-  let mut budget = CHUNK_GENERATE_BUDGET
+fn process_generate_queue_with_budget(budget_limit : Int) -> Unit {
+  let mut budget = budget_limit
   while budget > 0 && chunk_stream_queue.val.to_generate.length() > 0 {
     guard chunk_stream_queue.val.to_generate.pop() is Some(key) else { break }
     budget -= 1
@@ -435,8 +458,8 @@ fn process_generate_queue() -> Unit {
 }
 
 ///|
-fn process_rebuild_queue() -> Unit {
-  let mut budget = CHUNK_REBUILD_BUDGET
+fn process_rebuild_queue_with_budget(budget_limit : Int) -> Unit {
+  let mut budget = budget_limit
   while budget > 0 && chunk_stream_queue.val.to_rebuild.length() > 0 {
     guard chunk_stream_queue.val.to_rebuild.pop() is Some(key) else { break }
     budget -= 1
@@ -472,8 +495,31 @@ fn unload_chunk_record(record : ChunkRecord) -> Unit {
 }
 
 ///|
-fn process_unload_queue() -> Unit {
-  let mut budget = CHUNK_UNLOAD_BUDGET
+fn stream_chunks_step_with_budget(
+  generate_budget : Int,
+  rebuild_budget : Int,
+  unload_budget : Int,
+) -> Unit {
+  let queue_started_at = profile_phase_begin("chunks.queue")
+  queue_chunks_around_player()
+  profile_phase_end("chunks.queue", queue_started_at)
+
+  let generate_started_at = profile_phase_begin("chunks.generate")
+  process_generate_queue_with_budget(generate_budget)
+  profile_phase_end("chunks.generate", generate_started_at)
+
+  let rebuild_started_at = profile_phase_begin("chunks.rebuild")
+  process_rebuild_queue_with_budget(rebuild_budget)
+  profile_phase_end("chunks.rebuild", rebuild_started_at)
+
+  let unload_started_at = profile_phase_begin("chunks.unload")
+  process_unload_queue_with_budget(unload_budget)
+  profile_phase_end("chunks.unload", unload_started_at)
+}
+
+///|
+fn process_unload_queue_with_budget(budget_limit : Int) -> Unit {
+  let mut budget = budget_limit
   while budget > 0 && chunk_stream_queue.val.to_unload.length() > 0 {
     guard chunk_stream_queue.val.to_unload.pop() is Some(key) else { break }
     budget -= 1
@@ -489,8 +535,9 @@ fn process_unload_queue() -> Unit {
 
 ///|
 fn stream_chunks_step() -> Unit {
-  queue_chunks_around_player()
-  process_generate_queue()
-  process_rebuild_queue()
-  process_unload_queue()
+  stream_chunks_step_with_budget(
+    CHUNK_GENERATE_BUDGET,
+    CHUNK_REBUILD_BUDGET,
+    CHUNK_UNLOAD_BUDGET,
+  )
 }

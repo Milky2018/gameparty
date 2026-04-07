@@ -7,7 +7,12 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
     initialize_ui()
     ui_initialized.val = true
   }
-  enter_main_menu()
+  if env_flag_enabled(DEBUG_CAPTURE_ENV) {
+    game_state.selected_character = Captain
+    start_game_with_selected_character()
+  } else {
+    enter_main_menu()
+  }
 }
 
 ///|

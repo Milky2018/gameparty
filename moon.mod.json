@@ -15,6 +15,9 @@
     "pacman3d/_embedded_assets.pack",
     "pacman3d/embedded_assets_index.mbt",
     "pacman3d/embedded_assets_blob.mbt",
+    "coinpusher3d/_embedded_assets.pack",
+    "coinpusher3d/embedded_assets_index.mbt",
+    "coinpusher3d/embedded_assets_blob.mbt",
     "thetawave/_embedded_assets.pack",
     "thetawave/embedded_assets_index.mbt",
     "thetawave/embedded_assets_blob.mbt"

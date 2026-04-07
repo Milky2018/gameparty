@@ -277,6 +277,7 @@ fn solid_tile_rects_near(
   radius : Double,
   padding : Double,
 ) -> Array[Rect] {
+  movement_tile_rects_cache.clear()
   let extent = radius + padding
   let min_x = clamp_int(
     @cmath.floor((center[X] - extent - GRID_OFFSET_X) / CELL_SIZE).to_int() - 1,
@@ -298,37 +299,41 @@ fn solid_tile_rects_near(
     0,
     GRID_HEIGHT - 1,
   )
-  let rects : Array[Rect] = []
   for y in min_y..<=max_y {
     for x in min_x..<=max_x {
       if tile_is_solid(x, y) {
-        rects.push(cell_bounds(x, y))
+        movement_tile_rects_cache.push(cell_bounds(x, y))
       }
     }
   }
-  rects
+  movement_tile_rects_cache
 }
 
 ///|
 fn solid_bomb_centers_for_player(index : Int) -> Array[@math.Vec2D] {
-  let player = players[index]
-  let centers : Array[@math.Vec2D] = []
-  for bomb in bombs {
-    let solid = bomb.owner != player.id || !bomb.passable_for_owner
-    if solid {
-      centers.push(cell_center(bomb.cell_x, bomb.cell_y))
-    }
-  }
-  centers
+  movement_player_bomb_centers[index]
 }
 
 ///|
 fn solid_bomb_centers_for_enemy() -> Array[@math.Vec2D] {
-  let centers : Array[@math.Vec2D] = []
+  movement_enemy_bomb_centers
+}
+
+///|
+fn refresh_movement_collision_cache() -> Unit {
+  movement_player_bomb_centers[0].clear()
+  movement_player_bomb_centers[1].clear()
+  movement_enemy_bomb_centers.clear()
   for bomb in bombs {
-    centers.push(cell_center(bomb.cell_x, bomb.cell_y))
+    let bomb_center = cell_center(bomb.cell_x, bomb.cell_y)
+    movement_enemy_bomb_centers.push(bomb_center)
+    for index in 0..<players.length() {
+      let player = players[index]
+      if bomb.owner != player.id || !bomb.passable_for_owner {
+        movement_player_bomb_centers[index].push(bomb_center)
+      }
+    }
   }
-  centers
 }
 
 ///|
@@ -730,6 +735,7 @@ fn tick_player_motion(index : Int, delta : Double) -> Unit {
 
 ///|
 fn tick_players_motion(delta : Double) -> Unit {
+  refresh_movement_collision_cache()
   for index in 0..<players.length() {
     tick_player_motion(index, delta)
   }
@@ -919,14 +925,70 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
   if phase.val != Playing {
     return
   }
+  let sim_started_at = @time.elapsed_raw()
   let delta = @time.delta()
+  let motion_started_at = @time.elapsed_raw()
   tick_players_motion(delta)
+  profile_motion_total.val += @time.elapsed_raw() - motion_started_at
+  let bombs_started_at = @time.elapsed_raw()
   resolve_item_pickups()
   tick_bombs(delta)
   resolve_bomb_explosions()
+  profile_bombs_total.val += @time.elapsed_raw() - bombs_started_at
+  refresh_movement_collision_cache()
+  let flames_started_at = @time.elapsed_raw()
   tick_flames(delta)
+  profile_flames_total.val += @time.elapsed_raw() - flames_started_at
+  let enemies_started_at = @time.elapsed_raw()
   tick_enemies(delta)
+  profile_enemies_total.val += @time.elapsed_raw() - enemies_started_at
+  let hits_started_at = @time.elapsed_raw()
   resolve_flame_hits()
   resolve_enemy_contact()
+  profile_hits_total.val += @time.elapsed_raw() - hits_started_at
+  let phase_started_at = @time.elapsed_raw()
   resolve_phase()
+  profile_phase_total.val += @time.elapsed_raw() - phase_started_at
+  profile_sim_total.val += @time.elapsed_raw() - sim_started_at
+}
+
+///|
+fn emit_profile_report_if_needed(now : Double) -> Unit {
+  if !profile_enabled.val || now - profile_last_report_at.val < 1.0 {
+    return
+  }
+  let window_seconds = now - profile_last_report_at.val
+  let frames = if profile_frame_count.val <= 0 {
+    1
+  } else {
+    profile_frame_count.val
+  }
+  let frames_f = frames.to_double()
+  let sim_avg_ms = profile_sim_total.val * 1000.0 / frames_f
+  let render_avg_ms = profile_render_total.val * 1000.0 / frames_f
+  let fps_avg = if window_seconds <= 0.0 {
+    0.0
+  } else {
+    frames_f / window_seconds
+  }
+  let fps_window = fps_avg
+  let fps_from_frame_dt = if profile_frame_dt_total.val <= 0.0 {
+    0.0
+  } else {
+    frames_f / profile_frame_dt_total.val
+  }
+  println(
+    "[bombman][profile] t=\{now - profile_started_at.val} window=\{window_seconds} frames=\{profile_frame_count.val} fps_avg=\{fps_avg} fps_window=\{fps_window} fps=\{fps_avg} fps_frame_dt=\{fps_from_frame_dt} raylib_fps=\{@raylib.get_fps()} sim_avg_ms=\{sim_avg_ms} render_avg_ms=\{render_avg_ms}",
+  )
+  profile_last_report_at.val = now
+  profile_frame_count.val = 0
+  profile_sim_total.val = 0.0
+  profile_render_total.val = 0.0
+  profile_frame_dt_total.val = 0.0
+  profile_motion_total.val = 0.0
+  profile_bombs_total.val = 0.0
+  profile_flames_total.val = 0.0
+  profile_enemies_total.val = 0.0
+  profile_hits_total.val = 0.0
+  profile_phase_total.val = 0.0
 }

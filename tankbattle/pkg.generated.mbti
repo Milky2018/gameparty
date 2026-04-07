@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/tankbattle"
+
+import {
+  "Milky2018/selene/ecs",
+}
+
+// Values
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn render_sync_system(@ecs.World) -> Unit
+
+pub fn run() -> Unit
+
+pub fn simulation_system(@ecs.World) -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

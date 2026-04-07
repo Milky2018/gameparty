@@ -45,6 +45,96 @@ fn ensure_entity_list(entities : Array[@entity.Entity], count : Int) -> Unit {
 }
 
 ///|
+fn parse_color_component_int(part : StringView) -> Int? {
+  let token = part.to_string().trim().to_string()
+  if token == "" {
+    return None
+  }
+  Some(@string.parse_int(token)) catch {
+    _ => None
+  }
+}
+
+///|
+fn parse_color_alpha(part : StringView) -> Double? {
+  let token = part.to_string().trim().to_string()
+  if token == "" {
+    return None
+  }
+  Some(@string.parse_double(token)) catch {
+    _ => None
+  }
+}
+
+///|
+fn clamp_color_byte(value : Int) -> UInt {
+  let clamped = if value < 0 { 0 } else if value > 255 { 255 } else { value }
+  clamped.reinterpret_as_uint()
+}
+
+///|
+fn clamp_color_alpha(value : Double) -> Double {
+  clamp_double(value, 0.0, 1.0)
+}
+
+///|
+fn normalize_css_color_string(color : String) -> String {
+  let trimmed = color.trim().to_string()
+  if trimmed.length() >= 2 &&
+    trimmed.unsafe_get(0) == '\"' &&
+    trimmed.unsafe_get(trimmed.length() - 1) == '\"' {
+    return trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
+  }
+  if trimmed.length() >= 2 &&
+    trimmed.unsafe_get(0) == '\'' &&
+    trimmed.unsafe_get(trimmed.length() - 1) == '\'' {
+    return trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
+  }
+  trimmed
+}
+
+///|
+fn parse_css_rgb_components(color : String) -> (UInt, UInt, UInt, Double)? {
+  let trimmed = normalize_css_color_string(color)
+  let is_rgb = trimmed.has_prefix("rgb(") && trimmed.has_suffix(")")
+  let is_rgba = trimmed.has_prefix("rgba(") && trimmed.has_suffix(")")
+  if !is_rgb && !is_rgba {
+    return None
+  }
+  let body = if is_rgba {
+    trimmed.replace(old="rgba(", new="").replace(old=")", new="")
+  } else {
+    trimmed.replace(old="rgb(", new="").replace(old=")", new="")
+  }
+  let parts : Array[StringView] = []
+  for part in body.split(",") {
+    parts.push(part)
+  }
+  if (is_rgba && parts.length() != 4) || (is_rgb && parts.length() != 3) {
+    return None
+  }
+  guard parse_color_component_int(parts[0]) is Some(r) else { return None }
+  guard parse_color_component_int(parts[1]) is Some(g) else { return None }
+  guard parse_color_component_int(parts[2]) is Some(b) else { return None }
+  let alpha = if is_rgba {
+    guard parse_color_alpha(parts[3]) is Some(a) else { return None }
+    clamp_color_alpha(a)
+  } else {
+    1.0
+  }
+  Some((clamp_color_byte(r), clamp_color_byte(g), clamp_color_byte(b), alpha))
+}
+
+///|
+fn sprite_color(color : String) -> @render.Color {
+  let normalized = normalize_css_color_string(color)
+  match parse_css_rgb_components(color) {
+    Some((r, g, b, a)) => { r, g, b, a }
+    None => @sprite.color_from_css(normalized)
+  }
+}
+
+///|
 fn angryrabbits_spritesheet() -> @asset.ImageHandle {
   match angryrabbits_spritesheet_handle.val {
     Some(handle) => handle
@@ -91,7 +181,7 @@ fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
 fn circle_material_handle(color : String) -> @material2d.ColorMaterialHandle {
   circle_material_handles.get_or_init(color, fn() {
     @material2d.register_color_material(
-      @material2d.ColorMaterial::from_color(@sprite.color_from_css(color)),
+      @material2d.ColorMaterial::from_color(sprite_color(color)),
     )
   })
 }
@@ -843,6 +933,10 @@ fn debug_text() -> String {
 
 ///|
 fn sync_debug_ui() -> Unit {
+  if !debug_ui_enabled.val {
+    set_entity_visibility(debug_text_entity, false)
+    return
+  }
   set_text_entity(
     debug_text_entity,
     debug_text(),
@@ -921,7 +1015,7 @@ fn hide_all_level_visuals() -> Unit {
 ///|
 fn sync_error_visuals(message : String) -> Unit {
   let background_sprite = @sprite.Sprite::from_color(
-    @sprite.color_from_css("rgb(29, 20, 24)"),
+    sprite_color("rgb(29, 20, 24)"),
     @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
   )
   background_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
@@ -974,7 +1068,7 @@ fn sync_static_visuals() -> Unit {
   let ground = level.ground_rect
   let hill = level.hill_circle
   let background_sprite = @sprite.Sprite::from_color(
-    @sprite.color_from_css(background.color),
+    sprite_color(background.color),
     background.size,
   )
   background_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
@@ -983,6 +1077,7 @@ fn sync_static_visuals() -> Unit {
     background_entity,
     entity_transform_2d(background.position, background.zindex),
   )
+  set_entity_visibility(background_entity, true)
 
   @mesh2d.mesh2ds().set(
     hill_entity,
@@ -998,9 +1093,10 @@ fn sync_static_visuals() -> Unit {
     hill_entity,
     entity_transform_2d(hill.center, hill.zindex),
   )
+  set_entity_visibility(hill_entity, true)
 
   let ground_sprite = @sprite.Sprite::from_color(
-    @sprite.color_from_css(ground.color),
+    sprite_color(ground.color),
     ground.size,
   )
   ground_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
@@ -1009,6 +1105,7 @@ fn sync_static_visuals() -> Unit {
     ground_entity,
     entity_transform_2d(ground.position, ground.zindex),
   )
+  set_entity_visibility(ground_entity, true)
 
   let slingshot_scale_y = SLINGSHOT_WORLD_HEIGHT / SLINGSHOT_SPRITE_SRC_HEIGHT
   let slingshot_front_world_height = SLINGSHOT_FRONT_SRC_HEIGHT *
@@ -1180,50 +1277,86 @@ fn sync_ui() -> Unit {
     sync_debug_ui()
     return
   }
-  set_text_entity(
-    title_entity,
-    "ANGRY RABBITS",
-    @math.Vec2D(20.0, 16.0),
-    "32px \{ANGRYRABBITS_FONT_FAMILY}",
-    "rgb(84, 48, 22)",
-    220,
-  )
-  set_text_entity(
-    hint_entity,
-    "Click to start   Mouse drag/release launch   R/Enter restart   ESC back",
-    @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
-    "16px \{ANGRYRABBITS_FONT_FAMILY}",
-    "rgb(77, 74, 66)",
-    220,
-  )
-  set_text_entity(
-    score_entity,
-    score_text(),
-    @math.Vec2D(20.0, 54.0),
-    "20px \{ANGRYRABBITS_FONT_FAMILY}",
-    "rgb(66, 52, 32)",
-    220,
-  )
-  set_text_entity(
-    status_entity,
-    status_text(),
-    @math.Vec2D(20.0, 82.0),
-    "18px \{ANGRYRABBITS_FONT_FAMILY}",
-    if game_state.val == Won {
-      "rgb(32, 112, 48)"
-    } else if game_state.val == Lost {
-      "rgb(161, 54, 44)"
-    } else {
-      "rgb(72, 60, 44)"
-    },
-    220,
-  )
+  let title_text = "ANGRY RABBITS"
+  if ui_title_text_cache.val != title_text {
+    set_text_entity(
+      title_entity,
+      title_text,
+      @math.Vec2D(20.0, 16.0),
+      "32px \{ANGRYRABBITS_FONT_FAMILY}",
+      "rgb(84, 48, 22)",
+      220,
+    )
+    ui_title_text_cache.val = title_text
+  } else {
+    ensure_entity_alive(title_entity)
+    show_entity(title_entity)
+  }
+  let hint_text = "Click to start   Mouse drag/release launch   R/Enter restart   ESC back"
+  if ui_hint_text_cache.val != hint_text {
+    set_text_entity(
+      hint_entity,
+      hint_text,
+      @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
+      "16px \{ANGRYRABBITS_FONT_FAMILY}",
+      "rgb(77, 74, 66)",
+      220,
+    )
+    ui_hint_text_cache.val = hint_text
+  } else {
+    ensure_entity_alive(hint_entity)
+    show_entity(hint_entity)
+  }
+  let score = score_text()
+  if ui_score_text_cache.val != score {
+    set_text_entity(
+      score_entity,
+      score,
+      @math.Vec2D(20.0, 54.0),
+      "20px \{ANGRYRABBITS_FONT_FAMILY}",
+      "rgb(66, 52, 32)",
+      220,
+    )
+    ui_score_text_cache.val = score
+  } else {
+    ensure_entity_alive(score_entity)
+    show_entity(score_entity)
+  }
+  let status = status_text()
+  let status_color = if game_state.val == Won {
+    "rgb(32, 112, 48)"
+  } else if game_state.val == Lost {
+    "rgb(161, 54, 44)"
+  } else {
+    "rgb(72, 60, 44)"
+  }
+  if ui_status_text_cache.val != status ||
+    ui_status_color_cache.val != status_color {
+    set_text_entity(
+      status_entity,
+      status,
+      @math.Vec2D(20.0, 82.0),
+      "18px \{ANGRYRABBITS_FONT_FAMILY}",
+      status_color,
+      220,
+    )
+    ui_status_text_cache.val = status
+    ui_status_color_cache.val = status_color
+  } else {
+    ensure_entity_alive(status_entity)
+    show_entity(status_entity)
+  }
   sync_debug_ui()
 }
 
 ///|
 fn reset_level() -> Unit {
   register_angryrabbits_font_once()
+  ui_title_text_cache.val = ""
+  ui_hint_text_cache.val = ""
+  ui_score_text_cache.val = ""
+  ui_status_text_cache.val = ""
+  ui_status_color_cache.val = ""
   match load_current_level() {
     Err(message) => {
       reset_debug_state("level load error")
@@ -1294,5 +1427,18 @@ fn setup_scene_if_needed() -> Unit {
 ///|
 fn startup_system(_world : @ecs.World) -> Unit {
   setup_scene_if_needed()
+  profile_enabled.val = env_flag_enabled(PROFILE_ENV)
+  capture_enabled.val = env_flag_enabled(CAPTURE_ENV)
+  debug_ui_enabled.val = env_flag_enabled(DEBUG_UI_ENV)
   reset_level()
+  let started_at = @time.elapsed_raw()
+  profile_started_at.val = started_at
+  profile_last_report_at.val = started_at
+  profile_frame_count.val = 0
+  profile_sim_total.val = 0.0
+  profile_render_total.val = 0.0
+  profile_frame_dt_total.val = 0.0
+  capture_started_at.val = started_at
+  capture_taken.val = false
+  capture_forced_start.val = false
 }

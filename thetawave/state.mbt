@@ -11,6 +11,21 @@ const ZOOM : Double = 2.5
 const FPS : UInt = 60
 
 ///|
+const DEBUG_CAPTURE_ENV : String = "THETAWAVE_CAPTURE"
+
+///|
+const DEBUG_CAPTURE_PATH : String = "thetawave_capture.png"
+
+///|
+const DEBUG_CAPTURE_DELAY_SECONDS : Double = 2.2
+
+///|
+const DEBUG_PROFILE_ENV : String = "THETAWAVE_PROFILE"
+
+///|
+const PROFILE_REPORT_SECONDS : Double = 1.0
+
+///|
 const HUD_SIDE_COLUMN_WIDTH : Double = VIEWPORT_WIDTH * 0.1
 
 ///|
@@ -762,6 +777,33 @@ let game_state : GameState = {
 let ui_initialized : Ref[Bool] = { val: false }
 
 ///|
+let debug_bootstrapped : Ref[Bool] = { val: false }
+
+///|
+let debug_capture_enabled : Ref[Bool] = { val: false }
+
+///|
+let debug_capture_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_capture_taken : Ref[Bool] = { val: false }
+
+///|
+let debug_profile_enabled : Ref[Bool] = { val: false }
+
+///|
+let debug_profile_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_profile_last_report_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_profile_frame_count : Ref[Int] = { val: 0 }
+
+///|
+let debug_profile_delta_accum : Ref[Double] = { val: 0.0 }
+
+///|
 let enemies : Map[@entity.Entity, Enemy] = Map::new()
 
 ///|
@@ -775,6 +817,38 @@ let consumables : Map[@entity.Entity, Consumable] = Map::new()
 
 ///|
 let items : Map[@entity.Entity, ItemDrop] = Map::new()
+
+///|
+fn env_flag_enabled(name : String) -> Bool {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      raw == "1" ||
+      raw == "true" ||
+      raw == "TRUE" ||
+      raw == "yes" ||
+      raw == "YES" ||
+      raw == "on" ||
+      raw == "ON"
+    None => false
+  }
+}
+
+///|
+fn ensure_debug_runtime_state() -> Unit {
+  if debug_bootstrapped.val {
+    return
+  }
+  let started_at = @time.elapsed()
+  debug_capture_enabled.val = env_flag_enabled(DEBUG_CAPTURE_ENV)
+  debug_capture_started_at.val = started_at
+  debug_capture_taken.val = false
+  debug_profile_enabled.val = env_flag_enabled(DEBUG_PROFILE_ENV)
+  debug_profile_started_at.val = started_at
+  debug_profile_last_report_at.val = started_at
+  debug_profile_frame_count.val = 0
+  debug_profile_delta_accum.val = 0.0
+  debug_bootstrapped.val = true
+}
 
 ///|
 fn initial_player_position() -> @math.Vec2D {

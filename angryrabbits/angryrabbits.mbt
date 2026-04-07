@@ -36,16 +36,23 @@ pub fn add_runtime_systems(app : @app.App, run_if : () -> Bool) -> @app.App {
     run_if()
   })
   .add_system(Update, render_sync_system, run_if=fn(_world) { run_if() })
+  .add_system(RenderCleanup, capture_after_render_system, run_if=fn(_world) {
+    run_if()
+  })
 }
 
 ///|
 pub fn run() -> Unit {
+  @raylib.set_trace_log_level(@raylib.LogError)
   reset_exit_handler()
+  let runtime_qa = env_flag_enabled(CAPTURE_ENV) ||
+    env_flag_enabled(PROFILE_ENV)
+  let target_fps = if runtime_qa { 66U } else { FPS }
   let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(ZOOM)
-    .with_fps(FPS)
+    .with_fps(target_fps)
     .with_image_smooth(true)
     .add_plugin(@plugins.default_plugin)
     .add_system(Startup, startup_system)

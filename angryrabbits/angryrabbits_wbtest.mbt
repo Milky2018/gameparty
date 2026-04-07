@@ -2132,3 +2132,24 @@ test "target takes upstream-style damage from moving block" {
     assert_true(!targets[0].alive)
   })
 }
+
+///|
+test "quoted rgb css values are normalized before color parsing" {
+  assert_eq(
+    normalize_css_color_string("\"rgb(183, 225, 255)\""),
+    "rgb(183, 225, 255)",
+  )
+  assert_eq(
+    normalize_css_color_string("'rgb(183, 225, 255)'"),
+    "rgb(183, 225, 255)",
+  )
+  match parse_css_rgb_components("\"rgb(183, 225, 255)\"") {
+    Some((r, g, b, a)) => {
+      assert_eq(r, 183U)
+      assert_eq(g, 225U)
+      assert_eq(b, 255U)
+      assert_eq(a, 1.0)
+    }
+    None => fail("expected quoted rgb to parse")
+  }
+}

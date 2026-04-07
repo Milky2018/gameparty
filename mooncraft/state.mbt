@@ -1,8 +1,8 @@
 ///|
-pub const VIEWPORT_WIDTH : Double = 1280.0
+pub const VIEWPORT_WIDTH : Double = 960.0
 
 ///|
-pub const VIEWPORT_HEIGHT : Double = 720.0
+pub const VIEWPORT_HEIGHT : Double = 540.0
 
 ///|
 pub const FPS : UInt = 60
@@ -25,16 +25,28 @@ let mooncraft_asset_path_prefixes : Array[String] = [
 ]
 
 ///|
-const CHUNK_RADIUS_XZ : Int = 2
+const CHUNK_RADIUS_XZ : Int = 1
 
 ///|
-const CHUNK_GENERATE_BUDGET : Int = 16
+const CHUNK_GENERATE_BUDGET : Int = 10
 
 ///|
-const CHUNK_REBUILD_BUDGET : Int = 10
+const CHUNK_REBUILD_BUDGET : Int = 8
 
 ///|
-const CHUNK_UNLOAD_BUDGET : Int = 24
+const CHUNK_UNLOAD_BUDGET : Int = 12
+
+///|
+const STARTUP_CHUNK_PREWARM_STEPS : Int = 3
+
+///|
+const STARTUP_CHUNK_GENERATE_BUDGET : Int = 18
+
+///|
+const STARTUP_CHUNK_REBUILD_BUDGET : Int = 12
+
+///|
+const STARTUP_CHUNK_UNLOAD_BUDGET : Int = 0
 
 ///|
 const PLAYER_HEIGHT : Double = 1.8
@@ -142,13 +154,31 @@ const DEMO_ANIMATION_BLEND_DURATION : Double = 0.15
 const DEBUG_FORCE_WORLD_UNLIT : Bool = false
 
 ///|
-const DEBUG_CAPTURE_ENABLED : Bool = false
+const PROFILE_LOG_FRAME_LIMIT : Int = 90
 
 ///|
-const DEBUG_CAPTURE_DELAY : Double = 1.0
+const DEMO_SPAWN_DELAY_FRAMES : Int = 1
 
 ///|
-const DEBUG_CAPTURE_PATH : String = "/tmp/mooncraft_capture.png"
+const DEBUG_CAPTURE_PATH : String = "mooncraft_capture.png"
+
+///|
+const DEBUG_CAPTURE_DELAY : Double = 2.0
+
+///|
+const DEBUG_CAPTURE_WARMUP : Double = 1.0
+
+///|
+const DEBUG_PROFILE_ENV : String = "MOONCRAFT_PROFILE"
+
+///|
+const DEBUG_CAPTURE_ENV : String = "MOONCRAFT_CAPTURE"
+
+///|
+const DEBUG_DEMO_ENTITIES_ENV : String = "MOONCRAFT_DEMO_ENTITIES"
+
+///|
+const DEBUG_PROFILE_VERBOSE_PHASES : Bool = false
 
 ///|
 const DEBUG_FRAME_LOG_LIMIT : Int = 0
@@ -426,7 +456,82 @@ let debug_started_at : Ref[Double] = { val: 0.0 }
 let debug_capture_taken : Ref[Bool] = { val: false }
 
 ///|
+let debug_capture_ready_started : Ref[Bool] = { val: false }
+
+///|
+let debug_capture_ready_at : Ref[Double] = { val: 0.0 }
+
+///|
+let debug_capture_ready_frames : Ref[Int] = { val: 0 }
+
+///|
+let debug_capture_ready_delta : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_enabled : Ref[Bool] = { val: false }
+
+///|
+let capture_enabled : Ref[Bool] = { val: false }
+
+///|
+let profile_frame_counter : Ref[Int] = { val: 0 }
+
+///|
+let demo_spawn_pending : Ref[Bool] = { val: false }
+
+///|
+let demo_spawn_delay_frames : Ref[Int] = { val: 0 }
+
+///|
+let demo_entities_enabled : Ref[Bool] = { val: false }
+
+///|
 let world_material_rebind_frames_left : Ref[Int] = { val: 0 }
+
+///|
+fn env_flag_enabled(name : String) -> Bool {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      match raw {
+        "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => true
+        _ => false
+      }
+    None => false
+  }
+}
+
+///|
+fn profile_logging_active() -> Bool {
+  profile_enabled.val && profile_frame_counter.val < PROFILE_LOG_FRAME_LIMIT
+}
+
+///|
+fn profile_phase_begin(name : String) -> Double? {
+  if !profile_logging_active() {
+    return None
+  }
+  let started_at = @time.elapsed_raw()
+  if DEBUG_PROFILE_VERBOSE_PHASES {
+    println("[mooncraft][profile][begin] \{name} t=\{started_at}")
+  }
+  Some(started_at)
+}
+
+///|
+fn profile_phase_end(name : String, started_at : Double?) -> Unit {
+  if !profile_logging_active() {
+    return
+  }
+  match started_at {
+    Some(value) =>
+      if DEBUG_PROFILE_VERBOSE_PHASES {
+        println(
+          "[mooncraft][profile][end] \{name} dt=\{@time.elapsed_raw() - value}",
+        )
+      }
+    None => ()
+  }
+}
 
 ///|
 fn world_type_name(world_type : @level.WorldType) -> String {

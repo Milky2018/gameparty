@@ -22,6 +22,25 @@ fn load_demo_scene_handles_once() -> Unit {
 }
 
 ///|
+fn maybe_spawn_demo_entities() -> Unit {
+  if !demo_spawn_pending.val {
+    return
+  }
+  if demo_spawn_delay_frames.val > 0 {
+    demo_spawn_delay_frames.val -= 1
+    return
+  }
+  let load_started_at = profile_phase_begin("demo.load_scenes")
+  load_demo_scene_handles_once()
+  profile_phase_end("demo.load_scenes", load_started_at)
+
+  let spawn_started_at = profile_phase_begin("demo.spawn_entities")
+  spawn_demo_entities()
+  profile_phase_end("demo.spawn_entities", spawn_started_at)
+  demo_spawn_pending.val = false
+}
+
+///|
 fn clear_demo_entities() -> Unit {
   for root in demo_entity_state.val.roots {
     if root.is_alive() {

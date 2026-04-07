@@ -444,3 +444,34 @@ test "enemy contact kills any overlapping active player outside versus" {
     assert_true(players[0].alive)
   })
 }
+
+///|
+test "quoted rgb css values are normalized before color parsing" {
+  assert_eq(
+    normalize_css_color_string("\"rgb(18, 24, 30)\""),
+    "rgb(18, 24, 30)",
+  )
+  assert_eq(normalize_css_color_string("'rgb(18, 24, 30)'"), "rgb(18, 24, 30)")
+  match parse_css_rgb_components("\"rgb(18, 24, 30)\"") {
+    Some((r, g, b, a)) => {
+      assert_eq(r, 18U)
+      assert_eq(g, 24U)
+      assert_eq(b, 30U)
+      assert_eq(a, 1.0)
+    }
+    None => fail("expected quoted rgb to parse")
+  }
+}
+
+///|
+test "plain rgb css values with spaces parse correctly" {
+  match parse_css_rgb_components("rgb(86, 113, 140)") {
+    Some((r, g, b, a)) => {
+      assert_eq(r, 86U)
+      assert_eq(g, 113U)
+      assert_eq(b, 140U)
+      assert_eq(a, 1.0)
+    }
+    None => fail("expected plain rgb with spaces to parse")
+  }
+}

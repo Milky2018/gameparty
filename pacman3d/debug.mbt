@@ -38,7 +38,7 @@ let lighting_debug : LightingDebugState = {
   scene_enabled: false,
   freeze_ghosts: false,
   bobbing_enabled: true,
-  material_mode: Scene,
+  material_mode: WorldTextureFlat,
   show_ghost_spot_rays: false,
   center_ghost_spot_origin: false,
   light_mode: All,
@@ -149,7 +149,7 @@ fn debug_mode_allows_player_light() -> Bool {
 ///|
 fn debug_mode_allows_dot_light() -> Bool {
   if !lighting_debug.enabled {
-    return true
+    return false
   }
   match lighting_debug.light_mode {
     All => true
@@ -173,7 +173,7 @@ fn debug_mode_allows_ghost_point_light() -> Bool {
 ///|
 fn debug_mode_allows_ghost_spot_light() -> Bool {
   if !lighting_debug.enabled {
-    return true
+    return false
   }
   match lighting_debug.light_mode {
     All => true
@@ -319,25 +319,24 @@ fn sync_debug_light_state() -> Unit {
   )
   for dot in dots {
     if !dot.collected && dot.entity.is_alive() {
-      @render3d.point_lights3d().set(dot.entity, {
-        ..@render3d.default_point_light3d(),
-        color: color_rgba(245U, 227U, 92U, 1.0),
-        intensity: if debug_mode_allows_dot_light() {
-          DOT_LIGHT_INTENSITY
-        } else {
-          0.0
-        },
-        range: DOT_LIGHT_RANGE,
-      })
+      if debug_mode_allows_dot_light() {
+        @render3d.point_lights3d().set(dot.entity, {
+          ..@render3d.default_point_light3d(),
+          color: color_rgba(245U, 227U, 92U, 1.0),
+          intensity: DOT_LIGHT_INTENSITY,
+          range: DOT_LIGHT_RANGE,
+        })
+      } else {
+        @render3d.point_lights3d().remove(dot.entity)
+      }
     }
   }
 }
 
 ///|
 fn lighting_debug_system(_world : @ecs.World) -> Unit {
-  sync_debug_light_state()
-  sync_camera_transform()
-  for ghost in ghosts {
-    sync_ghost_visuals(ghost)
+  if !lighting_debug.enabled {
+    return
   }
+  sync_debug_light_state()
 }

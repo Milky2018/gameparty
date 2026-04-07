@@ -17,6 +17,8 @@ import {
   "Milky2018/selene/visibility",
   "Milky2018/selene/audio",
   "Milky2018/selene/time",
+  "tonyfettes/raylib" @raylib,
+  "moonbitlang/core/env" @env,
   "moonbitlang/core/math" @cmath,
   "moonbitlang/core/random",
 }

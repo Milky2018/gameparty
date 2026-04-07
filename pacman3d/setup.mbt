@@ -137,7 +137,11 @@ fn register_render_assets_once() -> Unit {
     ),
   )
   dot_mesh.val = Some(
-    @render3d.register_mesh_asset(@render3d.sphere_mesh(DOT_RADIUS)),
+    @render3d.register_mesh_asset(
+      @render3d.cube_mesh(
+        @math.Vec3::new(DOT_RADIUS * 1.8, DOT_RADIUS * 1.8, DOT_RADIUS * 1.8),
+      ),
+    ),
   )
   ghost_body_mesh.val = Some(
     @render3d.register_mesh_asset(
@@ -199,8 +203,8 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
     base_color_texture: Some(@render3d.texture_binding3d(wall_texture)),
-    roughness: 0.86,
-    metallic: 0.02,
+    roughness: 1.0,
+    metallic: 0.0,
   }
   wall_material.val = Some(
     @render3d.register_material_asset(wall_material_asset),
@@ -220,6 +224,7 @@ fn register_render_assets_once() -> Unit {
     base_color_texture: Some(@render3d.texture_binding3d(wall_texture_albedo)),
     roughness: 1.0,
     metallic: 0.0,
+    unlit: true,
   }
   wall_material_textured_flat.val = Some(
     @render3d.register_material_asset(wall_material_textured_flat_asset),
@@ -227,8 +232,8 @@ fn register_render_assets_once() -> Unit {
   let wall_material_brdf_only_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    roughness: 0.86,
-    metallic: 0.02,
+    roughness: 1.0,
+    metallic: 0.0,
   }
   wall_material_brdf_only.val = Some(
     @render3d.register_material_asset(wall_material_brdf_only_asset),
@@ -238,7 +243,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
     base_color_texture: Some(@render3d.texture_binding3d(floor_texture)),
-    roughness: 0.97,
+    roughness: 1.0,
   }
   floor_material.val = Some(
     @render3d.register_material_asset(floor_material_asset),
@@ -258,6 +263,7 @@ fn register_render_assets_once() -> Unit {
     base_color_texture: Some(@render3d.texture_binding3d(floor_texture_albedo)),
     roughness: 1.0,
     metallic: 0.0,
+    unlit: true,
   }
   floor_material_textured_flat.val = Some(
     @render3d.register_material_asset(floor_material_textured_flat_asset),
@@ -265,7 +271,7 @@ fn register_render_assets_once() -> Unit {
   let floor_material_brdf_only_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    roughness: 0.97,
+    roughness: 1.0,
     metallic: 0.0,
   }
   floor_material_brdf_only.val = Some(
@@ -276,7 +282,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
     base_color_texture: Some(@render3d.texture_binding3d(ceiling_texture)),
-    roughness: 0.92,
+    roughness: 1.0,
   }
   ceiling_material.val = Some(
     @render3d.register_material_asset(ceiling_material_asset),
@@ -298,6 +304,7 @@ fn register_render_assets_once() -> Unit {
     ),
     roughness: 1.0,
     metallic: 0.0,
+    unlit: true,
   }
   ceiling_material_textured_flat.val = Some(
     @render3d.register_material_asset(ceiling_material_textured_flat_asset),
@@ -305,7 +312,7 @@ fn register_render_assets_once() -> Unit {
   let ceiling_material_brdf_only_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    roughness: 0.92,
+    roughness: 1.0,
     metallic: 0.0,
   }
   ceiling_material_brdf_only.val = Some(
@@ -316,7 +323,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(245U, 227U, 92U, 1.0),
     emissive_color: color_rgba(168U, 146U, 56U, 1.0),
-    roughness: 0.3,
+    roughness: 1.0,
   }
   dot_material.val = Some(@render3d.register_material_asset(dot_material_asset))
   let dot_material_neutral_asset = {
@@ -331,7 +338,7 @@ fn register_render_assets_once() -> Unit {
   let dot_material_no_emissive_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(245U, 227U, 92U, 1.0),
-    roughness: 0.3,
+    roughness: 1.0,
     metallic: 0.0,
   }
   dot_material_no_emissive.val = Some(
@@ -342,7 +349,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(220U, 42U, 42U, 1.0),
     emissive_color: color_rgba(84U, 16U, 16U, 1.0),
-    roughness: 0.35,
+    roughness: 1.0,
   }
   ghost_material_fast.val = Some(
     @render3d.register_material_asset(fast_ghost_material_asset),
@@ -359,7 +366,7 @@ fn register_render_assets_once() -> Unit {
   let fast_ghost_material_no_emissive_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(220U, 42U, 42U, 1.0),
-    roughness: 0.35,
+    roughness: 1.0,
     metallic: 0.0,
   }
   ghost_material_fast_no_emissive.val = Some(
@@ -370,7 +377,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(246U, 146U, 46U, 1.0),
     emissive_color: color_rgba(96U, 48U, 16U, 1.0),
-    roughness: 0.35,
+    roughness: 1.0,
   }
   ghost_material_normal.val = Some(
     @render3d.register_material_asset(normal_ghost_material_asset),
@@ -387,7 +394,7 @@ fn register_render_assets_once() -> Unit {
   let normal_ghost_material_no_emissive_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(246U, 146U, 46U, 1.0),
-    roughness: 0.35,
+    roughness: 1.0,
     metallic: 0.0,
   }
   ghost_material_normal_no_emissive.val = Some(
@@ -398,7 +405,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(42U, 108U, 214U, 1.0),
     emissive_color: color_rgba(18U, 40U, 84U, 1.0),
-    roughness: 0.35,
+    roughness: 1.0,
   }
   ghost_material_slow.val = Some(
     @render3d.register_material_asset(slow_ghost_material_asset),
@@ -415,7 +422,7 @@ fn register_render_assets_once() -> Unit {
   let slow_ghost_material_no_emissive_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(42U, 108U, 214U, 1.0),
-    roughness: 0.35,
+    roughness: 1.0,
     metallic: 0.0,
   }
   ghost_material_slow_no_emissive.val = Some(
@@ -426,7 +433,7 @@ fn register_render_assets_once() -> Unit {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
     emissive_color: color_rgba(40U, 40U, 40U, 1.0),
-    roughness: 0.25,
+    roughness: 1.0,
   }
   ghost_eye_material.val = Some(
     @render3d.register_material_asset(ghost_eye_material_asset),
@@ -443,7 +450,7 @@ fn register_render_assets_once() -> Unit {
   let ghost_eye_material_no_emissive_asset = {
     ..@render3d.default_standard_material3d(),
     base_color: color_rgba(255U, 255U, 255U, 1.0),
-    roughness: 0.25,
+    roughness: 1.0,
     metallic: 0.0,
   }
   ghost_eye_material_no_emissive.val = Some(
@@ -483,7 +490,7 @@ fn spawn_mesh_entity(
   mesh : @render3d.MeshHandle,
   material : @render3d.MaterialHandle,
   translation : @math.Vec3,
-  cast_shadows? : Bool = true,
+  cast_shadows? : Bool = false,
   receive_shadows? : Bool = true,
 ) -> @entity.Entity {
   let entity = @entity.Entity::new()
@@ -725,29 +732,29 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     rotation,
     scale: @math.Vec3::one(),
   })
-  @render3d.point_lights3d().set(ghost.light_entity, {
-    ..@render3d.default_point_light3d(),
-    color: ghost_light_color_for_type(ghost.ghost_type),
-    intensity: if debug_mode_allows_ghost_point_light() {
-      GHOST_POINT_LIGHT_INTENSITY
-    } else {
-      0.0
-    },
-    range: GHOST_POINT_LIGHT_RANGE,
-  })
-  @render3d.spot_lights3d().set(ghost.light_entity, {
-    ..@render3d.default_spot_light3d(),
-    direction: local_spot_direction,
-    color: ghost_light_color_for_type(ghost.ghost_type),
-    intensity: if debug_mode_allows_ghost_spot_light() {
-      GHOST_SPOT_LIGHT_INTENSITY
-    } else {
-      0.0
-    },
-    range: GHOST_SPOT_LIGHT_RANGE,
-    inner_angle: GHOST_SPOT_LIGHT_INNER_ANGLE,
-    outer_angle: GHOST_SPOT_LIGHT_OUTER_ANGLE,
-  })
+  if debug_mode_allows_ghost_point_light() {
+    @render3d.point_lights3d().set(ghost.light_entity, {
+      ..@render3d.default_point_light3d(),
+      color: ghost_light_color_for_type(ghost.ghost_type),
+      intensity: GHOST_POINT_LIGHT_INTENSITY,
+      range: GHOST_POINT_LIGHT_RANGE,
+    })
+  } else {
+    @render3d.point_lights3d().remove(ghost.light_entity)
+  }
+  if debug_mode_allows_ghost_spot_light() {
+    @render3d.spot_lights3d().set(ghost.light_entity, {
+      ..@render3d.default_spot_light3d(),
+      direction: local_spot_direction,
+      color: ghost_light_color_for_type(ghost.ghost_type),
+      intensity: GHOST_SPOT_LIGHT_INTENSITY,
+      range: GHOST_SPOT_LIGHT_RANGE,
+      inner_angle: GHOST_SPOT_LIGHT_INNER_ANGLE,
+      outer_angle: GHOST_SPOT_LIGHT_OUTER_ANGLE,
+    })
+  } else {
+    @render3d.spot_lights3d().remove(ghost.light_entity)
+  }
   @render3d.mesh3d_renderers().set(ghost.spot_ray_entity, {
     mesh: ghost_spot_ray_mesh.val.unwrap(),
     material: ghost_spot_ray_material_for_type(ghost.ghost_type),
@@ -929,12 +936,14 @@ fn reset_level_entities() -> Unit {
           active_dot_material(),
           @math.Vec3::new(world_x, MAP_DOT_Y, world_z),
         )
-        @render3d.point_lights3d().set(dot_entity, {
-          ..@render3d.default_point_light3d(),
-          color: color_rgba(245U, 227U, 92U, 1.0),
-          intensity: DOT_LIGHT_INTENSITY,
-          range: DOT_LIGHT_RANGE,
-        })
+        if debug_mode_allows_dot_light() {
+          @render3d.point_lights3d().set(dot_entity, {
+            ..@render3d.default_point_light3d(),
+            color: color_rgba(245U, 227U, 92U, 1.0),
+            intensity: DOT_LIGHT_INTENSITY,
+            range: DOT_LIGHT_RANGE,
+          })
+        }
         let minimap_dot_entity = spawn_color_rect_entity(
           @math.Vec2D(MINIMAP_DOT_SIZE, MINIMAP_DOT_SIZE),
           minimap_pos_for_world(world_x, world_z, MINIMAP_DOT_SIZE),
@@ -1066,6 +1075,7 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
     direction: @math.Vec3::new(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
     intensity: DIRECTIONAL_LIGHT_INTENSITY,
+    shadows: false,
   })
   @render3d.point_lights3d().set(player_light_entity, {
     ..@render3d.default_point_light3d(),

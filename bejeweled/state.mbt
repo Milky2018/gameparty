@@ -1,0 +1,255 @@
+///|
+const VIEWPORT_WIDTH : Double = 1280.0
+
+///|
+const VIEWPORT_HEIGHT : Double = 720.0
+
+///|
+const FPS : UInt = 60
+
+///|
+const BOARD_ROWS : Int = 8
+
+///|
+const BOARD_COLS : Int = 8
+
+///|
+const CELL_SIZE : Double = 68.0
+
+///|
+const BOARD_ORIGIN_X : Double = 280.0
+
+///|
+const BOARD_ORIGIN_Y : Double = 86.0
+
+///|
+const BOARD_GAP : Double = 6.0
+
+///|
+const GEM_COUNT : Int = 6
+
+///|
+const MOVE_LIMIT : Int = 32
+
+///|
+const GAME_TIME_LIMIT : Double = 180.0
+
+///|
+const BOARD_ANIM_SECONDS : Double = 0.16
+
+///|
+const DEBUG_CAPTURE_ENV : String = "BEJEWELED_CAPTURE"
+
+///|
+const DEBUG_CAPTURE_PATH : String = "bejeweled_capture.png"
+
+///|
+const DEBUG_CAPTURE_DELAY_SECONDS : Double = 4.0
+
+///|
+const BEJEWELED_PROFILE_ENV : String = "BEJEWELED_PROFILE"
+
+///|
+const BEJEWELED_PROFILE_REPORT_SECONDS : Double = 1.0
+
+///|
+const BEJEWELED_PROFILE_WARMUP_SECONDS : Double = 2.5
+
+///|
+enum GamePhase {
+  Playing
+  GameOver
+} derive(Eq)
+
+///|
+enum GemKind {
+  Ruby
+  Emerald
+  Sapphire
+  Amber
+  Amethyst
+  Pearl
+} derive(Eq, Hash, Show)
+
+///|
+struct Cell {
+  row : Int
+  col : Int
+} derive(Eq, Hash, Show)
+
+///|
+struct Gem {
+  kind : GemKind
+  row : Int
+  col : Int
+  x : Double
+  y : Double
+  target_x : Double
+  target_y : Double
+  t : Double
+  anim_seconds : Double
+  clearing : Bool
+  entity : @entity.Entity
+} derive(Show)
+
+///|
+priv struct GameState {
+  mut phase : GamePhase
+  mut score : Int
+  mut moves_left : Int
+  mut time_left : Double
+  mut first_pick : Cell?
+  mut resolution_lock : Double
+  mut debug_fps : Bool
+  mut debug_capture_enabled : Bool
+  mut debug_capture_started_at : Double
+  mut debug_capture_taken : Bool
+  mut profile_enabled : Bool
+  mut profile_started_at : Double
+  mut profile_last_report_at : Double
+  mut profile_frame_count : Int
+  mut profile_input_total : Double
+  mut profile_update_total : Double
+  mut profile_render_total : Double
+  mut profile_slowest_frame : Double
+  mut hud_text_cache : String
+  mut hint_text_cache : String
+  mut overlay_text_cache : String
+  mut game_over_reason : String
+}
+
+///|
+let game_state : GameState = {
+  phase: Playing,
+  score: 0,
+  moves_left: MOVE_LIMIT,
+  time_left: GAME_TIME_LIMIT,
+  first_pick: None,
+  resolution_lock: 0.0,
+  debug_fps: false,
+  debug_capture_enabled: false,
+  debug_capture_started_at: 0.0,
+  debug_capture_taken: false,
+  profile_enabled: false,
+  profile_started_at: 0.0,
+  profile_last_report_at: 0.0,
+  profile_frame_count: 0,
+  profile_input_total: 0.0,
+  profile_update_total: 0.0,
+  profile_render_total: 0.0,
+  profile_slowest_frame: 0.0,
+  hud_text_cache: "",
+  hint_text_cache: "",
+  overlay_text_cache: "",
+  game_over_reason: "",
+}
+
+///|
+let rand : @random.Rand = @random.Rand::new()
+
+///|
+let board_bg_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let title_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let hud_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let hint_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let overlay_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let overlay_text_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let board_cell_entities : Array[@entity.Entity] = []
+
+///|
+let gem_entities : Array[@entity.Entity] = []
+
+///|
+let board : Array[GemKind?] = []
+
+///|
+let gem_lookup : Map[Cell, Gem] = Map::new()
+
+///|
+let gem_colors : Array[@render.Color] = [
+  { r: 235U, g: 72U, b: 84U, a: 1.0 },
+  { r: 76U, g: 213U, b: 111U, a: 1.0 },
+  { r: 78U, g: 150U, b: 255U, a: 1.0 },
+  { r: 245U, g: 181U, b: 66U, a: 1.0 },
+  { r: 183U, g: 110U, b: 255U, a: 1.0 },
+  { r: 246U, g: 234U, b: 173U, a: 1.0 },
+]
+
+///|
+let gem_names : Array[String] = [
+  "Ruby", "Emerald", "Sapphire", "Amber", "Amethyst", "Pearl",
+]
+
+///|
+let sound_swap : Ref[@raylib.Sound?] = { val: None }
+
+///|
+let sound_match : Ref[@raylib.Sound?] = { val: None }
+
+///|
+let sound_cascade : Ref[@raylib.Sound?] = { val: None }
+
+///|
+let sound_gameover : Ref[@raylib.Sound?] = { val: None }
+
+///|
+fn board_index(row : Int, col : Int) -> Int {
+  row * BOARD_COLS + col
+}
+
+///|
+fn in_bounds(row : Int, col : Int) -> Bool {
+  row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS
+}
+
+///|
+fn cell_center(cell : Cell) -> (@math.Vec2D, Double) {
+  (
+    @math.Vec2D(
+      BOARD_ORIGIN_X + cell.col.to_double() * CELL_SIZE + CELL_SIZE * 0.5,
+      BOARD_ORIGIN_Y + cell.row.to_double() * CELL_SIZE + CELL_SIZE * 0.5,
+    ),
+    200.0 + cell.row.to_double(),
+  )
+}
+
+///|
+fn gem_color(kind : GemKind) -> @render.Color {
+  gem_colors[gem_index(kind)]
+}
+
+///|
+fn gem_index(kind : GemKind) -> Int {
+  match kind {
+    Ruby => 0
+    Emerald => 1
+    Sapphire => 2
+    Amber => 3
+    Amethyst => 4
+    Pearl => 5
+  }
+}
+
+///|
+fn env_flag_enabled(name : String) -> Bool {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      match raw {
+        "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => true
+        _ => false
+      }
+    None => false
+  }
+}

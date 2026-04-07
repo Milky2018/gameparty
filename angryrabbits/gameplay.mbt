@@ -297,6 +297,52 @@ fn world_is_quiet() -> Bool {
 }
 
 ///|
+fn maybe_report_profile() -> Unit {
+  if !profile_enabled.val {
+    return
+  }
+  let now = @time.elapsed_raw()
+  if now - profile_last_report_at.val < PROFILE_LOG_INTERVAL_SECONDS {
+    return
+  }
+  let frames = if profile_frame_count.val <= 0 {
+    1
+  } else {
+    profile_frame_count.val
+  }
+  let frames_double = frames.to_double()
+  let window_seconds = now - profile_last_report_at.val
+  let sim_avg_ms = if frames_double <= 0.0 {
+    0.0
+  } else {
+    profile_sim_total.val / frames_double * 1000.0
+  }
+  let render_avg_ms = if frames_double <= 0.0 {
+    0.0
+  } else {
+    profile_render_total.val / frames_double * 1000.0
+  }
+  let fps = if window_seconds <= 0.0 {
+    0.0
+  } else {
+    frames_double / window_seconds
+  }
+  let fps_from_frame_dt = if profile_frame_dt_total.val <= 0.0 {
+    0.0
+  } else {
+    frames_double / profile_frame_dt_total.val
+  }
+  println(
+    "[angryrabbits][profile] elapsed=\{debug_scalar_string(now - profile_started_at.val)}s frames=\{profile_frame_count.val} fps=\{debug_scalar_string(fps)} fps_frame_dt=\{debug_scalar_string(fps_from_frame_dt)} sim_avg_ms=\{debug_scalar_string(sim_avg_ms)} render_avg_ms=\{debug_scalar_string(render_avg_ms)}",
+  )
+  profile_last_report_at.val = now
+  profile_frame_count.val = 0
+  profile_sim_total.val = 0.0
+  profile_render_total.val = 0.0
+  profile_frame_dt_total.val = 0.0
+}
+
+///|
 fn apply_contact_damage(
   entity : @entity.Entity,
   other : @entity.Entity,
@@ -570,6 +616,7 @@ fn simulation_system(_world : @ecs.World) -> Unit {
   if game_state.val == Error {
     return
   }
+  let sim_started_at = @time.elapsed_raw()
   let delta = @time.delta()
   if debug_trace_update_frames_remaining.val > 0 {
     match debug_tracked_rabbit_entity.val {
@@ -638,6 +685,9 @@ fn simulation_system(_world : @ecs.World) -> Unit {
       begin_next_shot_or_end()
     }
   }
+  if profile_enabled.val {
+    profile_sim_total.val += @time.elapsed_raw() - sim_started_at
+  }
 }
 
 ///|
@@ -663,6 +713,55 @@ fn physics_debug_trace_system(_world : @ecs.World) -> Unit {
 
 ///|
 fn render_sync_system(_world : @ecs.World) -> Unit {
+  let render_started_at = @time.elapsed_raw()
   sync_dynamic_visuals()
   sync_ui()
+  if profile_enabled.val {
+    profile_render_total.val += @time.elapsed_raw() - render_started_at
+    profile_frame_count.val = profile_frame_count.val + 1
+    profile_frame_dt_total.val += @time.frame_delta()
+    maybe_report_profile()
+  }
+}
+
+///|
+fn capture_after_render_system(_world : @ecs.World) -> Unit {
+  if !capture_enabled.val || capture_taken.val {
+    return
+  }
+  if game_state.val == Start && !capture_forced_start.val {
+    start_move_current_rabbit_to_slingshot()
+    capture_forced_start.val = true
+    capture_started_at.val = @time.elapsed_raw()
+    return
+  }
+  if capture_forced_start.val && game_state.val != Playing {
+    return
+  }
+  if @time.elapsed_raw() - capture_started_at.val < CAPTURE_DELAY_SECONDS {
+    return
+  }
+  if profile_enabled.val {
+    let elapsed = @time.elapsed_raw() - profile_last_report_at.val
+    let frames = profile_frame_count.val
+    let average_fps = if elapsed <= 0.0 || frames <= 0 {
+      0.0
+    } else {
+      frames.to_double() / elapsed
+    }
+    let fps_from_frame_dt = if profile_frame_dt_total.val <= 0.0 || frames <= 0 {
+      0.0
+    } else {
+      frames.to_double() / profile_frame_dt_total.val
+    }
+    if frames > 0 {
+      println(
+        "[angryrabbits][perf] raylib_fps=\{@raylib.get_fps()} avg_fps=\{debug_scalar_string(average_fps)} fps_frame_dt=\{debug_scalar_string(fps_from_frame_dt)} frames=\{frames} elapsed=\{debug_scalar_string(elapsed)}",
+      )
+    }
+  }
+  @raylib.take_screenshot(CAPTURE_PATH)
+  println("[angryrabbits][capture] path=\{CAPTURE_PATH}")
+  capture_taken.val = true
+  request_exit()
 }

@@ -5,7 +5,7 @@ const VIEWPORT_WIDTH : Double = 656.0
 const VIEWPORT_HEIGHT : Double = 616.0
 
 ///|
-const ZOOM : Double = 1.5
+const ZOOM : Double = 1.0
 
 ///|
 const FPS : UInt = 60
@@ -466,6 +466,87 @@ let forced_drop_rolls : Array[Double] = []
 let forced_drop_kinds : Array[ItemKind] = []
 
 ///|
+const PROFILE_ENV : String = "BOMBMAN_PROFILE"
+
+///|
+const CAPTURE_ENV : String = "BOMBMAN_CAPTURE"
+
+///|
+const CAPTURE_PATH : String = "bombman_capture.png"
+
+///|
+const CAPTURE_DELAY_SECONDS : Double = 4.0
+
+///|
+let profile_enabled : Ref[Bool] = { val: false }
+
+///|
+let profile_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_last_report_at : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_frame_count : Ref[Int] = { val: 0 }
+
+///|
+let profile_sim_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_render_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_frame_dt_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_motion_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_bombs_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_flames_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_enemies_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_hits_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_phase_total : Ref[Double] = { val: 0.0 }
+
+///|
+let capture_enabled : Ref[Bool] = { val: false }
+
+///|
+let capture_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let capture_taken : Ref[Bool] = { val: false }
+
+///|
+let capture_perf_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let capture_perf_frame_count : Ref[Int] = { val: 0 }
+
+///|
+let capture_perf_frame_dt_total : Ref[Double] = { val: 0.0 }
+
+///|
+let movement_player_bomb_centers : Array[Array[@math.Vec2D]] = [[], []]
+
+///|
+let movement_enemy_bomb_centers : Array[@math.Vec2D] = []
+
+///|
+let movement_tile_rects_cache : Array[Rect] = []
+
+///|
+let tile_visuals_dirty : Ref[Bool] = { val: true }
+
+///|
 fn cell_index(x : Int, y : Int) -> Int {
   y * GRID_WIDTH + x
 }
@@ -511,6 +592,18 @@ fn abs_double(value : Double) -> Double {
     -value
   } else {
     value
+  }
+}
+
+///|
+fn env_flag_enabled(name : String) -> Bool {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      match raw {
+        "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => true
+        _ => false
+      }
+    None => false
   }
 }
 

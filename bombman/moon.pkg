@@ -8,6 +8,7 @@ import {
   "Milky2018/selene/math",
   "Milky2018/selene/mesh2d",
   "Milky2018/selene/plugins",
+  "Milky2018/selene/render",
   "Milky2018/selene/sprite",
   "Milky2018/selene/system",
   "Milky2018/selene/text2d",
@@ -17,4 +18,6 @@ import {
   "Milky2018/selene/visibility",
   "tonyfettes/raylib" @raylib,
   "moonbitlang/core/math" @cmath,
+  "moonbitlang/core/string" @string,
+  "moonbitlang/core/env",
 }

@@ -6,6 +6,8 @@ import {
 }
 
 // Values
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
 pub fn input_system(@ecs.World) -> Unit
 
 pub fn render_sync_system(@ecs.World) -> Unit

@@ -9,13 +9,15 @@ import {
 // Values
 pub fn add_runtime_systems(@app.App, () -> Bool) -> @app.App
 
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
 pub fn combat_system(@ecs.World) -> Unit
+
+pub fn debug_runtime_system(@ecs.World) -> Unit
 
 pub fn enemy_spawn_system(@ecs.World) -> Unit
 
 pub fn enter_from_host() -> Unit
-
-pub fn get_embedded_asset(String) -> Bytes?
 
 pub fn menu_state_system(@ecs.World) -> Unit
 
@@ -42,47 +44,33 @@ pub fn victory_system(@ecs.World) -> Unit
 // Errors
 
 // Types and methods
-type BackgroundKind
-pub impl Eq for BackgroundKind
+type BackgroundKind derive(Eq)
 
-type BulletFaction
-pub impl Eq for BulletFaction
+type BulletFaction derive(Eq)
 
-type CharacterType
-pub impl Eq for CharacterType
+type CharacterType derive(Eq)
 
-type ConsumableKind
-pub impl Eq for ConsumableKind
+type ConsumableKind derive(Eq)
 
-type DropListType
-pub impl Eq for DropListType
+type DropListType derive(Eq)
 
-type EnemyKind
-pub impl Eq for EnemyKind
+type EnemyKind derive(Eq)
 
-type EnemyMovementKind
-pub impl Eq for EnemyMovementKind
+type EnemyMovementKind derive(Eq)
 
-type EnemyShooterKind
-pub impl Eq for EnemyShooterKind
+type EnemyShooterKind derive(Eq)
 
-type ItemKind
-pub impl Eq for ItemKind
+type ItemKind derive(Eq)
 
-type ProjectileKind
-pub impl Eq for ProjectileKind
+type ProjectileKind derive(Eq)
 
-type RunPhase
-pub impl Eq for RunPhase
+type RunPhase derive(Eq)
 
-type ScreenState
-pub impl Eq for ScreenState
+type ScreenState derive(Eq)
 
-type SpecialAbility
-pub impl Eq for SpecialAbility
+type SpecialAbility derive(Eq)
 
-type StageKind
-pub impl Eq for StageKind
+type StageKind derive(Eq)
 
 // Type aliases
 

@@ -23,8 +23,7 @@ pub(all) enum Category {
   Item
   Block
   None
-}
-pub impl Eq for Category
+} derive(Eq)
 
 pub struct Item {
   name : String

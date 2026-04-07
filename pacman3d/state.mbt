@@ -1,8 +1,8 @@
 ///|
-const VIEWPORT_WIDTH : Double = 640.0
+const VIEWPORT_WIDTH : Double = 480.0
 
 ///|
-const VIEWPORT_HEIGHT : Double = 480.0
+const VIEWPORT_HEIGHT : Double = 360.0
 
 ///|
 const FPS : UInt = 60
@@ -330,6 +330,21 @@ let hud_line3_ui : @entity.Entity = @entity.Entity::new()
 
 ///|
 let hud_debug_ui : @entity.Entity = @entity.Entity::new()
+
+///|
+let hud_title_text_cache : Ref[String] = { val: "" }
+
+///|
+let hud_line1_text_cache : Ref[String] = { val: "" }
+
+///|
+let hud_line2_text_cache : Ref[String] = { val: "" }
+
+///|
+let hud_line3_text_cache : Ref[String] = { val: "" }
+
+///|
+let hud_debug_text_cache : Ref[String] = { val: "" }
 
 ///|
 let wall_mesh : Ref[@render3d.MeshHandle?] = { val: None }

@@ -8,6 +8,12 @@ let circle_mesh_handles : Map[Int, @mesh2d.Mesh2dHandle] = Map::new()
 let circle_material_handles : Map[String, @material2d.ColorMaterialHandle] = Map::new()
 
 ///|
+let text_content_cache : Map[@entity.Entity, String] = Map::new()
+
+///|
+let text_style_cache : Map[@entity.Entity, String] = Map::new()
+
+///|
 fn register_bombman_font_once() -> Unit {
   if bombman_font_registered.val {
     return
@@ -45,6 +51,96 @@ fn show_entity(entity : @entity.Entity) -> Unit {
 }
 
 ///|
+fn parse_color_component_int(part : StringView) -> Int? {
+  let token = part.to_string().trim().to_string()
+  if token == "" {
+    return None
+  }
+  Some(@string.parse_int(token)) catch {
+    _ => None
+  }
+}
+
+///|
+fn parse_color_alpha(part : StringView) -> Double? {
+  let token = part.to_string().trim().to_string()
+  if token == "" {
+    return None
+  }
+  Some(@string.parse_double(token)) catch {
+    _ => None
+  }
+}
+
+///|
+fn clamp_color_byte(value : Int) -> UInt {
+  let clamped = if value < 0 { 0 } else if value > 255 { 255 } else { value }
+  clamped.reinterpret_as_uint()
+}
+
+///|
+fn clamp_color_alpha(value : Double) -> Double {
+  clamp_double(value, 0.0, 1.0)
+}
+
+///|
+fn normalize_css_color_string(color : String) -> String {
+  let trimmed = color.trim().to_string()
+  if trimmed.length() >= 2 &&
+    trimmed.unsafe_get(0) == '\"' &&
+    trimmed.unsafe_get(trimmed.length() - 1) == '\"' {
+    return trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
+  }
+  if trimmed.length() >= 2 &&
+    trimmed.unsafe_get(0) == '\'' &&
+    trimmed.unsafe_get(trimmed.length() - 1) == '\'' {
+    return trimmed.unsafe_substring(start=1, end=trimmed.length() - 1)
+  }
+  trimmed
+}
+
+///|
+fn parse_css_rgb_components(color : String) -> (UInt, UInt, UInt, Double)? {
+  let trimmed = normalize_css_color_string(color)
+  let is_rgb = trimmed.has_prefix("rgb(") && trimmed.has_suffix(")")
+  let is_rgba = trimmed.has_prefix("rgba(") && trimmed.has_suffix(")")
+  if !is_rgb && !is_rgba {
+    return None
+  }
+  let body = if is_rgba {
+    trimmed.replace(old="rgba(", new="").replace(old=")", new="")
+  } else {
+    trimmed.replace(old="rgb(", new="").replace(old=")", new="")
+  }
+  let parts : Array[StringView] = []
+  for part in body.split(",") {
+    parts.push(part)
+  }
+  if (is_rgba && parts.length() != 4) || (is_rgb && parts.length() != 3) {
+    return None
+  }
+  guard parse_color_component_int(parts[0]) is Some(r) else { return None }
+  guard parse_color_component_int(parts[1]) is Some(g) else { return None }
+  guard parse_color_component_int(parts[2]) is Some(b) else { return None }
+  let alpha = if is_rgba {
+    guard parse_color_alpha(parts[3]) is Some(a) else { return None }
+    clamp_color_alpha(a)
+  } else {
+    1.0
+  }
+  Some((clamp_color_byte(r), clamp_color_byte(g), clamp_color_byte(b), alpha))
+}
+
+///|
+fn sprite_color(color : String) -> @render.Color {
+  let normalized = normalize_css_color_string(color)
+  match parse_css_rgb_components(color) {
+    Some((r, g, b, a)) => { r, g, b, a }
+    None => @sprite.color_from_css(normalized)
+  }
+}
+
+///|
 fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
   let key = @cmath.round(radius * 1000.0).to_int()
   circle_mesh_handles.get_or_init(key, fn() { @mesh2d.circle(radius) })
@@ -54,7 +150,7 @@ fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
 fn circle_material_handle(color : String) -> @material2d.ColorMaterialHandle {
   circle_material_handles.get_or_init(color, fn() {
     @material2d.register_color_material(
-      @material2d.ColorMaterial::from_color(@sprite.color_from_css(color)),
+      @material2d.ColorMaterial::from_color(sprite_color(color)),
     )
   })
 }
@@ -75,12 +171,30 @@ fn set_text_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
-  @ui.texts().set(entity, @ui.Text::new(text))
-  @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
-  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
-  @ui.text_layouts().set(entity, @ui.TextLayout::new(align=Left, baseline=Top))
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  let style_key = font + "|" + color + "|left-top"
+  let style_changed = match text_style_cache.get(entity) {
+    Some(existing) => existing != style_key
+    None => true
+  }
+  if style_changed {
+    @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+    @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+    @ui.text_layouts().set(
+      entity,
+      @ui.TextLayout::new(align=Left, baseline=Top),
+    )
+    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+    text_style_cache.set(entity, style_key)
+  }
+  let content_changed = match text_content_cache.get(entity) {
+    Some(existing) => existing != text
+    None => true
+  }
+  if content_changed {
+    @ui.texts().set(entity, @ui.Text::new(text))
+    text_content_cache.set(entity, text)
+  }
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
@@ -95,15 +209,30 @@ fn set_text_entity_center(
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
-  @ui.texts().set(entity, @ui.Text::new(text))
-  @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
-  @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
-  @ui.text_layouts().set(
-    entity,
-    @ui.TextLayout::new(align=Center, baseline=Top),
-  )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.5)))
+  let style_key = font + "|" + color + "|center-top"
+  let style_changed = match text_style_cache.get(entity) {
+    Some(existing) => existing != style_key
+    None => true
+  }
+  if style_changed {
+    @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+    @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
+    @ui.text_layouts().set(
+      entity,
+      @ui.TextLayout::new(align=Center, baseline=Top),
+    )
+    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.5)))
+    text_style_cache.set(entity, style_key)
+  }
+  let content_changed = match text_content_cache.get(entity) {
+    Some(existing) => existing != text
+    None => true
+  }
+  if content_changed {
+    @ui.texts().set(entity, @ui.Text::new(text))
+    text_content_cache.set(entity, text)
+  }
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
@@ -117,7 +246,7 @@ fn set_rect_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
-  let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
+  let sprite = @sprite.Sprite::from_color(sprite_color(color), size)
   sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
@@ -154,7 +283,11 @@ fn tile_at(x : Int, y : Int) -> TileKind {
 ///|
 fn set_tile(x : Int, y : Int, tile : TileKind) -> Unit {
   if cell_in_bounds(x, y) {
-    tiles[cell_index(x, y)] = tile
+    let index = cell_index(x, y)
+    if tiles[index] != tile {
+      tiles[index] = tile
+      tile_visuals_dirty.val = true
+    }
   }
 }
 
@@ -231,6 +364,7 @@ fn clear_tile_grid() -> Unit {
   for _ in 0..<(GRID_WIDTH * GRID_HEIGHT) {
     tiles.push(Empty)
   }
+  tile_visuals_dirty.val = true
 }
 
 ///|
@@ -376,6 +510,7 @@ fn start_round(mode : GameMode) -> Unit {
   current_mode.val = mode
   round_outcome.val = LevelClear
   load_level(current_level.val, mode)
+  tile_visuals_dirty.val = true
   phase.val = Playing
 }
 
@@ -385,6 +520,7 @@ fn return_to_menu() -> Unit {
   clear_dynamic_entities()
   clear_tile_grid()
   deactivate_all_players()
+  tile_visuals_dirty.val = true
   phase.val = MainMenu
   round_outcome.val = LevelClear
   menu_selection.val = match current_mode.val {
@@ -397,6 +533,26 @@ fn return_to_menu() -> Unit {
 ///|
 fn startup_system(_world : @ecs.World) -> Unit {
   register_bombman_font_once()
+  profile_enabled.val = env_flag_enabled(PROFILE_ENV)
+  capture_enabled.val = env_flag_enabled(CAPTURE_ENV)
+  let started_at = @time.elapsed_raw()
+  profile_started_at.val = started_at
+  profile_last_report_at.val = started_at
+  profile_frame_count.val = 0
+  profile_sim_total.val = 0.0
+  profile_render_total.val = 0.0
+  profile_frame_dt_total.val = 0.0
+  profile_motion_total.val = 0.0
+  profile_bombs_total.val = 0.0
+  profile_flames_total.val = 0.0
+  profile_enemies_total.val = 0.0
+  profile_hits_total.val = 0.0
+  profile_phase_total.val = 0.0
+  capture_started_at.val = started_at
+  capture_taken.val = false
+  capture_perf_started_at.val = started_at
+  capture_perf_frame_count.val = 0
+  capture_perf_frame_dt_total.val = 0.0
   ensure_entity_alive(background_entity)
   ensure_entity_alive(title_entity)
   ensure_entity_alive(hud_entity)
@@ -413,7 +569,29 @@ fn startup_system(_world : @ecs.World) -> Unit {
   deactivate_all_players()
   phase.val = MainMenu
   exit_request_count.val = 0
+  if capture_enabled.val {
+    start_round(SinglePlayer)
+  }
   render_sync_system(@ecs.require_current_world())
+  // Ignore startup/setup cost for runtime QA metrics and capture delay.
+  let ready_at = @time.elapsed_raw()
+  profile_started_at.val = ready_at
+  profile_last_report_at.val = ready_at
+  profile_frame_count.val = 0
+  profile_sim_total.val = 0.0
+  profile_render_total.val = 0.0
+  profile_frame_dt_total.val = 0.0
+  profile_motion_total.val = 0.0
+  profile_bombs_total.val = 0.0
+  profile_flames_total.val = 0.0
+  profile_enemies_total.val = 0.0
+  profile_hits_total.val = 0.0
+  profile_phase_total.val = 0.0
+  capture_started_at.val = ready_at
+  capture_taken.val = false
+  capture_perf_started_at.val = ready_at
+  capture_perf_frame_count.val = 0
+  capture_perf_frame_dt_total.val = 0.0
 }
 
 ///|
@@ -658,6 +836,9 @@ fn status_text() -> String {
 
 ///|
 fn sync_tile_visuals() -> Unit {
+  if !tile_visuals_dirty.val {
+    return
+  }
   let size = floor_tile_size()
   for y in 0..<GRID_HEIGHT {
     for x in 0..<GRID_WIDTH {
@@ -670,6 +851,7 @@ fn sync_tile_visuals() -> Unit {
       set_rect_entity(entity, floor_tile_position(x, y), size, color, 20)
     }
   }
+  tile_visuals_dirty.val = false
 }
 
 ///|
@@ -677,6 +859,7 @@ fn hide_tile_visuals() -> Unit {
   for entity in tile_entities {
     hide_entity(entity)
   }
+  tile_visuals_dirty.val = true
 }
 
 ///|
@@ -869,6 +1052,7 @@ fn sync_playing_hud_visuals() -> Unit {
 
 ///|
 pub fn render_sync_system(_world : @ecs.World) -> Unit {
+  let render_started_at = @time.elapsed_raw()
   set_rect_entity(
     background_entity,
     @math.Vec2D::zero(),
@@ -891,4 +1075,48 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
       sync_playing_hud_visuals()
     }
   }
+  if profile_enabled.val {
+    profile_render_total.val += @time.elapsed_raw() - render_started_at
+    profile_frame_count.val += 1
+    profile_frame_dt_total.val += @time.frame_delta()
+    emit_profile_report_if_needed(@time.elapsed_raw())
+  }
+  if capture_enabled.val && !capture_taken.val {
+    capture_perf_frame_count.val += 1
+    capture_perf_frame_dt_total.val += @time.frame_delta()
+  }
+}
+
+///|
+pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
+  if !capture_enabled.val || capture_taken.val {
+    return
+  }
+  if @time.elapsed_raw() - capture_started_at.val < CAPTURE_DELAY_SECONDS {
+    return
+  }
+  if profile_enabled.val {
+    let elapsed = @time.elapsed_raw() - capture_perf_started_at.val
+    let frames = capture_perf_frame_count.val
+    let average_fps = if elapsed <= 0.0 || frames <= 0 {
+      0.0
+    } else {
+      frames.to_double() / elapsed
+    }
+    let fps_from_frame_dt = if capture_perf_frame_dt_total.val <= 0.0 ||
+      frames <= 0 {
+      0.0
+    } else {
+      frames.to_double() / capture_perf_frame_dt_total.val
+    }
+    if frames > 0 {
+      println(
+        "[bombman][perf] raylib_fps=\{@raylib.get_fps()} avg_fps=\{average_fps} fps_frame_dt=\{fps_from_frame_dt} frames=\{frames} elapsed=\{elapsed}",
+      )
+    }
+  }
+  @raylib.take_screenshot(CAPTURE_PATH)
+  println("[bombman][capture] path=\{CAPTURE_PATH}")
+  capture_taken.val = true
+  @system.exit()
 }

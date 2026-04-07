@@ -25,7 +25,11 @@ fn initialize_camera_and_lighting() -> Unit {
     clear_color: color_rgba(132U, 194U, 255U, 1.0),
     fov_y: 72.0,
     near: 0.01,
-    far: 512.0,
+    far: if capture_enabled.val {
+      96.0
+    } else {
+      512.0
+    },
   })
   @transform.transforms().set(light_entity, {
     translation: @math.Vec3::new(0.0, 24.0, 0.0),
@@ -46,32 +50,86 @@ fn initialize_camera_and_lighting() -> Unit {
 
 ///|
 fn prime_initial_chunks() -> Unit {
-  // Keep startup responsive: do one minimal streaming step here, then let
-  // regular per-frame streaming finish the neighborhood in background.
-  stream_chunks_step()
+  // Aggressively prewarm nearby chunks so the first visible frame does not
+  // show large terrain holes around the spawn column.
+  let prewarm_steps = if capture_enabled.val {
+    STARTUP_CHUNK_PREWARM_STEPS * 2
+  } else {
+    STARTUP_CHUNK_PREWARM_STEPS
+  }
+  for _ in 0..<prewarm_steps {
+    stream_chunks_step_with_budget(
+      STARTUP_CHUNK_GENERATE_BUDGET,
+      STARTUP_CHUNK_REBUILD_BUDGET,
+      STARTUP_CHUNK_UNLOAD_BUDGET,
+    )
+    if capture_enabled.val {
+      let has_visible_chunk_mesh = match player_chunk_mesh_counts() {
+        Some((normal_count, leaf_count, translucent_count)) =>
+          normal_count + leaf_count + translucent_count > 0
+        None => false
+      }
+      if player_chunk_column_loaded() && has_visible_chunk_mesh {
+        break
+      }
+    } else if player_chunk_column_loaded() && chunk_stream_idle() {
+      break
+    }
+  }
 }
 
 ///|
 fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
+  let reset_started_at = profile_phase_begin("startup.reset_runtime_world")
   debug_update_counter.val = 0
-  debug_started_at.val = @time.elapsed()
   debug_capture_taken.val = false
+  debug_capture_ready_started.val = false
+  debug_capture_ready_at.val = 0.0
+  debug_capture_ready_frames.val = 0
+  debug_capture_ready_delta.val = 0.0
   debug_first_mesh_logged.val = false
+  profile_frame_counter.val = 0
+  demo_spawn_pending.val = demo_entities_enabled.val
+  demo_spawn_delay_frames.val = if demo_entities_enabled.val {
+    DEMO_SPAWN_DELAY_FRAMES
+  } else {
+    0
+  }
   world_material_rebind_frames_left.val = 0
   let preserved_hotbar = inventory_state.val.hotbar.copy()
   let preserved_selection = wrap_hotbar_index(
     player_controller.val.selected_hotbar_index,
   )
+  let clear_started_at = profile_phase_begin("startup.clear_demo_and_chunks")
   clear_demo_entities()
   reset_chunk_runtime()
+  profile_phase_end("startup.clear_demo_and_chunks", clear_started_at)
+
+  let session_started_at = profile_phase_begin("startup.create_world_session")
   world_session.val = Some(create_world_session(seed, world_type))
+  profile_phase_end("startup.create_world_session", session_started_at)
+
+  let state_started_at = profile_phase_begin("startup.reset_player_and_ui")
+  let spawned_position = spawn_player_position()
+  let initial_position = if capture_enabled.val &&
+    world_type is @level.WorldType::Flat {
+    // Keep capture-mode camera inside the single loaded chunk so terrain is
+    // visible even with the reduced capture streaming radius.
+    @math.Vec3::new(
+      CHUNK_WORLD_SIZE_X.to_double() * 0.5 + 0.5,
+      spawned_position.y,
+      CHUNK_WORLD_SIZE_Z.to_double() * 0.5 + 0.5,
+    )
+  } else {
+    spawned_position
+  }
   selection_state.val = {
     hit: None,
     preview_long_id: None,
     preview_valid: false,
   }
   player_controller.val = {
-    position: spawn_player_position(),
+    position: initial_position,
     velocity: @math.Vec3::zero(),
     yaw: DEFAULT_PLAYER_YAW,
     pitch: DEFAULT_PLAYER_PITCH,
@@ -89,13 +147,33 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
       default_hotbar_slots(inventory_state.val.catalog)
     },
   }
+  profile_phase_end("startup.reset_player_and_ui", state_started_at)
+
+  let prewarm_started_at = profile_phase_begin("startup.prime_chunks")
   prime_initial_chunks()
+  profile_phase_end("startup.prime_chunks", prewarm_started_at)
+
+  let view_started_at = profile_phase_begin("startup.choose_initial_view")
   let (initial_yaw, initial_pitch) = choose_initial_view_angles()
+  let capture_yaw = if capture_enabled.val &&
+    world_type is @level.WorldType::Flat {
+    @cmath.PI * 0.25
+  } else {
+    initial_yaw
+  }
+  let capture_pitch = if capture_enabled.val &&
+    world_type is @level.WorldType::Flat {
+    -0.8
+  } else {
+    initial_pitch
+  }
   player_controller.val = {
     ..player_controller.val,
-    yaw: initial_yaw,
-    pitch: initial_pitch,
+    yaw: capture_yaw,
+    pitch: capture_pitch,
   }
+  profile_phase_end("startup.choose_initial_view", view_started_at)
+
   if DEBUG_VERBOSE_STARTUP {
     let hit_text = match startup_reach_hit() {
       Some(hit) => {
@@ -134,22 +212,47 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
       None => ()
     }
   }
-  spawn_demo_entities()
+  let sync_started_at = profile_phase_begin("startup.initial_sync")
   sync_camera_transform()
   sync_selection_visuals()
   sync_hud()
   sync_hotbar()
   sync_inventory()
+  profile_phase_end("startup.initial_sync", sync_started_at)
+  // Start capture/profile wall-time after startup so QA runs reflect steady-state gameplay.
+  debug_started_at.val = @time.elapsed_raw()
+  profile_phase_end("startup.reset_runtime_world", reset_started_at)
 }
 
 ///|
 fn startup_system(_world : @ecs.World) -> Unit {
+  profile_enabled.val = env_flag_enabled(DEBUG_PROFILE_ENV)
+  capture_enabled.val = env_flag_enabled(DEBUG_CAPTURE_ENV)
+  demo_entities_enabled.val = if capture_enabled.val {
+    env_flag_enabled(DEBUG_DEMO_ENTITIES_ENV)
+  } else {
+    true
+  }
+  let system_started_at = profile_phase_begin("startup.system")
   @ui.set_ui_scale_mode(@ui.UiScaleMode::Viewport)
+  let materials_started_at = profile_phase_begin("startup.register_materials")
   register_world_materials_once()
-  load_demo_scene_handles_once()
+  profile_phase_end("startup.register_materials", materials_started_at)
+
+  let inventory_started_at = profile_phase_begin("startup.inventory")
   initialize_inventory_once()
+  profile_phase_end("startup.inventory", inventory_started_at)
+
+  let camera_started_at = profile_phase_begin("startup.camera_and_lighting")
   initialize_camera_and_lighting()
+  profile_phase_end("startup.camera_and_lighting", camera_started_at)
+
   let seed = @env.now()
-  let startup_world = @level.WorldType::Infinite
+  let startup_world = if capture_enabled.val {
+    @level.WorldType::Flat
+  } else {
+    @level.WorldType::Infinite
+  }
   reset_runtime_world(startup_world, seed)
+  profile_phase_end("startup.system", system_started_at)
 }

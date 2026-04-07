@@ -1,6 +1,6 @@
 import {
   "moonbitlang/core/env",
-  "moonbitlang/core/strconv",
+  "moonbitlang/core/string",
   "Milky2018/gameparty/mooncraft_core/biome",
   "Milky2018/gameparty/mooncraft_core/util",
   "Milky2018/gameparty/mooncraft_core/block",

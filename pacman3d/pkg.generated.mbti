@@ -9,9 +9,11 @@ import {
 // Values
 pub fn add_runtime_systems(@app.App, () -> Bool) -> @app.App
 
-pub fn enter_from_host() -> Unit
+pub fn capture_after_render_system(@ecs.World) -> Unit
 
-pub fn get_embedded_asset(String) -> Bytes?
+pub fn debug_runtime_system(@ecs.World) -> Unit
+
+pub fn enter_from_host() -> Unit
 
 pub fn ghost_update_system(@ecs.World) -> Unit
 

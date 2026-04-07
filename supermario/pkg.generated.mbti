@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/supermario"
+
+import {
+  "Milky2018/selene/ecs",
+}
+
+// Values
+pub fn camera_system(@ecs.World) -> Unit
+
+pub fn capture_system(@ecs.World) -> Unit
+
+pub fn hud_system(@ecs.World) -> Unit
+
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn run() -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
+
+pub fn sync_system(@ecs.World) -> Unit
+
+pub fn update_system(@ecs.World) -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+

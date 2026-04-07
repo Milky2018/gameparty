@@ -12,7 +12,7 @@ const FPS : UInt = 60
 
 ///|
 /// Pixel zoom factor from logical viewport to window size.
-const ZOOM : Double = 2.0
+const ZOOM : Double = 1.0
 
 ///|
 /// Ground strip height from the bottom of the scene.
@@ -295,6 +295,30 @@ const CAMERA_RETURN_SPEED : Double = 1000.0
 const THROWN_RABBIT_REMOVE_DELAY : Double = 2.0
 
 ///|
+/// Interval between lightweight profile reports when profiling is enabled.
+const PROFILE_LOG_INTERVAL_SECONDS : Double = 1.0
+
+///|
+/// Delay before capture mode takes a screenshot.
+const CAPTURE_DELAY_SECONDS : Double = 2.3
+
+///|
+/// Output file name used by capture mode.
+const CAPTURE_PATH : String = "angryrabbits_capture.png"
+
+///|
+/// Environment variable enabling lightweight profiling.
+const PROFILE_ENV : String = "ANGRYRABBITS_PROFILE"
+
+///|
+/// Environment variable enabling delayed capture and exit.
+const CAPTURE_ENV : String = "ANGRYRABBITS_CAPTURE"
+
+///|
+/// Environment variable enabling on-screen debug telemetry text.
+const DEBUG_UI_ENV : String = "ANGRYRABBITS_DEBUG_UI"
+
+///|
 priv enum GameState {
   Error
   Start
@@ -530,3 +554,66 @@ let debug_trace_update_frames_remaining : Ref[Int] = { val: 0 }
 
 ///|
 let debug_tracked_rabbit_entity : Ref[@entity.Entity?] = { val: None }
+
+///|
+let profile_enabled : Ref[Bool] = { val: false }
+
+///|
+let profile_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_last_report_at : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_frame_count : Ref[Int] = { val: 0 }
+
+///|
+let profile_sim_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_render_total : Ref[Double] = { val: 0.0 }
+
+///|
+let profile_frame_dt_total : Ref[Double] = { val: 0.0 }
+
+///|
+let capture_enabled : Ref[Bool] = { val: false }
+
+///|
+let capture_started_at : Ref[Double] = { val: 0.0 }
+
+///|
+let capture_taken : Ref[Bool] = { val: false }
+
+///|
+let capture_forced_start : Ref[Bool] = { val: false }
+
+///|
+let debug_ui_enabled : Ref[Bool] = { val: false }
+
+///|
+let ui_title_text_cache : Ref[String] = { val: "" }
+
+///|
+let ui_hint_text_cache : Ref[String] = { val: "" }
+
+///|
+let ui_score_text_cache : Ref[String] = { val: "" }
+
+///|
+let ui_status_text_cache : Ref[String] = { val: "" }
+
+///|
+let ui_status_color_cache : Ref[String] = { val: "" }
+
+///|
+fn env_flag_enabled(name : String) -> Bool {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      match raw {
+        "1" | "true" | "TRUE" | "yes" | "YES" | "on" | "ON" => true
+        _ => false
+      }
+    None => false
+  }
+}
