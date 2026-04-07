@@ -980,11 +980,132 @@ fn resolve_item_pickups() -> Unit {
 }
 
 ///|
+fn set_playback_clip(
+  playback : AnimPlayback,
+  clip_id : AnimClip,
+  looping : Bool,
+) -> Unit {
+  if playback.clip_id == clip_id &&
+    playback.looping == looping &&
+    !playback.finished {
+    return
+  }
+  playback.clip_id = clip_id
+  playback.frame_index = 0
+  playback.frame_elapsed = 0.0
+  playback.looping = looping
+  playback.finished = false
+}
+
+///|
+fn tick_playback(playback : AnimPlayback, delta : Double) -> Unit {
+  if playback.finished {
+    return
+  }
+  let frame_duration = anim_frame_duration()
+  playback.frame_elapsed = playback.frame_elapsed + delta
+  let frame_count = anim_clip_frame_count(playback.clip_id)
+  while playback.frame_elapsed >= frame_duration {
+    playback.frame_elapsed = playback.frame_elapsed - frame_duration
+    if playback.frame_index + 1 < frame_count {
+      playback.frame_index += 1
+    } else if playback.looping {
+      playback.frame_index = 0
+    } else {
+      playback.frame_index = frame_count - 1
+      playback.finished = true
+      break
+    }
+  }
+}
+
+///|
+fn sync_player_playback(player : PlayerState) -> Unit {
+  if !player.active {
+    return
+  }
+  if !player.alive {
+    set_playback_clip(player.anim, PlayerDeath, false)
+    tick_playback(player.anim, 0.0)
+    return
+  }
+  player.death_animation_done = false
+  match player.direction {
+    Some(direction) => {
+      player.facing = direction
+      player.flip_x = direction == Left
+      set_playback_clip(
+        player.anim,
+        player_move_clip(player.id, direction),
+        true,
+      )
+    }
+    None => {
+      if player.facing == Left || player.facing == Right {
+        player.flip_x = player.facing == Left
+      } else {
+        player.flip_x = false
+      }
+      set_playback_clip(
+        player.anim,
+        player_idle_clip(player.id, player.facing),
+        true,
+      )
+    }
+  }
+}
+
+///|
+fn sync_enemy_playback(enemy : EnemyState) -> Unit {
+  if !enemy.alive {
+    set_playback_clip(enemy.anim, EnemyDeath, false)
+    tick_playback(enemy.anim, 0.0)
+    return
+  }
+  enemy.death_animation_done = false
+  enemy.facing = enemy.direction
+  enemy.flip_x = enemy.facing == Left
+  set_playback_clip(enemy.anim, enemy_move_clip(enemy.skin, enemy.facing), true)
+}
+
+///|
+fn kill_player(player : PlayerState) -> Unit {
+  if !player.alive {
+    return
+  }
+  player.alive = false
+  player.direction = None
+  player.desired_direction = None
+  player.flip_x = false
+  player.death_animation_done = false
+  set_playback_clip(player.anim, PlayerDeath, false)
+}
+
+///|
+fn kill_enemy(enemy : EnemyState) -> Unit {
+  if !enemy.alive {
+    return
+  }
+  enemy.alive = false
+  enemy.flip_x = false
+  enemy.death_animation_done = false
+  set_playback_clip(enemy.anim, EnemyDeath, false)
+}
+
+///|
 fn tick_player_motion(index : Int, delta : Double) -> Unit {
   let player = players[index]
-  if !player.active || !player.alive {
+  if !player.active {
+    return
+  }
+  if !player.alive {
     player.direction = None
     player.desired_direction = None
+    sync_player_playback(player)
+    tick_playback(player.anim, delta)
+    if player.anim.finished {
+      player.death_animation_done = true
+    }
     return
   }
   match player.desired_direction {
@@ -1062,6 +1183,8 @@ fn tick_player_motion(index : Int, delta : Double) -> Unit {
       player.direction = next_direction
     }
   }
+  sync_player_playback(player)
+  tick_playback(player.anim, delta)
 }
 
 ///|
@@ -1077,6 +1200,7 @@ fn tick_players_motion(delta : Double) -> Unit {
 fn tick_bombs(delta : Double) -> Unit {
   for bomb in bombs {
     bomb.timer = bomb.timer - delta
+    tick_playback(bomb.anim, delta)
   }
 }
 
@@ -1098,12 +1222,43 @@ fn tick_flames(delta : Double) -> Unit {
   while index > 0 {
     index -= 1
     let flame = flames[index]
-    let next_timer = flame.timer - delta
-    if next_timer > 0.0 {
-      flame.timer = next_timer
-    } else {
+    if flame.damage_timer > 0.0 {
+      flame.damage_timer = clamp_double(
+        flame.damage_timer - delta,
+        0.0,
+        FLAME_DAMAGE_DURATION,
+      )
+    }
+    flame.visual_timer = flame.visual_timer - delta
+    if !flame.tail_phase && flame.damage_timer <= 0.0 {
+      flame.tail_phase = true
+      set_playback_clip(flame.anim, flame_tail_clip(flame.kind), false)
+    }
+    tick_playback(flame.anim, delta)
+    if flame.visual_timer <= 0.0 {
       hide_entity(flame.entity)
       ignore(flames.remove(index))
+    }
+  }
+}
+
+///|
+fn tick_soft_wall_breaks(delta : Double) -> Unit {
+  let mut index = soft_wall_breaks.length()
+  while index > 0 {
+    index -= 1
+    let breaking = soft_wall_breaks[index]
+    breaking.timer = breaking.timer - delta
+    tick_playback(breaking.anim, delta)
+    if breaking.timer <= 0.0 || breaking.anim.finished {
+      set_tile(breaking.cell_x, breaking.cell_y, Empty)
+      maybe_spawn_random_item(
+        breaking.cell_x,
+        breaking.cell_y,
+        SOFT_WALL_ITEM_DROP_CHANCE,
+      )
+      hide_entity(breaking.entity)
+      ignore(soft_wall_breaks.remove(index))
     }
   }
 }
@@ -1136,6 +1291,11 @@ fn choose_enemy_direction(enemy : EnemyState) -> Direction {
 fn tick_enemies(delta : Double) -> Unit {
   for enemy in enemies {
     if !enemy.alive {
+      sync_enemy_playback(enemy)
+      tick_playback(enemy.anim, delta)
+      if enemy.anim.finished {
+        enemy.death_animation_done = true
+      }
       continue
     }
     let move_distance = enemy.speed * delta
@@ -1171,28 +1331,29 @@ fn tick_enemies(delta : Double) -> Unit {
     let (next_cell_x, next_cell_y) = world_to_cell(enemy.center)
     enemy.cell_x = next_cell_x
     enemy.cell_y = next_cell_y
+    sync_enemy_playback(enemy)
+    tick_playback(enemy.anim, delta)
   }
 }
 
 ///|
 fn flame_contains_center(center : @math.Vec2D) -> Bool {
   let (cell_x, cell_y) = world_to_cell(center)
-  flames.any(fn(flame) { flame.cell_x == cell_x && flame.cell_y == cell_y })
+  flames.any(fn(flame) {
+    flame.damage_timer > 0.0 && flame.cell_x == cell_x && flame.cell_y == cell_y
+  })
 }
 
 ///|
 fn resolve_flame_hits() -> Unit {
   for player in players {
     if player.active && player.alive && flame_contains_center(player.center) {
-      player.alive = false
-      player.direction = None
-      player.desired_direction = None
+      kill_player(player)
     }
   }
   for enemy in enemies {
     if enemy.alive && flame_contains_center(enemy.center) {
-      enemy.alive = false
-      hide_entity(enemy.entity)
+      kill_enemy(enemy)
       let (cell_x, cell_y) = world_to_cell(enemy.center)
       maybe_spawn_random_item(cell_x, cell_y, ENEMY_ITEM_DROP_CHANCE)
     }
@@ -1216,9 +1377,7 @@ fn resolve_enemy_contact() -> Unit {
           enemy.center,
           enemy.radius,
         ) {
-        player.alive = false
-        player.direction = None
-        player.desired_direction = None
+        kill_player(player)
         break
       }
     }
@@ -1252,22 +1411,51 @@ fn resolve_phase() -> Unit {
 }
 
 ///|
+fn tick_round_over_visuals(delta : Double) -> Unit {
+  for index in 0..<players.length() {
+    let player = players[index]
+    if player.active && !player.alive && !player.death_animation_done {
+      tick_player_motion(index, delta)
+    }
+  }
+  for enemy in enemies {
+    if !enemy.alive && !enemy.death_animation_done {
+      sync_enemy_playback(enemy)
+      tick_playback(enemy.anim, delta)
+      if enemy.anim.finished {
+        enemy.death_animation_done = true
+      }
+    }
+  }
+  for bomb in bombs {
+    tick_playback(bomb.anim, delta)
+  }
+  tick_flames(delta)
+  tick_soft_wall_breaks(delta)
+}
+
+///|
 pub fn simulation_system(_world : @ecs.World) -> Unit {
-  if phase.val != Playing {
+  if phase.val == MainMenu {
     return
   }
-  if netplay_mode.val == Host || netplay_mode.val == Client {
+  if phase.val == Playing &&
+    (netplay_mode.val == Host || netplay_mode.val == Client) {
     match netplay_session.val {
       Some(session) => if !session.is_running() { return }
       None => return
     }
   }
-  let sim_started_at = @time.elapsed_raw()
   let delta = if netplay_mode.val == Host || netplay_mode.val == Client {
     1.0 / FPS.to_double()
   } else {
     @time.delta()
   }
+  if phase.val == RoundOver {
+    tick_round_over_visuals(delta)
+    return
+  }
+  let sim_started_at = @time.elapsed_raw()
   let motion_started_at = @time.elapsed_raw()
   tick_players_motion(delta)
   profile_motion_total.val += @time.elapsed_raw() - motion_started_at
@@ -1279,6 +1467,7 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
   refresh_movement_collision_cache()
   let flames_started_at = @time.elapsed_raw()
   tick_flames(delta)
+  tick_soft_wall_breaks(delta)
   profile_flames_total.val += @time.elapsed_raw() - flames_started_at
   let enemies_started_at = @time.elapsed_raw()
   tick_enemies(delta)

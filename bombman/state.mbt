@@ -56,7 +56,16 @@ const COLLISION_EPSILON : Double = 0.001
 const BOMB_FUSE_TIME : Double = 2.0
 
 ///|
-const FLAME_DURATION : Double = 0.16
+const ANIM_FPS : Double = 12.0
+
+///|
+const FLAME_DAMAGE_DURATION : Double = 0.16
+
+///|
+const FLAME_VISUAL_DURATION : Double = 0.34
+
+///|
+const SOFT_WALL_BREAK_DURATION : Double = 0.34
 
 ///|
 const PLAYER_START_BOMBS : Int = 1
@@ -144,36 +153,6 @@ const SPRITE_SOFT_WALL_COL : Int = 4
 
 ///|
 const SPRITE_SOFT_WALL_ROW : Int = 3
-
-///|
-const SPRITE_BOMB_COL : Int = 0
-
-///|
-const SPRITE_BOMB_ROW : Int = 3
-
-///|
-const SPRITE_FLAME_COL : Int = 7
-
-///|
-const SPRITE_FLAME_ROW : Int = 7
-
-///|
-const SPRITE_P1_COL : Int = 0
-
-///|
-const SPRITE_P1_ROW : Int = 0
-
-///|
-const SPRITE_P2_COL : Int = 1
-
-///|
-const SPRITE_P2_ROW : Int = 0
-
-///|
-const SPRITE_ENEMY_COL : Int = 0
-
-///|
-const SPRITE_ENEMY_ROW : Int = 18
 
 ///|
 const SPRITE_SHOES_COL : Int = 8
@@ -295,6 +274,76 @@ priv enum Direction {
 } derive(Eq)
 
 ///|
+priv enum EnemySkinKind {
+  Blue
+  Pink
+  Peach
+}
+
+///|
+priv enum FlameKind {
+  Center
+  BodyH
+  BodyV
+  EndLeft
+  EndRight
+  EndUp
+  EndDown
+} derive(Eq)
+
+///|
+priv enum AnimClip {
+  PlayerP1IdleDown
+  PlayerP1IdleUp
+  PlayerP1IdleSide
+  PlayerP1MoveDown
+  PlayerP1MoveUp
+  PlayerP1MoveSide
+  PlayerP2IdleDown
+  PlayerP2IdleUp
+  PlayerP2IdleSide
+  PlayerP2MoveDown
+  PlayerP2MoveUp
+  PlayerP2MoveSide
+  PlayerDeath
+  EnemyBlueMoveDown
+  EnemyBlueMoveUp
+  EnemyBlueMoveSide
+  EnemyPinkMoveDown
+  EnemyPinkMoveUp
+  EnemyPinkMoveSide
+  EnemyPeachMoveDown
+  EnemyPeachMoveUp
+  EnemyPeachMoveSide
+  EnemyDeath
+  BombFuse
+  FlameCenterActive
+  FlameBodyHActive
+  FlameBodyVActive
+  FlameEndLeftActive
+  FlameEndRightActive
+  FlameEndUpActive
+  FlameEndDownActive
+  FlameCenterTail
+  FlameBodyHTail
+  FlameBodyVTail
+  FlameEndLeftTail
+  FlameEndRightTail
+  FlameEndUpTail
+  FlameEndDownTail
+  SoftWallBreak
+} derive(Eq)
+
+///|
+priv struct AnimPlayback {
+  mut clip_id : AnimClip
+  mut frame_index : Int
+  mut frame_elapsed : Double
+  mut looping : Bool
+  mut finished : Bool
+}
+
+///|
 type Level = ReadOnlyArray[ReadOnlyArray[Int]]
 
 ///|
@@ -313,9 +362,13 @@ priv struct PlayerState {
   mut center : @math.Vec2D
   mut direction : Direction?
   mut desired_direction : Direction?
+  mut facing : Direction
+  mut flip_x : Bool
   mut speed : Double
   radius : Double
   mut alive : Bool
+  mut death_animation_done : Bool
+  anim : AnimPlayback
   mut active_bombs : Int
   mut max_bombs : Int
   mut blast_radius : Int
@@ -329,9 +382,14 @@ priv struct EnemyState {
   mut center : @math.Vec2D
   mut direction : Direction
   mut desired_direction : Direction
+  mut facing : Direction
+  mut flip_x : Bool
   speed : Double
   radius : Double
   mut alive : Bool
+  skin : EnemySkinKind
+  mut death_animation_done : Bool
+  anim : AnimPlayback
 }
 
 ///|
@@ -343,6 +401,7 @@ priv struct BombState {
   radius : Int
   owner : PlayerId
   mut passable_for_owner : Bool
+  anim : AnimPlayback
 }
 
 ///|
@@ -350,7 +409,20 @@ priv struct FlameState {
   entity : @entity.Entity
   cell_x : Int
   cell_y : Int
+  mut kind : FlameKind
+  mut damage_timer : Double
+  mut visual_timer : Double
+  mut tail_phase : Bool
+  mut anim : AnimPlayback
+}
+
+///|
+priv struct SoftWallBreakState {
+  entity : @entity.Entity
+  cell_x : Int
+  cell_y : Int
   mut timer : Double
+  anim : AnimPlayback
 }
 
 ///|
@@ -396,6 +468,9 @@ let bombs : Array[BombState] = []
 let flames : Array[FlameState] = []
 
 ///|
+let soft_wall_breaks : Array[SoftWallBreakState] = []
+
+///|
 let items : Array[ItemState] = []
 
 ///|
@@ -407,9 +482,19 @@ let players : Array[PlayerState] = [
     center: cell_center(1, 1),
     direction: None,
     desired_direction: None,
+    facing: Down,
+    flip_x: false,
     speed: PLAYER_SPEED,
     radius: PLAYER_RADIUS,
     alive: true,
+    death_animation_done: false,
+    anim: {
+      clip_id: PlayerP1IdleDown,
+      frame_index: 0,
+      frame_elapsed: 0.0,
+      looping: true,
+      finished: false,
+    },
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -421,9 +506,19 @@ let players : Array[PlayerState] = [
     center: cell_center(11, 9),
     direction: None,
     desired_direction: None,
+    facing: Down,
+    flip_x: false,
     speed: PLAYER_SPEED,
     radius: PLAYER_RADIUS,
     alive: true,
+    death_animation_done: false,
+    anim: {
+      clip_id: PlayerP2IdleDown,
+      frame_index: 0,
+      frame_elapsed: 0.0,
+      looping: true,
+      finished: false,
+    },
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -1014,6 +1109,205 @@ fn player_can_use_item(player : PlayerState, kind : ItemKind) -> Bool {
     Shoes => player.speed < PLAYER_MAX_SPEED
     BombUp => player.max_bombs < PLAYER_MAX_BOMBS
     PowerUp => player.blast_radius < PLAYER_MAX_BLAST_RADIUS
+  }
+}
+
+///|
+fn anim_frame_duration() -> Double {
+  if ANIM_FPS <= 0.0 {
+    1.0 / 12.0
+  } else {
+    1.0 / ANIM_FPS
+  }
+}
+
+///|
+fn anim_playback_new(clip_id : AnimClip, looping : Bool) -> AnimPlayback {
+  { clip_id, frame_index: 0, frame_elapsed: 0.0, looping, finished: false }
+}
+
+///|
+fn enemy_skin_for_spawn(x : Int, y : Int, order : Int) -> EnemySkinKind {
+  let value = ((x + 1) * 31 + (y + 1) * 17 + order * 13) % 3
+  match value {
+    0 => Blue
+    1 => Pink
+    _ => Peach
+  }
+}
+
+///|
+fn player_idle_clip(id : PlayerId, facing : Direction) -> AnimClip {
+  match id {
+    P1 =>
+      match facing {
+        Up => PlayerP1IdleUp
+        Left | Right => PlayerP1IdleSide
+        Down => PlayerP1IdleDown
+      }
+    P2 =>
+      match facing {
+        Up => PlayerP2IdleUp
+        Left | Right => PlayerP2IdleSide
+        Down => PlayerP2IdleDown
+      }
+  }
+}
+
+///|
+fn player_move_clip(id : PlayerId, direction : Direction) -> AnimClip {
+  match id {
+    P1 =>
+      match direction {
+        Up => PlayerP1MoveUp
+        Left | Right => PlayerP1MoveSide
+        Down => PlayerP1MoveDown
+      }
+    P2 =>
+      match direction {
+        Up => PlayerP2MoveUp
+        Left | Right => PlayerP2MoveSide
+        Down => PlayerP2MoveDown
+      }
+  }
+}
+
+///|
+fn enemy_move_clip(skin : EnemySkinKind, direction : Direction) -> AnimClip {
+  match skin {
+    Blue =>
+      match direction {
+        Up => EnemyBlueMoveUp
+        Left | Right => EnemyBlueMoveSide
+        Down => EnemyBlueMoveDown
+      }
+    Pink =>
+      match direction {
+        Up => EnemyPinkMoveUp
+        Left | Right => EnemyPinkMoveSide
+        Down => EnemyPinkMoveDown
+      }
+    Peach =>
+      match direction {
+        Up => EnemyPeachMoveUp
+        Left | Right => EnemyPeachMoveSide
+        Down => EnemyPeachMoveDown
+      }
+  }
+}
+
+///|
+fn flame_active_clip(kind : FlameKind) -> AnimClip {
+  match kind {
+    Center => FlameCenterActive
+    BodyH => FlameBodyHActive
+    BodyV => FlameBodyVActive
+    EndLeft => FlameEndLeftActive
+    EndRight => FlameEndRightActive
+    EndUp => FlameEndUpActive
+    EndDown => FlameEndDownActive
+  }
+}
+
+///|
+fn flame_tail_clip(kind : FlameKind) -> AnimClip {
+  match kind {
+    Center => FlameCenterTail
+    BodyH => FlameBodyHTail
+    BodyV => FlameBodyVTail
+    EndLeft => FlameEndLeftTail
+    EndRight => FlameEndRightTail
+    EndUp => FlameEndUpTail
+    EndDown => FlameEndDownTail
+  }
+}
+
+///|
+fn anim_clip_frame_count(clip_id : AnimClip) -> Int {
+  match clip_id {
+    PlayerP1IdleDown
+    | PlayerP1IdleUp
+    | PlayerP1IdleSide
+    | PlayerP2IdleDown
+    | PlayerP2IdleUp
+    | PlayerP2IdleSide => 1
+    PlayerP1MoveDown
+    | PlayerP1MoveUp
+    | PlayerP1MoveSide
+    | PlayerP2MoveDown
+    | PlayerP2MoveUp
+    | PlayerP2MoveSide => 4
+    PlayerDeath => 7
+    EnemyBlueMoveDown
+    | EnemyBlueMoveUp
+    | EnemyBlueMoveSide
+    | EnemyPinkMoveDown
+    | EnemyPinkMoveUp
+    | EnemyPinkMoveSide
+    | EnemyPeachMoveDown
+    | EnemyPeachMoveUp
+    | EnemyPeachMoveSide => 4
+    EnemyDeath => 3
+    BombFuse => 3
+    FlameCenterActive => 2
+    FlameBodyHActive | FlameBodyVActive => 6
+    FlameEndLeftActive
+    | FlameEndRightActive
+    | FlameEndUpActive
+    | FlameEndDownActive => 3
+    FlameCenterTail | FlameBodyHTail | FlameBodyVTail => 2
+    FlameEndLeftTail | FlameEndRightTail | FlameEndUpTail | FlameEndDownTail =>
+      2
+    SoftWallBreak => 6
+  }
+}
+
+///|
+fn anim_clip_frame(clip_id : AnimClip, frame_index : Int) -> (Int, Int) {
+  match clip_id {
+    PlayerP1IdleDown => (0, 0)
+    PlayerP1IdleUp => (4, 0)
+    PlayerP1IdleSide => (2, 0)
+    PlayerP1MoveDown => [(0, 0), (1, 0), (0, 0), (3, 0)][frame_index]
+    PlayerP1MoveUp => [(4, 0), (5, 0), (4, 0), (3, 0)][frame_index]
+    PlayerP1MoveSide => [(2, 0), (3, 0), (2, 0), (1, 0)][frame_index]
+    PlayerP2IdleDown => (0, 1)
+    PlayerP2IdleUp => (4, 1)
+    PlayerP2IdleSide => (2, 1)
+    PlayerP2MoveDown => [(0, 1), (1, 1), (0, 1), (3, 1)][frame_index]
+    PlayerP2MoveUp => [(4, 1), (5, 1), (4, 1), (3, 1)][frame_index]
+    PlayerP2MoveSide => [(2, 1), (3, 1), (2, 1), (1, 1)][frame_index]
+    PlayerDeath =>
+      [(0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2)][frame_index]
+    EnemyBlueMoveDown => [(0, 16), (1, 16), (2, 16), (3, 16)][frame_index]
+    EnemyBlueMoveUp => [(4, 16), (5, 16), (6, 16), (5, 16)][frame_index]
+    EnemyBlueMoveSide => [(0, 16), (2, 16), (4, 16), (2, 16)][frame_index]
+    EnemyPinkMoveDown => [(0, 17), (1, 17), (2, 17), (3, 17)][frame_index]
+    EnemyPinkMoveUp => [(4, 17), (5, 17), (6, 17), (5, 17)][frame_index]
+    EnemyPinkMoveSide => [(0, 17), (2, 17), (4, 17), (2, 17)][frame_index]
+    EnemyPeachMoveDown => [(0, 18), (1, 18), (2, 18), (3, 18)][frame_index]
+    EnemyPeachMoveUp => [(4, 18), (5, 18), (6, 18), (5, 18)][frame_index]
+    EnemyPeachMoveSide => [(0, 18), (2, 18), (4, 18), (2, 18)][frame_index]
+    EnemyDeath => [(12, 14), (13, 14), (12, 14)][frame_index]
+    BombFuse => [(0, 3), (1, 3), (2, 3)][frame_index]
+    FlameCenterActive => [(2, 6), (7, 6)][frame_index]
+    FlameBodyHActive =>
+      [(0, 6), (1, 6), (5, 6), (6, 6), (8, 6), (9, 6)][frame_index]
+    FlameBodyVActive =>
+      [(2, 4), (2, 5), (2, 7), (2, 8), (2, 9), (2, 10)][frame_index]
+    FlameEndLeftActive => [(0, 6), (1, 6), (0, 6)][frame_index]
+    FlameEndRightActive => [(10, 6), (9, 6), (10, 6)][frame_index]
+    FlameEndUpActive => [(2, 4), (2, 5), (2, 4)][frame_index]
+    FlameEndDownActive => [(2, 10), (2, 9), (2, 10)][frame_index]
+    FlameCenterTail => [(7, 11), (8, 11)][frame_index]
+    FlameBodyHTail => [(5, 11), (9, 11)][frame_index]
+    FlameBodyVTail => [(7, 8), (7, 10)][frame_index]
+    FlameEndLeftTail => [(0, 11), (1, 11)][frame_index]
+    FlameEndRightTail => [(10, 11), (9, 11)][frame_index]
+    FlameEndUpTail => [(2, 8), (2, 9)][frame_index]
+    FlameEndDownTail => [(2, 10), (2, 9)][frame_index]
+    SoftWallBreak =>
+      [(5, 3), (6, 3), (7, 3), (8, 3), (9, 3), (10, 3)][frame_index]
   }
 }
 

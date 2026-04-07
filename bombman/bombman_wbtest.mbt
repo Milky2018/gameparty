@@ -311,8 +311,13 @@ test "destroyed soft walls can drop items with configured chance" {
       radius: 1,
       owner: P1,
       passable_for_owner: false,
+      anim: anim_playback_new(BombFuse, true),
     })
     resolve_bomb_explosions()
+    assert_true(tile_at(3, 1) is SoftWall)
+    assert_eq(soft_wall_breaks.length(), 1)
+    assert_eq(items.length(), 0)
+    tick_soft_wall_breaks(SOFT_WALL_BREAK_DURATION + 0.01)
     assert_true(tile_at(3, 1) is Empty)
     assert_eq(items.length(), 1)
     assert_eq(items[0].cell_x, 3)
@@ -398,11 +403,16 @@ test "enemy deaths can drop items with configured chance" {
       center,
       direction: Down,
       desired_direction: Down,
+      facing: Down,
+      flip_x: false,
       speed: ENEMY_SPEED,
       radius: ENEMY_RADIUS,
       alive: true,
+      skin: Blue,
+      death_animation_done: false,
+      anim: anim_playback_new(enemy_move_clip(Blue, Down), true),
     })
-    spawn_flame(5, 5)
+    spawn_flame(5, 5, Center)
     resolve_flame_hits()
     assert_eq(items.length(), 1)
     assert_eq(items[0].cell_x, 5)
@@ -488,10 +498,73 @@ test "flame hits every active player by center-in-cell semantics" {
     flames.clear()
     players[0] = { ..players[0], center: cell_center(4, 4), alive: true }
     players[1] = { ..players[1], center: cell_center(5, 4), alive: true }
-    spawn_flame(4, 4)
+    spawn_flame(4, 4, Center)
     resolve_flame_hits()
     assert_true(!players[0].alive)
     assert_true(players[1].alive)
+  })
+}
+
+///|
+test "soft wall remains blocking until break animation completes" {
+  with_round(SinglePlayer, fn() raise {
+    soft_wall_breaks.clear()
+    set_tile(4, 4, SoftWall)
+    spawn_soft_wall_break(4, 4)
+    assert_true(tile_is_solid(4, 4))
+    tick_soft_wall_breaks(SOFT_WALL_BREAK_DURATION / 2.0)
+    assert_true(tile_at(4, 4) is SoftWall)
+    tick_soft_wall_breaks(SOFT_WALL_BREAK_DURATION)
+    assert_true(tile_at(4, 4) is Empty)
+  })
+}
+
+///|
+test "flame damage window is shorter than visual window" {
+  with_round(SinglePlayer, fn() raise {
+    flames.clear()
+    players[0] = { ..players[0], center: cell_center(6, 6), alive: true }
+    spawn_flame(6, 6, Center)
+    resolve_flame_hits()
+    assert_true(!players[0].alive)
+
+    players[0] = {
+      ..players[0],
+      alive: true,
+      death_animation_done: false,
+      anim: anim_playback_new(player_idle_clip(P1, Down), true),
+      center: cell_center(6, 6),
+    }
+    tick_flames(FLAME_DAMAGE_DURATION + 0.01)
+    assert_eq(flames.length(), 1)
+    resolve_flame_hits()
+    assert_true(players[0].alive)
+    tick_flames(FLAME_VISUAL_DURATION)
+    assert_eq(flames.length(), 0)
+  })
+}
+
+///|
+test "player movement updates animation clip and mirror state" {
+  with_round(SinglePlayer, fn() raise {
+    let player = players[0]
+    player.direction = Some(Right)
+    player.desired_direction = Some(Right)
+    tick_player_motion(0, 0.2)
+    assert_true(player.anim.clip_id == player_move_clip(P1, Right))
+    assert_true(!player.flip_x)
+
+    player.direction = Some(Left)
+    player.desired_direction = Some(Left)
+    tick_player_motion(0, 0.2)
+    assert_true(player.anim.clip_id == player_move_clip(P1, Left))
+    assert_true(player.flip_x)
+
+    player.direction = None
+    player.desired_direction = None
+    tick_player_motion(0, 0.2)
+    assert_true(player.anim.clip_id == player_idle_clip(P1, Left))
+    assert_true(player.flip_x)
   })
 }
 
@@ -509,9 +582,14 @@ test "enemy contact kills any overlapping active player outside versus" {
       center,
       direction: Down,
       desired_direction: Down,
+      facing: Down,
+      flip_x: false,
       speed: ENEMY_SPEED,
       radius: ENEMY_RADIUS,
       alive: true,
+      skin: Blue,
+      death_animation_done: false,
+      anim: anim_playback_new(enemy_move_clip(Blue, Down), true),
     })
     resolve_enemy_contact()
     assert_true(!players[0].alive)
@@ -526,9 +604,14 @@ test "enemy contact kills any overlapping active player outside versus" {
       center,
       direction: Down,
       desired_direction: Down,
+      facing: Down,
+      flip_x: false,
       speed: ENEMY_SPEED,
       radius: ENEMY_RADIUS,
       alive: true,
+      skin: Blue,
+      death_animation_done: false,
+      anim: anim_playback_new(enemy_move_clip(Blue, Down), true),
     })
     resolve_enemy_contact()
     assert_true(players[0].alive)

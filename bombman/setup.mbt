@@ -287,6 +287,7 @@ fn set_atlas_entity_top_left(
   row : Int,
   zindex : Int,
   tint? : String? = None,
+  flip_x? : Bool = false,
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
@@ -296,6 +297,7 @@ fn set_atlas_entity_top_left(
   )
   sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
   sprite.rect = Some(atlas_tile_rect(col, row))
+  sprite.flip_x = flip_x
   match tint {
     Some(color) => sprite.color = sprite_color(color)
     None => ()
@@ -313,9 +315,26 @@ fn set_atlas_entity_center(
   row : Int,
   zindex : Int,
   tint? : String? = None,
+  flip_x? : Bool = false,
 ) -> Unit {
   let top_left = center - @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
-  set_atlas_entity_top_left(entity, top_left, size, col, row, zindex, tint~)
+  set_atlas_entity_top_left(
+    entity,
+    top_left,
+    size,
+    col,
+    row,
+    zindex,
+    tint~,
+    flip_x~,
+  )
+}
+
+///|
+fn playback_frame_tile(playback : AnimPlayback) -> (Int, Int) {
+  let frame_count = anim_clip_frame_count(playback.clip_id)
+  let index = clamp_int(playback.frame_index, 0, frame_count - 1)
+  anim_clip_frame(playback.clip_id, index)
 }
 
 ///|
@@ -585,9 +604,13 @@ fn reset_player_slot(
     center: start_center,
     direction: None,
     desired_direction: None,
+    facing: Down,
+    flip_x: false,
     speed: PLAYER_SPEED,
     radius: PLAYER_RADIUS,
     alive: true,
+    death_animation_done: false,
+    anim: anim_playback_new(player_idle_clip(id, Down), true),
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -602,6 +625,9 @@ fn clear_dynamic_entities() -> Unit {
   for flame in flames {
     hide_entity(flame.entity)
   }
+  for breaking in soft_wall_breaks {
+    hide_entity(breaking.entity)
+  }
   for item in items {
     hide_entity(item.entity)
     hide_entity(item.label_entity)
@@ -614,6 +640,7 @@ fn clear_dynamic_entities() -> Unit {
   }
   bombs.clear()
   flames.clear()
+  soft_wall_breaks.clear()
   items.clear()
   enemies.clear()
 }
@@ -673,16 +700,24 @@ fn load_level(level_index : Int, mode : GameMode) -> Unit {
         }
         LEVEL_ENEMY_SPAWN =>
           if mode != Versus {
+            let spawn_order = enemies.length()
+            let skin = enemy_skin_for_spawn(x, y, spawn_order)
+            let direction = default_enemy_direction()
             enemies.push({
               entity: @entity.Entity::new(),
               cell_x: x,
               cell_y: y,
               center: cell_center(x, y),
-              direction: default_enemy_direction(),
-              desired_direction: default_enemy_direction(),
+              direction,
+              desired_direction: direction,
+              facing: direction,
+              flip_x: false,
               speed: ENEMY_SPEED,
               radius: ENEMY_RADIUS,
               alive: true,
+              skin,
+              death_animation_done: false,
+              anim: anim_playback_new(enemy_move_clip(skin, direction), true),
             })
           }
         _ => ()
@@ -857,14 +892,43 @@ fn startup_system(_world : @ecs.World) -> Unit {
 }
 
 ///|
-fn collect_explosion_cells(
+priv struct FlameSpawnPlan {
+  cell_x : Int
+  cell_y : Int
+  kind : FlameKind
+}
+
+///|
+fn add_or_replace_flame_spawn(
+  spawns : Array[FlameSpawnPlan],
+  cell_x : Int,
+  cell_y : Int,
+  kind : FlameKind,
+) -> Unit {
+  match
+    spawns.search_by(fn(spawn) {
+      spawn.cell_x == cell_x && spawn.cell_y == cell_y
+    }) {
+    Some(index) =>
+      if spawns[index].kind != Center && kind == Center {
+        spawns[index] = { ..spawns[index], kind, }
+      }
+    None => spawns.push({ cell_x, cell_y, kind })
+  }
+}
+
+///|
+fn collect_explosion_spawns(
   origin_x : Int,
   origin_y : Int,
   radius : Int,
-) -> Array[(Int, Int)] {
-  let cells : Array[(Int, Int)] = [(origin_x, origin_y)]
+) -> Array[FlameSpawnPlan] {
+  let spawns : Array[FlameSpawnPlan] = [
+    { cell_x: origin_x, cell_y: origin_y, kind: Center },
+  ]
   for direction in [Up, Down, Left, Right] {
     let (dx, dy) = direction_delta(direction)
+    let traversed : Array[(Int, Int)] = []
     for step in 1..<=radius {
       let x = origin_x + dx * step
       let y = origin_y + dy * step
@@ -872,26 +936,85 @@ fn collect_explosion_cells(
       if tile == HardWall {
         break
       }
-      cells.push((x, y))
+      traversed.push((x, y))
       if tile == SoftWall {
         break
       }
     }
+    for index in 0..<traversed.length() {
+      let cell = traversed[index]
+      let is_end = index == traversed.length() - 1
+      let kind = if is_end {
+        match direction {
+          Left => EndLeft
+          Right => EndRight
+          Up => EndUp
+          Down => EndDown
+        }
+      } else {
+        match direction {
+          Left | Right => BodyH
+          Up | Down => BodyV
+        }
+      }
+      add_or_replace_flame_spawn(spawns, cell.0, cell.1, kind)
+    }
   }
-  cells
+  spawns
 }
 
 ///|
-fn spawn_flame(x : Int, y : Int) -> Unit {
-  if flames.any(fn(flame) { flame.cell_x == x && flame.cell_y == y }) {
+fn has_soft_wall_break_at(x : Int, y : Int) -> Bool {
+  soft_wall_breaks.any(fn(breaking) {
+    breaking.cell_x == x && breaking.cell_y == y
+  })
+}
+
+///|
+fn spawn_soft_wall_break(x : Int, y : Int) -> Unit {
+  if has_soft_wall_break_at(x, y) {
     return
   }
-  flames.push({
+  soft_wall_breaks.push({
     entity: @entity.Entity::new(),
     cell_x: x,
     cell_y: y,
-    timer: FLAME_DURATION,
+    timer: SOFT_WALL_BREAK_DURATION,
+    anim: anim_playback_new(SoftWallBreak, false),
   })
+}
+
+///|
+fn spawn_flame(x : Int, y : Int, kind : FlameKind) -> Unit {
+  match flames.search_by(fn(flame) { flame.cell_x == x && flame.cell_y == y }) {
+    Some(index) => {
+      let flame = flames[index]
+      flame.kind = kind
+      flame.damage_timer = clamp_double(
+        flame.damage_timer + FLAME_DAMAGE_DURATION,
+        0.0,
+        FLAME_DAMAGE_DURATION,
+      )
+      flame.visual_timer = clamp_double(
+        flame.visual_timer + FLAME_VISUAL_DURATION,
+        0.0,
+        FLAME_VISUAL_DURATION,
+      )
+      flame.tail_phase = false
+      flame.anim = anim_playback_new(flame_active_clip(kind), true)
+    }
+    None =>
+      flames.push({
+        entity: @entity.Entity::new(),
+        cell_x: x,
+        cell_y: y,
+        kind,
+        damage_timer: FLAME_DAMAGE_DURATION,
+        visual_timer: FLAME_VISUAL_DURATION,
+        tail_phase: false,
+        anim: anim_playback_new(flame_active_clip(kind), true),
+      })
+  }
 }
 
 ///|
@@ -973,20 +1096,19 @@ fn explode_bomb_at(index : Int) -> Unit {
   if owner.active_bombs > 0 {
     owner.active_bombs -= 1
   }
-  let cells = collect_explosion_cells(bomb.cell_x, bomb.cell_y, bomb.radius)
-  for cell in cells {
-    let x = cell.0
-    let y = cell.1
+  let spawns = collect_explosion_spawns(bomb.cell_x, bomb.cell_y, bomb.radius)
+  for spawn in spawns {
+    let x = spawn.cell_x
+    let y = spawn.cell_y
     if tile_at(x, y) == SoftWall {
-      set_tile(x, y, Empty)
-      maybe_spawn_random_item(x, y, SOFT_WALL_ITEM_DROP_CHANCE)
+      spawn_soft_wall_break(x, y)
     }
     for chained in bombs {
       if chained.cell_x == x && chained.cell_y == y {
         chained.timer = 0.0
       }
     }
-    spawn_flame(x, y)
+    spawn_flame(x, y, spawn.kind)
   }
 }
 
@@ -1008,6 +1130,7 @@ fn place_bomb_for_player(index : Int) -> Unit {
     radius: player.blast_radius,
     owner: player.id,
     passable_for_owner: true,
+    anim: anim_playback_new(BombFuse, true),
   })
   player.active_bombs += 1
 }
@@ -1204,12 +1327,13 @@ fn hide_tile_visuals() -> Unit {
 fn sync_bomb_visuals() -> Unit {
   let size = @math.Vec2D(BOMB_SPRITE_SIZE, BOMB_SPRITE_SIZE)
   for bomb in bombs {
+    let tile = playback_frame_tile(bomb.anim)
     set_atlas_entity_center(
       bomb.entity,
       cell_center(bomb.cell_x, bomb.cell_y),
       size,
-      SPRITE_BOMB_COL,
-      SPRITE_BOMB_ROW,
+      tile.0,
+      tile.1,
       60,
     )
   }
@@ -1219,13 +1343,30 @@ fn sync_bomb_visuals() -> Unit {
 fn sync_flame_visuals() -> Unit {
   let size = @math.Vec2D(FLAME_SPRITE_SIZE, FLAME_SPRITE_SIZE)
   for flame in flames {
+    let tile = playback_frame_tile(flame.anim)
     set_atlas_entity_center(
       flame.entity,
       cell_center(flame.cell_x, flame.cell_y),
       size,
-      SPRITE_FLAME_COL,
-      SPRITE_FLAME_ROW,
+      tile.0,
+      tile.1,
       70,
+    )
+  }
+}
+
+///|
+fn sync_soft_wall_break_visuals() -> Unit {
+  let size = floor_tile_size()
+  for breaking in soft_wall_breaks {
+    let tile = playback_frame_tile(breaking.anim)
+    set_atlas_entity_top_left(
+      breaking.entity,
+      floor_tile_position(breaking.cell_x, breaking.cell_y),
+      size,
+      tile.0,
+      tile.1,
+      45,
     )
   }
 }
@@ -1262,14 +1403,16 @@ fn sync_item_visuals() -> Unit {
 fn sync_enemy_visuals() -> Unit {
   let size = @math.Vec2D(ENEMY_SPRITE_SIZE, ENEMY_SPRITE_SIZE)
   for enemy in enemies {
-    if enemy.alive {
+    if enemy.alive || !enemy.death_animation_done {
+      let tile = playback_frame_tile(enemy.anim)
       set_atlas_entity_center(
         enemy.entity,
         enemy.center,
         size,
-        SPRITE_ENEMY_COL,
-        SPRITE_ENEMY_ROW,
+        tile.0,
+        tile.1,
         65,
+        flip_x=enemy.flip_x,
       )
     } else {
       hide_entity(enemy.entity)
@@ -1282,21 +1425,22 @@ fn sync_player_visuals() -> Unit {
   let size = @math.Vec2D(PLAYER_SPRITE_SIZE, PLAYER_SPRITE_SIZE)
   for player in players {
     if player.active {
-      let (col, row, tint) = match player.id {
-        P1 =>
-          (SPRITE_P1_COL, SPRITE_P1_ROW, Some(player_color(P1, player.alive)))
-        P2 =>
-          (SPRITE_P2_COL, SPRITE_P2_ROW, Some(player_color(P2, player.alive)))
+      if player.alive || !player.death_animation_done {
+        let tile = playback_frame_tile(player.anim)
+        let tint = Some(player_color(player.id, player.alive))
+        set_atlas_entity_center(
+          player.entity,
+          player.center,
+          size,
+          tile.0,
+          tile.1,
+          66,
+          tint~,
+          flip_x=player.flip_x,
+        )
+      } else {
+        hide_entity(player.entity)
       }
-      set_atlas_entity_center(
-        player.entity,
-        player.center,
-        size,
-        col,
-        row,
-        66,
-        tint~,
-      )
     } else {
       hide_entity(player.entity)
     }
@@ -1306,6 +1450,9 @@ fn sync_player_visuals() -> Unit {
 ///|
 fn hide_gameplay_visuals() -> Unit {
   hide_tile_visuals()
+  for breaking in soft_wall_breaks {
+    hide_entity(breaking.entity)
+  }
   for bomb in bombs {
     hide_entity(bomb.entity)
   }
@@ -1426,6 +1573,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     }
     Playing | RoundOver => {
       sync_tile_visuals()
+      sync_soft_wall_break_visuals()
       sync_bomb_visuals()
       sync_flame_visuals()
       sync_item_visuals()
