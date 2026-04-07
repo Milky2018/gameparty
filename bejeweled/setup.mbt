@@ -132,11 +132,18 @@ fn setup_board_entities() -> Unit {
 ///|
 fn reset_run_state() -> Unit {
   game_state.phase = Playing
+  game_state.resolution_phase = InputReady
+  game_state.resolution_elapsed = 0.0
+  game_state.resolution_duration = 0.0
   game_state.score = 0
   game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
   game_state.first_pick = None
-  game_state.resolution_lock = 0.0
+  game_state.pending_swap_a = None
+  game_state.pending_swap_b = None
+  game_state.pending_matches.clear()
+  game_state.active_tweens.clear()
+  game_state.cascade_depth = 0
   game_state.game_over_reason = ""
   game_state.hud_text_cache = ""
   game_state.hint_text_cache = ""

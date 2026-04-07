@@ -35,7 +35,19 @@ const MOVE_LIMIT : Int = 32
 const GAME_TIME_LIMIT : Double = 180.0
 
 ///|
-const BOARD_ANIM_SECONDS : Double = 0.16
+const SWAP_FORWARD_SECONDS : Double = 0.12
+
+///|
+const SWAP_ROLLBACK_SECONDS : Double = 0.10
+
+///|
+const CLEAR_SECONDS : Double = 0.12
+
+///|
+const FALL_SECONDS_PER_CELL : Double = 0.08
+
+///|
+const REFILL_SECONDS_PER_CELL : Double = 0.08
 
 ///|
 const DEBUG_CAPTURE_ENV : String = "BEJEWELED_CAPTURE"
@@ -62,6 +74,17 @@ enum GamePhase {
 } derive(Eq)
 
 ///|
+priv enum ResolutionPhase {
+  InputReady
+  SwapForward
+  SwapRollback
+  Clear
+  Fall
+  Refill
+  CascadeCheck
+} derive(Eq)
+
+///|
 enum GemKind {
   Ruby
   Emerald
@@ -82,24 +105,41 @@ struct Gem {
   kind : GemKind
   row : Int
   col : Int
-  x : Double
-  y : Double
-  target_x : Double
-  target_y : Double
-  t : Double
-  anim_seconds : Double
-  clearing : Bool
   entity : @entity.Entity
 } derive(Show)
 
 ///|
+priv struct GemTween {
+  entity : @entity.Entity
+  kind : GemKind
+  from_x : Double
+  from_y : Double
+  to_x : Double
+  to_y : Double
+  from_z : Double
+  to_z : Double
+  from_scale : Double
+  to_scale : Double
+  from_alpha : Double
+  to_alpha : Double
+  duration : Double
+}
+
+///|
 priv struct GameState {
   mut phase : GamePhase
+  mut resolution_phase : ResolutionPhase
+  mut resolution_elapsed : Double
+  mut resolution_duration : Double
   mut score : Int
   mut moves_left : Int
   mut time_left : Double
   mut first_pick : Cell?
-  mut resolution_lock : Double
+  mut pending_swap_a : Cell?
+  mut pending_swap_b : Cell?
+  mut pending_matches : Array[Cell]
+  mut active_tweens : Array[GemTween]
+  mut cascade_depth : Int
   mut debug_fps : Bool
   mut debug_capture_enabled : Bool
   mut debug_capture_started_at : Double
@@ -121,11 +161,18 @@ priv struct GameState {
 ///|
 let game_state : GameState = {
   phase: Playing,
+  resolution_phase: InputReady,
+  resolution_elapsed: 0.0,
+  resolution_duration: 0.0,
   score: 0,
   moves_left: MOVE_LIMIT,
   time_left: GAME_TIME_LIMIT,
   first_pick: None,
-  resolution_lock: 0.0,
+  pending_swap_a: None,
+  pending_swap_b: None,
+  pending_matches: [],
+  active_tweens: [],
+  cascade_depth: 0,
   debug_fps: false,
   debug_capture_enabled: false,
   debug_capture_started_at: 0.0,

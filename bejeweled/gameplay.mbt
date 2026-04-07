@@ -52,6 +52,12 @@ fn makes_match_at(row : Int, col : Int, kind : GemKind) -> Bool {
 
 ///|
 fn selected_hint_text() -> String {
+  if game_state.phase == GameOver {
+    return "Round ended. Press R, Enter, or Space to restart."
+  }
+  if game_state.resolution_phase != InputReady {
+    return "Resolving board..."
+  }
   match game_state.first_pick {
     Some(cell) =>
       match board_get(cell.row, cell.col) {
@@ -142,20 +148,6 @@ fn swap_cells(a : Cell, b : Cell) -> Unit {
 }
 
 ///|
-fn try_swap_and_find_match(a : Cell, b : Cell) -> Bool {
-  if !is_adjacent(a, b) {
-    return false
-  }
-  swap_cells(a, b)
-  let matches = find_matches()
-  let valid = !matches.is_empty()
-  if !valid {
-    swap_cells(a, b)
-  }
-  valid
-}
-
-///|
 fn score_for_matches(count : Int) -> Int {
   if count <= 0 {
     0
@@ -165,15 +157,307 @@ fn score_for_matches(count : Int) -> Int {
 }
 
 ///|
-fn remove_matches(matches : Array[Cell]) -> Unit {
-  for cell in matches {
-    board_set(cell.row, cell.col, None)
+fn clamp01(value : Double) -> Double {
+  if value <= 0.0 {
+    0.0
+  } else if value >= 1.0 {
+    1.0
+  } else {
+    value
   }
 }
 
 ///|
-fn collapse_board() -> Bool {
-  let mut changed = false
+fn lerp(from : Double, to : Double, t : Double) -> Double {
+  from + (to - from) * t
+}
+
+///|
+fn smoothstep(t : Double) -> Double {
+  let clamped = clamp01(t)
+  clamped * clamped * (3.0 - 2.0 * clamped)
+}
+
+///|
+fn set_gem_visual(
+  entity : @entity.Entity,
+  kind : GemKind,
+  center : @math.Vec2D,
+  z : Double,
+  scale : Double,
+  alpha : Double,
+) -> Unit {
+  let clamped_scale = if scale <= 0.01 { 0.01 } else { scale }
+  let clamped_alpha = clamp01(alpha)
+  let size_value = CELL_SIZE * 0.75 * clamped_scale
+  let size = @math.Vec2D(size_value, size_value)
+  let top_left = @math.Vec2D(
+    center[X] - size[X] * 0.5,
+    center[Y] - size[Y] * 0.5,
+  )
+  let color = { ..gem_color(kind), a: clamped_alpha }
+  let sprite = @sprite.Sprite::from_color(color, size)
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  @sprite.sprites().set(entity, sprite)
+  @transform.transforms().set(
+    entity,
+    @transform.Transform::from_xyz(top_left[X], top_left[Y], z),
+  )
+  set_entity_visible(entity, true)
+}
+
+///|
+fn create_gem_entity(cell : Cell, kind : GemKind) -> Gem {
+  let entity = @entity.Entity::new()
+  let (center, z) = cell_center(cell)
+  set_gem_visual(entity, kind, center, z, 1.0, 1.0)
+  Gem::{ kind, row: cell.row, col: cell.col, entity }
+}
+
+///|
+fn remove_entity_once(entity : @entity.Entity) -> Unit {
+  match gem_entities.search_by(fn(existing) { existing == entity }) {
+    Some(index) => ignore(gem_entities.remove(index))
+    None => ()
+  }
+  if entity.is_alive() {
+    entity.destroy()
+  }
+}
+
+///|
+fn rebuild_visuals_from_board() -> Unit {
+  for entity in gem_entities {
+    if entity.is_alive() {
+      entity.destroy()
+    }
+  }
+  gem_entities.clear()
+  gem_lookup.clear()
+  for row in 0..<BOARD_ROWS {
+    for col in 0..<BOARD_COLS {
+      match board_get(row, col) {
+        Some(kind) => {
+          let cell = Cell::{ row, col }
+          let gem = create_gem_entity(cell, kind)
+          gem_entities.push(gem.entity)
+          gem_lookup.set(cell, gem)
+        }
+        None => ()
+      }
+    }
+  }
+}
+
+///|
+fn can_accept_input() -> Bool {
+  game_state.phase == Playing && game_state.resolution_phase == InputReady
+}
+
+///|
+fn max_tween_duration(tweens : Array[GemTween]) -> Double {
+  let mut max_duration = 0.0
+  for tween in tweens {
+    if tween.duration > max_duration {
+      max_duration = tween.duration
+    }
+  }
+  if max_duration <= 0.0 {
+    0.0001
+  } else {
+    max_duration
+  }
+}
+
+///|
+fn set_input_ready_phase() -> Unit {
+  game_state.resolution_phase = InputReady
+  game_state.resolution_elapsed = 0.0
+  game_state.resolution_duration = 0.0
+  game_state.active_tweens.clear()
+}
+
+///|
+fn start_resolution_phase(
+  phase : ResolutionPhase,
+  tweens : Array[GemTween],
+) -> Unit {
+  game_state.resolution_phase = phase
+  game_state.resolution_elapsed = 0.0
+  game_state.resolution_duration = max_tween_duration(tweens)
+  game_state.active_tweens = tweens
+}
+
+///|
+fn move_tween(
+  entity : @entity.Entity,
+  kind : GemKind,
+  from_cell : Cell,
+  to_cell : Cell,
+  duration : Double,
+) -> GemTween {
+  let (from_center, from_z) = cell_center(from_cell)
+  let (to_center, to_z) = cell_center(to_cell)
+  {
+    entity,
+    kind,
+    from_x: from_center[X],
+    from_y: from_center[Y],
+    to_x: to_center[X],
+    to_y: to_center[Y],
+    from_z,
+    to_z,
+    from_scale: 1.0,
+    to_scale: 1.0,
+    from_alpha: 1.0,
+    to_alpha: 1.0,
+    duration: if duration <= 0.0001 {
+      0.0001
+    } else {
+      duration
+    },
+  }
+}
+
+///|
+fn clear_tween(
+  entity : @entity.Entity,
+  kind : GemKind,
+  cell : Cell,
+) -> GemTween {
+  let (center, z) = cell_center(cell)
+  {
+    entity,
+    kind,
+    from_x: center[X],
+    from_y: center[Y],
+    to_x: center[X],
+    to_y: center[Y],
+    from_z: z,
+    to_z: z,
+    from_scale: 1.0,
+    to_scale: 0.12,
+    from_alpha: 1.0,
+    to_alpha: 0.0,
+    duration: CLEAR_SECONDS,
+  }
+}
+
+///|
+fn swap_gems_in_lookup(a : Cell, b : Cell) -> Unit {
+  match gem_lookup.get(a) {
+    Some(gem_a) =>
+      match gem_lookup.get(b) {
+        Some(gem_b) => {
+          gem_lookup.set(a, { ..gem_b, row: a.row, col: a.col })
+          gem_lookup.set(b, { ..gem_a, row: b.row, col: b.col })
+        }
+        None => ()
+      }
+    None => ()
+  }
+}
+
+///|
+fn begin_swap_forward_phase(a : Cell, b : Cell) -> Unit {
+  game_state.pending_swap_a = Some(a)
+  game_state.pending_swap_b = Some(b)
+  let tweens : Array[GemTween] = []
+  match gem_lookup.get(a) {
+    Some(gem_a) =>
+      tweens.push(
+        move_tween(gem_a.entity, gem_a.kind, a, b, SWAP_FORWARD_SECONDS),
+      )
+    None => ()
+  }
+  match gem_lookup.get(b) {
+    Some(gem_b) =>
+      tweens.push(
+        move_tween(gem_b.entity, gem_b.kind, b, a, SWAP_FORWARD_SECONDS),
+      )
+    None => ()
+  }
+  if tweens.length() == 2 {
+    play_sound_ref(sound_swap)
+    start_resolution_phase(SwapForward, tweens)
+  } else {
+    set_input_ready_phase()
+  }
+}
+
+///|
+fn begin_swap_rollback_phase() -> Unit {
+  match game_state.pending_swap_a {
+    Some(a) =>
+      match game_state.pending_swap_b {
+        Some(b) => {
+          let tweens : Array[GemTween] = []
+          match gem_lookup.get(a) {
+            Some(gem_a) =>
+              tweens.push(
+                move_tween(
+                  gem_a.entity,
+                  gem_a.kind,
+                  a,
+                  b,
+                  SWAP_ROLLBACK_SECONDS,
+                ),
+              )
+            None => ()
+          }
+          match gem_lookup.get(b) {
+            Some(gem_b) =>
+              tweens.push(
+                move_tween(
+                  gem_b.entity,
+                  gem_b.kind,
+                  b,
+                  a,
+                  SWAP_ROLLBACK_SECONDS,
+                ),
+              )
+            None => ()
+          }
+          if tweens.length() == 2 {
+            start_resolution_phase(SwapRollback, tweens)
+          } else {
+            set_input_ready_phase()
+          }
+        }
+        None => set_input_ready_phase()
+      }
+    None => set_input_ready_phase()
+  }
+}
+
+///|
+fn begin_clear_phase(matches : Array[Cell]) -> Unit {
+  game_state.pending_matches = matches
+  let tweens : Array[GemTween] = []
+  for cell in matches {
+    if gem_lookup.get(cell) is Some(gem) {
+      tweens.push(clear_tween(gem.entity, gem.kind, cell))
+    }
+  }
+  if tweens.is_empty() {
+    game_state.pending_matches.clear()
+    set_input_ready_phase()
+  } else {
+    start_resolution_phase(Clear, tweens)
+  }
+}
+
+///|
+fn begin_cascade_check_phase() -> Unit {
+  game_state.resolution_phase = CascadeCheck
+  game_state.resolution_elapsed = 0.0
+  game_state.resolution_duration = 0.0
+  game_state.active_tweens.clear()
+}
+
+///|
+fn begin_fall_phase() -> Bool {
+  let tweens : Array[GemTween] = []
   for col in 0..<BOARD_COLS {
     let mut write_row = BOARD_ROWS - 1
     let mut row = BOARD_ROWS - 1
@@ -183,7 +467,22 @@ fn collapse_board() -> Bool {
           if write_row != row {
             board_set(write_row, col, Some(kind))
             board_set(row, col, None)
-            changed = true
+            let from = Cell::{ row, col }
+            let to = Cell::{ row: write_row, col }
+            if gem_lookup.get(from) is Some(gem) {
+              gem_lookup.remove(from)
+              gem_lookup.set(to, { ..gem, row: write_row, col })
+              let distance = (write_row - row).to_double()
+              tweens.push(
+                move_tween(
+                  gem.entity,
+                  gem.kind,
+                  from,
+                  to,
+                  FALL_SECONDS_PER_CELL * distance,
+                ),
+              )
+            }
           }
           write_row -= 1
         }
@@ -192,83 +491,203 @@ fn collapse_board() -> Bool {
       row -= 1
     }
     while write_row >= 0 {
-      board_set(write_row, col, Some(random_kind()))
-      changed = true
+      board_set(write_row, col, None)
       write_row -= 1
     }
   }
-  changed
+  if tweens.is_empty() {
+    false
+  } else {
+    start_resolution_phase(Fall, tweens)
+    true
+  }
 }
 
 ///|
-fn create_gem_entity(cell : Cell, kind : GemKind) -> Gem {
-  let entity = @entity.Entity::new()
-  let (center, z) = cell_center(cell)
-  let size = @math.Vec2D(CELL_SIZE * 0.75, CELL_SIZE * 0.75)
-  let top_left = @math.Vec2D(
-    center[X] - size[X] * 0.5,
-    center[Y] - size[Y] * 0.5,
-  )
-  let gem = Gem::{
-    kind,
-    row: cell.row,
-    col: cell.col,
-    x: center[X],
-    y: center[Y],
-    target_x: center[X],
-    target_y: center[Y],
-    t: 1.0,
-    anim_seconds: 0.001,
-    clearing: false,
-    entity,
+fn begin_refill_phase() -> Bool {
+  let tweens : Array[GemTween] = []
+  for col in 0..<BOARD_COLS {
+    let mut spawn_index = 0
+    for row in 0..<BOARD_ROWS {
+      if board_get(row, col) is None {
+        let kind = random_kind()
+        board_set(row, col, Some(kind))
+        let spawn_row = -1 - spawn_index
+        spawn_index += 1
+        let target = Cell::{ row, col }
+        let spawn = Cell::{ row: spawn_row, col }
+        let entity = @entity.Entity::new()
+        let gem = Gem::{ kind, row, col, entity }
+        gem_lookup.set(target, gem)
+        gem_entities.push(entity)
+        let distance = (row - spawn_row).to_double()
+        tweens.push(
+          move_tween(
+            entity,
+            kind,
+            spawn,
+            target,
+            REFILL_SECONDS_PER_CELL * distance,
+          ),
+        )
+      }
+    }
   }
-  @transform.transforms().set(
-    entity,
-    @transform.Transform::from_xyz(top_left[X], top_left[Y], z).with_scale(
-      @math.Vec3::one(),
-    ),
-  )
-  let sprite = @sprite.Sprite::from_color(gem_color(kind), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
-  @sprite.sprites().set(entity, sprite)
-  @visibility.visibilities().set(entity, Visible)
-  gem
+  if tweens.is_empty() {
+    false
+  } else {
+    start_resolution_phase(Refill, tweens)
+    true
+  }
 }
 
 ///|
-fn rebuild_visuals_from_board() -> Unit {
-  for entity in gem_entities {
-    entity.destroy()
+fn finalize_clear_phase() -> Unit {
+  let cleared = game_state.pending_matches.length()
+  if cleared <= 0 {
+    game_state.pending_matches.clear()
+    return
   }
-  gem_entities.clear()
-  gem_lookup.clear()
-  for row in 0..<BOARD_ROWS {
-    for col in 0..<BOARD_COLS {
-      match board_get(row, col) {
-        Some(kind) => {
-          let gem = create_gem_entity(Cell::{ row, col }, kind)
-          gem_entities.push(gem.entity)
-          gem_lookup.set(Cell::{ row, col }, gem)
-        }
+  game_state.score += score_for_matches(cleared)
+  play_sound_ref(sound_match)
+  if game_state.cascade_depth > 0 || cleared >= 6 {
+    play_sound_ref(sound_cascade)
+  }
+  for cell in game_state.pending_matches {
+    board_set(cell.row, cell.col, None)
+    if gem_lookup.get(cell) is Some(gem) {
+      gem_lookup.remove(cell)
+      remove_entity_once(gem.entity)
+    }
+  }
+  game_state.pending_matches.clear()
+}
+
+///|
+fn complete_resolution_phase() -> Unit {
+  match game_state.resolution_phase {
+    InputReady => ()
+    SwapForward =>
+      match game_state.pending_swap_a {
+        Some(a) =>
+          match game_state.pending_swap_b {
+            Some(b) => {
+              swap_cells(a, b)
+              swap_gems_in_lookup(a, b)
+              let matches = find_matches()
+              if matches.is_empty() {
+                begin_swap_rollback_phase()
+              } else {
+                game_state.moves_left -= 1
+                game_state.cascade_depth = 0
+                begin_clear_phase(matches)
+              }
+            }
+            None => set_input_ready_phase()
+          }
+        None => set_input_ready_phase()
+      }
+    SwapRollback => {
+      match game_state.pending_swap_a {
+        Some(a) =>
+          match game_state.pending_swap_b {
+            Some(b) => {
+              swap_cells(a, b)
+              swap_gems_in_lookup(a, b)
+            }
+            None => ()
+          }
         None => ()
+      }
+      game_state.first_pick = game_state.pending_swap_b
+      game_state.pending_swap_a = None
+      game_state.pending_swap_b = None
+      game_state.cascade_depth = 0
+      game_state.pending_matches.clear()
+      set_input_ready_phase()
+    }
+    Clear => {
+      finalize_clear_phase()
+      if begin_fall_phase() {
+        return
+      }
+      if begin_refill_phase() {
+        return
+      }
+      begin_cascade_check_phase()
+    }
+    Fall => {
+      if begin_refill_phase() {
+        return
+      }
+      begin_cascade_check_phase()
+    }
+    Refill => begin_cascade_check_phase()
+    CascadeCheck => {
+      let matches = find_matches()
+      if matches.is_empty() {
+        game_state.pending_swap_a = None
+        game_state.pending_swap_b = None
+        game_state.pending_matches.clear()
+        game_state.cascade_depth = 0
+        set_input_ready_phase()
+        if game_state.moves_left <= 0 {
+          game_state.phase = GameOver
+          game_state.game_over_reason = "No moves left"
+          play_sound_ref(sound_gameover)
+        }
+      } else {
+        game_state.cascade_depth += 1
+        begin_clear_phase(matches)
       }
     }
   }
 }
 
 ///|
-fn clear_matches_and_cascade() -> Int {
-  let mut total_cleared = 0
-  while true {
-    let matches = find_matches()
-    if matches.is_empty() {
-      break
+fn apply_active_tweens() -> Unit {
+  for tween in game_state.active_tweens {
+    let local_t = if tween.duration <= 0.0001 {
+      1.0
+    } else {
+      clamp01(game_state.resolution_elapsed / tween.duration)
     }
-    total_cleared += matches.length()
-    remove_matches(matches)
-    ignore(collapse_board())
+    let eased = smoothstep(local_t)
+    let center = @math.Vec2D(
+      lerp(tween.from_x, tween.to_x, eased),
+      lerp(tween.from_y, tween.to_y, eased),
+    )
+    let z = lerp(tween.from_z, tween.to_z, eased)
+    let scale = lerp(tween.from_scale, tween.to_scale, eased)
+    let alpha = lerp(tween.from_alpha, tween.to_alpha, eased)
+    set_gem_visual(tween.entity, tween.kind, center, z, scale, alpha)
   }
-  total_cleared
+}
+
+///|
+fn tick_resolution(delta : Double) -> Unit {
+  if game_state.resolution_phase == InputReady {
+    return
+  }
+  let mut phase_guard_count = 0
+  while game_state.resolution_phase == CascadeCheck && phase_guard_count < 8 {
+    complete_resolution_phase()
+    phase_guard_count += 1
+  }
+  if game_state.resolution_phase == InputReady ||
+    game_state.resolution_phase == CascadeCheck {
+    return
+  }
+  game_state.resolution_elapsed += delta
+  apply_active_tweens()
+  if game_state.resolution_elapsed >= game_state.resolution_duration {
+    complete_resolution_phase()
+    phase_guard_count = 0
+    while game_state.resolution_phase == CascadeCheck && phase_guard_count < 8 {
+      complete_resolution_phase()
+      phase_guard_count += 1
+    }
+  }
 }
 
 ///|
@@ -352,7 +771,7 @@ pub fn input_system(_world : @ecs.World) -> Unit {
     @system.exit()
     return
   }
-  if game_state.phase != Playing || game_state.resolution_lock > 0.0 {
+  if !can_accept_input() {
     return
   }
   if !@inputs.is_mouse_just_pressed(@inputs.MouseButton::Left) {
@@ -371,30 +790,8 @@ pub fn input_system(_world : @ecs.World) -> Unit {
             game_state.first_pick = Some(cell)
             return
           }
-          if try_swap_and_find_match(first, cell) {
-            game_state.moves_left -= 1
-            play_sound_ref(sound_swap)
-            let cleared = clear_matches_and_cascade()
-            if cleared > 0 {
-              game_state.score += score_for_matches(cleared)
-              play_sound_ref(sound_match)
-              if cleared >= 6 {
-                play_sound_ref(sound_cascade)
-              }
-            }
-            rebuild_visuals_from_board()
-            game_state.first_pick = None
-            game_state.resolution_lock = BOARD_ANIM_SECONDS
-            if game_state.moves_left <= 0 {
-              game_state.phase = GameOver
-              game_state.game_over_reason = "No moves left"
-              play_sound_ref(sound_gameover)
-            }
-          } else {
-            play_sound_ref(sound_swap)
-            game_state.first_pick = Some(cell)
-            game_state.resolution_lock = BOARD_ANIM_SECONDS * 0.75
-          }
+          game_state.first_pick = None
+          begin_swap_forward_phase(first, cell)
         }
       }
     None => ()
@@ -408,24 +805,19 @@ pub fn input_system(_world : @ecs.World) -> Unit {
 pub fn update_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
   let delta = @time.delta()
-  if game_state.phase == GameOver {
-    return
-  }
-  game_state.time_left -= delta
-  if game_state.time_left <= 0.0 {
-    game_state.time_left = 0.0
-    game_state.phase = GameOver
-    game_state.game_over_reason = "Time up"
-    play_sound_ref(sound_gameover)
-    return
-  }
-  if game_state.resolution_lock > 0.0 {
-    game_state.resolution_lock = if game_state.resolution_lock > delta {
-      game_state.resolution_lock - delta
+
+  if game_state.phase != GameOver {
+    game_state.time_left -= delta
+    if game_state.time_left <= 0.0 {
+      game_state.time_left = 0.0
+      game_state.phase = GameOver
+      game_state.game_over_reason = "Time up"
+      play_sound_ref(sound_gameover)
     } else {
-      0.0
+      tick_resolution(delta)
     }
   }
+
   if game_state.debug_capture_enabled &&
     !game_state.debug_capture_taken &&
     @time.elapsed() - game_state.debug_capture_started_at >=
@@ -435,6 +827,7 @@ pub fn update_system(_world : @ecs.World) -> Unit {
     game_state.debug_capture_taken = true
     @system.exit()
   }
+
   if game_state.profile_enabled {
     game_state.profile_update_total += @time.elapsed() - started_at
   }
