@@ -77,15 +77,6 @@ const SOFT_WALL_ITEM_DROP_CHANCE : Double = 0.15
 const ENEMY_ITEM_DROP_CHANCE : Double = 0.5
 
 ///|
-const FLOOR_COLOR : String = "rgb(36, 48, 56)"
-
-///|
-const HARD_WALL_COLOR : String = "rgb(86, 113, 140)"
-
-///|
-const SOFT_WALL_COLOR : String = "rgb(163, 111, 58)"
-
-///|
 const P1_COLOR : String = "rgb(70, 200, 255)"
 
 ///|
@@ -96,12 +87,6 @@ const P2_COLOR : String = "rgb(255, 201, 84)"
 
 ///|
 const P2_DEAD_COLOR : String = "rgb(124, 112, 82)"
-
-///|
-const BOMB_COLOR : String = "rgb(28, 28, 32)"
-
-///|
-const FLAME_COLOR : String = "rgb(255, 170, 56)"
 
 ///|
 const SHOES_ITEM_COLOR : String = "rgb(108, 232, 143)"
@@ -135,6 +120,93 @@ const BOMBMAN_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
 const BOMBMAN_FONT_PATH : String = "bombman/assets/ThaleahFat.ttf"
+
+///|
+const BOMBMAN_SPRITES_PATH : String = "bombman/assets/bomberman.png"
+
+///|
+const BOMBMAN_SPRITE_TILE_SIZE : Double = 16.0
+
+///|
+const SPRITE_FLOOR_COL : Int = 0
+
+///|
+const SPRITE_FLOOR_ROW : Int = 4
+
+///|
+const SPRITE_HARD_WALL_COL : Int = 3
+
+///|
+const SPRITE_HARD_WALL_ROW : Int = 3
+
+///|
+const SPRITE_SOFT_WALL_COL : Int = 4
+
+///|
+const SPRITE_SOFT_WALL_ROW : Int = 3
+
+///|
+const SPRITE_BOMB_COL : Int = 0
+
+///|
+const SPRITE_BOMB_ROW : Int = 3
+
+///|
+const SPRITE_FLAME_COL : Int = 7
+
+///|
+const SPRITE_FLAME_ROW : Int = 7
+
+///|
+const SPRITE_P1_COL : Int = 0
+
+///|
+const SPRITE_P1_ROW : Int = 0
+
+///|
+const SPRITE_P2_COL : Int = 1
+
+///|
+const SPRITE_P2_ROW : Int = 0
+
+///|
+const SPRITE_ENEMY_COL : Int = 0
+
+///|
+const SPRITE_ENEMY_ROW : Int = 18
+
+///|
+const SPRITE_SHOES_COL : Int = 8
+
+///|
+const SPRITE_SHOES_ROW : Int = 14
+
+///|
+const SPRITE_BOMB_ITEM_COL : Int = 10
+
+///|
+const SPRITE_BOMB_ITEM_ROW : Int = 14
+
+///|
+const SPRITE_POWER_ITEM_COL : Int = 12
+
+///|
+const SPRITE_POWER_ITEM_ROW : Int = 14
+
+///|
+const PLAYER_SPRITE_SIZE : Double = CELL_SIZE - 2.0
+
+///|
+const ENEMY_SPRITE_SIZE : Double = CELL_SIZE - 2.0
+
+///|
+const BOMB_SPRITE_SIZE : Double = CELL_SIZE - 2.0
+
+///|
+const FLAME_SPRITE_SIZE : Double = CELL_SIZE - FLOOR_INSET * 2.0
+
+///|
+const ITEM_ICON_SIZE : Double = ITEM_BUBBLE_RADIUS * 1.2
 
 ///|
 const LEVEL_EMPTY : Int = 0
@@ -766,15 +838,6 @@ fn decode_round_seed_from_netplay(seed : Int) -> (Int, GameMode)? {
     return None
   }
   Some((level_index, mode))
-}
-
-///|
-fn item_label(kind : ItemKind) -> String {
-  match kind {
-    Shoes => "S"
-    BombUp => "B"
-    PowerUp => "P"
-  }
 }
 
 ///|

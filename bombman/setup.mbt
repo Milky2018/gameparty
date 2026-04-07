@@ -14,12 +14,27 @@ let text_content_cache : Map[@entity.Entity, String] = Map::new()
 let text_style_cache : Map[@entity.Entity, String] = Map::new()
 
 ///|
+let bombman_spritesheet_handle : Ref[@asset.ImageHandle?] = { val: None }
+
+///|
 fn register_bombman_font_once() -> Unit {
   if bombman_font_registered.val {
     return
   }
   ignore(@asset.load_font(BOMBMAN_FONT_PATH, family=BOMBMAN_FONT_FAMILY))
   bombman_font_registered.val = true
+}
+
+///|
+fn bombman_spritesheet() -> @asset.ImageHandle {
+  match bombman_spritesheet_handle.val {
+    Some(handle) => handle
+    None => {
+      let handle = @asset.load_image(BOMBMAN_SPRITES_PATH)
+      bombman_spritesheet_handle.val = Some(handle)
+      handle
+    }
+  }
 }
 
 ///|
@@ -48,6 +63,17 @@ fn entity_transform_2d(
 ///|
 fn show_entity(entity : @entity.Entity) -> Unit {
   @visibility.visibilities().set(entity, Visible)
+}
+
+///|
+fn atlas_tile_rect(col : Int, row : Int) -> @math.Rect {
+  {
+    position: @math.Vec2D(
+      col.to_double() * BOMBMAN_SPRITE_TILE_SIZE,
+      row.to_double() * BOMBMAN_SPRITE_TILE_SIZE,
+    ),
+    size: @math.Vec2D(BOMBMAN_SPRITE_TILE_SIZE, BOMBMAN_SPRITE_TILE_SIZE),
+  }
 }
 
 ///|
@@ -250,6 +276,46 @@ fn set_rect_entity(
   sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
+}
+
+///|
+fn set_atlas_entity_top_left(
+  entity : @entity.Entity,
+  position : @math.Vec2D,
+  size : @math.Vec2D,
+  col : Int,
+  row : Int,
+  zindex : Int,
+  tint? : String? = None,
+) -> Unit {
+  ensure_entity_alive(entity)
+  show_entity(entity)
+  let sprite = @sprite.Sprite::from_image(
+    bombman_spritesheet(),
+    custom_size=Some(size),
+  )
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.rect = Some(atlas_tile_rect(col, row))
+  match tint {
+    Some(color) => sprite.color = sprite_color(color)
+    None => ()
+  }
+  @sprite.sprites().set(entity, sprite)
+  @transform.transforms().set(entity, entity_transform_2d(position, zindex))
+}
+
+///|
+fn set_atlas_entity_center(
+  entity : @entity.Entity,
+  center : @math.Vec2D,
+  size : @math.Vec2D,
+  col : Int,
+  row : Int,
+  zindex : Int,
+  tint? : String? = None,
+) -> Unit {
+  let top_left = center - @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
+  set_atlas_entity_top_left(entity, top_left, size, col, row, zindex, tint~)
 }
 
 ///|
@@ -1108,12 +1174,19 @@ fn sync_tile_visuals() -> Unit {
   for y in 0..<GRID_HEIGHT {
     for x in 0..<GRID_WIDTH {
       let entity = tile_entities[cell_index(x, y)]
-      let color = match tile_at(x, y) {
-        Empty => FLOOR_COLOR
-        HardWall => HARD_WALL_COLOR
-        SoftWall => SOFT_WALL_COLOR
+      let (col, row) = match tile_at(x, y) {
+        Empty => (SPRITE_FLOOR_COL, SPRITE_FLOOR_ROW)
+        HardWall => (SPRITE_HARD_WALL_COL, SPRITE_HARD_WALL_ROW)
+        SoftWall => (SPRITE_SOFT_WALL_COL, SPRITE_SOFT_WALL_ROW)
       }
-      set_rect_entity(entity, floor_tile_position(x, y), size, color, 20)
+      set_atlas_entity_top_left(
+        entity,
+        floor_tile_position(x, y),
+        size,
+        col,
+        row,
+        20,
+      )
     }
   }
   tile_visuals_dirty.val = false
@@ -1129,12 +1202,14 @@ fn hide_tile_visuals() -> Unit {
 
 ///|
 fn sync_bomb_visuals() -> Unit {
+  let size = @math.Vec2D(BOMB_SPRITE_SIZE, BOMB_SPRITE_SIZE)
   for bomb in bombs {
-    set_circle_entity(
+    set_atlas_entity_center(
       bomb.entity,
       cell_center(bomb.cell_x, bomb.cell_y),
-      BOMB_RADIUS,
-      BOMB_COLOR,
+      size,
+      SPRITE_BOMB_COL,
+      SPRITE_BOMB_ROW,
       60,
     )
   }
@@ -1142,13 +1217,14 @@ fn sync_bomb_visuals() -> Unit {
 
 ///|
 fn sync_flame_visuals() -> Unit {
+  let size = @math.Vec2D(FLAME_SPRITE_SIZE, FLAME_SPRITE_SIZE)
   for flame in flames {
-    let pos = cell_top_left(flame.cell_x, flame.cell_y) + @math.Vec2D(6.0, 6.0)
-    set_rect_entity(
+    set_atlas_entity_center(
       flame.entity,
-      pos,
-      @math.Vec2D(CELL_SIZE - 12.0, CELL_SIZE - 12.0),
-      FLAME_COLOR,
+      cell_center(flame.cell_x, flame.cell_y),
+      size,
+      SPRITE_FLAME_COL,
+      SPRITE_FLAME_ROW,
       70,
     )
   }
@@ -1158,6 +1234,11 @@ fn sync_flame_visuals() -> Unit {
 fn sync_item_visuals() -> Unit {
   for item in items {
     let center = cell_center(item.cell_x, item.cell_y)
+    let (icon_col, icon_row) = match item.kind {
+      Shoes => (SPRITE_SHOES_COL, SPRITE_SHOES_ROW)
+      BombUp => (SPRITE_BOMB_ITEM_COL, SPRITE_BOMB_ITEM_ROW)
+      PowerUp => (SPRITE_POWER_ITEM_COL, SPRITE_POWER_ITEM_ROW)
+    }
     set_circle_entity(
       item.entity,
       center,
@@ -1165,27 +1246,31 @@ fn sync_item_visuals() -> Unit {
       ITEM_BUBBLE_COLOR,
       62,
     )
-    set_text_entity_center(
+    set_atlas_entity_center(
       item.label_entity,
-      item_label(item.kind),
-      @math.Vec2D(center[X], center[Y] - 14.0),
-      "26px \{BOMBMAN_FONT_FAMILY}",
-      item_color(item.kind),
+      center,
+      @math.Vec2D(ITEM_ICON_SIZE, ITEM_ICON_SIZE),
+      icon_col,
+      icon_row,
       63,
+      tint=Some(item_color(item.kind)),
     )
   }
 }
 
 ///|
 fn sync_enemy_visuals() -> Unit {
-  for index, enemy in enemies {
+  let size = @math.Vec2D(ENEMY_SPRITE_SIZE, ENEMY_SPRITE_SIZE)
+  for enemy in enemies {
     if enemy.alive {
-      let color = if index % 2 == 0 {
-        "rgb(235, 78, 99)"
-      } else {
-        "rgb(198, 94, 255)"
-      }
-      set_circle_entity(enemy.entity, enemy.center, enemy.radius, color, 65)
+      set_atlas_entity_center(
+        enemy.entity,
+        enemy.center,
+        size,
+        SPRITE_ENEMY_COL,
+        SPRITE_ENEMY_ROW,
+        65,
+      )
     } else {
       hide_entity(enemy.entity)
     }
@@ -1194,14 +1279,23 @@ fn sync_enemy_visuals() -> Unit {
 
 ///|
 fn sync_player_visuals() -> Unit {
+  let size = @math.Vec2D(PLAYER_SPRITE_SIZE, PLAYER_SPRITE_SIZE)
   for player in players {
     if player.active {
-      set_circle_entity(
+      let (col, row, tint) = match player.id {
+        P1 =>
+          (SPRITE_P1_COL, SPRITE_P1_ROW, Some(player_color(P1, player.alive)))
+        P2 =>
+          (SPRITE_P2_COL, SPRITE_P2_ROW, Some(player_color(P2, player.alive)))
+      }
+      set_atlas_entity_center(
         player.entity,
         player.center,
-        player.radius,
-        player_color(player.id, player.alive),
+        size,
+        col,
+        row,
         66,
+        tint~,
       )
     } else {
       hide_entity(player.entity)
