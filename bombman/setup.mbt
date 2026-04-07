@@ -676,6 +676,28 @@ fn reset_netplay_runtime() -> Unit {
 }
 
 ///|
+fn reset_network_menu_state() -> Unit {
+  menu_screen.val = MainRoot
+  network_root_selection.val = CreateRoom
+  host_setup_focus.val = Mode
+  join_setup_focus.val = Host
+  host_setup_mode.val = Coop
+  host_setup_port.val = "39000"
+  join_setup_host.val = "127.0.0.1"
+  join_setup_port.val = "39000"
+  lobby_local_ip.val = None
+  lobby_mode_label.val = "A (CO-OP)"
+  lobby_endpoint_label.val = ""
+  lobby_status_label.val = ""
+}
+
+///|
+fn stop_active_netplay() -> Unit {
+  reset_netplay_runtime()
+  netplay_mode.val = Off
+}
+
+///|
 fn apply_remote_round_seed(seed : Int) -> Unit {
   if netplay_round_seed_applied.val == seed {
     return
@@ -686,7 +708,7 @@ fn apply_remote_round_seed(seed : Int) -> Unit {
         current_mode.val != remote_mode
       current_level.val = remote_level
       current_mode.val = remote_mode
-      if needs_reload {
+      if phase.val == Playing && needs_reload {
         clear_dynamic_entities()
         load_level(remote_level, remote_mode)
         tile_visuals_dirty.val = true
@@ -716,87 +738,120 @@ fn netplay_loopback_exchange(
 }
 
 ///|
-fn configure_netplay_for_round(mode : GameMode) -> Unit {
-  reset_netplay_runtime()
-  if netplay_local_loop_enabled.val {
-    netplay_mode.val = Loopback
+fn parse_numeric_port(raw : String) -> Int? {
+  if raw == "" {
+    return None
   }
-  if mode == SinglePlayer || netplay_mode.val == Off {
-    return
-  }
-  // `BOMBMAN_NET_MODE=client` only affects Join Game.
-  if netplay_mode.val != Loopback && !netplay_join_mode_active.val {
-    return
-  }
-  if netplay_mode.val == Loopback {
-    let config = @netplay.NetConfig::default()
-    let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
-    let mut host = @netplay.NetSession::new_host(
-      local_peer_id="p1",
-      remote_peer_id="p2",
-      seed=round_seed,
-      config~,
-    )
-    let mut client = @netplay.NetSession::new_client(
-      local_peer_id="p2",
-      remote_peer_id="p1",
-      config~,
-    )
-    host = host.begin_handshake()
-    client = client.begin_handshake()
-    for _ in 0..<2 {
-      let (next_host, next_client) = netplay_loopback_exchange(host, client)
-      host = next_host
-      client = next_client
+  for index in 0..<raw.length() {
+    let code = raw.code_unit_at(index).to_int()
+    if code < 48 || code > 57 {
+      return None
     }
-    host = host.set_local_ready()
-    client = client.set_local_ready()
-    for _ in 0..<4 {
-      let (next_host, next_client) = netplay_loopback_exchange(host, client)
-      host = next_host
-      client = next_client
-    }
-    let (host_after_events, _) = host.drain_events()
-    let (client_after_events, _) = client.drain_events()
-    netplay_host_session.val = Some(host_after_events)
-    netplay_client_session.val = Some(client_after_events)
-    netplay_round_seed_applied.val = round_seed
-    return
   }
+  let parsed = Some(@string.parse_int(raw)) catch { _ => None }
+  match parsed {
+    Some(port) => if port >= 1 && port <= 65535 { Some(port) } else { None }
+    None => None
+  }
+}
+
+///|
+fn open_network_menu_root() -> Unit {
+  stop_active_netplay()
+  menu_error_message.val = ""
+  menu_screen.val = NetworkRoot
+  network_root_selection.val = CreateRoom
+  lobby_status_label.val = ""
+}
+
+///|
+fn open_network_host_setup() -> Unit {
+  menu_error_message.val = ""
+  menu_screen.val = NetworkHostSetup
+  host_setup_focus.val = Mode
+  host_setup_mode.val = Coop
+  host_setup_port.val = "39000"
+}
+
+///|
+fn open_network_join_setup() -> Unit {
+  menu_error_message.val = ""
+  menu_screen.val = NetworkJoinSetup
+  join_setup_focus.val = Host
+  join_setup_host.val = "127.0.0.1"
+  join_setup_port.val = "39000"
+}
+
+///|
+fn cancel_network_lobby_to_root(error? : String = "") -> Unit {
+  stop_active_netplay()
+  menu_screen.val = NetworkRoot
+  network_root_selection.val = CreateRoom
+  lobby_status_label.val = ""
+  if error == "" {
+    menu_error_message.val = ""
+  } else {
+    menu_error_message.val = error
+  }
+}
+
+///|
+fn begin_network_host_lobby(mode : GameMode, port : Int) -> Unit {
+  stop_active_netplay()
+  let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
   let config = @netplay.NetConfig::default()
-  match netplay_mode.val {
-    Host => {
-      let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
-      let mut session = @netplay.NetSession::new_host(
-        local_peer_id="p1",
-        remote_peer_id="p2",
-        seed=round_seed,
-        config~,
-      )
-      session = session.begin_handshake()
-      session = session.set_local_ready()
-      netplay_session.val = Some(session)
-      netplay_link.val = Some(@netplay.TcpLink::new_host(netplay_port.val))
-      netplay_round_seed_applied.val = round_seed
-    }
-    Client => {
-      let mut session = @netplay.NetSession::new_client(
-        local_peer_id="p2",
-        remote_peer_id="p1",
-        config~,
-      )
-      session = session.begin_handshake()
-      session = session.set_local_ready()
-      netplay_session.val = Some(session)
-      netplay_link.val = Some(
-        @netplay.TcpLink::new_client(
-          remote_host=netplay_remote_host.val,
-          remote_port=netplay_remote_port.val,
-        ),
-      )
-    }
-    Off | Loopback => ()
-  }
+  let mut session = @netplay.NetSession::new_host(
+    local_peer_id="p1",
+    remote_peer_id="p2",
+    seed=round_seed,
+    config~,
+  )
+  session = session.begin_handshake()
+  session = session.set_local_ready()
+  netplay_mode.val = Host
+  netplay_port.val = port
+  netplay_session.val = Some(session)
+  netplay_link.val = Some(@netplay.TcpLink::new_host(port))
+  netplay_round_seed_applied.val = round_seed
+  current_mode.val = mode
+  lobby_local_ip.val = @netplay.local_ipv4()
+  lobby_mode_label.val = network_mode_short(mode)
+  lobby_endpoint_label.val = "0.0.0.0:\{port}"
+  lobby_status_label.val = "Waiting for another player..."
+  menu_error_message.val = ""
+  menu_screen.val = NetworkLobby
+}
+
+///|
+fn begin_network_join_lobby(host : String, port : Int) -> Unit {
+  stop_active_netplay()
+  let config = @netplay.NetConfig::default()
+  let mut session = @netplay.NetSession::new_client(
+    local_peer_id="p2",
+    remote_peer_id="p1",
+    config~,
+  )
+  session = session.begin_handshake()
+  session = session.set_local_ready()
+  netplay_mode.val = Client
+  netplay_remote_host.val = host
+  netplay_remote_port.val = port
+  netplay_session.val = Some(session)
+  netplay_link.val = Some(
+    @netplay.TcpLink::new_client(remote_host=host, remote_port=port),
+  )
+  lobby_local_ip.val = @netplay.local_ipv4()
+  lobby_mode_label.val = "SYNCING FROM HOST"
+  lobby_endpoint_label.val = "\{host}:\{port}"
+  lobby_status_label.val = "Connecting and syncing..."
+  menu_error_message.val = ""
+  menu_screen.val = NetworkLobby
+}
+
+///|
+fn start_local_round(mode : GameMode) -> Unit {
+  stop_active_netplay()
+  start_round(mode)
 }
 
 ///|
@@ -1004,7 +1059,6 @@ fn start_round(mode : GameMode) -> Unit {
   current_mode.val = mode
   round_outcome.val = LevelClear
   load_level(current_level.val, mode)
-  configure_netplay_for_round(mode)
   tile_visuals_dirty.val = true
   phase.val = Playing
 }
@@ -1012,12 +1066,12 @@ fn start_round(mode : GameMode) -> Unit {
 ///|
 fn return_to_menu() -> Unit {
   reset_direction_input_state()
-  reset_netplay_runtime()
-  netplay_join_mode_active.val = false
+  stop_active_netplay()
   clear_dynamic_entities()
   clear_tile_grid()
   deactivate_all_players()
   menu_error_message.val = ""
+  reset_network_menu_state()
   tile_visuals_dirty.val = true
   phase.val = MainMenu
   round_outcome.val = LevelClear
@@ -1029,66 +1083,13 @@ fn return_to_menu() -> Unit {
 }
 
 ///|
-fn parse_env_int(name : String, fallback : Int) -> Int {
-  match @env.get_env_var(name) {
-    Some(raw) =>
-      match parse_color_component_int(raw.to_string_view()) {
-        Some(value) => value
-        None => fallback
-      }
-    None => fallback
-  }
-}
-
-///|
-fn parse_env_netplay_mode() -> NetTransportMode {
-  match @env.get_env_var(NETPLAY_MODE_ENV) {
-    Some(raw) =>
-      match raw {
-        "host" | "HOST" | "Host" => Host
-        "client" | "CLIENT" | "Client" => Client
-        "off" | "OFF" | "Off" => Off
-        _ => Off
-      }
-    None => Off
-  }
-}
-
-///|
-fn configure_netplay_mode_from_env() -> Unit {
-  netplay_port.val = clamp_int(parse_env_int(NETPLAY_PORT_ENV, 39000), 1, 65535)
-  netplay_remote_port.val = clamp_int(
-    parse_env_int(NETPLAY_REMOTE_PORT_ENV, netplay_port.val),
-    1,
-    65535,
-  )
-  netplay_remote_host.val = match @env.get_env_var(NETPLAY_REMOTE_HOST_ENV) {
-    Some(host) => {
-      let trimmed = host.trim().to_string()
-      if trimmed == "" {
-        "127.0.0.1"
-      } else {
-        trimmed
-      }
-    }
-    None => "127.0.0.1"
-  }
-  netplay_mode.val = parse_env_netplay_mode()
-  if netplay_local_loop_enabled.val {
-    netplay_mode.val = Loopback
-  }
-}
-
-///|
 fn startup_system(_world : @ecs.World) -> Unit {
   register_bombman_font_once()
   ensure_bombman_animation_assets_once()
   profile_enabled.val = env_flag_enabled(PROFILE_ENV)
   capture_enabled.val = env_flag_enabled(CAPTURE_ENV)
-  netplay_local_loop_enabled.val = env_flag_enabled(NETPLAY_LOCAL_LOOP_ENV)
-  configure_netplay_mode_from_env()
-  reset_netplay_runtime()
-  netplay_join_mode_active.val = false
+  stop_active_netplay()
+  reset_network_menu_state()
   let started_at = @time.elapsed_raw()
   profile_started_at.val = started_at
   profile_last_report_at.val = started_at
@@ -1122,6 +1123,7 @@ fn startup_system(_world : @ecs.World) -> Unit {
   clear_tile_grid()
   deactivate_all_players()
   phase.val = MainMenu
+  menu_selection.val = OnePlayer
   exit_request_count.val = 0
   if capture_enabled.val {
     start_round(SinglePlayer)
@@ -1406,7 +1408,14 @@ fn round_outcome_text() -> String {
 ///|
 fn phase_status_text() -> String {
   match phase.val {
-    MainMenu => "LEVEL \{current_level_number()} / \{levels.length()}"
+    MainMenu =>
+      match menu_screen.val {
+        MainRoot => "LEVEL \{current_level_number()} / \{levels.length()}"
+        NetworkRoot => "NETWORK BATTLE"
+        NetworkHostSetup => "CREATE ROOM"
+        NetworkJoinSetup => "JOIN ROOM"
+        NetworkLobby => "NETWORK LOBBY"
+      }
     Playing => {
       let base = "MODE: \{mode_label(current_mode.val)}   LEVEL: \{current_level_number()}/\{levels.length()}"
       let p1 = players[0]
@@ -1433,7 +1442,17 @@ fn phase_status_text() -> String {
 fn hint_text() -> String {
   match phase.val {
     MainMenu =>
-      "W/S or Up/Down: Mode   A/D or Left/Right: Level   Enter/Space: Select   Esc: Exit"
+      match menu_screen.val {
+        MainRoot =>
+          "W/S or Up/Down: Mode   A/D or Left/Right: Level   Enter/Space: Select   Esc: Exit"
+        NetworkRoot =>
+          "W/S or Up/Down: Option   Enter/Space: Select   Esc: Back"
+        NetworkHostSetup =>
+          "W/S: Field   A/D or Left/Right: Mode   Digits: Port   Backspace: Delete   Enter: Create   Esc: Back"
+        NetworkJoinSetup =>
+          "W/S: Field   Type Host/Port   Backspace: Delete   Enter: Join   Esc: Back"
+        NetworkLobby => "Waiting for handshake... Esc: Cancel"
+      }
     Playing =>
       match current_mode.val {
         SinglePlayer =>
@@ -1463,19 +1482,29 @@ fn status_text() -> String {
       if menu_error_message.val != "" {
         menu_error_message.val
       } else {
-        "2 Players A = co-op, 2 Players B = versus. Join Game is client-only."
+        match menu_screen.val {
+          MainRoot => "2 Players A = co-op, 2 Players B = versus."
+          NetworkRoot => "Network battle supports Host(P1) + Client(P2)."
+          NetworkHostSetup =>
+            "Choose mode A/B and port, then press Enter to create."
+          NetworkJoinSetup =>
+            "Enter host IP and port, then press Enter to join."
+          NetworkLobby => {
+            let lan = match lobby_local_ip.val {
+              Some(ip) => ip
+              None => "unavailable"
+            }
+            "MODE: \{lobby_mode_label.val}   ROOM: \{lobby_endpoint_label.val}   LAN: \{lan}   LOOPBACK: 127.0.0.1   \{lobby_status_label.val}"
+          }
+        }
       }
     Playing =>
       match current_mode.val {
         SinglePlayer =>
           "Soft walls break. Hard walls block. Flames travel in a cross."
         Coop => {
-          let net_suffix = if netplay_session.val is Some(_) ||
-            (
-              netplay_mode.val == Loopback &&
-              netplay_host_session.val is Some(_) &&
-              netplay_client_session.val is Some(_)
-            ) {
+          let net_suffix = if netplay_session.val is Some(_) &&
+            (netplay_mode.val == Host || netplay_mode.val == Client) {
             match netplay_mode.val {
               Host => {
                 let connected = match netplay_link.val {
@@ -1519,8 +1548,8 @@ fn status_text() -> String {
                 }
                 "   NET CLIENT \{connected}/\{running} to \{netplay_remote_host.val}:\{netplay_remote_port.val}"
               }
-              Loopback => "   NET LOOPBACK"
               Off => ""
+              Loopback => ""
             }
           } else {
             ""
@@ -1529,17 +1558,13 @@ fn status_text() -> String {
           net_suffix
         }
         Versus => {
-          let net_suffix = if netplay_session.val is Some(_) ||
-            (
-              netplay_mode.val == Loopback &&
-              netplay_host_session.val is Some(_) &&
-              netplay_client_session.val is Some(_)
-            ) {
+          let net_suffix = if netplay_session.val is Some(_) &&
+            (netplay_mode.val == Host || netplay_mode.val == Client) {
             match netplay_mode.val {
               Host => "   NET HOST"
               Client => "   NET CLIENT"
-              Loopback => "   NET LOOPBACK"
               Off => ""
+              Loopback => ""
             }
           } else {
             ""
@@ -1762,6 +1787,23 @@ fn hide_menu_visuals() -> Unit {
 }
 
 ///|
+fn set_menu_entry(
+  index : Int,
+  text : String,
+  y : Double,
+  color : String,
+) -> Unit {
+  set_text_entity_center(
+    menu_entities[index],
+    text,
+    @math.Vec2D(VIEWPORT_WIDTH / 2.0, y),
+    "24px \{BOMBMAN_FONT_FAMILY}",
+    color,
+    200,
+  )
+}
+
+///|
 fn sync_menu_visuals() -> Unit {
   let center_x = VIEWPORT_WIDTH / 2.0
   set_text_entity_center(
@@ -1780,23 +1822,121 @@ fn sync_menu_visuals() -> Unit {
     MENU_SELECTED_COLOR,
     200,
   )
-  let options = menu_options()
-  for index in 0..<options.length() {
-    let option = options[index]
-    let prefix = if option == menu_selection.val { "> " } else { "  " }
-    let color = if option == menu_selection.val {
-      MENU_SELECTED_COLOR
-    } else {
-      MENU_NORMAL_COLOR
+  hide_menu_visuals()
+  match menu_screen.val {
+    MainRoot => {
+      let options = menu_options()
+      for index in 0..<options.length() {
+        let option = options[index]
+        let prefix = if option == menu_selection.val { "> " } else { "  " }
+        let color = if option == menu_selection.val {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        }
+        set_menu_entry(
+          index,
+          prefix + menu_option_label(option),
+          210.0 + index.to_double() * 38.0,
+          color,
+        )
+      }
     }
-    set_text_entity_center(
-      menu_entities[index],
-      prefix + menu_option_label(option),
-      @math.Vec2D(center_x, 210.0 + index.to_double() * 38.0),
-      "24px \{BOMBMAN_FONT_FAMILY}",
-      color,
-      200,
-    )
+    NetworkRoot => {
+      let options : Array[NetworkRootOption] = [CreateRoom, JoinRoom, Back]
+      for index in 0..<options.length() {
+        let option = options[index]
+        let prefix = if option == network_root_selection.val {
+          "> "
+        } else {
+          "  "
+        }
+        let color = if option == network_root_selection.val {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        }
+        set_menu_entry(
+          index,
+          prefix + network_root_option_label(option),
+          234.0 + index.to_double() * 42.0,
+          color,
+        )
+      }
+    }
+    NetworkHostSetup => {
+      let mode_prefix = if host_setup_focus.val == Mode { "> " } else { "  " }
+      let port_prefix = if host_setup_focus.val == Port { "> " } else { "  " }
+      set_menu_entry(
+        0,
+        mode_prefix + "MODE: \{network_mode_short(host_setup_mode.val)}",
+        220.0,
+        if host_setup_focus.val == Mode {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        },
+      )
+      set_menu_entry(
+        1,
+        port_prefix + "PORT: \{host_setup_port.val}",
+        262.0,
+        if host_setup_focus.val == Port {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        },
+      )
+      set_menu_entry(2, "ENTER: CREATE ROOM", 322.0, MENU_SELECTED_COLOR)
+      set_menu_entry(3, "ESC: BACK", 364.0, MENU_NORMAL_COLOR)
+    }
+    NetworkJoinSetup => {
+      let host_prefix = if join_setup_focus.val == Host { "> " } else { "  " }
+      let port_prefix = if join_setup_focus.val == Port { "> " } else { "  " }
+      set_menu_entry(
+        0,
+        host_prefix + "HOST: \{join_setup_host.val}",
+        220.0,
+        if join_setup_focus.val == Host {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        },
+      )
+      set_menu_entry(
+        1,
+        port_prefix + "PORT: \{join_setup_port.val}",
+        262.0,
+        if join_setup_focus.val == Port {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        },
+      )
+      set_menu_entry(2, "ENTER: JOIN ROOM", 322.0, MENU_SELECTED_COLOR)
+      set_menu_entry(3, "ESC: BACK", 364.0, MENU_NORMAL_COLOR)
+    }
+    NetworkLobby => {
+      let lan = match lobby_local_ip.val {
+        Some(ip) => ip
+        None => "unavailable"
+      }
+      set_menu_entry(
+        0,
+        "MODE: \{lobby_mode_label.val}",
+        214.0,
+        MENU_SELECTED_COLOR,
+      )
+      set_menu_entry(
+        1,
+        "ROOM: \{lobby_endpoint_label.val}",
+        252.0,
+        MENU_NORMAL_COLOR,
+      )
+      set_menu_entry(2, "LAN: \{lan}", 290.0, MENU_NORMAL_COLOR)
+      set_menu_entry(3, "LOOPBACK: 127.0.0.1", 328.0, MENU_NORMAL_COLOR)
+      set_menu_entry(4, lobby_status_label.val, 380.0, MENU_SELECTED_COLOR)
+    }
   }
   set_text_entity_center(
     status_entity,

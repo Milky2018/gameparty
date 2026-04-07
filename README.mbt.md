@@ -72,27 +72,14 @@ moon run cmd/jackal
 moon run cmd/kofarena
 ```
 
-`bombman` local netplay bridge (host/client loopback in one process, for development):
+`bombman` netplay is now fully menu-driven (no `BOMBMAN_NET_*` env vars):
 
-```bash
-BOMBMAN_NET_LOCAL_LOOP=1 moon run cmd/bombman
-```
+1. In main menu, enter `NETWORK BATTLE`.
+2. Host chooses `CREATE ROOM`, picks mode `A/B` and a port, then waits in lobby.
+3. Client chooses `JOIN ROOM`, enters host IP and port.
+4. After handshake, round starts automatically and client syncs host level/mode.
 
-`bombman` remote netplay (two processes on two machines):
-
-Host side:
-
-```bash
-BOMBMAN_NET_MODE=host BOMBMAN_NET_PORT=39000 moon run cmd/bombman
-```
-
-Client side:
-
-```bash
-BOMBMAN_NET_MODE=client BOMBMAN_NET_REMOTE_HOST=<host-ip> BOMBMAN_NET_REMOTE_PORT=39000 moon run cmd/bombman
-```
-
-Then both players enter `2 Players A` or `2 Players B` in the menu.
+Lobby shows both detected LAN IPv4 and `127.0.0.1` for local testing.
 
 ## Check
 

@@ -43,6 +43,16 @@ fn ascii_string(bytes : Bytes) -> String {
 }
 
 ///|
+pub fn local_ipv4() -> String? {
+  let detected = ascii_string(tcp_local_ipv4_ffi()).trim().to_string()
+  if detected == "" {
+    None
+  } else {
+    Some(detected)
+  }
+}
+
+///|
 fn parse_int_safe(raw : String) -> Int? {
   Some(@string.parse_int(raw)) catch {
     _ => None

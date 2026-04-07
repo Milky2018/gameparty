@@ -2,10 +2,9 @@
 fn reset_test_input_state() -> Unit {
   @inputs.pressed_keys.clear()
   reset_direction_input_state()
-  reset_netplay_runtime()
+  stop_active_netplay()
   netplay_mode.val = Off
-  netplay_join_mode_active.val = false
-  netplay_local_loop_enabled.val = false
+  reset_network_menu_state()
   menu_error_message.val = ""
   suppress_exit_for_tests.val = true
   exit_request_count.val = 0
@@ -60,7 +59,7 @@ test "menu navigation wraps and selection starts correct modes" {
   press_menu_key(@inputs.KeyS)
   assert_true(menu_selection.val == TwoPlayersB)
   press_menu_key(@inputs.KeyS)
-  assert_true(menu_selection.val == JoinGame)
+  assert_true(menu_selection.val == NetworkBattle)
   press_menu_key(@inputs.KeyS)
   assert_true(menu_selection.val == Exit)
   press_menu_key(@inputs.KeyS)
@@ -86,35 +85,61 @@ test "menu exit triggers exit path" {
 }
 
 ///|
-test "join game is client-only on main menu" {
+test "network battle menu routes host/join setup and validates inputs" {
   prepare_menu()
-  netplay_mode.val = Off
-  menu_selection.val = JoinGame
+  menu_selection.val = NetworkBattle
   press_menu_key(@inputs.Enter)
   assert_true(phase.val == MainMenu)
-  assert_true(menu_error_message.val.contains("client mode"))
+  assert_true(menu_screen.val == NetworkRoot)
 
+  // Create room path
+  press_menu_key(@inputs.Enter)
+  assert_true(menu_screen.val == NetworkHostSetup)
+  host_setup_focus.val = Port
+  host_setup_port.val = "0"
+  press_menu_key(@inputs.Enter)
+  assert_true(menu_screen.val == NetworkHostSetup)
+  assert_true(menu_error_message.val.contains("1..65535"))
+  host_setup_port.val = "39000"
+  press_menu_key(@inputs.Enter)
+  assert_true(menu_screen.val == NetworkLobby)
+  assert_true(netplay_mode.val == Host)
+  assert_true(netplay_session.val is Some(_))
+  assert_true(netplay_link.val is Some(_))
+
+  // Cancel lobby and go to join path.
+  press_menu_key(@inputs.Escape)
+  assert_true(menu_screen.val == NetworkRoot)
+  assert_true(netplay_mode.val == Off)
+  press_menu_key(@inputs.KeyS)
+  press_menu_key(@inputs.Enter)
+  assert_true(menu_screen.val == NetworkJoinSetup)
+  join_setup_focus.val = Host
+  join_setup_host.val = ""
+  press_menu_key(@inputs.Enter)
+  assert_true(menu_screen.val == NetworkJoinSetup)
+  assert_true(menu_error_message.val.contains("Host IP cannot be empty"))
+  join_setup_host.val = "127.0.0.1"
+  join_setup_port.val = "39000"
+  press_menu_key(@inputs.Enter)
+  assert_true(menu_screen.val == NetworkLobby)
+  assert_true(netplay_mode.val == Client)
+  assert_true(netplay_session.val is Some(_))
+  assert_true(netplay_link.val is Some(_))
+}
+
+///|
+test "escape returns from network submenu hierarchy to main menu" {
   prepare_menu()
-  netplay_mode.val = Client
-  menu_selection.val = JoinGame
+  menu_selection.val = NetworkBattle
   press_menu_key(@inputs.Enter)
-  assert_true(phase.val == Playing)
-  assert_true(current_mode.val == Coop)
-  assert_true(netplay_join_mode_active.val)
-
-  return_to_menu()
-  menu_selection.val = TwoPlayersA
+  assert_true(menu_screen.val == NetworkRoot)
   press_menu_key(@inputs.Enter)
-  assert_true(phase.val == Playing)
-  assert_true(current_mode.val == Coop)
-  assert_true(!netplay_join_mode_active.val)
-
-  return_to_menu()
-  menu_selection.val = TwoPlayersB
-  press_menu_key(@inputs.Enter)
-  assert_true(phase.val == Playing)
-  assert_true(current_mode.val == Versus)
-  assert_true(!netplay_join_mode_active.val)
+  assert_true(menu_screen.val == NetworkHostSetup)
+  press_menu_key(@inputs.Escape)
+  assert_true(menu_screen.val == NetworkRoot)
+  press_menu_key(@inputs.Escape)
+  assert_true(menu_screen.val == MainRoot)
 }
 
 ///|
@@ -205,39 +230,21 @@ test "dual-player controls use WASD+G and IJKL+apostrophe" {
 }
 
 ///|
-test "local loop netplay bridge drives p2 input through net session" {
+test "local round startup clears active netplay runtime" {
   reset_test_input_state()
-  netplay_local_loop_enabled.val = true
-  current_level.val = 0
-  start_round(Coop)
-  assert_true(netplay_host_session.val is Some(_))
-  assert_true(netplay_client_session.val is Some(_))
-
-  @inputs.pressed_keys.add(@inputs.KeyL)
-  advance_input_frame()
-  input_system(@ecs.require_current_world())
-  assert_true(players[1].desired_direction is Some(Right))
-  @inputs.pressed_keys.clear()
-  advance_input_frame()
-
-  p2_bomb_test_override.val = true
-  input_system(@ecs.require_current_world())
-  assert_eq(bombs.length(), 1)
-  assert_true(bombs[0].owner == P2)
+  begin_network_host_lobby(Coop, 39000)
+  assert_true(netplay_mode.val == Host)
+  assert_true(netplay_session.val is Some(_))
+  start_local_round(Coop)
+  assert_true(phase.val == Playing)
+  assert_true(current_mode.val == Coop)
+  assert_true(netplay_mode.val == Off)
+  assert_true(netplay_session.val is None)
+  assert_true(netplay_link.val is None)
 }
 
 ///|
-test "single-player round ignores netplay bridge even when env flag is on" {
-  reset_test_input_state()
-  netplay_local_loop_enabled.val = true
-  current_level.val = 0
-  start_round(SinglePlayer)
-  assert_true(netplay_host_session.val is None)
-  assert_true(netplay_client_session.val is None)
-}
-
-///|
-test "single-player simulation still advances when netplay mode is client" {
+test "single-player simulation still advances with stale client mode and no session" {
   reset_test_input_state()
   netplay_mode.val = Client
   current_level.val = 0
@@ -253,54 +260,18 @@ test "single-player simulation still advances when netplay mode is client" {
 }
 
 ///|
-test "local coop simulation advances even when netplay mode is client" {
+test "client seed application updates menu state and selected round config" {
   reset_test_input_state()
-  netplay_mode.val = Client
   current_level.val = 0
-  start_round(Coop)
-  assert_true(enemies.length() > 0)
-  let before = enemies[0].center
-  for _ in 0..<20 {
-    simulation_system(@ecs.require_current_world())
-  }
-  let moved_x = abs_double(enemies[0].center[X] - before[X]) > 0.001
-  let moved_y = abs_double(enemies[0].center[Y] - before[Y]) > 0.001
-  assert_true(moved_x || moved_y)
-}
-
-///|
-test "remote client netplay mode survives repeated input ticks without host" {
-  reset_test_input_state()
-  netplay_local_loop_enabled.val = false
-  netplay_mode.val = Client
-  netplay_join_mode_active.val = true
-  netplay_remote_host.val = "127.0.0.1"
-  netplay_remote_port.val = 39999
-  current_level.val = 0
-  start_round(Coop)
-  assert_true(netplay_session.val is Some(_))
-  assert_true(netplay_link.val is Some(_))
-  for _ in 0..<240 {
-    advance_input_frame()
-    input_system(@ecs.require_current_world())
-    simulation_system(@ecs.require_current_world())
-  }
-  assert_true(phase.val == Playing)
-}
-
-///|
-test "client applies host round config from netplay start seed" {
-  reset_test_input_state()
-  netplay_mode.val = Client
-  current_level.val = 0
-  start_round(Coop)
-  assert_true(current_mode.val == Coop)
-  assert_eq(current_level.val, 0)
-  assert_true(enemies.length() > 0)
+  return_to_menu()
+  assert_true(phase.val == MainMenu)
   let host_seed = encode_round_seed_for_netplay(2, Versus)
   apply_remote_round_seed(host_seed)
   assert_true(current_mode.val == Versus)
   assert_eq(current_level.val, 2)
+  assert_true(phase.val == MainMenu)
+
+  start_round(current_mode.val)
   assert_eq(enemies.length(), 0)
 }
 

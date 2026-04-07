@@ -235,3 +235,59 @@ MOONBIT_FFI_EXPORT moonbit_bytes_t netplay_tcp_recv(int32_t fd, int32_t max_byte
   free(buffer);
   return result;
 }
+
+MOONBIT_FFI_EXPORT moonbit_bytes_t netplay_tcp_local_ipv4() {
+  net_init_once();
+
+  char host_name[256];
+  if (gethostname(host_name, sizeof(host_name)) != 0) {
+    return moonbit_make_bytes(0, 0);
+  }
+  host_name[sizeof(host_name) - 1] = '\0';
+
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+
+  struct addrinfo *result = NULL;
+  if (getaddrinfo(host_name, NULL, &hints, &result) != 0) {
+    return moonbit_make_bytes(0, 0);
+  }
+
+  char selected[INET_ADDRSTRLEN];
+  char fallback[INET_ADDRSTRLEN];
+  selected[0] = '\0';
+  fallback[0] = '\0';
+
+  for (struct addrinfo *it = result; it != NULL; it = it->ai_next) {
+    if (it->ai_addr == NULL || it->ai_family != AF_INET) {
+      continue;
+    }
+    struct sockaddr_in *addr = (struct sockaddr_in *)it->ai_addr;
+    char ip[INET_ADDRSTRLEN];
+    if (inet_ntop(AF_INET, &(addr->sin_addr), ip, sizeof(ip)) == NULL) {
+      continue;
+    }
+    if (fallback[0] == '\0') {
+      strncpy(fallback, ip, sizeof(fallback) - 1);
+      fallback[sizeof(fallback) - 1] = '\0';
+    }
+    if (strncmp(ip, "127.", 4) != 0) {
+      strncpy(selected, ip, sizeof(selected) - 1);
+      selected[sizeof(selected) - 1] = '\0';
+      break;
+    }
+  }
+
+  freeaddrinfo(result);
+
+  const char *ip = selected[0] != '\0' ? selected : fallback;
+  if (ip[0] == '\0') {
+    return moonbit_make_bytes(0, 0);
+  }
+  int32_t len = (int32_t)strlen(ip);
+  moonbit_bytes_t output = moonbit_make_bytes(len, 0);
+  memcpy(output, ip, (size_t)len);
+  return output;
+}

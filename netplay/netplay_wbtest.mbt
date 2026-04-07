@@ -164,6 +164,11 @@ test "wire codec keeps net messages round-trippable" {
 }
 
 ///|
+test "local ipv4 helper is callable" {
+  ignore(local_ipv4())
+}
+
+///|
 test "tcp link can connect and exchange encoded net messages" {
   let test_port = 45123
   let mut host = TcpLink::new_host(test_port)

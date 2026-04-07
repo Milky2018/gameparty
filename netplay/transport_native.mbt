@@ -25,6 +25,10 @@ extern "C" fn tcp_send_ffi(fd : Int, payload : Bytes) -> Int = "netplay_tcp_send
 extern "C" fn tcp_recv_ffi(fd : Int, max_bytes : Int) -> Bytes = "netplay_tcp_recv"
 
 ///|
+#cfg(target="native")
+extern "C" fn tcp_local_ipv4_ffi() -> Bytes = "netplay_tcp_local_ipv4"
+
+///|
 #cfg(not(target="native"))
 fn tcp_listen_ffi(_port : Int) -> Int {
   -1
@@ -57,5 +61,11 @@ fn tcp_send_ffi(_fd : Int, _payload : Bytes) -> Int {
 ///|
 #cfg(not(target="native"))
 fn tcp_recv_ffi(_fd : Int, _max_bytes : Int) -> Bytes {
+  b""
+}
+
+///|
+#cfg(not(target="native"))
+fn tcp_local_ipv4_ffi() -> Bytes {
   b""
 }

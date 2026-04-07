@@ -237,8 +237,36 @@ priv enum MenuOption {
   OnePlayer
   TwoPlayersA
   TwoPlayersB
-  JoinGame
+  NetworkBattle
   Exit
+} derive(Eq)
+
+///|
+priv enum MenuScreen {
+  MainRoot
+  NetworkRoot
+  NetworkHostSetup
+  NetworkJoinSetup
+  NetworkLobby
+} derive(Eq)
+
+///|
+priv enum NetworkRootOption {
+  CreateRoom
+  JoinRoom
+  Back
+} derive(Eq)
+
+///|
+priv enum HostSetupFocus {
+  Mode
+  Port
+} derive(Eq)
+
+///|
+priv enum JoinSetupFocus {
+  Host
+  Port
 } derive(Eq)
 
 ///|
@@ -452,6 +480,42 @@ let current_mode : Ref[GameMode] = { val: SinglePlayer }
 let menu_selection : Ref[MenuOption] = { val: OnePlayer }
 
 ///|
+let menu_screen : Ref[MenuScreen] = { val: MainRoot }
+
+///|
+let network_root_selection : Ref[NetworkRootOption] = { val: CreateRoom }
+
+///|
+let host_setup_focus : Ref[HostSetupFocus] = { val: Mode }
+
+///|
+let join_setup_focus : Ref[JoinSetupFocus] = { val: Host }
+
+///|
+let host_setup_mode : Ref[GameMode] = { val: Coop }
+
+///|
+let host_setup_port : Ref[String] = { val: "39000" }
+
+///|
+let join_setup_host : Ref[String] = { val: "127.0.0.1" }
+
+///|
+let join_setup_port : Ref[String] = { val: "39000" }
+
+///|
+let lobby_local_ip : Ref[String?] = { val: None }
+
+///|
+let lobby_mode_label : Ref[String] = { val: "A" }
+
+///|
+let lobby_endpoint_label : Ref[String] = { val: "" }
+
+///|
+let lobby_status_label : Ref[String] = { val: "" }
+
+///|
 let round_outcome : Ref[RoundOutcome] = { val: LevelClear }
 
 ///|
@@ -639,21 +703,6 @@ const PROFILE_ENV : String = "BOMBMAN_PROFILE"
 const CAPTURE_ENV : String = "BOMBMAN_CAPTURE"
 
 ///|
-const NETPLAY_LOCAL_LOOP_ENV : String = "BOMBMAN_NET_LOCAL_LOOP"
-
-///|
-const NETPLAY_MODE_ENV : String = "BOMBMAN_NET_MODE"
-
-///|
-const NETPLAY_PORT_ENV : String = "BOMBMAN_NET_PORT"
-
-///|
-const NETPLAY_REMOTE_HOST_ENV : String = "BOMBMAN_NET_REMOTE_HOST"
-
-///|
-const NETPLAY_REMOTE_PORT_ENV : String = "BOMBMAN_NET_REMOTE_PORT"
-
-///|
 const CAPTURE_PATH : String = "bombman_capture.png"
 
 ///|
@@ -708,13 +757,7 @@ let capture_started_at : Ref[Double] = { val: 0.0 }
 let capture_taken : Ref[Bool] = { val: false }
 
 ///|
-let netplay_local_loop_enabled : Ref[Bool] = { val: false }
-
-///|
 let netplay_mode : Ref[NetTransportMode] = { val: Off }
-
-///|
-let netplay_join_mode_active : Ref[Bool] = { val: false }
 
 ///|
 let netplay_host_session : Ref[@netplay.NetSession?] = { val: None }
@@ -852,7 +895,7 @@ fn player_index(id : PlayerId) -> Int {
 
 ///|
 fn menu_options() -> Array[MenuOption] {
-  [OnePlayer, TwoPlayersA, TwoPlayersB, JoinGame, Exit]
+  [OnePlayer, TwoPlayersA, TwoPlayersB, NetworkBattle, Exit]
 }
 
 ///|
@@ -861,8 +904,17 @@ fn menu_option_label(option : MenuOption) -> String {
     OnePlayer => "1 PLAYER"
     TwoPlayersA => "2 PLAYERS A"
     TwoPlayersB => "2 PLAYERS B"
-    JoinGame => "JOIN GAME"
+    NetworkBattle => "NETWORK BATTLE"
     Exit => "EXIT"
+  }
+}
+
+///|
+fn network_root_option_label(option : NetworkRootOption) -> String {
+  match option {
+    CreateRoom => "CREATE ROOM"
+    JoinRoom => "JOIN ROOM"
+    Back => "BACK"
   }
 }
 
@@ -871,9 +923,18 @@ fn next_menu_option(option : MenuOption) -> MenuOption {
   match option {
     OnePlayer => TwoPlayersA
     TwoPlayersA => TwoPlayersB
-    TwoPlayersB => JoinGame
-    JoinGame => Exit
+    TwoPlayersB => NetworkBattle
+    NetworkBattle => Exit
     Exit => OnePlayer
+  }
+}
+
+///|
+fn next_network_root_option(option : NetworkRootOption) -> NetworkRootOption {
+  match option {
+    CreateRoom => JoinRoom
+    JoinRoom => Back
+    Back => CreateRoom
   }
 }
 
@@ -883,8 +944,19 @@ fn previous_menu_option(option : MenuOption) -> MenuOption {
     OnePlayer => Exit
     TwoPlayersA => OnePlayer
     TwoPlayersB => TwoPlayersA
-    JoinGame => TwoPlayersB
-    Exit => JoinGame
+    NetworkBattle => TwoPlayersB
+    Exit => NetworkBattle
+  }
+}
+
+///|
+fn previous_network_root_option(
+  option : NetworkRootOption,
+) -> NetworkRootOption {
+  match option {
+    CreateRoom => Back
+    JoinRoom => CreateRoom
+    Back => JoinRoom
   }
 }
 
@@ -894,6 +966,15 @@ fn mode_label(mode : GameMode) -> String {
     SinglePlayer => "1 PLAYER"
     Coop => "2 PLAYERS A"
     Versus => "2 PLAYERS B"
+  }
+}
+
+///|
+fn network_mode_short(mode : GameMode) -> String {
+  match mode {
+    Coop => "A (CO-OP)"
+    Versus => "B (VS)"
+    SinglePlayer => "A (CO-OP)"
   }
 }
 

@@ -36,30 +36,11 @@ fn activate_menu_option(option : MenuOption) -> Unit {
   menu_selection.val = option
   menu_error_message.val = ""
   match option {
-    Exit => {
-      netplay_join_mode_active.val = false
-      request_exit()
-    }
-    OnePlayer => {
-      netplay_join_mode_active.val = false
-      start_round(SinglePlayer)
-    }
-    TwoPlayersA => {
-      netplay_join_mode_active.val = false
-      start_round(Coop)
-    }
-    TwoPlayersB => {
-      netplay_join_mode_active.val = false
-      start_round(Versus)
-    }
-    JoinGame =>
-      if netplay_mode.val == Client {
-        netplay_join_mode_active.val = true
-        start_round(Coop)
-      } else {
-        netplay_join_mode_active.val = false
-        menu_error_message.val = "JOIN GAME requires client mode (set BOMBMAN_NET_MODE=client)."
-      }
+    Exit => request_exit()
+    OnePlayer => start_local_round(SinglePlayer)
+    TwoPlayersA => start_local_round(Coop)
+    TwoPlayersB => start_local_round(Versus)
+    NetworkBattle => open_network_menu_root()
   }
 }
 
@@ -76,17 +57,221 @@ fn handle_global_input() -> Unit {
   }
   if @inputs.is_just_pressed(Escape) {
     match phase.val {
-      MainMenu => request_exit()
+      MainMenu =>
+        match menu_screen.val {
+          MainRoot => request_exit()
+          NetworkRoot => {
+            menu_screen.val = MainRoot
+            menu_error_message.val = ""
+          }
+          NetworkHostSetup | NetworkJoinSetup => open_network_menu_root()
+          NetworkLobby => cancel_network_lobby_to_root()
+        }
       Playing | RoundOver => return_to_menu()
     }
   }
 }
 
 ///|
-fn handle_menu_input() -> Unit {
-  if phase.val != MainMenu {
+fn collect_typed_code_points() -> Array[Int] {
+  let codes : Array[Int] = []
+  let mut code = @raylib.get_char_pressed()
+  while code > 0 {
+    codes.push(code)
+    code = @raylib.get_char_pressed()
+  }
+  codes
+}
+
+///|
+fn codepoint_to_ascii_string(code : Int) -> String? {
+  if code < 32 || code > 126 {
+    None
+  } else {
+    Some(String::from_array([Int::unsafe_to_char(code)]))
+  }
+}
+
+///|
+fn codepoint_is_digit(code : Int) -> Bool {
+  code >= 48 && code <= 57
+}
+
+///|
+fn codepoint_is_host_char(code : Int) -> Bool {
+  codepoint_is_digit(code) ||
+  (code >= 65 && code <= 90) ||
+  (code >= 97 && code <= 122) ||
+  code == 45 ||
+  code == 46 ||
+  code == 58
+}
+
+///|
+fn append_codepoint_if_allowed(
+  target : Ref[String],
+  code : Int,
+  allow : (Int) -> Bool,
+) -> Unit {
+  if !allow(code) {
     return
   }
+  match codepoint_to_ascii_string(code) {
+    Some(char_text) => target.val = target.val + char_text
+    None => ()
+  }
+}
+
+///|
+fn erase_last_char(target : Ref[String]) -> Unit {
+  if target.val.length() == 0 {
+    return
+  }
+  let next_len = target.val.length() - 1
+  target.val = target.val.unsafe_substring(start=0, end=next_len)
+}
+
+///|
+fn toggle_host_setup_mode() -> Unit {
+  host_setup_mode.val = match host_setup_mode.val {
+    Versus => Coop
+    _ => Versus
+  }
+}
+
+///|
+fn submit_host_setup() -> Unit {
+  let mode = match host_setup_mode.val {
+    Versus => Versus
+    _ => Coop
+  }
+  let raw_port = host_setup_port.val.trim().to_string()
+  match parse_numeric_port(raw_port) {
+    Some(port) => begin_network_host_lobby(mode, port)
+    None => menu_error_message.val = "Port must be an integer in 1..65535."
+  }
+}
+
+///|
+fn submit_join_setup() -> Unit {
+  let host = join_setup_host.val.trim().to_string()
+  if host == "" {
+    menu_error_message.val = "Host IP cannot be empty."
+    return
+  }
+  let raw_port = join_setup_port.val.trim().to_string()
+  match parse_numeric_port(raw_port) {
+    Some(port) => begin_network_join_lobby(host, port)
+    None => menu_error_message.val = "Port must be an integer in 1..65535."
+  }
+}
+
+///|
+fn netplay_poll_and_ingest_with_events(
+  session : @netplay.NetSession,
+  link : @netplay.TcpLink,
+) -> (@netplay.NetSession, @netplay.TcpLink, Array[@netplay.TcpLinkEvent]) {
+  let mut next_session = session
+  let (next_link, lines, events) = link.poll()
+  for line in lines {
+    match @netplay.decode_message(line) {
+      Some(message) => next_session = next_session.ingest_remote(message)
+      None => ()
+    }
+  }
+  (next_session, next_link, events)
+}
+
+///|
+fn tick_network_lobby() -> Unit {
+  if phase.val != MainMenu || menu_screen.val != NetworkLobby {
+    return
+  }
+  match netplay_session.val {
+    Some(session0) =>
+      match netplay_link.val {
+        Some(link0) => {
+          let mut session = session0
+          let mut link = link0
+
+          let (after_send1, link_after_send1) = netplay_send_outgoing(
+            session, link,
+          )
+          session = after_send1
+          link = link_after_send1
+
+          let (after_ingest, link_after_ingest, events) = netplay_poll_and_ingest_with_events(
+            session, link,
+          )
+          session = after_ingest
+          link = link_after_ingest
+
+          for event in events {
+            match event {
+              Connected => ()
+              Error(message) => {
+                cancel_network_lobby_to_root(error="Network error: \{message}.")
+                return
+              }
+            }
+          }
+
+          let (after_send2, link_after_send2) = netplay_send_outgoing(
+            session, link,
+          )
+          session = after_send2
+          link = link_after_send2
+
+          session = update_remote_input_cache_from_session(session)
+          let link_connected = link.is_connected()
+          lobby_status_label.val = match netplay_mode.val {
+            Host =>
+              if session.is_running() {
+                "Player connected. Starting round..."
+              } else if link_connected {
+                "Player connected. Syncing..."
+              } else {
+                "Waiting for another player..."
+              }
+            Client =>
+              if session.is_running() {
+                "Synced. Starting round..."
+              } else if link_connected {
+                "Connected. Waiting for host start..."
+              } else {
+                "Connecting..."
+              }
+            Off | Loopback => "Idle"
+          }
+
+          netplay_session.val = Some(session)
+          netplay_link.val = Some(link)
+
+          if session.is_running() {
+            let selected_mode = match netplay_mode.val {
+              Host => host_setup_mode.val
+              Client => current_mode.val
+              Off | Loopback => Coop
+            }
+            if selected_mode == SinglePlayer {
+              cancel_network_lobby_to_root(
+                error="Host reported unsupported mode. Expected A or B.",
+              )
+              return
+            }
+            start_round(selected_mode)
+          }
+        }
+        None =>
+          cancel_network_lobby_to_root(error="Network link is unavailable.")
+      }
+    None =>
+      cancel_network_lobby_to_root(error="Network session is unavailable.")
+  }
+}
+
+///|
+fn handle_main_root_menu_input() -> Unit {
   if @inputs.is_just_pressed(KeyW) || @inputs.is_just_pressed(ArrowUp) {
     menu_selection.val = previous_menu_option(menu_selection.val)
   }
@@ -101,6 +286,114 @@ fn handle_menu_input() -> Unit {
   }
   if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
     activate_menu_option(menu_selection.val)
+  }
+}
+
+///|
+fn handle_network_root_menu_input() -> Unit {
+  if @inputs.is_just_pressed(KeyW) || @inputs.is_just_pressed(ArrowUp) {
+    network_root_selection.val = previous_network_root_option(
+      network_root_selection.val,
+    )
+  }
+  if @inputs.is_just_pressed(KeyS) || @inputs.is_just_pressed(ArrowDown) {
+    network_root_selection.val = next_network_root_option(
+      network_root_selection.val,
+    )
+  }
+  if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+    menu_error_message.val = ""
+    match network_root_selection.val {
+      CreateRoom => open_network_host_setup()
+      JoinRoom => open_network_join_setup()
+      Back => {
+        menu_screen.val = MainRoot
+        menu_error_message.val = ""
+      }
+    }
+  }
+}
+
+///|
+fn handle_network_host_setup_input() -> Unit {
+  if @inputs.is_just_pressed(KeyW) ||
+    @inputs.is_just_pressed(ArrowUp) ||
+    @inputs.is_just_pressed(KeyS) ||
+    @inputs.is_just_pressed(ArrowDown) {
+    host_setup_focus.val = match host_setup_focus.val {
+      Mode => Port
+      Port => Mode
+    }
+  }
+  if host_setup_focus.val == Mode &&
+    (
+      @inputs.is_just_pressed(KeyA) ||
+      @inputs.is_just_pressed(ArrowLeft) ||
+      @inputs.is_just_pressed(KeyD) ||
+      @inputs.is_just_pressed(ArrowRight)
+    ) {
+    toggle_host_setup_mode()
+  }
+  if @raylib.is_key_pressed(@raylib.KeyBackspace) &&
+    host_setup_focus.val == Port {
+    erase_last_char(host_setup_port)
+  }
+  if host_setup_focus.val == Port {
+    for code in collect_typed_code_points() {
+      append_codepoint_if_allowed(host_setup_port, code, codepoint_is_digit)
+    }
+  } else {
+    ignore(collect_typed_code_points())
+  }
+  if @inputs.is_just_pressed(Enter) {
+    submit_host_setup()
+  }
+}
+
+///|
+fn handle_network_join_setup_input() -> Unit {
+  if @inputs.is_just_pressed(KeyW) ||
+    @inputs.is_just_pressed(ArrowUp) ||
+    @inputs.is_just_pressed(KeyS) ||
+    @inputs.is_just_pressed(ArrowDown) {
+    join_setup_focus.val = match join_setup_focus.val {
+      Host => Port
+      Port => Host
+    }
+  }
+  if @raylib.is_key_pressed(@raylib.KeyBackspace) {
+    match join_setup_focus.val {
+      Host => erase_last_char(join_setup_host)
+      Port => erase_last_char(join_setup_port)
+    }
+  }
+  let typed = collect_typed_code_points()
+  for code in typed {
+    match join_setup_focus.val {
+      Host =>
+        append_codepoint_if_allowed(
+          join_setup_host, code, codepoint_is_host_char,
+        )
+      Port =>
+        append_codepoint_if_allowed(join_setup_port, code, codepoint_is_digit)
+    }
+  }
+  if @inputs.is_just_pressed(Enter) {
+    submit_join_setup()
+  }
+}
+
+///|
+fn handle_menu_input() -> Unit {
+  if phase.val != MainMenu {
+    return
+  }
+  match menu_screen.val {
+    MainRoot => handle_main_root_menu_input()
+    NetworkRoot => handle_network_root_menu_input()
+    NetworkHostSetup => handle_network_host_setup_input()
+    NetworkJoinSetup => handle_network_join_setup_input()
+    NetworkLobby => tick_network_lobby()
   }
 }
 

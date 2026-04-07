@@ -6,6 +6,8 @@ pub fn decode_message(String) -> NetMessage?
 
 pub fn encode_message(NetMessage) -> String
 
+pub fn local_ipv4() -> String?
+
 // Errors
 
 // Types and methods
