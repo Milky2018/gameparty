@@ -78,6 +78,22 @@ moon run cmd/kofarena
 BOMBMAN_NET_LOCAL_LOOP=1 moon run cmd/bombman
 ```
 
+`bombman` remote netplay (two processes on two machines):
+
+Host side:
+
+```bash
+BOMBMAN_NET_MODE=host BOMBMAN_NET_PORT=39000 moon run cmd/bombman
+```
+
+Client side:
+
+```bash
+BOMBMAN_NET_MODE=client BOMBMAN_NET_REMOTE_HOST=<host-ip> BOMBMAN_NET_REMOTE_PORT=39000 moon run cmd/bombman
+```
+
+Then both players enter `2 Players A` or `2 Players B` in the menu.
+
 ## Check
 
 ```bash

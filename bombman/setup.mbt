@@ -325,8 +325,18 @@ fn reset_direction_input_state() -> Unit {
 
 ///|
 fn reset_netplay_runtime() -> Unit {
+  match netplay_link.val {
+    Some(link) => {
+      ignore(link.close())
+      netplay_link.val = None
+    }
+    None => ()
+  }
   netplay_host_session.val = None
   netplay_client_session.val = None
+  netplay_session.val = None
+  netplay_last_remote_input.val = None
+  netplay_last_remote_action_frame.val = -1
   netplay_local_frame.val = 0
 }
 
@@ -351,39 +361,77 @@ fn netplay_loopback_exchange(
 ///|
 fn configure_netplay_for_round(mode : GameMode) -> Unit {
   reset_netplay_runtime()
-  if mode == SinglePlayer || !netplay_local_loop_enabled.val {
+  if netplay_local_loop_enabled.val {
+    netplay_mode.val = Loopback
+  }
+  if mode == SinglePlayer || netplay_mode.val == Off {
+    return
+  }
+  if netplay_mode.val == Loopback {
+    let config = @netplay.NetConfig::default()
+    let mut host = @netplay.NetSession::new_host(
+      local_peer_id="p1",
+      remote_peer_id="p2",
+      seed=current_level.val + 1,
+      config~,
+    )
+    let mut client = @netplay.NetSession::new_client(
+      local_peer_id="p2",
+      remote_peer_id="p1",
+      config~,
+    )
+    host = host.begin_handshake()
+    client = client.begin_handshake()
+    for _ in 0..<2 {
+      let (next_host, next_client) = netplay_loopback_exchange(host, client)
+      host = next_host
+      client = next_client
+    }
+    host = host.set_local_ready()
+    client = client.set_local_ready()
+    for _ in 0..<4 {
+      let (next_host, next_client) = netplay_loopback_exchange(host, client)
+      host = next_host
+      client = next_client
+    }
+    let (host_after_events, _) = host.drain_events()
+    let (client_after_events, _) = client.drain_events()
+    netplay_host_session.val = Some(host_after_events)
+    netplay_client_session.val = Some(client_after_events)
     return
   }
   let config = @netplay.NetConfig::default()
-  let mut host = @netplay.NetSession::new_host(
-    local_peer_id="p1",
-    remote_peer_id="p2",
-    seed=current_level.val + 1,
-    config~,
-  )
-  let mut client = @netplay.NetSession::new_client(
-    local_peer_id="p2",
-    remote_peer_id="p1",
-    config~,
-  )
-  host = host.begin_handshake()
-  client = client.begin_handshake()
-  for _ in 0..<2 {
-    let (next_host, next_client) = netplay_loopback_exchange(host, client)
-    host = next_host
-    client = next_client
+  match netplay_mode.val {
+    Host => {
+      let mut session = @netplay.NetSession::new_host(
+        local_peer_id="p1",
+        remote_peer_id="p2",
+        seed=current_level.val + 1,
+        config~,
+      )
+      session = session.begin_handshake()
+      session = session.set_local_ready()
+      netplay_session.val = Some(session)
+      netplay_link.val = Some(@netplay.TcpLink::new_host(netplay_port.val))
+    }
+    Client => {
+      let mut session = @netplay.NetSession::new_client(
+        local_peer_id="p2",
+        remote_peer_id="p1",
+        config~,
+      )
+      session = session.begin_handshake()
+      session = session.set_local_ready()
+      netplay_session.val = Some(session)
+      netplay_link.val = Some(
+        @netplay.TcpLink::new_client(
+          remote_host=netplay_remote_host.val,
+          remote_port=netplay_remote_port.val,
+        ),
+      )
+    }
+    Off | Loopback => ()
   }
-  host = host.set_local_ready()
-  client = client.set_local_ready()
-  for _ in 0..<4 {
-    let (next_host, next_client) = netplay_loopback_exchange(host, client)
-    host = next_host
-    client = next_client
-  }
-  let (host_after_events, _) = host.drain_events()
-  let (client_after_events, _) = client.drain_events()
-  netplay_host_session.val = Some(host_after_events)
-  netplay_client_session.val = Some(client_after_events)
 }
 
 ///|
@@ -596,11 +644,63 @@ fn return_to_menu() -> Unit {
 }
 
 ///|
+fn parse_env_int(name : String, fallback : Int) -> Int {
+  match @env.get_env_var(name) {
+    Some(raw) =>
+      match parse_color_component_int(raw.to_string_view()) {
+        Some(value) => value
+        None => fallback
+      }
+    None => fallback
+  }
+}
+
+///|
+fn parse_env_netplay_mode() -> NetTransportMode {
+  match @env.get_env_var(NETPLAY_MODE_ENV) {
+    Some(raw) =>
+      match raw {
+        "host" | "HOST" | "Host" => Host
+        "client" | "CLIENT" | "Client" => Client
+        "off" | "OFF" | "Off" => Off
+        _ => Off
+      }
+    None => Off
+  }
+}
+
+///|
+fn configure_netplay_mode_from_env() -> Unit {
+  netplay_port.val = clamp_int(parse_env_int(NETPLAY_PORT_ENV, 39000), 1, 65535)
+  netplay_remote_port.val = clamp_int(
+    parse_env_int(NETPLAY_REMOTE_PORT_ENV, netplay_port.val),
+    1,
+    65535,
+  )
+  netplay_remote_host.val = match @env.get_env_var(NETPLAY_REMOTE_HOST_ENV) {
+    Some(host) => {
+      let trimmed = host.trim().to_string()
+      if trimmed == "" {
+        "127.0.0.1"
+      } else {
+        trimmed
+      }
+    }
+    None => "127.0.0.1"
+  }
+  netplay_mode.val = parse_env_netplay_mode()
+  if netplay_local_loop_enabled.val {
+    netplay_mode.val = Loopback
+  }
+}
+
+///|
 fn startup_system(_world : @ecs.World) -> Unit {
   register_bombman_font_once()
   profile_enabled.val = env_flag_enabled(PROFILE_ENV)
   capture_enabled.val = env_flag_enabled(CAPTURE_ENV)
   netplay_local_loop_enabled.val = env_flag_enabled(NETPLAY_LOCAL_LOOP_ENV)
+  configure_netplay_mode_from_env()
   reset_netplay_runtime()
   let started_at = @time.elapsed_raw()
   profile_started_at.val = started_at
@@ -863,7 +963,15 @@ fn hint_text() -> String {
       match current_mode.val {
         SinglePlayer =>
           "Move: WASD / Arrows   Bomb: Space   R: Restart   Esc: Menu"
-        Coop | Versus => "P1: WASD + G   P2: IJKL + '   R: Restart   Esc: Menu"
+        Coop | Versus =>
+          match netplay_mode.val {
+            Host =>
+              "NET HOST   Local: P1 WASD+G   Remote: P2 IJKL+'   R: Restart   Esc: Menu"
+            Client =>
+              "NET CLIENT   Local: P2 IJKL+'   Remote: P1 WASD+G   R: Restart   Esc: Menu"
+            Off | Loopback =>
+              "P1: WASD + G   P2: IJKL + '   R: Restart   Esc: Menu"
+          }
       }
     RoundOver =>
       match current_mode.val {
@@ -881,9 +989,65 @@ fn status_text() -> String {
       match current_mode.val {
         SinglePlayer =>
           "Soft walls break. Hard walls block. Flames travel in a cross."
-        Coop =>
-          "Friendly fire is enabled. Clear all enemies with at least one player alive."
-        Versus => "Friendly fire is enabled. Last survivor wins."
+        Coop => {
+          let net_suffix = match netplay_mode.val {
+            Host => {
+              let connected = match netplay_link.val {
+                Some(link) =>
+                  if link.is_connected() {
+                    "connected"
+                  } else {
+                    "waiting"
+                  }
+                None => "waiting"
+              }
+              let running = match netplay_session.val {
+                Some(session) =>
+                  if session.is_running() {
+                    "running"
+                  } else {
+                    "syncing"
+                  }
+                None => "syncing"
+              }
+              "   NET HOST \{connected}/\{running} port=\{netplay_port.val}"
+            }
+            Client => {
+              let connected = match netplay_link.val {
+                Some(link) =>
+                  if link.is_connected() {
+                    "connected"
+                  } else {
+                    "waiting"
+                  }
+                None => "waiting"
+              }
+              let running = match netplay_session.val {
+                Some(session) =>
+                  if session.is_running() {
+                    "running"
+                  } else {
+                    "syncing"
+                  }
+                None => "syncing"
+              }
+              "   NET CLIENT \{connected}/\{running} to \{netplay_remote_host.val}:\{netplay_remote_port.val}"
+            }
+            Loopback => "   NET LOOPBACK"
+            Off => ""
+          }
+          "Friendly fire is enabled. Clear all enemies with at least one player alive." +
+          net_suffix
+        }
+        Versus => {
+          let net_suffix = match netplay_mode.val {
+            Host => "   NET HOST"
+            Client => "   NET CLIENT"
+            Loopback => "   NET LOOPBACK"
+            Off => ""
+          }
+          "Friendly fire is enabled. Last survivor wins." + net_suffix
+        }
       }
     RoundOver =>
       match round_outcome.val {

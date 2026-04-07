@@ -124,3 +124,84 @@ test "local input is normalized before send" {
     _ => panic()
   }
 }
+
+///|
+fn pump_tcp_links(
+  host : TcpLink,
+  client : TcpLink,
+  steps : Int,
+) -> (TcpLink, TcpLink, Array[String], Array[String]) {
+  let mut next_host = host
+  let mut next_client = client
+  let host_lines_all : Array[String] = []
+  let client_lines_all : Array[String] = []
+  for _ in 0..<steps {
+    let (host_after_poll, host_lines, _) = next_host.poll()
+    next_host = host_after_poll
+    for line in host_lines {
+      host_lines_all.push(line)
+    }
+    let (client_after_poll, client_lines, _) = next_client.poll()
+    next_client = client_after_poll
+    for line in client_lines {
+      client_lines_all.push(line)
+    }
+  }
+  (next_host, next_client, host_lines_all, client_lines_all)
+}
+
+///|
+test "wire codec keeps net messages round-trippable" {
+  let original = Snapshot(42, "state|line\nnext")
+  let encoded = encode_message(original)
+  match decode_message(encoded) {
+    Some(Snapshot(frame_id, payload)) => {
+      assert_eq(frame_id, 42)
+      assert_eq(payload, "state|line\nnext")
+    }
+    _ => panic()
+  }
+}
+
+///|
+test "tcp link can connect and exchange encoded net messages" {
+  let test_port = 45123
+  let mut host = TcpLink::new_host(test_port)
+  let mut client = TcpLink::new_client(
+    remote_host="127.0.0.1",
+    remote_port=test_port,
+  )
+  let (host_after_connect, client_after_connect, _, _) = pump_tcp_links(
+    host, client, 300,
+  )
+  host = host_after_connect
+  client = client_after_connect
+  assert_true(host.is_connected())
+  assert_true(client.is_connected())
+
+  let payload = Input(
+    PlayerInput::new(frame_id=7, axis_x=-1, axis_y=0, action_mask=1),
+  )
+  let (client_after_send, sent) = client.send_line(encode_message(payload))
+  client = client_after_send
+  assert_true(sent)
+
+  let (host_after_recv, client_after_recv, host_lines, _) = pump_tcp_links(
+    host, client, 300,
+  )
+  host = host_after_recv
+  client = client_after_recv
+  assert_true(host_lines.length() > 0)
+  match decode_message(host_lines[0]) {
+    Some(Input(input)) => {
+      assert_eq(input.frame_id, 7)
+      assert_eq(input.axis_x, -1)
+      assert_eq(input.axis_y, 0)
+      assert_eq(input.action_mask, 1)
+    }
+    _ => panic()
+  }
+
+  ignore(host.close())
+  ignore(client.close())
+}

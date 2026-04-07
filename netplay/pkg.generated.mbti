@@ -2,6 +2,9 @@
 package "Milky2018/gameparty/netplay"
 
 // Values
+pub fn decode_message(String) -> NetMessage?
+
+pub fn encode_message(NetMessage) -> String
 
 // Errors
 
@@ -81,6 +84,29 @@ pub fn PlayerInput::new(frame_id~ : Int, axis_x~ : Int, axis_y~ : Int, action_ma
 
 pub enum SyncPolicy {
   HostAuthoritative
+}
+
+pub struct TcpLink {
+  role : NetRole
+  listen_port : Int
+  remote_host : String
+  remote_port : Int
+  mut listener_fd : Int
+  mut socket_fd : Int
+  mut connected : Bool
+  mut recv_buffer : String
+  mut last_error : String?
+}
+pub fn TcpLink::close(Self) -> Self
+pub fn TcpLink::is_connected(Self) -> Bool
+pub fn TcpLink::new_client(remote_host~ : String, remote_port~ : Int) -> Self
+pub fn TcpLink::new_host(Int) -> Self
+pub fn TcpLink::poll(Self) -> (Self, Array[String], Array[TcpLinkEvent])
+pub fn TcpLink::send_line(Self, String) -> (Self, Bool)
+
+pub enum TcpLinkEvent {
+  Connected
+  Error(String)
 }
 
 // Type aliases

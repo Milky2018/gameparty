@@ -234,12 +234,21 @@ fn direction_from_net_axes(axis_x : Int, axis_y : Int) -> Direction? {
 }
 
 ///|
-fn netplay_input_bridge_enabled() -> Bool {
+fn netplay_loopback_input_bridge_enabled() -> Bool {
   phase.val == Playing &&
   current_mode.val != SinglePlayer &&
-  netplay_local_loop_enabled.val &&
+  netplay_mode.val == Loopback &&
   netplay_host_session.val is Some(_) &&
   netplay_client_session.val is Some(_)
+}
+
+///|
+fn netplay_remote_input_bridge_enabled() -> Bool {
+  phase.val == Playing &&
+  current_mode.val != SinglePlayer &&
+  (netplay_mode.val == Host || netplay_mode.val == Client) &&
+  netplay_session.val is Some(_) &&
+  netplay_link.val is Some(_)
 }
 
 ///|
@@ -269,14 +278,19 @@ fn handle_player_inputs_local() -> Unit {
 }
 
 ///|
-fn apply_remote_input_to_player_two(input : @netplay.PlayerInput) -> Unit {
-  let player = players[1]
+fn apply_remote_input_to_player(
+  player_index_ : Int,
+  input : @netplay.PlayerInput,
+) -> Unit {
+  let player = players[player_index_]
   if !player.active || !player.alive {
     return
   }
   player.desired_direction = direction_from_net_axes(input.axis_x, input.axis_y)
-  if input.action_mask == NET_ACTION_PLACE_BOMB {
-    place_bomb_for_player(1)
+  if input.action_mask == NET_ACTION_PLACE_BOMB &&
+    input.frame_id > netplay_last_remote_action_frame.val {
+    place_bomb_for_player(player_index_)
+    netplay_last_remote_action_frame.val = input.frame_id
   }
 }
 
@@ -340,11 +354,169 @@ fn handle_player_inputs_with_netplay_bridge() -> Unit {
             for input in remote_inputs {
               latest = input
             }
-            apply_remote_input_to_player_two(latest)
+            apply_remote_input_to_player(1, latest)
           }
           netplay_host_session.val = Some(host_after_inputs.tick())
           netplay_client_session.val = Some(client_after_events.tick())
           netplay_local_frame.val += 1
+        }
+        None => handle_player_inputs_local()
+      }
+    None => handle_player_inputs_local()
+  }
+}
+
+///|
+fn clear_player_input(index : Int) -> Unit {
+  if players[index].active && players[index].alive {
+    players[index].desired_direction = None
+  } else {
+    players[index].desired_direction = None
+    players[index].direction = None
+  }
+}
+
+///|
+fn local_bomb_pressed_for_network(player_id : PlayerId) -> Bool {
+  match player_id {
+    P1 => @inputs.is_just_pressed(KeyG)
+    P2 => p2_bomb_just_pressed()
+  }
+}
+
+///|
+fn make_network_input(
+  frame_id : Int,
+  player_id : PlayerId,
+  bomb_pressed : Bool,
+) -> @netplay.PlayerInput {
+  let desired = latest_held_direction(player_id)
+  let (axis_x, axis_y) = direction_to_net_axes(desired)
+  let action_mask = if bomb_pressed { NET_ACTION_PLACE_BOMB } else { 0 }
+  @netplay.PlayerInput::new(frame_id~, axis_x~, axis_y~, action_mask~)
+}
+
+///|
+fn netplay_send_outgoing(
+  session : @netplay.NetSession,
+  link : @netplay.TcpLink,
+) -> (@netplay.NetSession, @netplay.TcpLink) {
+  let (next_session, outgoing) = session.drain_outgoing()
+  let mut next_link = link
+  for message in outgoing {
+    let (updated, _) = next_link.send_line(@netplay.encode_message(message))
+    next_link = updated
+  }
+  (next_session, next_link)
+}
+
+///|
+fn netplay_poll_and_ingest(
+  session : @netplay.NetSession,
+  link : @netplay.TcpLink,
+) -> (@netplay.NetSession, @netplay.TcpLink) {
+  let mut next_session = session
+  let (next_link, lines, _) = link.poll()
+  for line in lines {
+    match @netplay.decode_message(line) {
+      Some(message) => next_session = next_session.ingest_remote(message)
+      None => ()
+    }
+  }
+  (next_session, next_link)
+}
+
+///|
+fn update_remote_input_cache_from_session(
+  session : @netplay.NetSession,
+) -> @netplay.NetSession {
+  let (after_events, _) = session.drain_events()
+  let (after_inputs, remote_inputs) = after_events.drain_remote_inputs()
+  if !remote_inputs.is_empty() {
+    let mut latest = remote_inputs[0]
+    for input in remote_inputs {
+      latest = input
+    }
+    netplay_last_remote_input.val = Some(latest)
+  }
+  after_inputs
+}
+
+///|
+fn handle_player_inputs_with_remote_netplay() -> Unit {
+  let (local_player_index, local_player_id, remote_player_index) = match
+    netplay_mode.val {
+    Host => (0, P1, 1)
+    Client => (1, P2, 0)
+    Off | Loopback => {
+      handle_player_inputs_local()
+      return
+    }
+  }
+  clear_player_input(local_player_index)
+  clear_player_input(remote_player_index)
+
+  match netplay_session.val {
+    Some(session0) =>
+      match netplay_link.val {
+        Some(link0) => {
+          let mut session = session0
+          let mut link = link0
+
+          let (after_send1, link_after_send1) = netplay_send_outgoing(
+            session, link,
+          )
+          session = after_send1
+          link = link_after_send1
+
+          let (after_ingest, link_after_ingest) = netplay_poll_and_ingest(
+            session, link,
+          )
+          session = after_ingest
+          link = link_after_ingest
+
+          let (after_send2, link_after_send2) = netplay_send_outgoing(
+            session, link,
+          )
+          session = after_send2
+          link = link_after_send2
+
+          session = update_remote_input_cache_from_session(session)
+
+          if session.is_running() {
+            let local_bomb_pressed = local_bomb_pressed_for_network(
+              local_player_id,
+            )
+            let local_input = make_network_input(
+              session.current_frame(),
+              local_player_id,
+              local_bomb_pressed,
+            )
+            session = session.submit_local_input(local_input)
+            if players[local_player_index].active &&
+              players[local_player_index].alive {
+              players[local_player_index].desired_direction = latest_held_direction(
+                local_player_id,
+              )
+              if local_bomb_pressed {
+                place_bomb_for_player(local_player_index)
+              }
+            }
+            match netplay_last_remote_input.val {
+              Some(remote_input) =>
+                apply_remote_input_to_player(remote_player_index, remote_input)
+              None => ()
+            }
+            session = session.tick()
+          }
+          let (after_send3, link_after_send3) = netplay_send_outgoing(
+            session, link,
+          )
+          session = after_send3
+          link = link_after_send3
+
+          netplay_session.val = Some(session)
+          netplay_link.val = Some(link)
         }
         None => handle_player_inputs_local()
       }
@@ -364,8 +536,10 @@ pub fn input_system(_world : @ecs.World) -> Unit {
     return
   }
   refresh_direction_press_stamps()
-  if netplay_input_bridge_enabled() {
+  if netplay_loopback_input_bridge_enabled() {
     handle_player_inputs_with_netplay_bridge()
+  } else if netplay_remote_input_bridge_enabled() {
+    handle_player_inputs_with_remote_netplay()
   } else {
     handle_player_inputs_local()
   }
@@ -1051,8 +1225,18 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
   if phase.val != Playing {
     return
   }
+  if netplay_mode.val == Host || netplay_mode.val == Client {
+    match netplay_session.val {
+      Some(session) => if !session.is_running() { return }
+      None => return
+    }
+  }
   let sim_started_at = @time.elapsed_raw()
-  let delta = @time.delta()
+  let delta = if netplay_mode.val == Host || netplay_mode.val == Client {
+    1.0 / FPS.to_double()
+  } else {
+    @time.delta()
+  }
   let motion_started_at = @time.elapsed_raw()
   tick_players_motion(delta)
   profile_motion_total.val += @time.elapsed_raw() - motion_started_at

@@ -193,6 +193,14 @@ priv enum RoundOutcome {
 }
 
 ///|
+priv enum NetTransportMode {
+  Off
+  Loopback
+  Host
+  Client
+} derive(Eq)
+
+///|
 priv enum ItemKind {
   Shoes
   BombUp
@@ -475,6 +483,18 @@ const CAPTURE_ENV : String = "BOMBMAN_CAPTURE"
 const NETPLAY_LOCAL_LOOP_ENV : String = "BOMBMAN_NET_LOCAL_LOOP"
 
 ///|
+const NETPLAY_MODE_ENV : String = "BOMBMAN_NET_MODE"
+
+///|
+const NETPLAY_PORT_ENV : String = "BOMBMAN_NET_PORT"
+
+///|
+const NETPLAY_REMOTE_HOST_ENV : String = "BOMBMAN_NET_REMOTE_HOST"
+
+///|
+const NETPLAY_REMOTE_PORT_ENV : String = "BOMBMAN_NET_REMOTE_PORT"
+
+///|
 const CAPTURE_PATH : String = "bombman_capture.png"
 
 ///|
@@ -532,13 +552,37 @@ let capture_taken : Ref[Bool] = { val: false }
 let netplay_local_loop_enabled : Ref[Bool] = { val: false }
 
 ///|
+let netplay_mode : Ref[NetTransportMode] = { val: Off }
+
+///|
 let netplay_host_session : Ref[@netplay.NetSession?] = { val: None }
 
 ///|
 let netplay_client_session : Ref[@netplay.NetSession?] = { val: None }
 
 ///|
+let netplay_session : Ref[@netplay.NetSession?] = { val: None }
+
+///|
+let netplay_link : Ref[@netplay.TcpLink?] = { val: None }
+
+///|
 let netplay_local_frame : Ref[Int] = { val: 0 }
+
+///|
+let netplay_port : Ref[Int] = { val: 39000 }
+
+///|
+let netplay_remote_port : Ref[Int] = { val: 39000 }
+
+///|
+let netplay_remote_host : Ref[String] = { val: "127.0.0.1" }
+
+///|
+let netplay_last_remote_input : Ref[@netplay.PlayerInput?] = { val: None }
+
+///|
+let netplay_last_remote_action_frame : Ref[Int] = { val: -1 }
 
 ///|
 let capture_perf_started_at : Ref[Double] = { val: 0.0 }
