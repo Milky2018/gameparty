@@ -46,14 +46,13 @@ test "menu navigation wraps and selection starts correct modes" {
   assert_true(menu_selection.val == OnePlayer)
   assert_eq(current_level.val, 0)
   press_menu_key(@inputs.KeyD)
-  assert_eq(current_level.val, 1)
+  assert_eq(current_level.val, 0)
   press_menu_key(@inputs.ArrowRight)
-  assert_eq(current_level.val, 2)
+  assert_eq(current_level.val, 0)
   press_menu_key(@inputs.KeyA)
-  assert_eq(current_level.val, 1)
-  current_level.val = 0
+  assert_eq(current_level.val, 0)
   press_menu_key(@inputs.ArrowLeft)
-  assert_eq(current_level.val, levels.length() - 1)
+  assert_eq(current_level.val, 0)
   press_menu_key(@inputs.KeyS)
   assert_true(menu_selection.val == TwoPlayersA)
   press_menu_key(@inputs.KeyS)
@@ -95,6 +94,13 @@ test "network battle menu routes host/join setup and validates inputs" {
   // Create room path
   press_menu_key(@inputs.Enter)
   assert_true(menu_screen.val == NetworkHostSetup)
+  let selected_before = host_setup_level.val
+  host_setup_focus.val = Level
+  press_menu_key(@inputs.KeyD)
+  assert_eq(host_setup_level.val, next_level_index(selected_before))
+  press_menu_key(@inputs.KeyA)
+  assert_eq(host_setup_level.val, selected_before)
+  host_setup_level.val = 2
   host_setup_focus.val = Port
   host_setup_port.val = "0"
   press_menu_key(@inputs.Enter)
@@ -104,11 +110,12 @@ test "network battle menu routes host/join setup and validates inputs" {
   press_menu_key(@inputs.Enter)
   assert_true(menu_screen.val == NetworkLobby)
   assert_true(netplay_mode.val == Host)
+  assert_eq(current_level.val, 2)
   assert_true(netplay_session.val is Some(_))
   assert_true(netplay_link.val is Some(_))
 
   // Cancel lobby and go to join path.
-  press_menu_key(@inputs.Escape)
+  press_menu_key(@inputs.Enter)
   assert_true(menu_screen.val == NetworkRoot)
   assert_true(netplay_mode.val == Off)
   press_menu_key(@inputs.KeyS)
@@ -232,7 +239,7 @@ test "dual-player controls use WASD+G and IJKL+apostrophe" {
 ///|
 test "local round startup clears active netplay runtime" {
   reset_test_input_state()
-  begin_network_host_lobby(Coop, 39000)
+  begin_network_host_lobby(Coop, 39000, 0)
   assert_true(netplay_mode.val == Host)
   assert_true(netplay_session.val is Some(_))
   start_local_round(Coop)

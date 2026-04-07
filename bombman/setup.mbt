@@ -682,6 +682,7 @@ fn reset_network_menu_state() -> Unit {
   host_setup_focus.val = Mode
   join_setup_focus.val = Host
   host_setup_mode.val = Coop
+  host_setup_level.val = current_level.val
   host_setup_port.val = "39000"
   join_setup_host.val = "127.0.0.1"
   join_setup_port.val = "39000"
@@ -770,6 +771,7 @@ fn open_network_host_setup() -> Unit {
   menu_screen.val = NetworkHostSetup
   host_setup_focus.val = Mode
   host_setup_mode.val = Coop
+  host_setup_level.val = current_level.val
   host_setup_port.val = "39000"
 }
 
@@ -796,8 +798,14 @@ fn cancel_network_lobby_to_root(error? : String = "") -> Unit {
 }
 
 ///|
-fn begin_network_host_lobby(mode : GameMode, port : Int) -> Unit {
+fn begin_network_host_lobby(
+  mode : GameMode,
+  port : Int,
+  level_index : Int,
+) -> Unit {
   stop_active_netplay()
+  let normalized_level = clamp_int(level_index, 0, levels.length() - 1)
+  current_level.val = normalized_level
   let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
   let config = @netplay.NetConfig::default()
   let mut session = @netplay.NetSession::new_host(
@@ -1443,15 +1451,14 @@ fn hint_text() -> String {
   match phase.val {
     MainMenu =>
       match menu_screen.val {
-        MainRoot =>
-          "W/S or Up/Down: Mode   A/D or Left/Right: Level   Enter/Space: Select   Esc: Exit"
+        MainRoot => "W/S or Up/Down: Mode   Enter/Space: Select   Esc: Exit"
         NetworkRoot =>
           "W/S or Up/Down: Option   Enter/Space: Select   Esc: Back"
         NetworkHostSetup =>
-          "W/S: Field   A/D or Left/Right: Mode   Digits: Port   Backspace: Delete   Enter: Create   Esc: Back"
+          "W/S: Field   A/D or Left/Right: Mode/Level   Digits: Port   Backspace: Delete   Enter: Create   Esc: Back"
         NetworkJoinSetup =>
           "W/S: Field   Type Host/Port   Backspace: Delete   Enter: Join   Esc: Back"
-        NetworkLobby => "Waiting for handshake... Esc: Cancel"
+        NetworkLobby => "Waiting for handshake... Enter/Esc: Cancel"
       }
     Playing =>
       match current_mode.val {
@@ -1486,7 +1493,7 @@ fn status_text() -> String {
           MainRoot => "2 Players A = co-op, 2 Players B = versus."
           NetworkRoot => "Network battle supports Host(P1) + Client(P2)."
           NetworkHostSetup =>
-            "Choose mode A/B and port, then press Enter to create."
+            "Choose mode A/B, level, and port, then press Enter to create."
           NetworkJoinSetup =>
             "Enter host IP and port, then press Enter to join."
           NetworkLobby => {
@@ -1494,7 +1501,7 @@ fn status_text() -> String {
               Some(ip) => ip
               None => "unavailable"
             }
-            "MODE: \{lobby_mode_label.val}   ROOM: \{lobby_endpoint_label.val}   LAN: \{lan}   LOOPBACK: 127.0.0.1   \{lobby_status_label.val}"
+            "MODE: \{lobby_mode_label.val}   LEVEL: \{current_level_number()}/\{levels.length()}   ROOM: \{lobby_endpoint_label.val}   LAN: \{lan}   LOOPBACK: 127.0.0.1   \{lobby_status_label.val}"
           }
         }
       }
@@ -1866,6 +1873,7 @@ fn sync_menu_visuals() -> Unit {
     }
     NetworkHostSetup => {
       let mode_prefix = if host_setup_focus.val == Mode { "> " } else { "  " }
+      let level_prefix = if host_setup_focus.val == Level { "> " } else { "  " }
       let port_prefix = if host_setup_focus.val == Port { "> " } else { "  " }
       set_menu_entry(
         0,
@@ -1879,16 +1887,24 @@ fn sync_menu_visuals() -> Unit {
       )
       set_menu_entry(
         1,
-        port_prefix + "PORT: \{host_setup_port.val}",
+        level_prefix + "LEVEL: \{host_setup_level.val + 1} / \{levels.length()}",
         262.0,
+        if host_setup_focus.val == Level {
+          MENU_SELECTED_COLOR
+        } else {
+          MENU_NORMAL_COLOR
+        },
+      )
+      set_menu_entry(
+        2,
+        port_prefix + "PORT: \{host_setup_port.val}",
+        304.0,
         if host_setup_focus.val == Port {
           MENU_SELECTED_COLOR
         } else {
           MENU_NORMAL_COLOR
         },
       )
-      set_menu_entry(2, "ENTER: CREATE ROOM", 322.0, MENU_SELECTED_COLOR)
-      set_menu_entry(3, "ESC: BACK", 364.0, MENU_NORMAL_COLOR)
     }
     NetworkJoinSetup => {
       let host_prefix = if join_setup_focus.val == Host { "> " } else { "  " }
@@ -1923,7 +1939,7 @@ fn sync_menu_visuals() -> Unit {
       }
       set_menu_entry(
         0,
-        "MODE: \{lobby_mode_label.val}",
+        "MODE: \{lobby_mode_label.val}   LEVEL: \{current_level_number()}/\{levels.length()}",
         214.0,
         MENU_SELECTED_COLOR,
       )
@@ -1935,7 +1951,7 @@ fn sync_menu_visuals() -> Unit {
       )
       set_menu_entry(2, "LAN: \{lan}", 290.0, MENU_NORMAL_COLOR)
       set_menu_entry(3, "LOOPBACK: 127.0.0.1", 328.0, MENU_NORMAL_COLOR)
-      set_menu_entry(4, lobby_status_label.val, 380.0, MENU_SELECTED_COLOR)
+      set_menu_entry(4, "> CANCEL (ENTER/ESC)", 380.0, MENU_SELECTED_COLOR)
     }
   }
   set_text_entity_center(

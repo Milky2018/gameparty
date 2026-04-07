@@ -260,6 +260,7 @@ priv enum NetworkRootOption {
 ///|
 priv enum HostSetupFocus {
   Mode
+  Level
   Port
 } derive(Eq)
 
@@ -493,6 +494,9 @@ let join_setup_focus : Ref[JoinSetupFocus] = { val: Host }
 
 ///|
 let host_setup_mode : Ref[GameMode] = { val: Coop }
+
+///|
+let host_setup_level : Ref[Int] = { val: 0 }
 
 ///|
 let host_setup_port : Ref[String] = { val: "39000" }

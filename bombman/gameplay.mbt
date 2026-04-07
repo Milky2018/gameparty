@@ -147,7 +147,7 @@ fn submit_host_setup() -> Unit {
   }
   let raw_port = host_setup_port.val.trim().to_string()
   match parse_numeric_port(raw_port) {
-    Some(port) => begin_network_host_lobby(mode, port)
+    Some(port) => begin_network_host_lobby(mode, port, host_setup_level.val)
     None => menu_error_message.val = "Port must be an integer in 1..65535."
   }
 }
@@ -278,12 +278,6 @@ fn handle_main_root_menu_input() -> Unit {
   if @inputs.is_just_pressed(KeyS) || @inputs.is_just_pressed(ArrowDown) {
     menu_selection.val = next_menu_option(menu_selection.val)
   }
-  if @inputs.is_just_pressed(KeyA) || @inputs.is_just_pressed(ArrowLeft) {
-    current_level.val = previous_level_index(current_level.val)
-  }
-  if @inputs.is_just_pressed(KeyD) || @inputs.is_just_pressed(ArrowRight) {
-    current_level.val = next_level_index(current_level.val)
-  }
   if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
     activate_menu_option(menu_selection.val)
   }
@@ -321,18 +315,26 @@ fn handle_network_host_setup_input() -> Unit {
     @inputs.is_just_pressed(KeyS) ||
     @inputs.is_just_pressed(ArrowDown) {
     host_setup_focus.val = match host_setup_focus.val {
-      Mode => Port
+      Mode => Level
+      Level => Port
       Port => Mode
     }
   }
-  if host_setup_focus.val == Mode &&
-    (
-      @inputs.is_just_pressed(KeyA) ||
-      @inputs.is_just_pressed(ArrowLeft) ||
-      @inputs.is_just_pressed(KeyD) ||
-      @inputs.is_just_pressed(ArrowRight)
-    ) {
-    toggle_host_setup_mode()
+  let left_pressed = @inputs.is_just_pressed(KeyA) ||
+    @inputs.is_just_pressed(ArrowLeft)
+  let right_pressed = @inputs.is_just_pressed(KeyD) ||
+    @inputs.is_just_pressed(ArrowRight)
+  if left_pressed || right_pressed {
+    match host_setup_focus.val {
+      Mode => toggle_host_setup_mode()
+      Level =>
+        if left_pressed {
+          host_setup_level.val = previous_level_index(host_setup_level.val)
+        } else {
+          host_setup_level.val = next_level_index(host_setup_level.val)
+        }
+      Port => ()
+    }
   }
   if @raylib.is_key_pressed(@raylib.KeyBackspace) &&
     host_setup_focus.val == Port {
@@ -384,6 +386,15 @@ fn handle_network_join_setup_input() -> Unit {
 }
 
 ///|
+fn handle_network_lobby_menu_input() -> Unit {
+  if @inputs.is_just_pressed(Enter) || @inputs.is_just_pressed(Space) {
+    cancel_network_lobby_to_root()
+    return
+  }
+  tick_network_lobby()
+}
+
+///|
 fn handle_menu_input() -> Unit {
   if phase.val != MainMenu {
     return
@@ -393,7 +404,7 @@ fn handle_menu_input() -> Unit {
     NetworkRoot => handle_network_root_menu_input()
     NetworkHostSetup => handle_network_host_setup_input()
     NetworkJoinSetup => handle_network_join_setup_input()
-    NetworkLobby => tick_network_lobby()
+    NetworkLobby => handle_network_lobby_menu_input()
   }
 }
 
