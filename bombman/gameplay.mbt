@@ -982,6 +982,7 @@ fn resolve_item_pickups() -> Unit {
 ///|
 fn set_playback_clip(
   playback : AnimPlayback,
+  entity : @entity.Entity,
   clip_id : AnimClip,
   looping : Bool,
 ) -> Unit {
@@ -991,32 +992,18 @@ fn set_playback_clip(
     return
   }
   playback.clip_id = clip_id
-  playback.frame_index = 0
-  playback.frame_elapsed = 0.0
   playback.looping = looping
   playback.finished = false
+  ignore(play_entity_animation(entity, playback.clip_id, playback.looping))
 }
 
 ///|
-fn tick_playback(playback : AnimPlayback, delta : Double) -> Unit {
-  if playback.finished {
+fn tick_playback(playback : AnimPlayback, entity : @entity.Entity) -> Unit {
+  if playback.looping {
+    playback.finished = false
     return
   }
-  let frame_duration = anim_frame_duration()
-  playback.frame_elapsed = playback.frame_elapsed + delta
-  let frame_count = anim_clip_frame_count(playback.clip_id)
-  while playback.frame_elapsed >= frame_duration {
-    playback.frame_elapsed = playback.frame_elapsed - frame_duration
-    if playback.frame_index + 1 < frame_count {
-      playback.frame_index += 1
-    } else if playback.looping {
-      playback.frame_index = 0
-    } else {
-      playback.frame_index = frame_count - 1
-      playback.finished = true
-      break
-    }
-  }
+  playback.finished = entity_animation_finished(entity, playback.clip_id)
 }
 
 ///|
@@ -1025,8 +1012,8 @@ fn sync_player_playback(player : PlayerState) -> Unit {
     return
   }
   if !player.alive {
-    set_playback_clip(player.anim, PlayerDeath, false)
-    tick_playback(player.anim, 0.0)
+    set_playback_clip(player.anim, player.entity, PlayerDeath, false)
+    tick_playback(player.anim, player.entity)
     return
   }
   player.death_animation_done = false
@@ -1036,6 +1023,7 @@ fn sync_player_playback(player : PlayerState) -> Unit {
       player.flip_x = direction == Left
       set_playback_clip(
         player.anim,
+        player.entity,
         player_move_clip(player.id, direction),
         true,
       )
@@ -1048,6 +1036,7 @@ fn sync_player_playback(player : PlayerState) -> Unit {
       }
       set_playback_clip(
         player.anim,
+        player.entity,
         player_idle_clip(player.id, player.facing),
         true,
       )
@@ -1058,14 +1047,19 @@ fn sync_player_playback(player : PlayerState) -> Unit {
 ///|
 fn sync_enemy_playback(enemy : EnemyState) -> Unit {
   if !enemy.alive {
-    set_playback_clip(enemy.anim, EnemyDeath, false)
-    tick_playback(enemy.anim, 0.0)
+    set_playback_clip(enemy.anim, enemy.entity, EnemyDeath, false)
+    tick_playback(enemy.anim, enemy.entity)
     return
   }
   enemy.death_animation_done = false
   enemy.facing = enemy.direction
   enemy.flip_x = enemy.facing == Left
-  set_playback_clip(enemy.anim, enemy_move_clip(enemy.skin, enemy.facing), true)
+  set_playback_clip(
+    enemy.anim,
+    enemy.entity,
+    enemy_move_clip(enemy.skin, enemy.facing),
+    true,
+  )
 }
 
 ///|
@@ -1078,7 +1072,7 @@ fn kill_player(player : PlayerState) -> Unit {
   player.desired_direction = None
   player.flip_x = false
   player.death_animation_done = false
-  set_playback_clip(player.anim, PlayerDeath, false)
+  set_playback_clip(player.anim, player.entity, PlayerDeath, false)
 }
 
 ///|
@@ -1089,7 +1083,7 @@ fn kill_enemy(enemy : EnemyState) -> Unit {
   enemy.alive = false
   enemy.flip_x = false
   enemy.death_animation_done = false
-  set_playback_clip(enemy.anim, EnemyDeath, false)
+  set_playback_clip(enemy.anim, enemy.entity, EnemyDeath, false)
 }
 
 ///|
@@ -1102,7 +1096,7 @@ fn tick_player_motion(index : Int, delta : Double) -> Unit {
     player.direction = None
     player.desired_direction = None
     sync_player_playback(player)
-    tick_playback(player.anim, delta)
+    tick_playback(player.anim, player.entity)
     if player.anim.finished {
       player.death_animation_done = true
     }
@@ -1184,7 +1178,7 @@ fn tick_player_motion(index : Int, delta : Double) -> Unit {
     }
   }
   sync_player_playback(player)
-  tick_playback(player.anim, delta)
+  tick_playback(player.anim, player.entity)
 }
 
 ///|
@@ -1200,7 +1194,7 @@ fn tick_players_motion(delta : Double) -> Unit {
 fn tick_bombs(delta : Double) -> Unit {
   for bomb in bombs {
     bomb.timer = bomb.timer - delta
-    tick_playback(bomb.anim, delta)
+    tick_playback(bomb.anim, bomb.entity)
   }
 }
 
@@ -1232,9 +1226,14 @@ fn tick_flames(delta : Double) -> Unit {
     flame.visual_timer = flame.visual_timer - delta
     if !flame.tail_phase && flame.damage_timer <= 0.0 {
       flame.tail_phase = true
-      set_playback_clip(flame.anim, flame_tail_clip(flame.kind), false)
+      set_playback_clip(
+        flame.anim,
+        flame.entity,
+        flame_tail_clip(flame.kind),
+        false,
+      )
     }
-    tick_playback(flame.anim, delta)
+    tick_playback(flame.anim, flame.entity)
     if flame.visual_timer <= 0.0 {
       hide_entity(flame.entity)
       ignore(flames.remove(index))
@@ -1249,7 +1248,7 @@ fn tick_soft_wall_breaks(delta : Double) -> Unit {
     index -= 1
     let breaking = soft_wall_breaks[index]
     breaking.timer = breaking.timer - delta
-    tick_playback(breaking.anim, delta)
+    tick_playback(breaking.anim, breaking.entity)
     if breaking.timer <= 0.0 || breaking.anim.finished {
       set_tile(breaking.cell_x, breaking.cell_y, Empty)
       maybe_spawn_random_item(
@@ -1292,7 +1291,7 @@ fn tick_enemies(delta : Double) -> Unit {
   for enemy in enemies {
     if !enemy.alive {
       sync_enemy_playback(enemy)
-      tick_playback(enemy.anim, delta)
+      tick_playback(enemy.anim, enemy.entity)
       if enemy.anim.finished {
         enemy.death_animation_done = true
       }
@@ -1332,7 +1331,7 @@ fn tick_enemies(delta : Double) -> Unit {
     enemy.cell_x = next_cell_x
     enemy.cell_y = next_cell_y
     sync_enemy_playback(enemy)
-    tick_playback(enemy.anim, delta)
+    tick_playback(enemy.anim, enemy.entity)
   }
 }
 
@@ -1421,14 +1420,14 @@ fn tick_round_over_visuals(delta : Double) -> Unit {
   for enemy in enemies {
     if !enemy.alive && !enemy.death_animation_done {
       sync_enemy_playback(enemy)
-      tick_playback(enemy.anim, delta)
+      tick_playback(enemy.anim, enemy.entity)
       if enemy.anim.finished {
         enemy.death_animation_done = true
       }
     }
   }
   for bomb in bombs {
-    tick_playback(bomb.anim, delta)
+    tick_playback(bomb.anim, bomb.entity)
   }
   tick_flames(delta)
   tick_soft_wall_breaks(delta)
@@ -1440,6 +1439,7 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
     return
   }
   if phase.val == Playing &&
+    current_mode.val != SinglePlayer &&
     (netplay_mode.val == Host || netplay_mode.val == Client) {
     match netplay_session.val {
       Some(session) => if !session.is_running() { return }

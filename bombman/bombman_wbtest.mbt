@@ -221,6 +221,22 @@ test "single-player round ignores netplay bridge even when env flag is on" {
 }
 
 ///|
+test "single-player simulation still advances when netplay mode is client" {
+  reset_test_input_state()
+  netplay_mode.val = Client
+  current_level.val = 0
+  start_round(SinglePlayer)
+  let before_x = players[0].center[X]
+  players[0] = {
+    ..players[0],
+    desired_direction: Some(Right),
+    direction: Some(Right),
+  }
+  simulation_system(@ecs.require_current_world())
+  assert_true(players[0].center[X] > before_x + 0.1)
+}
+
+///|
 test "remote client netplay mode survives repeated input ticks without host" {
   reset_test_input_state()
   netplay_local_loop_enabled.val = false

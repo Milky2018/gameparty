@@ -77,6 +77,198 @@ fn atlas_tile_rect(col : Int, row : Int) -> @math.Rect {
 }
 
 ///|
+fn atlas_tile_index(col : Int, row : Int) -> Int {
+  row * BOMBMAN_SPRITE_ATLAS_COLUMNS + col
+}
+
+///|
+fn anim_clip_first_tile_index(clip_id : AnimClip) -> Int {
+  let frame = anim_clip_frame(clip_id, 0)
+  atlas_tile_index(frame.0, frame.1)
+}
+
+///|
+fn anim_clip_name(clip_id : AnimClip) -> String {
+  match clip_id {
+    PlayerP1IdleDown => "player.p1.idle.down"
+    PlayerP1IdleUp => "player.p1.idle.up"
+    PlayerP1IdleSide => "player.p1.idle.side"
+    PlayerP1MoveDown => "player.p1.move.down"
+    PlayerP1MoveUp => "player.p1.move.up"
+    PlayerP1MoveSide => "player.p1.move.side"
+    PlayerP2IdleDown => "player.p2.idle.down"
+    PlayerP2IdleUp => "player.p2.idle.up"
+    PlayerP2IdleSide => "player.p2.idle.side"
+    PlayerP2MoveDown => "player.p2.move.down"
+    PlayerP2MoveUp => "player.p2.move.up"
+    PlayerP2MoveSide => "player.p2.move.side"
+    PlayerDeath => "player.death"
+    EnemyBlueMoveDown => "enemy.blue.move.down"
+    EnemyBlueMoveUp => "enemy.blue.move.up"
+    EnemyBlueMoveSide => "enemy.blue.move.side"
+    EnemyPinkMoveDown => "enemy.pink.move.down"
+    EnemyPinkMoveUp => "enemy.pink.move.up"
+    EnemyPinkMoveSide => "enemy.pink.move.side"
+    EnemyPeachMoveDown => "enemy.peach.move.down"
+    EnemyPeachMoveUp => "enemy.peach.move.up"
+    EnemyPeachMoveSide => "enemy.peach.move.side"
+    EnemyDeath => "enemy.death"
+    BombFuse => "bomb.fuse"
+    FlameCenterActive => "flame.center.active"
+    FlameBodyHActive => "flame.body_h.active"
+    FlameBodyVActive => "flame.body_v.active"
+    FlameEndLeftActive => "flame.end_left.active"
+    FlameEndRightActive => "flame.end_right.active"
+    FlameEndUpActive => "flame.end_up.active"
+    FlameEndDownActive => "flame.end_down.active"
+    FlameCenterTail => "flame.center.tail"
+    FlameBodyHTail => "flame.body_h.tail"
+    FlameBodyVTail => "flame.body_v.tail"
+    FlameEndLeftTail => "flame.end_left.tail"
+    FlameEndRightTail => "flame.end_right.tail"
+    FlameEndUpTail => "flame.end_up.tail"
+    FlameEndDownTail => "flame.end_down.tail"
+    SoftWallBreak => "soft_wall.break"
+  }
+}
+
+///|
+fn ensure_bombman_animation_assets_once() -> Unit {
+  if bombman_atlas_layout.val is None {
+    let layout = @sprite.TextureAtlasLayout::from_grid(
+      @math.Vec2D(BOMBMAN_SPRITE_TILE_SIZE, BOMBMAN_SPRITE_TILE_SIZE),
+      BOMBMAN_SPRITE_ATLAS_COLUMNS,
+      BOMBMAN_SPRITE_ATLAS_ROWS,
+    )
+    bombman_atlas_layout.val = Some(
+      @sprite.register_texture_atlas_layout(layout),
+    )
+  }
+  if bombman_anim_graph.val is Some(_) {
+    return
+  }
+  let clip_handles : Array[@animation.AnimationClipHandle] = []
+  let frame_duration = anim_frame_duration()
+  for clip_id in all_anim_clips {
+    let frame_count = anim_clip_frame_count(clip_id)
+    let keys : Array[@animation.ScalarKeyframe] = []
+    for frame_index in 0..<frame_count {
+      let frame = anim_clip_frame(clip_id, frame_index)
+      keys.push({
+        time: frame_index.to_double() * frame_duration,
+        value: atlas_tile_index(frame.0, frame.1).to_double(),
+        in_tangent: None,
+        out_tangent: None,
+      })
+    }
+    let clip = @animation.AnimationClip::new(anim_clip_name(clip_id))
+    clip.add_curve_to_target(
+      @animation.AnimationTargetId::new("self"),
+      @animation.VariableCurve::scalar(
+        @animation.texture_atlas_index_field(),
+        keys,
+        interpolation=@animation.ChannelInterpolation::Step,
+      ),
+    )
+    clip.duration = frame_count.to_double() * frame_duration
+    clip_handles.push(@animation.register_animation_clip_asset(clip))
+  }
+  let (graph, nodes) = @animation.AnimationGraph::from_clips(clip_handles)
+  bombman_anim_graph.val = Some(
+    @animation.register_animation_graph_asset(graph),
+  )
+  bombman_anim_nodes.clear()
+  for node in nodes {
+    bombman_anim_nodes.push(node)
+  }
+}
+
+///|
+fn animation_node_for_clip(
+  clip_id : AnimClip,
+) -> @animation.AnimationNodeIndex? {
+  for index in 0..<all_anim_clips.length() {
+    if all_anim_clips[index] == clip_id {
+      if index >= 0 && index < bombman_anim_nodes.length() {
+        return Some(bombman_anim_nodes[index])
+      }
+      return None
+    }
+  }
+  None
+}
+
+///|
+fn ensure_entity_animation_binding(entity : @entity.Entity) -> Unit {
+  ensure_bombman_animation_assets_once()
+  match bombman_anim_graph.val {
+    Some(graph_handle) => {
+      @animation.animation_graph_handles().set(entity, graph_handle)
+      @animation.animation_target_ids().set(
+        entity,
+        @animation.AnimationTargetId::new("self"),
+      )
+      @animation.animated_bys().set(entity, @animation.AnimatedBy::new(entity))
+      ignore(
+        @animation.animation_players().get_or_init(entity, fn() {
+          @animation.AnimationPlayer::new()
+        }),
+      )
+      ignore(
+        @animation.animation_transitions().get_or_init(entity, fn() {
+          @animation.AnimationTransitions::new()
+        }),
+      )
+    }
+    None => ()
+  }
+}
+
+///|
+fn play_entity_animation(
+  entity : @entity.Entity,
+  clip_id : AnimClip,
+  looping : Bool,
+) -> Bool {
+  ensure_entity_animation_binding(entity)
+  guard animation_node_for_clip(clip_id) is Some(node) else { return false }
+  guard @animation.animation_players().get(entity) is Some(player) else {
+    return false
+  }
+  guard @animation.animation_transitions().get(entity) is Some(transitions) else {
+    return false
+  }
+  ignore(
+    transitions.play(
+      player,
+      node,
+      0.0,
+      repeat=if looping {
+        @animation.RepeatAnimation::Forever
+      } else {
+        @animation.RepeatAnimation::Never
+      },
+    ),
+  )
+  true
+}
+
+///|
+fn entity_animation_finished(
+  entity : @entity.Entity,
+  clip_id : AnimClip,
+) -> Bool {
+  guard animation_node_for_clip(clip_id) is Some(node) else { return true }
+  guard @animation.animation_players().get(entity) is Some(player) else {
+    return false
+  }
+  match player.animation(node) {
+    Some(active_animation) => active_animation.is_finished()
+    None => false
+  }
+}
+
+///|
 fn parse_color_component_int(part : StringView) -> Int? {
   let token = part.to_string().trim().to_string()
   if token == "" {
@@ -331,10 +523,72 @@ fn set_atlas_entity_center(
 }
 
 ///|
-fn playback_frame_tile(playback : AnimPlayback) -> (Int, Int) {
-  let frame_count = anim_clip_frame_count(playback.clip_id)
-  let index = clamp_int(playback.frame_index, 0, frame_count - 1)
-  anim_clip_frame(playback.clip_id, index)
+fn set_animated_atlas_entity_top_left(
+  entity : @entity.Entity,
+  position : @math.Vec2D,
+  size : @math.Vec2D,
+  clip_id : AnimClip,
+  zindex : Int,
+  tint? : String? = None,
+  flip_x? : Bool = false,
+) -> Unit {
+  ensure_entity_alive(entity)
+  show_entity(entity)
+  ensure_entity_animation_binding(entity)
+  guard bombman_atlas_layout.val is Some(layout) else { return }
+  let image = bombman_spritesheet()
+  let sprite = match @sprite.sprites().get(entity) {
+    Some(existing) => existing
+    None =>
+      @sprite.Sprite::from_atlas_image(
+        image,
+        @sprite.TextureAtlas::new(
+          layout,
+          index=anim_clip_first_tile_index(clip_id),
+        ),
+      )
+  }
+  sprite.custom_size = Some(size)
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.flip_x = flip_x
+  sprite.texture_atlas = match sprite.texture_atlas {
+    Some(texture_atlas) => Some({ ..texture_atlas, layout, })
+    None =>
+      Some(
+        @sprite.TextureAtlas::new(
+          layout,
+          index=anim_clip_first_tile_index(clip_id),
+        ),
+      )
+  }
+  match tint {
+    Some(color) => sprite.color = sprite_color(color)
+    None => sprite.color = sprite_color("rgb(255,255,255)")
+  }
+  @sprite.sprites().set(entity, sprite)
+  @transform.transforms().set(entity, entity_transform_2d(position, zindex))
+}
+
+///|
+fn set_animated_atlas_entity_center(
+  entity : @entity.Entity,
+  center : @math.Vec2D,
+  size : @math.Vec2D,
+  clip_id : AnimClip,
+  zindex : Int,
+  tint? : String? = None,
+  flip_x? : Bool = false,
+) -> Unit {
+  let top_left = center - @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
+  set_animated_atlas_entity_top_left(
+    entity,
+    top_left,
+    size,
+    clip_id,
+    zindex,
+    tint~,
+    flip_x~,
+  )
 }
 
 ///|
@@ -827,6 +1081,7 @@ fn configure_netplay_mode_from_env() -> Unit {
 ///|
 fn startup_system(_world : @ecs.World) -> Unit {
   register_bombman_font_once()
+  ensure_bombman_animation_assets_once()
   profile_enabled.val = env_flag_enabled(PROFILE_ENV)
   capture_enabled.val = env_flag_enabled(CAPTURE_ENV)
   netplay_local_loop_enabled.val = env_flag_enabled(NETPLAY_LOCAL_LOOP_ENV)
@@ -1297,19 +1552,40 @@ fn sync_tile_visuals() -> Unit {
   for y in 0..<GRID_HEIGHT {
     for x in 0..<GRID_WIDTH {
       let entity = tile_entities[cell_index(x, y)]
-      let (col, row) = match tile_at(x, y) {
-        Empty => (SPRITE_FLOOR_COL, SPRITE_FLOOR_ROW)
-        HardWall => (SPRITE_HARD_WALL_COL, SPRITE_HARD_WALL_ROW)
-        SoftWall => (SPRITE_SOFT_WALL_COL, SPRITE_SOFT_WALL_ROW)
+      match tile_at(x, y) {
+        Empty => {
+          let color = if (x + y) % 2 == 0 {
+            FLOOR_TILE_COLOR_A
+          } else {
+            FLOOR_TILE_COLOR_B
+          }
+          set_rect_entity(
+            entity,
+            floor_tile_position(x, y),
+            size,
+            color,
+            20,
+          )
+        }
+        HardWall =>
+          set_atlas_entity_top_left(
+            entity,
+            floor_tile_position(x, y),
+            size,
+            SPRITE_HARD_WALL_COL,
+            SPRITE_HARD_WALL_ROW,
+            20,
+          )
+        SoftWall =>
+          set_atlas_entity_top_left(
+            entity,
+            floor_tile_position(x, y),
+            size,
+            SPRITE_SOFT_WALL_COL,
+            SPRITE_SOFT_WALL_ROW,
+            20,
+          )
       }
-      set_atlas_entity_top_left(
-        entity,
-        floor_tile_position(x, y),
-        size,
-        col,
-        row,
-        20,
-      )
     }
   }
   tile_visuals_dirty.val = false
@@ -1327,13 +1603,11 @@ fn hide_tile_visuals() -> Unit {
 fn sync_bomb_visuals() -> Unit {
   let size = @math.Vec2D(BOMB_SPRITE_SIZE, BOMB_SPRITE_SIZE)
   for bomb in bombs {
-    let tile = playback_frame_tile(bomb.anim)
-    set_atlas_entity_center(
+    set_animated_atlas_entity_center(
       bomb.entity,
       cell_center(bomb.cell_x, bomb.cell_y),
       size,
-      tile.0,
-      tile.1,
+      bomb.anim.clip_id,
       60,
     )
   }
@@ -1343,13 +1617,11 @@ fn sync_bomb_visuals() -> Unit {
 fn sync_flame_visuals() -> Unit {
   let size = @math.Vec2D(FLAME_SPRITE_SIZE, FLAME_SPRITE_SIZE)
   for flame in flames {
-    let tile = playback_frame_tile(flame.anim)
-    set_atlas_entity_center(
+    set_animated_atlas_entity_center(
       flame.entity,
       cell_center(flame.cell_x, flame.cell_y),
       size,
-      tile.0,
-      tile.1,
+      flame.anim.clip_id,
       70,
     )
   }
@@ -1359,13 +1631,11 @@ fn sync_flame_visuals() -> Unit {
 fn sync_soft_wall_break_visuals() -> Unit {
   let size = floor_tile_size()
   for breaking in soft_wall_breaks {
-    let tile = playback_frame_tile(breaking.anim)
-    set_atlas_entity_top_left(
+    set_animated_atlas_entity_top_left(
       breaking.entity,
       floor_tile_position(breaking.cell_x, breaking.cell_y),
       size,
-      tile.0,
-      tile.1,
+      breaking.anim.clip_id,
       45,
     )
   }
@@ -1404,13 +1674,11 @@ fn sync_enemy_visuals() -> Unit {
   let size = @math.Vec2D(ENEMY_SPRITE_SIZE, ENEMY_SPRITE_SIZE)
   for enemy in enemies {
     if enemy.alive || !enemy.death_animation_done {
-      let tile = playback_frame_tile(enemy.anim)
-      set_atlas_entity_center(
+      set_animated_atlas_entity_center(
         enemy.entity,
         enemy.center,
         size,
-        tile.0,
-        tile.1,
+        enemy.anim.clip_id,
         65,
         flip_x=enemy.flip_x,
       )
@@ -1426,14 +1694,12 @@ fn sync_player_visuals() -> Unit {
   for player in players {
     if player.active {
       if player.alive || !player.death_animation_done {
-        let tile = playback_frame_tile(player.anim)
         let tint = Some(player_color(player.id, player.alive))
-        set_atlas_entity_center(
+        set_animated_atlas_entity_center(
           player.entity,
           player.center,
           size,
-          tile.0,
-          tile.1,
+          player.anim.clip_id,
           66,
           tint~,
           flip_x=player.flip_x,

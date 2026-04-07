@@ -56,7 +56,7 @@ const COLLISION_EPSILON : Double = 0.001
 const BOMB_FUSE_TIME : Double = 2.0
 
 ///|
-const ANIM_FPS : Double = 12.0
+const ANIM_FPS : Double = 8.0
 
 ///|
 const FLAME_DAMAGE_DURATION : Double = 0.16
@@ -107,6 +107,12 @@ const BOMB_ITEM_COLOR : String = "rgb(253, 236, 102)"
 const POWER_ITEM_COLOR : String = "rgb(176, 124, 255)"
 
 ///|
+const FLOOR_TILE_COLOR_A : String = "rgb(12, 20, 33)"
+
+///|
+const FLOOR_TILE_COLOR_B : String = "rgb(16, 27, 42)"
+
+///|
 const ITEM_BUBBLE_COLOR : String = "rgba(244, 247, 250, 0.92)"
 
 ///|
@@ -137,12 +143,11 @@ const BOMBMAN_SPRITES_PATH : String = "bombman/assets/bomberman.png"
 const BOMBMAN_SPRITE_TILE_SIZE : Double = 16.0
 
 ///|
-const SPRITE_FLOOR_COL : Int = 0
+const BOMBMAN_SPRITE_ATLAS_COLUMNS : Int = 16
 
 ///|
-const SPRITE_FLOOR_ROW : Int = 4
+const BOMBMAN_SPRITE_ATLAS_ROWS : Int = 24
 
-///|
 const SPRITE_HARD_WALL_COL : Int = 3
 
 ///|
@@ -337,8 +342,6 @@ priv enum AnimClip {
 ///|
 priv struct AnimPlayback {
   mut clip_id : AnimClip
-  mut frame_index : Int
-  mut frame_elapsed : Double
   mut looping : Bool
   mut finished : Bool
 }
@@ -488,13 +491,7 @@ let players : Array[PlayerState] = [
     radius: PLAYER_RADIUS,
     alive: true,
     death_animation_done: false,
-    anim: {
-      clip_id: PlayerP1IdleDown,
-      frame_index: 0,
-      frame_elapsed: 0.0,
-      looping: true,
-      finished: false,
-    },
+    anim: { clip_id: PlayerP1IdleDown, looping: true, finished: false },
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -512,13 +509,7 @@ let players : Array[PlayerState] = [
     radius: PLAYER_RADIUS,
     alive: true,
     death_animation_done: false,
-    anim: {
-      clip_id: PlayerP2IdleDown,
-      frame_index: 0,
-      frame_elapsed: 0.0,
-      looping: true,
-      finished: false,
-    },
+    anim: { clip_id: PlayerP2IdleDown, looping: true, finished: false },
     active_bombs: 0,
     max_bombs: PLAYER_START_BOMBS,
     blast_radius: PLAYER_BLAST_RADIUS,
@@ -776,6 +767,17 @@ let movement_enemy_bomb_centers : Array[@math.Vec2D] = []
 
 ///|
 let movement_tile_rects_cache : Array[Rect] = []
+
+///|
+let bombman_atlas_layout : Ref[@sprite.TextureAtlasLayoutHandle?] = {
+  val: None,
+}
+
+///|
+let bombman_anim_graph : Ref[@animation.AnimationGraphHandle?] = { val: None }
+
+///|
+let bombman_anim_nodes : Array[@animation.AnimationNodeIndex] = []
 
 ///|
 let tile_visuals_dirty : Ref[Bool] = { val: true }
@@ -1115,7 +1117,7 @@ fn player_can_use_item(player : PlayerState, kind : ItemKind) -> Bool {
 ///|
 fn anim_frame_duration() -> Double {
   if ANIM_FPS <= 0.0 {
-    1.0 / 12.0
+    1.0 / 8.0
   } else {
     1.0 / ANIM_FPS
   }
@@ -1123,8 +1125,51 @@ fn anim_frame_duration() -> Double {
 
 ///|
 fn anim_playback_new(clip_id : AnimClip, looping : Bool) -> AnimPlayback {
-  { clip_id, frame_index: 0, frame_elapsed: 0.0, looping, finished: false }
+  { clip_id, looping, finished: false }
 }
+
+///|
+let all_anim_clips : ReadOnlyArray[AnimClip] = [
+  PlayerP1IdleDown,
+  PlayerP1IdleUp,
+  PlayerP1IdleSide,
+  PlayerP1MoveDown,
+  PlayerP1MoveUp,
+  PlayerP1MoveSide,
+  PlayerP2IdleDown,
+  PlayerP2IdleUp,
+  PlayerP2IdleSide,
+  PlayerP2MoveDown,
+  PlayerP2MoveUp,
+  PlayerP2MoveSide,
+  PlayerDeath,
+  EnemyBlueMoveDown,
+  EnemyBlueMoveUp,
+  EnemyBlueMoveSide,
+  EnemyPinkMoveDown,
+  EnemyPinkMoveUp,
+  EnemyPinkMoveSide,
+  EnemyPeachMoveDown,
+  EnemyPeachMoveUp,
+  EnemyPeachMoveSide,
+  EnemyDeath,
+  BombFuse,
+  FlameCenterActive,
+  FlameBodyHActive,
+  FlameBodyVActive,
+  FlameEndLeftActive,
+  FlameEndRightActive,
+  FlameEndUpActive,
+  FlameEndDownActive,
+  FlameCenterTail,
+  FlameBodyHTail,
+  FlameBodyVTail,
+  FlameEndLeftTail,
+  FlameEndRightTail,
+  FlameEndUpTail,
+  FlameEndDownTail,
+  SoftWallBreak,
+]
 
 ///|
 fn enemy_skin_for_spawn(x : Int, y : Int, order : Int) -> EnemySkinKind {
@@ -1268,15 +1313,15 @@ fn anim_clip_frame(clip_id : AnimClip, frame_index : Int) -> (Int, Int) {
     PlayerP1IdleDown => (0, 0)
     PlayerP1IdleUp => (4, 0)
     PlayerP1IdleSide => (2, 0)
-    PlayerP1MoveDown => [(0, 0), (1, 0), (0, 0), (3, 0)][frame_index]
-    PlayerP1MoveUp => [(4, 0), (5, 0), (4, 0), (3, 0)][frame_index]
-    PlayerP1MoveSide => [(2, 0), (3, 0), (2, 0), (1, 0)][frame_index]
+    PlayerP1MoveDown => [(0, 0), (1, 0), (0, 0), (1, 0)][frame_index]
+    PlayerP1MoveUp => [(4, 0), (5, 0), (4, 0), (5, 0)][frame_index]
+    PlayerP1MoveSide => [(2, 0), (3, 0), (2, 0), (3, 0)][frame_index]
     PlayerP2IdleDown => (0, 1)
     PlayerP2IdleUp => (4, 1)
     PlayerP2IdleSide => (2, 1)
-    PlayerP2MoveDown => [(0, 1), (1, 1), (0, 1), (3, 1)][frame_index]
-    PlayerP2MoveUp => [(4, 1), (5, 1), (4, 1), (3, 1)][frame_index]
-    PlayerP2MoveSide => [(2, 1), (3, 1), (2, 1), (1, 1)][frame_index]
+    PlayerP2MoveDown => [(0, 1), (1, 1), (0, 1), (1, 1)][frame_index]
+    PlayerP2MoveUp => [(4, 1), (5, 1), (4, 1), (5, 1)][frame_index]
+    PlayerP2MoveSide => [(2, 1), (3, 1), (2, 1), (3, 1)][frame_index]
     PlayerDeath =>
       [(0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2)][frame_index]
     EnemyBlueMoveDown => [(0, 16), (1, 16), (2, 16), (3, 16)][frame_index]
