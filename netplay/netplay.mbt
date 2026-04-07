@@ -325,6 +325,16 @@ pub fn NetSession::drain_remote_inputs(
 }
 
 ///|
+pub fn NetSession::enqueue_outgoing(
+  self : NetSession,
+  message : NetMessage,
+) -> NetSession {
+  let next = self
+  next.outgoing.push(message)
+  next
+}
+
+///|
 pub fn NetSession::is_running(self : NetSession) -> Bool {
   self.running
 }

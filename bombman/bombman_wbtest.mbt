@@ -200,6 +200,41 @@ test "single-player round ignores netplay bridge even when env flag is on" {
 }
 
 ///|
+test "remote client netplay mode survives repeated input ticks without host" {
+  reset_test_input_state()
+  netplay_local_loop_enabled.val = false
+  netplay_mode.val = Client
+  netplay_remote_host.val = "127.0.0.1"
+  netplay_remote_port.val = 39999
+  current_level.val = 0
+  start_round(Coop)
+  assert_true(netplay_session.val is Some(_))
+  assert_true(netplay_link.val is Some(_))
+  for _ in 0..<240 {
+    advance_input_frame()
+    input_system(@ecs.require_current_world())
+    simulation_system(@ecs.require_current_world())
+  }
+  assert_true(phase.val == Playing)
+}
+
+///|
+test "client applies host round config from netplay start seed" {
+  reset_test_input_state()
+  netplay_mode.val = Client
+  current_level.val = 0
+  start_round(Coop)
+  assert_true(current_mode.val == Coop)
+  assert_eq(current_level.val, 0)
+  assert_true(enemies.length() > 0)
+  let host_seed = encode_round_seed_for_netplay(2, Versus)
+  apply_remote_round_seed(host_seed)
+  assert_true(current_mode.val == Versus)
+  assert_eq(current_level.val, 2)
+  assert_eq(enemies.length(), 0)
+}
+
+///|
 test "bomb owner can leave just-placed bomb but other player cannot pass through" {
   with_round(Coop, fn() raise {
     players[0] = { ..players[0], center: cell_center(1, 1), active_bombs: 0 }

@@ -58,6 +58,15 @@ static void net_close_fd(net_fd_t fd) {
 #define NET_INVALID_FD (-1)
 #endif
 
+static void net_disable_sigpipe(net_fd_t fd) {
+#if defined(SO_NOSIGPIPE)
+  int yes = 1;
+  setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, (const char *)&yes, sizeof(yes));
+#else
+  (void)fd;
+#endif
+}
+
 static int32_t net_fd_to_i32(net_fd_t fd) {
 #ifdef _WIN32
   return (int32_t)fd;
@@ -100,6 +109,7 @@ MOONBIT_FFI_EXPORT int32_t netplay_tcp_listen(int32_t port) {
     net_close_fd(fd);
     return -1;
   }
+  net_disable_sigpipe(fd);
   return net_fd_to_i32(fd);
 }
 
@@ -115,6 +125,7 @@ MOONBIT_FFI_EXPORT int32_t netplay_tcp_accept(int32_t listener_fd) {
     net_close_fd(accepted);
     return -1;
   }
+  net_disable_sigpipe(accepted);
   return net_fd_to_i32(accepted);
 }
 
@@ -131,6 +142,7 @@ MOONBIT_FFI_EXPORT int32_t netplay_tcp_connect(moonbit_bytes_t host, int32_t por
     net_close_fd(fd);
     return -1;
   }
+  net_disable_sigpipe(fd);
 
   struct addrinfo hints;
   memset(&hints, 0, sizeof(hints));
@@ -188,9 +200,19 @@ MOONBIT_FFI_EXPORT int32_t netplay_tcp_send(int32_t fd, moonbit_bytes_t payload)
   if (len <= 0) {
     return 0;
   }
-  int32_t sent = (int32_t)send(net_i32_to_fd(fd), (const char *)payload, len, 0);
+#ifdef MSG_NOSIGNAL
+  int flags = MSG_NOSIGNAL;
+#else
+  int flags = 0;
+#endif
+  int32_t sent = (int32_t)send(
+    net_i32_to_fd(fd),
+    (const char *)payload,
+    len,
+    flags
+  );
   if (sent < 0 && net_would_block()) {
-    return 0;
+    return -2;
   }
   return sent;
 }

@@ -585,6 +585,9 @@ let netplay_last_remote_input : Ref[@netplay.PlayerInput?] = { val: None }
 let netplay_last_remote_action_frame : Ref[Int] = { val: -1 }
 
 ///|
+let netplay_round_seed_applied : Ref[Int] = { val: -1 }
+
+///|
 let capture_perf_started_at : Ref[Double] = { val: 0.0 }
 
 ///|
@@ -716,6 +719,45 @@ fn mode_label(mode : GameMode) -> String {
     Coop => "2 PLAYERS A"
     Versus => "2 PLAYERS B"
   }
+}
+
+///|
+fn netplay_mode_code(mode : GameMode) -> Int {
+  match mode {
+    SinglePlayer => 1
+    Coop => 2
+    Versus => 3
+  }
+}
+
+///|
+fn netplay_mode_from_code(code : Int) -> GameMode? {
+  match code {
+    1 => Some(SinglePlayer)
+    2 => Some(Coop)
+    3 => Some(Versus)
+    _ => None
+  }
+}
+
+///|
+fn encode_round_seed_for_netplay(level_index : Int, mode : GameMode) -> Int {
+  (level_index + 1) * 10 + netplay_mode_code(mode)
+}
+
+///|
+fn decode_round_seed_from_netplay(seed : Int) -> (Int, GameMode)? {
+  if seed <= 0 {
+    return None
+  }
+  let mode_code = seed % 10
+  let level_number = seed / 10
+  guard netplay_mode_from_code(mode_code) is Some(mode) else { return None }
+  let level_index = level_number - 1
+  if level_index < 0 || level_index >= levels.length() {
+    return None
+  }
+  Some((level_index, mode))
 }
 
 ///|

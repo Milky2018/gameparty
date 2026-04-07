@@ -325,6 +325,8 @@ pub fn TcpLink::send_line(self : TcpLink, line : String) -> (TcpLink, Bool) {
   let sent = tcp_send_ffi(next.socket_fd, payload)
   if sent == payload.length() {
     (next, true)
+  } else if sent == -2 {
+    (next, false)
   } else {
     if next.socket_fd >= 0 {
       tcp_close_ffi(next.socket_fd)

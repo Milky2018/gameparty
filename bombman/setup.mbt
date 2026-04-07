@@ -337,7 +337,30 @@ fn reset_netplay_runtime() -> Unit {
   netplay_session.val = None
   netplay_last_remote_input.val = None
   netplay_last_remote_action_frame.val = -1
+  netplay_round_seed_applied.val = -1
   netplay_local_frame.val = 0
+}
+
+///|
+fn apply_remote_round_seed(seed : Int) -> Unit {
+  if netplay_round_seed_applied.val == seed {
+    return
+  }
+  match decode_round_seed_from_netplay(seed) {
+    Some((remote_level, remote_mode)) => {
+      let needs_reload = current_level.val != remote_level ||
+        current_mode.val != remote_mode
+      current_level.val = remote_level
+      current_mode.val = remote_mode
+      if needs_reload {
+        clear_dynamic_entities()
+        load_level(remote_level, remote_mode)
+        tile_visuals_dirty.val = true
+      }
+      netplay_round_seed_applied.val = seed
+    }
+    None => ()
+  }
 }
 
 ///|
@@ -369,10 +392,11 @@ fn configure_netplay_for_round(mode : GameMode) -> Unit {
   }
   if netplay_mode.val == Loopback {
     let config = @netplay.NetConfig::default()
+    let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
     let mut host = @netplay.NetSession::new_host(
       local_peer_id="p1",
       remote_peer_id="p2",
-      seed=current_level.val + 1,
+      seed=round_seed,
       config~,
     )
     let mut client = @netplay.NetSession::new_client(
@@ -398,21 +422,24 @@ fn configure_netplay_for_round(mode : GameMode) -> Unit {
     let (client_after_events, _) = client.drain_events()
     netplay_host_session.val = Some(host_after_events)
     netplay_client_session.val = Some(client_after_events)
+    netplay_round_seed_applied.val = round_seed
     return
   }
   let config = @netplay.NetConfig::default()
   match netplay_mode.val {
     Host => {
+      let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
       let mut session = @netplay.NetSession::new_host(
         local_peer_id="p1",
         remote_peer_id="p2",
-        seed=current_level.val + 1,
+        seed=round_seed,
         config~,
       )
       session = session.begin_handshake()
       session = session.set_local_ready()
       netplay_session.val = Some(session)
       netplay_link.val = Some(@netplay.TcpLink::new_host(netplay_port.val))
+      netplay_round_seed_applied.val = round_seed
     }
     Client => {
       let mut session = @netplay.NetSession::new_client(

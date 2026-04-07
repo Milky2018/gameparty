@@ -401,13 +401,29 @@ fn netplay_send_outgoing(
   session : @netplay.NetSession,
   link : @netplay.TcpLink,
 ) -> (@netplay.NetSession, @netplay.TcpLink) {
+  if !link.is_connected() {
+    return (session, link)
+  }
   let (next_session, outgoing) = session.drain_outgoing()
+  let mut session_after_send = next_session
   let mut next_link = link
-  for message in outgoing {
+  let mut keep_index = -1
+  for index in 0..<outgoing.length() {
+    let message = outgoing[index]
     let (updated, _) = next_link.send_line(@netplay.encode_message(message))
+    if !updated.is_connected() {
+      keep_index = index
+      next_link = updated
+      break
+    }
     next_link = updated
   }
-  (next_session, next_link)
+  if keep_index >= 0 {
+    for index in keep_index..<outgoing.length() {
+      session_after_send = session_after_send.enqueue_outgoing(outgoing[index])
+    }
+  }
+  (session_after_send, next_link)
 }
 
 ///|
@@ -430,7 +446,15 @@ fn netplay_poll_and_ingest(
 fn update_remote_input_cache_from_session(
   session : @netplay.NetSession,
 ) -> @netplay.NetSession {
-  let (after_events, _) = session.drain_events()
+  let (after_events, events) = session.drain_events()
+  if netplay_mode.val == Client {
+    for event in events {
+      match event {
+        RoundStarted(seed, _, _) => apply_remote_round_seed(seed)
+        _ => ()
+      }
+    }
+  }
   let (after_inputs, remote_inputs) = after_events.drain_remote_inputs()
   if !remote_inputs.is_empty() {
     let mut latest = remote_inputs[0]

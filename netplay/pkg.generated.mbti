@@ -64,6 +64,7 @@ pub fn NetSession::current_frame(Self) -> Int
 pub fn NetSession::drain_events(Self) -> (Self, Array[NetEvent])
 pub fn NetSession::drain_outgoing(Self) -> (Self, Array[NetMessage])
 pub fn NetSession::drain_remote_inputs(Self) -> (Self, Array[PlayerInput])
+pub fn NetSession::enqueue_outgoing(Self, NetMessage) -> Self
 pub fn NetSession::enqueue_ping(Self, Int) -> Self
 pub fn NetSession::ingest_remote(Self, NetMessage) -> Self
 pub fn NetSession::is_running(Self) -> Bool
