@@ -205,7 +205,45 @@ fn p2_bomb_just_pressed() -> Bool {
 }
 
 ///|
-fn handle_player_inputs() -> Unit {
+const NET_ACTION_PLACE_BOMB : Int = 1
+
+///|
+fn direction_to_net_axes(direction : Direction?) -> (Int, Int) {
+  match direction {
+    Some(Up) => (0, -1)
+    Some(Down) => (0, 1)
+    Some(Left) => (-1, 0)
+    Some(Right) => (1, 0)
+    None => (0, 0)
+  }
+}
+
+///|
+fn direction_from_net_axes(axis_x : Int, axis_y : Int) -> Direction? {
+  if axis_x < 0 {
+    Some(Left)
+  } else if axis_x > 0 {
+    Some(Right)
+  } else if axis_y < 0 {
+    Some(Up)
+  } else if axis_y > 0 {
+    Some(Down)
+  } else {
+    None
+  }
+}
+
+///|
+fn netplay_input_bridge_enabled() -> Bool {
+  phase.val == Playing &&
+  current_mode.val != SinglePlayer &&
+  netplay_local_loop_enabled.val &&
+  netplay_host_session.val is Some(_) &&
+  netplay_client_session.val is Some(_)
+}
+
+///|
+fn handle_player_inputs_local() -> Unit {
   for player in players {
     if !player.active || !player.alive {
       player.desired_direction = None
@@ -231,6 +269,90 @@ fn handle_player_inputs() -> Unit {
 }
 
 ///|
+fn apply_remote_input_to_player_two(input : @netplay.PlayerInput) -> Unit {
+  let player = players[1]
+  if !player.active || !player.alive {
+    return
+  }
+  player.desired_direction = direction_from_net_axes(input.axis_x, input.axis_y)
+  if input.action_mask == NET_ACTION_PLACE_BOMB {
+    place_bomb_for_player(1)
+  }
+}
+
+///|
+fn local_loopback_p2_input() -> @netplay.PlayerInput {
+  let (axis_x, axis_y) = direction_to_net_axes(latest_held_direction(P2))
+  let action_mask = if players[1].active &&
+    players[1].alive &&
+    p2_bomb_just_pressed() {
+    NET_ACTION_PLACE_BOMB
+  } else {
+    0
+  }
+  @netplay.PlayerInput::new(
+    frame_id=netplay_local_frame.val,
+    axis_x~,
+    axis_y~,
+    action_mask~,
+  )
+}
+
+///|
+fn handle_player_inputs_with_netplay_bridge() -> Unit {
+  if players[0].active && players[0].alive {
+    players[0].desired_direction = latest_held_direction(P1)
+  } else {
+    players[0].desired_direction = None
+    players[0].direction = None
+  }
+  if players[1].active && players[1].alive {
+    players[1].desired_direction = None
+  } else {
+    players[1].desired_direction = None
+    players[1].direction = None
+  }
+  if current_mode.val == SinglePlayer {
+    return
+  }
+  if players[0].active && players[0].alive && @inputs.is_just_pressed(KeyG) {
+    place_bomb_for_player(0)
+  }
+  match netplay_host_session.val {
+    Some(host0) =>
+      match netplay_client_session.val {
+        Some(client0) => {
+          let mut host = host0
+          let mut client = client0
+          client = client.submit_local_input(local_loopback_p2_input())
+          let (next_host, next_client) = netplay_loopback_exchange(host, client)
+          host = next_host
+          client = next_client
+          let (host_after_events, _) = host.drain_events()
+          let (client_after_events, _) = client.drain_events()
+          let (host_after_inputs, remote_inputs) = host_after_events.drain_remote_inputs()
+          if remote_inputs.is_empty() {
+            if players[1].active && players[1].alive {
+              players[1].desired_direction = None
+            }
+          } else {
+            let mut latest = remote_inputs[0]
+            for input in remote_inputs {
+              latest = input
+            }
+            apply_remote_input_to_player_two(latest)
+          }
+          netplay_host_session.val = Some(host_after_inputs.tick())
+          netplay_client_session.val = Some(client_after_events.tick())
+          netplay_local_frame.val += 1
+        }
+        None => handle_player_inputs_local()
+      }
+    None => handle_player_inputs_local()
+  }
+}
+
+///|
 pub fn input_system(_world : @ecs.World) -> Unit {
   handle_global_input()
   if phase.val == MainMenu {
@@ -242,7 +364,11 @@ pub fn input_system(_world : @ecs.World) -> Unit {
     return
   }
   refresh_direction_press_stamps()
-  handle_player_inputs()
+  if netplay_input_bridge_enabled() {
+    handle_player_inputs_with_netplay_bridge()
+  } else {
+    handle_player_inputs_local()
+  }
 }
 
 ///|

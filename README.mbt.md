@@ -16,6 +16,7 @@ This repository currently contains these playable prototypes and ports:
 - `bejeweled`: a match-3 prototype built with pure primitives and procedural audio.
 - `jackal`: a top-down run-and-gun prototype built with pure primitives and procedural audio.
 - `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
+- `netplay`: a standalone networking layer subpackage for host-authoritative input sync (library-only, no `cmd/*` entry).
 
 ## Included Packages
 
@@ -44,6 +45,7 @@ This repository currently contains these playable prototypes and ports:
 - `bejeweled/`: Bejeweled package and tests.
 - `jackal/`: Jackal package and tests.
 - `kofarena/`: KOFArena package and tests.
+- `netplay/`: shared networking-layer package for future multiplayer integration.
 
 ## Requirements
 
@@ -68,6 +70,12 @@ moon run cmd/plantvszombies
 moon run cmd/bejeweled
 moon run cmd/jackal
 moon run cmd/kofarena
+```
+
+`bombman` local netplay bridge (host/client loopback in one process, for development):
+
+```bash
+BOMBMAN_NET_LOCAL_LOOP=1 moon run cmd/bombman
 ```
 
 ## Check

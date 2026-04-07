@@ -1,0 +1,89 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/netplay"
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct NetConfig {
+  input_delay_frames : Int
+  checksum_interval_frames : Int
+  policy : SyncPolicy
+}
+pub fn NetConfig::default() -> Self
+
+pub enum NetEvent {
+  RemoteReady(String)
+  RoundStarted(Int, Int, Int)
+  RemoteInput(PlayerInput)
+  ResyncNeeded(Int, Int, Int)
+  RemoteResyncRequest(Int)
+  RemoteSnapshot(Int, String)
+  LatencyProbe(Int)
+}
+
+pub enum NetMessage {
+  Hello(String, NetRole)
+  Ready(String)
+  Start(Int, Int, Int)
+  Input(PlayerInput)
+  Checksum(Int, Int)
+  ResyncRequest(Int)
+  Snapshot(Int, String)
+  Ping(Int)
+  Pong(Int)
+}
+
+pub enum NetRole {
+  Host
+  Client
+}
+
+pub struct NetSession {
+  role : NetRole
+  local_peer_id : String
+  remote_peer_id : String
+  config : NetConfig
+  mut seed : Int
+  mut local_ready : Bool
+  mut remote_ready : Bool
+  mut running : Bool
+  mut next_local_frame : Int
+  mut last_checksum_frame : Int
+  mut last_checksum_value : Int
+  mut outgoing : Array[NetMessage]
+  mut events : Array[NetEvent]
+  mut remote_inputs : Array[PlayerInput]
+}
+pub fn NetSession::begin_handshake(Self) -> Self
+pub fn NetSession::current_frame(Self) -> Int
+pub fn NetSession::drain_events(Self) -> (Self, Array[NetEvent])
+pub fn NetSession::drain_outgoing(Self) -> (Self, Array[NetMessage])
+pub fn NetSession::drain_remote_inputs(Self) -> (Self, Array[PlayerInput])
+pub fn NetSession::enqueue_ping(Self, Int) -> Self
+pub fn NetSession::ingest_remote(Self, NetMessage) -> Self
+pub fn NetSession::is_running(Self) -> Bool
+pub fn NetSession::new_client(local_peer_id~ : String, remote_peer_id~ : String, config? : NetConfig) -> Self
+pub fn NetSession::new_host(local_peer_id~ : String, remote_peer_id~ : String, seed? : Int, config? : NetConfig) -> Self
+pub fn NetSession::report_local_checksum(Self, Int, Int) -> Self
+pub fn NetSession::set_local_ready(Self) -> Self
+pub fn NetSession::submit_local_input(Self, PlayerInput) -> Self
+pub fn NetSession::tick(Self) -> Self
+
+pub struct PlayerInput {
+  frame_id : Int
+  axis_x : Int
+  axis_y : Int
+  action_mask : Int
+}
+pub fn PlayerInput::new(frame_id~ : Int, axis_x~ : Int, axis_y~ : Int, action_mask~ : Int) -> Self
+
+pub enum SyncPolicy {
+  HostAuthoritative
+}
+
+// Type aliases
+
+// Traits
+

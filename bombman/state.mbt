@@ -472,6 +472,9 @@ const PROFILE_ENV : String = "BOMBMAN_PROFILE"
 const CAPTURE_ENV : String = "BOMBMAN_CAPTURE"
 
 ///|
+const NETPLAY_LOCAL_LOOP_ENV : String = "BOMBMAN_NET_LOCAL_LOOP"
+
+///|
 const CAPTURE_PATH : String = "bombman_capture.png"
 
 ///|
@@ -524,6 +527,18 @@ let capture_started_at : Ref[Double] = { val: 0.0 }
 
 ///|
 let capture_taken : Ref[Bool] = { val: false }
+
+///|
+let netplay_local_loop_enabled : Ref[Bool] = { val: false }
+
+///|
+let netplay_host_session : Ref[@netplay.NetSession?] = { val: None }
+
+///|
+let netplay_client_session : Ref[@netplay.NetSession?] = { val: None }
+
+///|
+let netplay_local_frame : Ref[Int] = { val: 0 }
 
 ///|
 let capture_perf_started_at : Ref[Double] = { val: 0.0 }

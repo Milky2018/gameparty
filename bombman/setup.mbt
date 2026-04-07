@@ -324,6 +324,69 @@ fn reset_direction_input_state() -> Unit {
 }
 
 ///|
+fn reset_netplay_runtime() -> Unit {
+  netplay_host_session.val = None
+  netplay_client_session.val = None
+  netplay_local_frame.val = 0
+}
+
+///|
+fn netplay_loopback_exchange(
+  host : @netplay.NetSession,
+  client : @netplay.NetSession,
+) -> (@netplay.NetSession, @netplay.NetSession) {
+  let (host_after_drain, host_messages) = host.drain_outgoing()
+  let mut next_client = client
+  for message in host_messages {
+    next_client = next_client.ingest_remote(message)
+  }
+  let (client_after_drain, client_messages) = next_client.drain_outgoing()
+  let mut next_host = host_after_drain
+  for message in client_messages {
+    next_host = next_host.ingest_remote(message)
+  }
+  (next_host, client_after_drain)
+}
+
+///|
+fn configure_netplay_for_round(mode : GameMode) -> Unit {
+  reset_netplay_runtime()
+  if mode == SinglePlayer || !netplay_local_loop_enabled.val {
+    return
+  }
+  let config = @netplay.NetConfig::default()
+  let mut host = @netplay.NetSession::new_host(
+    local_peer_id="p1",
+    remote_peer_id="p2",
+    seed=current_level.val + 1,
+    config~,
+  )
+  let mut client = @netplay.NetSession::new_client(
+    local_peer_id="p2",
+    remote_peer_id="p1",
+    config~,
+  )
+  host = host.begin_handshake()
+  client = client.begin_handshake()
+  for _ in 0..<2 {
+    let (next_host, next_client) = netplay_loopback_exchange(host, client)
+    host = next_host
+    client = next_client
+  }
+  host = host.set_local_ready()
+  client = client.set_local_ready()
+  for _ in 0..<4 {
+    let (next_host, next_client) = netplay_loopback_exchange(host, client)
+    host = next_host
+    client = next_client
+  }
+  let (host_after_events, _) = host.drain_events()
+  let (client_after_events, _) = client.drain_events()
+  netplay_host_session.val = Some(host_after_events)
+  netplay_client_session.val = Some(client_after_events)
+}
+
+///|
 fn active_enemy_count() -> Int {
   enemies.fold(init=0, fn(acc, enemy) {
     if enemy.alive {
@@ -510,6 +573,7 @@ fn start_round(mode : GameMode) -> Unit {
   current_mode.val = mode
   round_outcome.val = LevelClear
   load_level(current_level.val, mode)
+  configure_netplay_for_round(mode)
   tile_visuals_dirty.val = true
   phase.val = Playing
 }
@@ -517,6 +581,7 @@ fn start_round(mode : GameMode) -> Unit {
 ///|
 fn return_to_menu() -> Unit {
   reset_direction_input_state()
+  reset_netplay_runtime()
   clear_dynamic_entities()
   clear_tile_grid()
   deactivate_all_players()
@@ -535,6 +600,8 @@ fn startup_system(_world : @ecs.World) -> Unit {
   register_bombman_font_once()
   profile_enabled.val = env_flag_enabled(PROFILE_ENV)
   capture_enabled.val = env_flag_enabled(CAPTURE_ENV)
+  netplay_local_loop_enabled.val = env_flag_enabled(NETPLAY_LOCAL_LOOP_ENV)
+  reset_netplay_runtime()
   let started_at = @time.elapsed_raw()
   profile_started_at.val = started_at
   profile_last_report_at.val = started_at

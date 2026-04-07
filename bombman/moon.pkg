@@ -1,4 +1,5 @@
 import {
+  "Milky2018/gameparty/netplay" @netplay,
   "Milky2018/selene/app",
   "Milky2018/selene/asset",
   "Milky2018/selene/ecs",

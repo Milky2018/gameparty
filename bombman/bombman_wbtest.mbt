@@ -2,6 +2,8 @@
 fn reset_test_input_state() -> Unit {
   @inputs.pressed_keys.clear()
   reset_direction_input_state()
+  reset_netplay_runtime()
+  netplay_local_loop_enabled.val = false
   suppress_exit_for_tests.val = true
   exit_request_count.val = 0
 }
@@ -163,6 +165,38 @@ test "dual-player controls use WASD+G and IJKL+apostrophe" {
     @inputs.pressed_keys.clear()
     advance_input_frame()
   })
+}
+
+///|
+test "local loop netplay bridge drives p2 input through net session" {
+  reset_test_input_state()
+  netplay_local_loop_enabled.val = true
+  current_level.val = 0
+  start_round(Coop)
+  assert_true(netplay_host_session.val is Some(_))
+  assert_true(netplay_client_session.val is Some(_))
+
+  @inputs.pressed_keys.add(@inputs.KeyL)
+  advance_input_frame()
+  input_system(@ecs.require_current_world())
+  assert_true(players[1].desired_direction is Some(Right))
+  @inputs.pressed_keys.clear()
+  advance_input_frame()
+
+  p2_bomb_test_override.val = true
+  input_system(@ecs.require_current_world())
+  assert_eq(bombs.length(), 1)
+  assert_true(bombs[0].owner == P2)
+}
+
+///|
+test "single-player round ignores netplay bridge even when env flag is on" {
+  reset_test_input_state()
+  netplay_local_loop_enabled.val = true
+  current_level.val = 0
+  start_round(SinglePlayer)
+  assert_true(netplay_host_session.val is None)
+  assert_true(netplay_client_session.val is None)
 }
 
 ///|
