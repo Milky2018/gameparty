@@ -34,11 +34,18 @@ fn continue_after_round_over() -> Unit {
 ///|
 fn activate_menu_option(option : MenuOption) -> Unit {
   menu_selection.val = option
+  menu_error_message.val = ""
   match option {
     Exit => request_exit()
     OnePlayer => start_round(SinglePlayer)
     TwoPlayersA => start_round(Coop)
     TwoPlayersB => start_round(Versus)
+    JoinGame =>
+      if netplay_mode.val == Client {
+        start_round(Coop)
+      } else {
+        menu_error_message.val = "JOIN GAME requires client mode (set BOMBMAN_NET_MODE=client)."
+      }
   }
 }
 

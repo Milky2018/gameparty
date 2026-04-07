@@ -180,6 +180,7 @@ priv enum MenuOption {
   OnePlayer
   TwoPlayersA
   TwoPlayersB
+  JoinGame
   Exit
 } derive(Eq)
 
@@ -444,6 +445,7 @@ let menu_entities : Array[@entity.Entity] = [
   @entity.Entity::new(),
   @entity.Entity::new(),
   @entity.Entity::new(),
+  @entity.Entity::new(),
 ]
 
 ///|
@@ -454,6 +456,9 @@ let status_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let hint_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let menu_error_message : Ref[String] = { val: "" }
 
 ///|
 let p2_bomb_test_override : Ref[Bool] = { val: false }
@@ -679,7 +684,7 @@ fn player_index(id : PlayerId) -> Int {
 
 ///|
 fn menu_options() -> Array[MenuOption] {
-  [OnePlayer, TwoPlayersA, TwoPlayersB, Exit]
+  [OnePlayer, TwoPlayersA, TwoPlayersB, JoinGame, Exit]
 }
 
 ///|
@@ -688,6 +693,7 @@ fn menu_option_label(option : MenuOption) -> String {
     OnePlayer => "1 PLAYER"
     TwoPlayersA => "2 PLAYERS A"
     TwoPlayersB => "2 PLAYERS B"
+    JoinGame => "JOIN GAME"
     Exit => "EXIT"
   }
 }
@@ -697,7 +703,8 @@ fn next_menu_option(option : MenuOption) -> MenuOption {
   match option {
     OnePlayer => TwoPlayersA
     TwoPlayersA => TwoPlayersB
-    TwoPlayersB => Exit
+    TwoPlayersB => JoinGame
+    JoinGame => Exit
     Exit => OnePlayer
   }
 }
@@ -708,7 +715,8 @@ fn previous_menu_option(option : MenuOption) -> MenuOption {
     OnePlayer => Exit
     TwoPlayersA => OnePlayer
     TwoPlayersB => TwoPlayersA
-    Exit => TwoPlayersB
+    JoinGame => TwoPlayersB
+    Exit => JoinGame
   }
 }
 

@@ -645,6 +645,7 @@ fn start_round(mode : GameMode) -> Unit {
   ensure_tile_entities()
   reset_direction_input_state()
   clear_dynamic_entities()
+  menu_error_message.val = ""
   current_mode.val = mode
   round_outcome.val = LevelClear
   load_level(current_level.val, mode)
@@ -660,6 +661,7 @@ fn return_to_menu() -> Unit {
   clear_dynamic_entities()
   clear_tile_grid()
   deactivate_all_players()
+  menu_error_message.val = ""
   tile_visuals_dirty.val = true
   phase.val = MainMenu
   round_outcome.val = LevelClear
@@ -985,7 +987,7 @@ fn phase_status_text() -> String {
 fn hint_text() -> String {
   match phase.val {
     MainMenu =>
-      "W/S or Up/Down: Mode   A/D or Left/Right: Level   Enter/Space: Start   Esc: Exit"
+      "W/S or Up/Down: Mode   A/D or Left/Right: Level   Enter/Space: Select   Esc: Exit"
     Playing =>
       match current_mode.val {
         SinglePlayer =>
@@ -1011,7 +1013,12 @@ fn hint_text() -> String {
 ///|
 fn status_text() -> String {
   match phase.val {
-    MainMenu => "2 Players A = co-op, 2 Players B = versus with no enemies."
+    MainMenu =>
+      if menu_error_message.val != "" {
+        menu_error_message.val
+      } else {
+        "2 Players A = co-op, 2 Players B = versus. Join Game is client-only."
+      }
     Playing =>
       match current_mode.val {
         SinglePlayer =>

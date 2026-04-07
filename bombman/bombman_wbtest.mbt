@@ -3,7 +3,9 @@ fn reset_test_input_state() -> Unit {
   @inputs.pressed_keys.clear()
   reset_direction_input_state()
   reset_netplay_runtime()
+  netplay_mode.val = Off
   netplay_local_loop_enabled.val = false
+  menu_error_message.val = ""
   suppress_exit_for_tests.val = true
   exit_request_count.val = 0
 }
@@ -57,6 +59,8 @@ test "menu navigation wraps and selection starts correct modes" {
   press_menu_key(@inputs.KeyS)
   assert_true(menu_selection.val == TwoPlayersB)
   press_menu_key(@inputs.KeyS)
+  assert_true(menu_selection.val == JoinGame)
+  press_menu_key(@inputs.KeyS)
   assert_true(menu_selection.val == Exit)
   press_menu_key(@inputs.KeyS)
   assert_true(menu_selection.val == OnePlayer)
@@ -78,6 +82,23 @@ test "menu exit triggers exit path" {
   press_menu_key(@inputs.Space)
   assert_eq(exit_request_count.val, 1)
   assert_true(phase.val == MainMenu)
+}
+
+///|
+test "join game is client-only on main menu" {
+  prepare_menu()
+  netplay_mode.val = Off
+  menu_selection.val = JoinGame
+  press_menu_key(@inputs.Enter)
+  assert_true(phase.val == MainMenu)
+  assert_true(menu_error_message.val.contains("client mode"))
+
+  prepare_menu()
+  netplay_mode.val = Client
+  menu_selection.val = JoinGame
+  press_menu_key(@inputs.Enter)
+  assert_true(phase.val == Playing)
+  assert_true(current_mode.val == Coop)
 }
 
 ///|
