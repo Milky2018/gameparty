@@ -150,20 +150,49 @@ priv enum GamePhase {
   MainMenu
   Playing
   RoundOver
-} derive(Eq, Show)
+} derive(Eq, Debug)
+
+///|
+impl Show for GamePhase with output(self, logger) {
+  let text = match self {
+    MainMenu => "MainMenu"
+    Playing => "Playing"
+    RoundOver => "RoundOver"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv enum RoundOutcome {
   P1Win
   P2Win
   Draw
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for RoundOutcome with output(self, logger) {
+  let text = match self {
+    P1Win => "P1Win"
+    P2Win => "P2Win"
+    Draw => "Draw"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv enum Facing {
   Left
   Right
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for Facing with output(self, logger) {
+  let text = match self {
+    Left => "Left"
+    Right => "Right"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv enum Pose {
@@ -174,25 +203,66 @@ priv enum Pose {
   Attack
   Hit
   KO
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for Pose with output(self, logger) {
+  let text = match self {
+    Idle => "Idle"
+    Run => "Run"
+    Crouch => "Crouch"
+    Jump => "Jump"
+    Attack => "Attack"
+    Hit => "Hit"
+    KO => "KO"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv enum AttackKind {
   Light
   Heavy
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for AttackKind with output(self, logger) {
+  let text = match self {
+    Light => "Light"
+    Heavy => "Heavy"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv enum PlayerId {
   P1
   P2
-} derive(Eq, Show)
+} derive(Eq, Debug)
+
+///|
+impl Show for PlayerId with output(self, logger) {
+  let text = match self {
+    P1 => "P1"
+    P2 => "P2"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv enum InputMode {
   Human
   AI
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for InputMode with output(self, logger) {
+  let text = match self {
+    Human => "Human"
+    AI => "AI"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv struct Rect {
@@ -200,7 +270,14 @@ priv struct Rect {
   y : Double
   w : Double
   h : Double
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for Rect with output(self, logger) {
+  logger.write_string(
+    "{x: \{self.x}, y: \{self.y}, w: \{self.w}, h: \{self.h}}",
+  )
+}
 
 ///|
 priv struct AttackSpec {
@@ -237,7 +314,14 @@ priv struct FighterState {
   mut ai_timer : Double
   mut last_human_input : Double
   mut input_mode : InputMode
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for FighterState with output(self, logger) {
+  logger.write_string(
+    "{id: \{self.id}, alive: \{self.alive}, x: \{self.x}, y: \{self.y}, vx: \{self.vx}, vy: \{self.vy}, facing: \{self.facing}, pose: \{self.pose}, on_ground: \{self.on_ground}, crouching: \{self.crouching}, health: \{self.health}, attack_kind: \{self.attack_kind}, attack_elapsed: \{self.attack_elapsed}, attack_cooldown: \{self.attack_cooldown}, attack_hit: \{self.attack_hit}, hitstun: \{self.hitstun}, invuln: \{self.invuln}, backstep_timer: \{self.backstep_timer}, ai_timer: \{self.ai_timer}, last_human_input: \{self.last_human_input}, input_mode: \{self.input_mode}}",
+  )
+}
 
 ///|
 priv struct GameState {
@@ -248,20 +332,42 @@ priv struct GameState {
   mut p2_human_enabled : Bool
   menu_selected : Int
   mut round_banner_timer : Double
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for GameState with output(self, logger) {
+  logger.write_string(
+    "{phase: \{self.phase}, round_time: \{self.round_time}, round_outcome: \{self.round_outcome}, debug_fps: \{self.debug_fps}, p2_human_enabled: \{self.p2_human_enabled}, menu_selected: \{self.menu_selected}, round_banner_timer: \{self.round_banner_timer}}",
+  )
+}
 
 ///|
 priv struct StageObject {
   kind : StageObjectKind
   rect : Rect
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for StageObject with output(self, logger) {
+  logger.write_string("{kind: \{self.kind}, rect: \{self.rect}}")
+}
 
 ///|
 priv enum StageObjectKind {
   Ground
   Platform
   Pillar
-} derive(Show)
+} derive(Debug)
+
+///|
+impl Show for StageObjectKind with output(self, logger) {
+  let text = match self {
+    Ground => "Ground"
+    Platform => "Platform"
+    Pillar => "Pillar"
+  }
+  logger.write_string(text)
+}
 
 ///|
 priv struct SoundSet {

@@ -3,6 +3,7 @@ package "Milky2018/gameparty/bejeweled"
 
 import {
   "Milky2018/selene/ecs",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -21,13 +22,13 @@ pub fn update_system(@ecs.World) -> Unit
 // Errors
 
 // Types and methods
-type Cell derive(Eq, Hash, Show)
+type Cell derive(Eq, Hash, @debug.Debug)
 
 type GamePhase derive(Eq)
 
-type Gem derive(Show)
+type Gem
 
-type GemKind derive(Eq, Hash, Show)
+type GemKind derive(Eq, Hash, @debug.Debug)
 
 // Type aliases
 

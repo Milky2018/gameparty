@@ -3,7 +3,7 @@ pub struct ChunkBlockPos {
   x : Int
   y : Int
   z : Int
-} derive(Show)
+} derive(Debug)
 
 ///|
 const SHIFT_X = 4

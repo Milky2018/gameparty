@@ -4,6 +4,7 @@ package "Milky2018/gameparty/mooncraft_core/level"
 import {
   "Milky2018/gameparty/mooncraft_core/biome",
   "Milky2018/gameparty/mooncraft_core/util",
+  "moonbitlang/core/debug",
 }
 
 // Values
@@ -113,7 +114,7 @@ pub struct BlockPos {
   x : Int
   y : Int
   z : Int
-} derive(Show)
+} derive(@debug.Debug)
 pub fn BlockPos::new(Int, Int, Int) -> Self
 
 pub struct Chunk {
@@ -134,7 +135,7 @@ pub struct ChunkBlockPos {
   x : Int
   y : Int
   z : Int
-} derive(Show)
+} derive(@debug.Debug)
 pub fn ChunkBlockPos::from_block_pos(BlockPos) -> Self
 
 pub struct ChunkRegion {

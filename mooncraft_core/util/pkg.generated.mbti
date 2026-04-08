@@ -2,6 +2,7 @@
 package "Milky2018/gameparty/mooncraft_core/util"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/core/random",
 }
 
@@ -78,7 +79,7 @@ pub fn PerlinNoise::new(seed? : UInt64) -> Self
 pub struct Vec2[T] {
   x : T
   y : T
-} derive(Show)
+} derive(@debug.Debug)
 pub fn Vec2::almost_equal(Self[Float], Self[Float]) -> Bool
 pub fn Vec2::angle(Self[Float], Self[Float]) -> Double
 pub fn[T : Mul + Sub] Vec2::cross(Self[T], Self[T]) -> T
@@ -100,7 +101,7 @@ pub struct Vec3[T] {
   x : T
   y : T
   z : T
-} derive(Show)
+} derive(@debug.Debug)
 pub fn Vec3::almost_equal(Self[Float], Self[Float]) -> Bool
 pub fn Vec3::as_block_position(Self[Float]) -> Self[Float]
 pub fn[T : Mul + Sub] Vec3::cross(Self[T], Self[T]) -> Self[T]

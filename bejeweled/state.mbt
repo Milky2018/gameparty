@@ -98,13 +98,31 @@ enum GemKind {
   Amber
   Amethyst
   Pearl
-} derive(Eq, Hash, Show)
+} derive(Eq, Hash, Debug)
+
+///|
+impl Show for GemKind with output(self, logger) {
+  let text = match self {
+    Ruby => "Ruby"
+    Emerald => "Emerald"
+    Sapphire => "Sapphire"
+    Amber => "Amber"
+    Amethyst => "Amethyst"
+    Pearl => "Pearl"
+  }
+  logger.write_string(text)
+}
 
 ///|
 struct Cell {
   row : Int
   col : Int
-} derive(Eq, Hash, Show)
+} derive(Eq, Hash, Debug)
+
+///|
+impl Show for Cell with output(self, logger) {
+  logger.write_string("{row: \{self.row}, col: \{self.col}}")
+}
 
 ///|
 struct Gem {
@@ -112,7 +130,7 @@ struct Gem {
   row : Int
   col : Int
   entity : @entity.Entity
-} derive(Show)
+}
 
 ///|
 priv struct GemTween {
