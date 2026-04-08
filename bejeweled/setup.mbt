@@ -130,6 +130,52 @@ fn setup_board_entities() -> Unit {
 }
 
 ///|
+fn setup_selection_frame() -> Unit {
+  let frame_color = color_rgba(64U, 156U, 255U, 0.9)
+  let span = CELL_SIZE - BOARD_GAP
+  panel_entity(
+    selected_frame_top_entity,
+    frame_color,
+    0.0,
+    0.0,
+    span,
+    SELECT_FRAME_THICKNESS,
+    SELECT_FRAME_Z,
+  )
+  panel_entity(
+    selected_frame_bottom_entity,
+    frame_color,
+    0.0,
+    0.0,
+    span,
+    SELECT_FRAME_THICKNESS,
+    SELECT_FRAME_Z,
+  )
+  panel_entity(
+    selected_frame_left_entity,
+    frame_color,
+    0.0,
+    0.0,
+    SELECT_FRAME_THICKNESS,
+    span,
+    SELECT_FRAME_Z,
+  )
+  panel_entity(
+    selected_frame_right_entity,
+    frame_color,
+    0.0,
+    0.0,
+    SELECT_FRAME_THICKNESS,
+    span,
+    SELECT_FRAME_Z,
+  )
+  set_entity_visible(selected_frame_top_entity, false)
+  set_entity_visible(selected_frame_bottom_entity, false)
+  set_entity_visible(selected_frame_left_entity, false)
+  set_entity_visible(selected_frame_right_entity, false)
+}
+
+///|
 fn reset_run_state() -> Unit {
   game_state.phase = Playing
   game_state.resolution_phase = InputReady
@@ -139,6 +185,9 @@ fn reset_run_state() -> Unit {
   game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
   game_state.first_pick = None
+  game_state.drag_origin = None
+  game_state.drag_pointer_down = false
+  game_state.drag_swapped = false
   game_state.pending_swap_a = None
   game_state.pending_swap_b = None
   game_state.pending_matches.clear()
@@ -181,6 +230,7 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
   setup_board_background()
   setup_static_text()
   setup_board_entities()
+  setup_selection_frame()
   ensure_sounds_loaded()
   setup_debug_capture()
   setup_profile()

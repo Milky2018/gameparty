@@ -5,6 +5,9 @@ fn reset_logic_state_for_test() -> Unit {
   game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
   game_state.first_pick = None
+  game_state.drag_origin = None
+  game_state.drag_pointer_down = false
+  game_state.drag_swapped = false
   game_state.pending_swap_a = None
   game_state.pending_swap_b = None
   game_state.pending_matches.clear()
@@ -231,4 +234,84 @@ test "steady visuals keep entity count aligned with non-empty cells" {
   inspect(non_empty_board_count_for_test(), content="3")
   inspect(gem_lookup_count(), content="3")
   inspect(alive_gem_entity_count(), content="3")
+}
+
+///|
+test "drag swap triggers immediately when pointer crosses adjacent cell" {
+  reset_logic_state_for_test()
+  place_gem_for_test(0, 0, Ruby)
+  place_gem_for_test(0, 1, Emerald)
+  game_state.first_pick = Some(Cell::{ row: 0, col: 0 })
+  game_state.drag_origin = Some(Cell::{ row: 0, col: 0 })
+  game_state.drag_pointer_down = true
+  game_state.drag_swapped = false
+  inspect(try_drag_swap_to_cell(Some(Cell::{ row: 0, col: 1 })), content="true")
+  assert_true(game_state.resolution_phase is SwapForward)
+  inspect(game_state.first_pick, content="None")
+  inspect(game_state.drag_swapped, content="true")
+}
+
+///|
+test "drag swap only fires once per hold and ignores non-adjacent targets" {
+  reset_logic_state_for_test()
+  place_gem_for_test(0, 0, Ruby)
+  place_gem_for_test(0, 1, Emerald)
+  game_state.drag_origin = Some(Cell::{ row: 0, col: 0 })
+  game_state.drag_pointer_down = true
+  game_state.drag_swapped = false
+  inspect(
+    try_drag_swap_to_cell(Some(Cell::{ row: 0, col: 2 })),
+    content="false",
+  )
+  inspect(game_state.resolution_phase is InputReady, content="true")
+  inspect(try_drag_swap_to_cell(Some(Cell::{ row: 0, col: 1 })), content="true")
+  inspect(
+    try_drag_swap_to_cell(Some(Cell::{ row: 1, col: 1 })),
+    content="false",
+  )
+}
+
+///|
+test "click flow keeps two-click behavior and adjacency rules" {
+  reset_logic_state_for_test()
+  place_gem_for_test(0, 0, Ruby)
+  place_gem_for_test(0, 1, Emerald)
+  place_gem_for_test(3, 3, Sapphire)
+  place_gem_for_test(3, 4, Amber)
+  inspect(handle_click_cell(Cell::{ row: 0, col: 0 }), content="false")
+  inspect(game_state.first_pick, content="Some({row: 0, col: 0})")
+  inspect(handle_click_cell(Cell::{ row: 3, col: 3 }), content="false")
+  inspect(game_state.first_pick, content="Some({row: 3, col: 3})")
+  inspect(handle_click_cell(Cell::{ row: 3, col: 4 }), content="true")
+  assert_true(game_state.resolution_phase is SwapForward)
+  inspect(game_state.first_pick, content="None")
+}
+
+///|
+test "drag and click swaps are disabled outside input-ready phase" {
+  reset_logic_state_for_test()
+  place_gem_for_test(0, 0, Ruby)
+  place_gem_for_test(0, 1, Emerald)
+  game_state.drag_origin = Some(Cell::{ row: 0, col: 0 })
+  game_state.drag_pointer_down = true
+  game_state.drag_swapped = false
+  game_state.resolution_phase = Clear
+  inspect(
+    try_drag_swap_to_cell(Some(Cell::{ row: 0, col: 1 })),
+    content="false",
+  )
+  inspect(game_state.resolution_phase is Clear, content="true")
+}
+
+///|
+test "selected frame visibility follows first_pick and input gate" {
+  reset_logic_state_for_test()
+  inspect(should_show_selected_frame(), content="false")
+  game_state.first_pick = Some(Cell::{ row: 0, col: 0 })
+  inspect(should_show_selected_frame(), content="true")
+  game_state.resolution_phase = Fall
+  inspect(should_show_selected_frame(), content="false")
+  game_state.resolution_phase = InputReady
+  game_state.phase = GameOver
+  inspect(should_show_selected_frame(), content="false")
 }

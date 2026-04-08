@@ -66,7 +66,7 @@ fn selected_hint_text() -> String {
         None => "Selected empty cell. Pick an adjacent gem."
       }
     None =>
-      "Click adjacent gems to swap. Match 3+ to clear. R/Enter/Space restart. F3 toggle FPS. Esc quit."
+      "Click or drag adjacent gems to swap. Match 3+ to clear. R/Enter/Space restart. F3 toggle FPS. Esc quit."
   }
 }
 
@@ -703,6 +703,147 @@ fn choose_cell_from_mouse() -> Cell? {
 }
 
 ///|
+fn clear_drag_state() -> Unit {
+  game_state.drag_origin = None
+  game_state.drag_pointer_down = false
+  game_state.drag_swapped = false
+}
+
+///|
+fn handle_click_cell(cell : Cell) -> Bool {
+  match game_state.first_pick {
+    None => {
+      game_state.first_pick = Some(cell)
+      false
+    }
+    Some(first) => {
+      if first == cell {
+        game_state.first_pick = None
+        return false
+      }
+      if !is_adjacent(first, cell) {
+        game_state.first_pick = Some(cell)
+        return false
+      }
+      game_state.first_pick = None
+      begin_swap_forward_phase(first, cell)
+      true
+    }
+  }
+}
+
+///|
+fn try_drag_swap_to_cell(cell : Cell?) -> Bool {
+  if !can_accept_input() {
+    return false
+  }
+  if !game_state.drag_pointer_down || game_state.drag_swapped {
+    return false
+  }
+  match game_state.drag_origin {
+    Some(origin) =>
+      match cell {
+        Some(target) => {
+          if origin == target || !is_adjacent(origin, target) {
+            return false
+          }
+          game_state.first_pick = None
+          game_state.drag_swapped = true
+          game_state.drag_origin = None
+          game_state.drag_pointer_down = false
+          begin_swap_forward_phase(origin, target)
+          true
+        }
+        None => false
+      }
+    None => false
+  }
+}
+
+///|
+fn should_show_selected_frame() -> Bool {
+  can_accept_input() && game_state.first_pick is Some(_)
+}
+
+///|
+fn set_selection_frame_visible(visible : Bool) -> Unit {
+  set_entity_visible(selected_frame_top_entity, visible)
+  set_entity_visible(selected_frame_bottom_entity, visible)
+  set_entity_visible(selected_frame_left_entity, visible)
+  set_entity_visible(selected_frame_right_entity, visible)
+}
+
+///|
+fn set_selection_frame_transform(
+  entity : @entity.Entity,
+  center_x : Double,
+  center_y : Double,
+  width : Double,
+  height : Double,
+  z : Double,
+) -> Unit {
+  @transform.transforms().set(
+    entity,
+    transform_xy(center_x - width * 0.5, center_y - height * 0.5, z),
+  )
+}
+
+///|
+fn update_selected_frame_visual() -> Unit {
+  if !should_show_selected_frame() {
+    set_selection_frame_visible(false)
+    return
+  }
+  match game_state.first_pick {
+    Some(cell) => {
+      let (center, _) = cell_center(cell)
+      let span = CELL_SIZE - BOARD_GAP
+      let half = span * 0.5
+      let thickness = SELECT_FRAME_THICKNESS
+      let row_z = SELECT_FRAME_Z + cell.row.to_double() * 0.01
+      let top_center_y = center[Y] - half + thickness * 0.5
+      let bottom_center_y = center[Y] + half - thickness * 0.5
+      let left_center_x = center[X] - half + thickness * 0.5
+      let right_center_x = center[X] + half - thickness * 0.5
+      set_selection_frame_transform(
+        selected_frame_top_entity,
+        center[X],
+        top_center_y,
+        span,
+        thickness,
+        row_z,
+      )
+      set_selection_frame_transform(
+        selected_frame_bottom_entity,
+        center[X],
+        bottom_center_y,
+        span,
+        thickness,
+        row_z,
+      )
+      set_selection_frame_transform(
+        selected_frame_left_entity,
+        left_center_x,
+        center[Y],
+        thickness,
+        span,
+        row_z,
+      )
+      set_selection_frame_transform(
+        selected_frame_right_entity,
+        right_center_x,
+        center[Y],
+        thickness,
+        span,
+        row_z,
+      )
+      set_selection_frame_visible(true)
+    }
+    None => set_selection_frame_visible(false)
+  }
+}
+
+///|
 fn reset_if_needed() -> Unit {
   if @inputs.is_just_pressed(KeyR) ||
     @inputs.is_just_pressed(Enter) ||
@@ -771,30 +912,30 @@ pub fn input_system(_world : @ecs.World) -> Unit {
     @system.exit()
     return
   }
+  let left_just_pressed = @inputs.just_pressed_mouse.left_button
+  let left_pressed = @inputs.mouse.left_button
+  let left_just_released = @inputs.just_release_mouse.left_button
+  let mouse_cell = choose_cell_from_mouse()
   if !can_accept_input() {
+    if left_just_released || !left_pressed {
+      clear_drag_state()
+    }
     return
   }
-  if !@inputs.is_mouse_just_pressed(@inputs.MouseButton::Left) {
-    return
+  if left_just_pressed {
+    game_state.drag_pointer_down = true
+    game_state.drag_swapped = false
+    game_state.drag_origin = mouse_cell
+    match mouse_cell {
+      Some(cell) => if handle_click_cell(cell) { clear_drag_state() }
+      None => game_state.first_pick = None
+    }
   }
-  match choose_cell_from_mouse() {
-    Some(cell) =>
-      match game_state.first_pick {
-        None => game_state.first_pick = Some(cell)
-        Some(first) => {
-          if first == cell {
-            game_state.first_pick = None
-            return
-          }
-          if !is_adjacent(first, cell) {
-            game_state.first_pick = Some(cell)
-            return
-          }
-          game_state.first_pick = None
-          begin_swap_forward_phase(first, cell)
-        }
-      }
-    None => ()
+  if left_pressed {
+    ignore(try_drag_swap_to_cell(mouse_cell))
+  }
+  if left_just_released || !left_pressed {
+    clear_drag_state()
   }
   if game_state.profile_enabled {
     game_state.profile_input_total += @time.elapsed() - started_at
@@ -861,6 +1002,7 @@ pub fn render_system(_world : @ecs.World) -> Unit {
     @ui.texts().set(hint_entity, @ui.Text::new(hint))
     game_state.hint_text_cache = hint
   }
+  update_selected_frame_visual()
   if game_state.phase == GameOver {
     set_entity_visible(overlay_entity, true)
     set_entity_visible(overlay_text_entity, true)

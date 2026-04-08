@@ -50,6 +50,12 @@ const FALL_SECONDS_PER_CELL : Double = 0.08
 const REFILL_SECONDS_PER_CELL : Double = 0.08
 
 ///|
+const SELECT_FRAME_THICKNESS : Double = 4.0
+
+///|
+const SELECT_FRAME_Z : Double = 240.0
+
+///|
 const DEBUG_CAPTURE_ENV : String = "BEJEWELED_CAPTURE"
 
 ///|
@@ -135,6 +141,9 @@ priv struct GameState {
   mut moves_left : Int
   mut time_left : Double
   mut first_pick : Cell?
+  mut drag_origin : Cell?
+  mut drag_pointer_down : Bool
+  mut drag_swapped : Bool
   mut pending_swap_a : Cell?
   mut pending_swap_b : Cell?
   mut pending_matches : Array[Cell]
@@ -168,6 +177,9 @@ let game_state : GameState = {
   moves_left: MOVE_LIMIT,
   time_left: GAME_TIME_LIMIT,
   first_pick: None,
+  drag_origin: None,
+  drag_pointer_down: false,
+  drag_swapped: false,
   pending_swap_a: None,
   pending_swap_b: None,
   pending_matches: [],
@@ -211,6 +223,18 @@ let overlay_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let overlay_text_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let selected_frame_top_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let selected_frame_bottom_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let selected_frame_left_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let selected_frame_right_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let board_cell_entities : Array[@entity.Entity] = []
