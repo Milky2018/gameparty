@@ -77,7 +77,21 @@ fn convert_kind_to_sapphire(
       if board_get(row, col) == Some(kind) {
         board_set(row, col, Some(Sapphire))
         if gem_lookup.get(cell) is Some(gem) {
-          gem_lookup.set(cell, { ..gem, kind: Sapphire })
+          let converted = { ..gem, kind: Sapphire }
+          gem_lookup.set(cell, converted)
+          let (center, z) = cell_center(cell)
+          // Keep visual sprite in sync with the converted logical kind
+          // immediately, instead of waiting for a later tween.
+          set_gem_visual(
+            converted.entity,
+            converted.aura_entity,
+            converted.kind,
+            converted.flash,
+            center,
+            z,
+            1.0,
+            1.0,
+          )
         }
       }
     }

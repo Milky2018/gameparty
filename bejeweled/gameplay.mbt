@@ -592,7 +592,7 @@ fn complete_resolution_phase() -> Unit {
           }
         None => ()
       }
-      game_state.first_pick = game_state.pending_swap_b
+      game_state.first_pick = None
       game_state.pending_swap_a = None
       game_state.pending_swap_b = None
       game_state.cascade_depth = 0
@@ -725,7 +725,7 @@ fn handle_click_cell(cell : Cell) -> Bool {
         return false
       }
       if !is_adjacent(first, cell) {
-        game_state.first_pick = Some(cell)
+        game_state.first_pick = None
         return false
       }
       game_state.first_pick = None

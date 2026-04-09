@@ -148,6 +148,19 @@ fn resolve_until_input_ready(step_limit : Int) -> Int {
 }
 
 ///|
+fn sprite_image_path_for_cell(cell : Cell) -> String? {
+  match gem_lookup.get(cell) {
+    Some(gem) =>
+      @sprite.sprites()
+      .get(gem.entity)
+      .bind(fn(sprite) {
+        sprite.image.bind(fn(image) { @asset.image_path(image) })
+      })
+    None => None
+  }
+}
+
+///|
 test "find_matches detects horizontal and vertical runs" {
   reset_logic_state_for_test()
   board_set(0, 0, Some(Emerald))
@@ -375,6 +388,8 @@ test "click flow keeps two-click behavior and adjacency rules" {
   inspect(handle_click_cell(Cell::{ row: 0, col: 0 }), content="false")
   inspect(game_state.first_pick, content="Some({row: 0, col: 0})")
   inspect(handle_click_cell(Cell::{ row: 3, col: 3 }), content="false")
+  inspect(game_state.first_pick, content="None")
+  inspect(handle_click_cell(Cell::{ row: 3, col: 3 }), content="false")
   inspect(game_state.first_pick, content="Some({row: 3, col: 3})")
   inspect(handle_click_cell(Cell::{ row: 3, col: 4 }), content="true")
   assert_true(game_state.resolution_phase is SwapForward)
@@ -492,6 +507,15 @@ test "flash Sapphire converts one other kind into Sapphire" {
   finalize_clear_phase()
   inspect(board_get(2, 2), content="Some(Sapphire)")
   inspect(board_get(4, 4), content="Some(Sapphire)")
+  let sapphire_image = Some(gem_image_paths[gem_index(Sapphire)])
+  inspect(
+    sprite_image_path_for_cell(Cell::{ row: 2, col: 2 }) == sapphire_image,
+    content="true",
+  )
+  inspect(
+    sprite_image_path_for_cell(Cell::{ row: 4, col: 4 }) == sapphire_image,
+    content="true",
+  )
 }
 
 ///|
