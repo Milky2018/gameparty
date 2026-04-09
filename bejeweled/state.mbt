@@ -107,7 +107,7 @@ enum GemKind {
 } derive(Eq, Hash, Debug)
 
 ///|
-impl Show for GemKind with output(self, logger) {
+pub impl Show for GemKind with output(self, logger) {
   let text = match self {
     Ruby => "Ruby"
     Emerald => "Emerald"
@@ -126,15 +126,13 @@ struct Cell {
 } derive(Eq, Hash, Debug)
 
 ///|
-impl Show for Cell with output(self, logger) {
+pub impl Show for Cell with output(self, logger) {
   logger.write_string("{row: \{self.row}, col: \{self.col}}")
 }
 
 ///|
-struct Gem {
+priv struct Gem {
   kind : GemKind
-  row : Int
-  col : Int
   entity : @entity.Entity
 }
 

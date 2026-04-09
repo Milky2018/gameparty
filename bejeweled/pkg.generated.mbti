@@ -23,12 +23,12 @@ pub fn update_system(@ecs.World) -> Unit
 
 // Types and methods
 type Cell derive(Eq, Hash, @debug.Debug)
+pub impl Show for Cell
 
 type GamePhase derive(Eq)
 
-type Gem
-
 type GemKind derive(Eq, Hash, @debug.Debug)
+pub impl Show for GemKind
 
 // Type aliases
 

@@ -211,7 +211,7 @@ fn create_gem_entity(cell : Cell, kind : GemKind) -> Gem {
   let entity = @entity.Entity::new()
   let (center, z) = cell_center(cell)
   set_gem_visual(entity, kind, center, z, 1.0, 1.0)
-  Gem::{ kind, row: cell.row, col: cell.col, entity }
+  Gem::{ kind, entity }
 }
 
 ///|
@@ -349,8 +349,8 @@ fn swap_gems_in_lookup(a : Cell, b : Cell) -> Unit {
     Some(gem_a) =>
       match gem_lookup.get(b) {
         Some(gem_b) => {
-          gem_lookup.set(a, { ..gem_b, row: a.row, col: a.col })
-          gem_lookup.set(b, { ..gem_a, row: b.row, col: b.col })
+          gem_lookup.set(a, gem_b)
+          gem_lookup.set(b, gem_a)
         }
         None => ()
       }
@@ -471,7 +471,7 @@ fn begin_fall_phase() -> Bool {
             let to = Cell::{ row: write_row, col }
             if gem_lookup.get(from) is Some(gem) {
               gem_lookup.remove(from)
-              gem_lookup.set(to, { ..gem, row: write_row, col })
+              gem_lookup.set(to, gem)
               let distance = (write_row - row).to_double()
               tweens.push(
                 move_tween(
@@ -517,7 +517,7 @@ fn begin_refill_phase() -> Bool {
         let target = Cell::{ row, col }
         let spawn = Cell::{ row: spawn_row, col }
         let entity = @entity.Entity::new()
-        let gem = Gem::{ kind, row, col, entity }
+        let gem = Gem::{ kind, entity }
         gem_lookup.set(target, gem)
         gem_entities.push(entity)
         let distance = (row - spawn_row).to_double()

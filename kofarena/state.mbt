@@ -150,7 +150,7 @@ priv enum GamePhase {
   MainMenu
   Playing
   RoundOver
-} derive(Eq, Debug)
+} derive(Eq)
 
 ///|
 impl Show for GamePhase with output(self, logger) {
@@ -167,7 +167,7 @@ priv enum RoundOutcome {
   P1Win
   P2Win
   Draw
-} derive(Debug)
+}
 
 ///|
 impl Show for RoundOutcome with output(self, logger) {
@@ -183,7 +183,7 @@ impl Show for RoundOutcome with output(self, logger) {
 priv enum Facing {
   Left
   Right
-} derive(Debug)
+}
 
 ///|
 impl Show for Facing with output(self, logger) {
@@ -203,7 +203,7 @@ priv enum Pose {
   Attack
   Hit
   KO
-} derive(Debug)
+}
 
 ///|
 impl Show for Pose with output(self, logger) {
@@ -223,7 +223,7 @@ impl Show for Pose with output(self, logger) {
 priv enum AttackKind {
   Light
   Heavy
-} derive(Debug)
+}
 
 ///|
 impl Show for AttackKind with output(self, logger) {
@@ -238,7 +238,7 @@ impl Show for AttackKind with output(self, logger) {
 priv enum PlayerId {
   P1
   P2
-} derive(Eq, Debug)
+} derive(Eq)
 
 ///|
 impl Show for PlayerId with output(self, logger) {
@@ -253,7 +253,7 @@ impl Show for PlayerId with output(self, logger) {
 priv enum InputMode {
   Human
   AI
-} derive(Debug)
+}
 
 ///|
 impl Show for InputMode with output(self, logger) {
@@ -270,7 +270,7 @@ priv struct Rect {
   y : Double
   w : Double
   h : Double
-} derive(Debug)
+}
 
 ///|
 impl Show for Rect with output(self, logger) {
@@ -314,7 +314,7 @@ priv struct FighterState {
   mut ai_timer : Double
   mut last_human_input : Double
   mut input_mode : InputMode
-} derive(Debug)
+}
 
 ///|
 impl Show for FighterState with output(self, logger) {
@@ -332,7 +332,7 @@ priv struct GameState {
   mut p2_human_enabled : Bool
   menu_selected : Int
   mut round_banner_timer : Double
-} derive(Debug)
+}
 
 ///|
 impl Show for GameState with output(self, logger) {
@@ -345,7 +345,7 @@ impl Show for GameState with output(self, logger) {
 priv struct StageObject {
   kind : StageObjectKind
   rect : Rect
-} derive(Debug)
+}
 
 ///|
 impl Show for StageObject with output(self, logger) {
@@ -357,7 +357,7 @@ priv enum StageObjectKind {
   Ground
   Platform
   Pillar
-} derive(Debug)
+}
 
 ///|
 impl Show for StageObjectKind with output(self, logger) {

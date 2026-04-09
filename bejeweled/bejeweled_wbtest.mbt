@@ -33,7 +33,7 @@ fn place_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
   board_set(row, col, Some(kind))
   let entity = @entity.Entity::new()
   gem_entities.push(entity)
-  gem_lookup.set(Cell::{ row, col }, Gem::{ kind, row, col, entity })
+  gem_lookup.set(Cell::{ row, col }, Gem::{ kind, entity })
 }
 
 ///|
