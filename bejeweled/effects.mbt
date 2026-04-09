@@ -174,20 +174,3 @@ fn effect_time_scale_for_tick(delta : Double) -> Double {
     1.0
   }
 }
-
-///|
-fn effect_hud_suffix() -> String {
-  let freeze_text = if game_state.time_freeze_remaining > 0.0 {
-    let shown = @cmath.ceil(game_state.time_freeze_remaining).to_int()
-    " FREEZE \{shown}s"
-  } else {
-    ""
-  }
-  let bonus_text = if game_state.score_bonus_remaining > 0.0 {
-    let shown = @cmath.ceil(game_state.score_bonus_remaining).to_int()
-    " X2 \{shown}s"
-  } else {
-    ""
-  }
-  "\{freeze_text}\{bonus_text}"
-}

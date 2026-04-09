@@ -954,14 +954,23 @@ pub fn update_system(_world : @ecs.World) -> Unit {
 }
 
 ///|
-fn hud_text() -> String {
+fn timer_text() -> String {
   let remaining = @cmath.floor(game_state.time_left).to_int()
   let seconds = remaining % 60
   let minutes = remaining / 60
   let seconds_text = if seconds < 10 { "0\{seconds}" } else { "\{seconds}" }
-  let effect_text = effect_hud_suffix()
-  let fps_text = if game_state.debug_fps { " FPS ON" } else { "" }
-  "SCORE \{game_state.score}  MOVES \{game_state.moves_left}  TIME \{minutes}:\{seconds_text}\{effect_text}\{fps_text}"
+  "TIME\n\{minutes}:\{seconds_text}"
+}
+
+///|
+fn score_text() -> String {
+  let fps_text = if game_state.debug_fps {
+    let fps = @raylib.get_fps()
+    "\nFPS \{fps}"
+  } else {
+    ""
+  }
+  "SCORE\n\{game_state.score}\nMOVES \{game_state.moves_left}\{fps_text}"
 }
 
 ///|
@@ -972,16 +981,23 @@ fn overlay_text() -> String {
 ///|
 pub fn render_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
-  let hud = hud_text()
-  if game_state.hud_text_cache != hud {
-    @ui.texts().set(hud_entity, @ui.Text::new(hud))
-    game_state.hud_text_cache = hud
+  let timer = timer_text()
+  if game_state.timer_text_cache != timer {
+    @ui.texts().set(timer_text_entity, @ui.Text::new(timer))
+    game_state.timer_text_cache = timer
+  }
+  let score = score_text()
+  if game_state.score_text_cache != score {
+    @ui.texts().set(score_text_entity, @ui.Text::new(score))
+    game_state.score_text_cache = score
   }
   let hint = selected_hint_text()
   if game_state.hint_text_cache != hint {
     @ui.texts().set(hint_entity, @ui.Text::new(hint))
     game_state.hint_text_cache = hint
   }
+  set_entity_visible(timer_fx_entity, game_state.time_freeze_remaining > 0.0)
+  set_entity_visible(score_fx_entity, game_state.score_bonus_remaining > 0.0)
   update_selected_frame_visual()
   if game_state.phase == GameOver {
     set_entity_visible(overlay_entity, true)

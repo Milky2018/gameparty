@@ -95,6 +95,21 @@ const BEJEWELED_FONT_FAMILY : String = "MGS1Codec"
 const BEJEWELED_FONT_PATH : String = "bejeweled/assets/mgs1codec.ttf"
 
 ///|
+const STATUS_BOX_WIDTH : Double = 220.0
+
+///|
+const STATUS_BOX_HEIGHT : Double = 82.0
+
+///|
+const STATUS_BOX_GAP : Double = 14.0
+
+///|
+const STATUS_BOX_MARGIN_RIGHT : Double = 24.0
+
+///|
+const STATUS_BOX_TOP : Double = 24.0
+
+///|
 enum GamePhase {
   Playing
   GameOver
@@ -211,7 +226,8 @@ priv struct GameState {
   mut profile_update_total : Double
   mut profile_render_total : Double
   mut profile_slowest_frame : Double
-  mut hud_text_cache : String
+  mut timer_text_cache : String
+  mut score_text_cache : String
   mut hint_text_cache : String
   mut overlay_text_cache : String
   mut game_over_reason : String
@@ -251,7 +267,8 @@ let game_state : GameState = {
   profile_update_total: 0.0,
   profile_render_total: 0.0,
   profile_slowest_frame: 0.0,
-  hud_text_cache: "",
+  timer_text_cache: "",
+  score_text_cache: "",
   hint_text_cache: "",
   overlay_text_cache: "",
   game_over_reason: "",
@@ -267,7 +284,22 @@ let board_bg_entity : @entity.Entity = @entity.Entity::new()
 let title_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
-let hud_entity : @entity.Entity = @entity.Entity::new()
+let timer_panel_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let timer_fx_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let timer_text_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let score_panel_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let score_fx_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let score_text_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let hint_entity : @entity.Entity = @entity.Entity::new()

@@ -52,6 +52,28 @@ fn text_entity(
 }
 
 ///|
+fn set_centered_text_block(
+  entity : @entity.Entity,
+  width : Double,
+  height : Double,
+) -> Unit {
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.0)))
+  @text2d.text_bounds().set(entity, @text2d.TextBounds::new(width, height))
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::new(align=Center, baseline=Center, wrap=WordWrap),
+  )
+}
+
+///|
+fn status_box_center_x(slot : Int) -> Double {
+  let timer_center_x = VIEWPORT_WIDTH -
+    STATUS_BOX_MARGIN_RIGHT -
+    STATUS_BOX_WIDTH * 0.5
+  timer_center_x - slot.to_double() * (STATUS_BOX_WIDTH + STATUS_BOX_GAP)
+}
+
+///|
 fn panel_entity(
   entity : @entity.Entity,
   color : @render.Color,
@@ -91,7 +113,65 @@ fn setup_static_text() -> Unit {
   text_entity(
     title_entity, "BEJEWELED", 32.0, 24.0, 40, "rgb(249,251,255)", 100.0,
   )
-  text_entity(hud_entity, "", 32.0, 74.0, 24, "rgb(221,228,241)", 100.0)
+  let status_center_y = STATUS_BOX_TOP + STATUS_BOX_HEIGHT * 0.5
+  let score_center_x = status_box_center_x(1)
+  let timer_center_x = status_box_center_x(0)
+  panel_entity(
+    score_panel_entity,
+    color_rgba(13U, 24U, 44U, 0.92),
+    score_center_x,
+    status_center_y,
+    STATUS_BOX_WIDTH,
+    STATUS_BOX_HEIGHT,
+    102.0,
+  )
+  panel_entity(
+    timer_panel_entity,
+    color_rgba(13U, 24U, 44U, 0.92),
+    timer_center_x,
+    status_center_y,
+    STATUS_BOX_WIDTH,
+    STATUS_BOX_HEIGHT,
+    102.0,
+  )
+  panel_entity(
+    score_fx_entity,
+    color_rgba(255U, 64U, 64U, 0.5),
+    score_center_x,
+    status_center_y,
+    STATUS_BOX_WIDTH,
+    STATUS_BOX_HEIGHT,
+    105.0,
+  )
+  panel_entity(
+    timer_fx_entity,
+    color_rgba(255U, 255U, 255U, 0.5),
+    timer_center_x,
+    status_center_y,
+    STATUS_BOX_WIDTH,
+    STATUS_BOX_HEIGHT,
+    105.0,
+  )
+  set_entity_visible(score_fx_entity, false)
+  set_entity_visible(timer_fx_entity, false)
+  text_entity(
+    score_text_entity, "", score_center_x, status_center_y, 24, "rgb(236,244,255)",
+    106.0,
+  )
+  set_centered_text_block(
+    score_text_entity,
+    STATUS_BOX_WIDTH * 0.9,
+    STATUS_BOX_HEIGHT * 0.9,
+  )
+  text_entity(
+    timer_text_entity, "", timer_center_x, status_center_y, 24, "rgb(236,244,255)",
+    106.0,
+  )
+  set_centered_text_block(
+    timer_text_entity,
+    STATUS_BOX_WIDTH * 0.9,
+    STATUS_BOX_HEIGHT * 0.9,
+  )
   text_entity(hint_entity, "", 32.0, 654.0, 20, "rgb(196,205,220)", 100.0)
   text_entity(
     overlay_text_entity,
@@ -222,7 +302,8 @@ fn reset_run_state() -> Unit {
   game_state.active_tweens.clear()
   game_state.cascade_depth = 0
   game_state.game_over_reason = ""
-  game_state.hud_text_cache = ""
+  game_state.timer_text_cache = ""
+  game_state.score_text_cache = ""
   game_state.hint_text_cache = ""
   game_state.overlay_text_cache = ""
   board.clear()
