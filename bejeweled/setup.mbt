@@ -102,6 +102,18 @@ fn setup_static_text() -> Unit {
     "rgb(255,255,255)",
     400.0,
   )
+  @text2d.text_anchors().set(
+    overlay_text_entity,
+    @sprite.Anchor(@math.Vec2D(0.0, 0.0)),
+  )
+  @text2d.text_bounds().set(
+    overlay_text_entity,
+    @text2d.TextBounds::new(VIEWPORT_WIDTH * 0.8, VIEWPORT_HEIGHT * 0.5),
+  )
+  @ui.text_layouts().set(
+    overlay_text_entity,
+    @ui.TextLayout::new(align=Center, baseline=Center, wrap=WordWrap),
+  )
   panel_entity(
     overlay_entity,
     color_rgba(0U, 0U, 0U, 0.58),

@@ -293,6 +293,16 @@ let gem_image_paths : Array[String] = [
 ]
 
 ///|
+let gem_image_sizes : Array[@math.Vec2D] = [
+  @math.Vec2D(512.0, 512.0),
+  @math.Vec2D(512.0, 512.0),
+  @math.Vec2D(508.0, 652.0),
+  @math.Vec2D(512.0, 512.0),
+  @math.Vec2D(512.0, 512.0),
+  @math.Vec2D(900.0, 673.0),
+]
+
+///|
 let gem_image_handles : Array[@asset.ImageHandle] = []
 
 ///|
@@ -356,6 +366,11 @@ fn ensure_gem_images_loaded() -> Unit {
 fn gem_image(kind : GemKind) -> @asset.ImageHandle {
   ensure_gem_images_loaded()
   gem_image_handles[gem_index(kind)]
+}
+
+///|
+fn gem_image_size(kind : GemKind) -> @math.Vec2D {
+  gem_image_sizes[gem_index(kind)]
 }
 
 ///|

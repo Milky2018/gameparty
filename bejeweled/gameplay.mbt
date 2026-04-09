@@ -213,20 +213,45 @@ fn set_gem_visual(
     let pulse = 0.5 +
       0.5 *
       @cmath.sin(@time.elapsed() * 11.0 + center[X] * 0.021 + center[Y] * 0.017)
-    let aura_size_value = size_value * (1.24 + 0.18 * pulse)
-    let aura_size = @math.Vec2D(aura_size_value, aura_size_value)
+    // Keep the glow energy high, but clip it to one board cell so it never bleeds
+    // into neighbor cells.
+    let aura_virtual_scale = 1.24 + 0.18 * pulse
+    let aura_virtual_size_value = size_value * aura_virtual_scale
+    let aura_clip_size_value = CELL_SIZE - BOARD_GAP
+    let aura_size = @math.Vec2D(aura_clip_size_value, aura_clip_size_value)
     let aura_top_left = @math.Vec2D(
       center[X] - aura_size[X] * 0.5,
       center[Y] - aura_size[Y] * 0.5,
     )
+    let clip_ratio_unclamped = aura_clip_size_value / aura_virtual_size_value
+    let clip_ratio = if clip_ratio_unclamped >= 1.0 {
+      1.0
+    } else if clip_ratio_unclamped <= 0.01 {
+      0.01
+    } else {
+      clip_ratio_unclamped
+    }
+    let source_size = gem_image_size(kind)
+    let source_clip_size = @math.Vec2D(
+      source_size[X] * clip_ratio,
+      source_size[Y] * clip_ratio,
+    )
+    let source_clip_pos = @math.Vec2D(
+      (source_size[X] - source_clip_size[X]) * 0.5,
+      (source_size[Y] - source_clip_size[Y]) * 0.5,
+    )
     let aura_color = {
       ..gem_aura_color(kind),
-      a: clamp01(clamped_alpha * (0.22 + 0.34 * pulse)),
+      a: clamp01(clamped_alpha * (0.18 + 0.26 * pulse)),
     }
     let aura_sprite = @sprite.Sprite::from_image(
       gem_image(kind),
       custom_size=Some(aura_size),
     )
+    aura_sprite.rect = Some({
+      position: source_clip_pos,
+      size: source_clip_size,
+    })
     aura_sprite.color = aura_color
     aura_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
     @sprite.sprites().set(aura_entity, aura_sprite)
