@@ -432,6 +432,24 @@ test "seven-in-a-row creates one flash gem at the fourth cell" {
 }
 
 ///|
+test "l-shape five match places flash gem at the corner center" {
+  reset_logic_state_for_test()
+  let matches : Array[Cell] = [
+    Cell::{ row: 0, col: 0 },
+    Cell::{ row: 1, col: 0 },
+    Cell::{ row: 2, col: 0 },
+    Cell::{ row: 2, col: 1 },
+    Cell::{ row: 2, col: 2 },
+  ]
+  for cell in matches {
+    place_gem_for_test(cell.row, cell.col, Ruby)
+  }
+  let (_, spawns) = plan_special_spawns(matches)
+  inspect(spawns.length(), content="1")
+  inspect(spawns[0].cell, content="{row: 2, col: 0}")
+}
+
+///|
 test "flash Sapphire converts one other kind into Sapphire" {
   reset_logic_state_for_test()
   place_flash_gem_for_test(0, 0, Sapphire)

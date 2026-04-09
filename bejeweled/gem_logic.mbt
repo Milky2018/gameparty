@@ -138,30 +138,59 @@ fn score_for_matches(count : Int) -> Int {
 
 ///|
 fn center_cell_of_group(group : Array[Cell]) -> Cell {
-  let mut row_sum = 0.0
-  let mut col_sum = 0.0
+  let group_set : Map[Cell, Bool] = Map::new()
   for cell in group {
-    row_sum += cell.row.to_double()
-    col_sum += cell.col.to_double()
+    group_set.set(cell, true)
   }
-  let count = group.length().to_double()
-  let row_center = row_sum / count
-  let col_center = col_sum / count
   let mut best = group[0]
-  let mut best_dist = 0.0
+  let mut best_total_distance = 0
+  let mut best_degree = -1
   for i in 0..<group.length() {
     let cell = group[i]
-    let row_delta = cell.row.to_double() - row_center
-    let col_delta = cell.col.to_double() - col_center
-    let dist = row_delta * row_delta + col_delta * col_delta
+    let mut total_distance = 0
+    for other in group {
+      let row_delta = if cell.row >= other.row {
+        cell.row - other.row
+      } else {
+        other.row - cell.row
+      }
+      let col_delta = if cell.col >= other.col {
+        cell.col - other.col
+      } else {
+        other.col - cell.col
+      }
+      total_distance += row_delta + col_delta
+    }
+    let mut degree = 0
+    let neighbors : Array[Cell] = [
+      Cell::{ row: cell.row - 1, col: cell.col },
+      Cell::{ row: cell.row + 1, col: cell.col },
+      Cell::{ row: cell.row, col: cell.col - 1 },
+      Cell::{ row: cell.row, col: cell.col + 1 },
+    ]
+    for next in neighbors {
+      if group_set.get(next) is Some(_) {
+        degree += 1
+      }
+    }
     if i == 0 ||
-      dist < best_dist ||
+      total_distance < best_total_distance ||
       (
-        dist == best_dist &&
-        (cell.row < best.row || (cell.row == best.row && cell.col < best.col))
+        total_distance == best_total_distance &&
+        (
+          degree > best_degree ||
+          (
+            degree == best_degree &&
+            (
+              cell.row < best.row ||
+              (cell.row == best.row && cell.col < best.col)
+            )
+          )
+        )
       ) {
       best = cell
-      best_dist = dist
+      best_total_distance = total_distance
+      best_degree = degree
     }
   }
   best
