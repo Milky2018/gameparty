@@ -50,6 +50,21 @@ const FALL_SECONDS_PER_CELL : Double = 0.08
 const REFILL_SECONDS_PER_CELL : Double = 0.08
 
 ///|
+const FLASH_TIME_FREEZE_SCALE : Double = 0.5
+
+///|
+const FLASH_EMERALD_FREEZE_SECONDS : Double = 6.0
+
+///|
+const FLASH_AMETHYST_SCORE_SECONDS : Double = 10.0
+
+///|
+const FLASH_PEARL_SCORE_MULTIPLIER : Int = 3
+
+///|
+const FLASH_AMETHYST_SCORE_MULTIPLIER : Int = 2
+
+///|
 const SELECT_FRAME_THICKNESS : Double = 4.0
 
 ///|
@@ -171,6 +186,8 @@ priv struct GameState {
   mut score : Int
   mut moves_left : Int
   mut time_left : Double
+  mut time_freeze_remaining : Double
+  mut score_bonus_remaining : Double
   mut first_pick : Cell?
   mut drag_origin : Cell?
   mut drag_pointer_down : Bool
@@ -209,6 +226,8 @@ let game_state : GameState = {
   score: 0,
   moves_left: MOVE_LIMIT,
   time_left: GAME_TIME_LIMIT,
+  time_freeze_remaining: 0.0,
+  score_bonus_remaining: 0.0,
   first_pick: None,
   drag_origin: None,
   drag_pointer_down: false,

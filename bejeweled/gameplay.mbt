@@ -1,56 +1,4 @@
 ///|
-fn board_get(row : Int, col : Int) -> GemKind? {
-  if !in_bounds(row, col) {
-    return None
-  }
-  board[board_index(row, col)]
-}
-
-///|
-fn board_set(row : Int, col : Int, value : GemKind?) -> Unit {
-  if in_bounds(row, col) {
-    board[board_index(row, col)] = value
-  }
-}
-
-///|
-fn random_kind() -> GemKind {
-  match rand.int(limit=GEM_COUNT) {
-    0 => Ruby
-    1 => Emerald
-    2 => Sapphire
-    3 => Amber
-    4 => Amethyst
-    _ => Pearl
-  }
-}
-
-///|
-fn fill_board_without_initial_matches() -> Unit {
-  for row in 0..<BOARD_ROWS {
-    for col in 0..<BOARD_COLS {
-      let mut candidate = random_kind()
-      while makes_match_at(row, col, candidate) {
-        candidate = random_kind()
-      }
-      board_set(row, col, Some(candidate))
-    }
-  }
-}
-
-///|
-fn makes_match_at(row : Int, col : Int, kind : GemKind) -> Bool {
-  let left1 = if col >= 1 { board_get(row, col - 1) } else { None }
-  let left2 = if col >= 2 { board_get(row, col - 2) } else { None }
-  if left1 == Some(kind) && left2 == Some(kind) {
-    return true
-  }
-  let up1 = if row >= 1 { board_get(row - 1, col) } else { None }
-  let up2 = if row >= 2 { board_get(row - 2, col) } else { None }
-  up1 == Some(kind) && up2 == Some(kind)
-}
-
-///|
 fn selected_hint_text() -> String {
   if game_state.phase == GameOver {
     return "Round ended. Press R, Enter, or Space to restart."
@@ -67,92 +15,6 @@ fn selected_hint_text() -> String {
       }
     None =>
       "Click or drag adjacent gems to swap. Match 3+ to clear. R/Enter/Space restart. F3 toggle FPS. Esc quit."
-  }
-}
-
-///|
-fn find_matches() -> Array[Cell] {
-  let matched : Map[Cell, Bool] = Map::new()
-  for row in 0..<BOARD_ROWS {
-    let mut run_kind : GemKind? = None
-    let mut run_start = 0
-    let mut run_len = 0
-    for col in 0..<BOARD_COLS {
-      let current = board_get(row, col)
-      if current == run_kind && current is Some(_) {
-        run_len += 1
-      } else {
-        if run_len >= 3 && run_kind is Some(_) {
-          for k in run_start..<(run_start + run_len) {
-            matched.set(Cell::{ row, col: k }, true)
-          }
-        }
-        run_kind = current
-        run_start = col
-        run_len = if current is Some(_) { 1 } else { 0 }
-      }
-    }
-    if run_len >= 3 && run_kind is Some(_) {
-      for k in run_start..<(run_start + run_len) {
-        matched.set(Cell::{ row, col: k }, true)
-      }
-    }
-  }
-
-  for col in 0..<BOARD_COLS {
-    let mut run_kind : GemKind? = None
-    let mut run_start = 0
-    let mut run_len = 0
-    for row in 0..<BOARD_ROWS {
-      let current = board_get(row, col)
-      if current == run_kind && current is Some(_) {
-        run_len += 1
-      } else {
-        if run_len >= 3 && run_kind is Some(_) {
-          for k in run_start..<(run_start + run_len) {
-            matched.set(Cell::{ row: k, col }, true)
-          }
-        }
-        run_kind = current
-        run_start = row
-        run_len = if current is Some(_) { 1 } else { 0 }
-      }
-    }
-    if run_len >= 3 && run_kind is Some(_) {
-      for k in run_start..<(run_start + run_len) {
-        matched.set(Cell::{ row: k, col }, true)
-      }
-    }
-  }
-
-  let result : Array[Cell] = []
-  for cell, _ in matched {
-    result.push(cell)
-  }
-  result
-}
-
-///|
-fn is_adjacent(a : Cell, b : Cell) -> Bool {
-  let col_delta = if a.col >= b.col { a.col - b.col } else { b.col - a.col }
-  let row_delta = if a.row >= b.row { a.row - b.row } else { b.row - a.row }
-  (a.row == b.row && col_delta == 1) || (a.col == b.col && row_delta == 1)
-}
-
-///|
-fn swap_cells(a : Cell, b : Cell) -> Unit {
-  let left = board_get(a.row, a.col)
-  let right = board_get(b.row, b.col)
-  board_set(a.row, a.col, right)
-  board_set(b.row, b.col, left)
-}
-
-///|
-fn score_for_matches(count : Int) -> Int {
-  if count <= 0 {
-    0
-  } else {
-    count * 10
   }
 }
 
@@ -509,100 +371,6 @@ fn begin_swap_rollback_phase() -> Unit {
 }
 
 ///|
-fn center_cell_of_group(group : Array[Cell]) -> Cell {
-  let mut row_sum = 0.0
-  let mut col_sum = 0.0
-  for cell in group {
-    row_sum += cell.row.to_double()
-    col_sum += cell.col.to_double()
-  }
-  let count = group.length().to_double()
-  let row_center = row_sum / count
-  let col_center = col_sum / count
-  let mut best = group[0]
-  let mut best_dist = 0.0
-  for i in 0..<group.length() {
-    let cell = group[i]
-    let row_delta = cell.row.to_double() - row_center
-    let col_delta = cell.col.to_double() - col_center
-    let dist = row_delta * row_delta + col_delta * col_delta
-    if i == 0 ||
-      dist < best_dist ||
-      (
-        dist == best_dist &&
-        (cell.row < best.row || (cell.row == best.row && cell.col < best.col))
-      ) {
-      best = cell
-      best_dist = dist
-    }
-  }
-  best
-}
-
-///|
-fn plan_special_spawns(
-  matches : Array[Cell],
-) -> (Array[Cell], Array[SpecialSpawn]) {
-  let matched_set : Map[Cell, Bool] = Map::new()
-  let clear_set : Map[Cell, Bool] = Map::new()
-  let visited : Map[Cell, Bool] = Map::new()
-  for cell in matches {
-    matched_set.set(cell, true)
-    clear_set.set(cell, true)
-  }
-  let spawns : Array[SpecialSpawn] = []
-  for start in matches {
-    if visited.get(start) is Some(_) {
-      continue
-    }
-    let kind = match board_get(start.row, start.col) {
-      Some(kind) => kind
-      None => continue
-    }
-    let queue : Array[Cell] = [start]
-    let group : Array[Cell] = []
-    visited.set(start, true)
-    let mut head = 0
-    while head < queue.length() {
-      let current = queue[head]
-      head += 1
-      group.push(current)
-      let neighbors : Array[Cell] = [
-        Cell::{ row: current.row - 1, col: current.col },
-        Cell::{ row: current.row + 1, col: current.col },
-        Cell::{ row: current.row, col: current.col - 1 },
-        Cell::{ row: current.row, col: current.col + 1 },
-      ]
-      for next in neighbors {
-        if !in_bounds(next.row, next.col) {
-          continue
-        }
-        if matched_set.get(next) is None {
-          continue
-        }
-        if visited.get(next) is Some(_) {
-          continue
-        }
-        if board_get(next.row, next.col) == Some(kind) {
-          visited.set(next, true)
-          queue.push(next)
-        }
-      }
-    }
-    if group.length() >= 5 {
-      let center_cell = center_cell_of_group(group)
-      clear_set.remove(center_cell)
-      spawns.push({ cell: center_cell, kind })
-    }
-  }
-  let clear_cells : Array[Cell] = []
-  for cell, _ in clear_set {
-    clear_cells.push(cell)
-  }
-  (clear_cells, spawns)
-}
-
-///|
 fn begin_clear_phase(matches : Array[Cell]) -> Unit {
   game_state.pending_match_count = matches.length()
   let (clear_cells, special_spawns) = plan_special_spawns(matches)
@@ -698,19 +466,46 @@ fn begin_fall_phase() -> Bool {
 
 ///|
 fn finalize_clear_phase() -> Unit {
-  let cleared = game_state.pending_match_count
-  if cleared <= 0 {
+  if game_state.pending_match_count <= 0 {
     game_state.pending_matches.clear()
     game_state.pending_special_spawns.clear()
     game_state.pending_match_count = 0
     return
   }
-  game_state.score += score_for_matches(cleared)
+  let had_amethyst_bonus = game_state.score_bonus_remaining > 0.0
+  let original_match_set : Map[Cell, Bool] = Map::new()
+  for cell in game_state.pending_matches {
+    original_match_set.set(cell, true)
+  }
+  for spawn in game_state.pending_special_spawns {
+    original_match_set.set(spawn.cell, true)
+  }
+  let clear_set : Map[Cell, Bool] = Map::new()
+  for cell in game_state.pending_matches {
+    clear_set.set(cell, true)
+  }
+  let flash_round_multiplier = apply_flash_effects(clear_set)
+  let mut extra_cleared = 0
+  for cell, _ in clear_set {
+    if original_match_set.get(cell) is Some(_) {
+      continue
+    }
+    if board_get(cell.row, cell.col) is Some(_) {
+      extra_cleared += 1
+    }
+  }
+  let scored_count = game_state.pending_match_count + extra_cleared
+  let mut earned_score = score_for_matches(scored_count)
+  if had_amethyst_bonus {
+    earned_score *= FLASH_AMETHYST_SCORE_MULTIPLIER
+  }
+  earned_score *= flash_round_multiplier
+  game_state.score += earned_score
   play_sound_ref(sound_match)
-  if game_state.cascade_depth > 0 || cleared >= 6 {
+  if game_state.cascade_depth > 0 || scored_count >= 6 {
     play_sound_ref(sound_cascade)
   }
-  for cell in game_state.pending_matches {
+  for cell, _ in clear_set {
     board_set(cell.row, cell.col, None)
     if gem_lookup.get(cell) is Some(gem) {
       gem_lookup.remove(cell)
@@ -719,6 +514,9 @@ fn finalize_clear_phase() -> Unit {
   }
   for spawn in game_state.pending_special_spawns {
     let cell = spawn.cell
+    if clear_set.get(cell) is Some(_) {
+      continue
+    }
     board_set(cell.row, cell.col, Some(spawn.kind))
     match gem_lookup.get(cell) {
       Some(gem) => {
@@ -1128,7 +926,8 @@ pub fn update_system(_world : @ecs.World) -> Unit {
   let delta = @time.delta()
 
   if game_state.phase != GameOver {
-    game_state.time_left -= delta
+    let time_scale = effect_time_scale_for_tick(delta)
+    game_state.time_left -= delta * time_scale
     if game_state.time_left <= 0.0 {
       game_state.time_left = 0.0
       game_state.phase = GameOver
@@ -1160,8 +959,9 @@ fn hud_text() -> String {
   let seconds = remaining % 60
   let minutes = remaining / 60
   let seconds_text = if seconds < 10 { "0\{seconds}" } else { "\{seconds}" }
+  let effect_text = effect_hud_suffix()
   let fps_text = if game_state.debug_fps { " FPS ON" } else { "" }
-  "SCORE \{game_state.score}  MOVES \{game_state.moves_left}  TIME \{minutes}:\{seconds_text}\{fps_text}"
+  "SCORE \{game_state.score}  MOVES \{game_state.moves_left}  TIME \{minutes}:\{seconds_text}\{effect_text}\{fps_text}"
 }
 
 ///|

@@ -4,6 +4,8 @@ fn reset_logic_state_for_test() -> Unit {
   game_state.score = 0
   game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
+  game_state.time_freeze_remaining = 0.0
+  game_state.score_bonus_remaining = 0.0
   game_state.first_pick = None
   game_state.drag_origin = None
   game_state.drag_pointer_down = false
@@ -46,6 +48,21 @@ fn place_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
   gem_lookup.set(Cell::{ row, col }, Gem::{
     kind,
     flash: false,
+    entity,
+    aura_entity,
+  })
+}
+
+///|
+fn place_flash_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
+  board_set(row, col, Some(kind))
+  let entity = @entity.Entity::new()
+  let aura_entity = @entity.Entity::new()
+  gem_entities.push(entity)
+  gem_aura_entities.push(aura_entity)
+  gem_lookup.set(Cell::{ row, col }, Gem::{
+    kind,
+    flash: true,
     entity,
     aura_entity,
   })
@@ -101,6 +118,24 @@ fn is_flash_gem(cell : Cell, kind : GemKind) -> Bool {
     Some(gem) => gem.flash && gem.kind == kind
     None => false
   }
+}
+
+///|
+fn non_empty_count_in_rect(
+  row_start : Int,
+  row_end_exclusive : Int,
+  col_start : Int,
+  col_end_exclusive : Int,
+) -> Int {
+  let mut count = 0
+  for row in row_start..<row_end_exclusive {
+    for col in col_start..<col_end_exclusive {
+      if board_get(row, col) is Some(_) {
+        count += 1
+      }
+    }
+  }
+  count
 }
 
 ///|
@@ -394,4 +429,115 @@ test "seven-in-a-row creates one flash gem at the fourth cell" {
   complete_resolution_phase()
   inspect(flash_gem_count_for_test(), content="1")
   inspect(is_flash_gem(Cell::{ row: 7, col: 3 }, Sapphire), content="true")
+}
+
+///|
+test "flash Sapphire converts one other kind into Sapphire" {
+  reset_logic_state_for_test()
+  place_flash_gem_for_test(0, 0, Sapphire)
+  place_gem_for_test(0, 1, Sapphire)
+  place_gem_for_test(0, 2, Sapphire)
+  place_gem_for_test(2, 2, Emerald)
+  place_gem_for_test(4, 4, Emerald)
+  begin_clear_phase([
+    Cell::{ row: 0, col: 0 },
+    Cell::{ row: 0, col: 1 },
+    Cell::{ row: 0, col: 2 },
+  ])
+  finalize_clear_phase()
+  inspect(board_get(2, 2), content="Some(Sapphire)")
+  inspect(board_get(4, 4), content="Some(Sapphire)")
+}
+
+///|
+test "flash Ruby clears a 3x3 area and scores the extra clears" {
+  reset_logic_state_for_test()
+  place_gem_for_test(3, 2, Ruby)
+  place_flash_gem_for_test(3, 3, Ruby)
+  place_gem_for_test(3, 4, Ruby)
+  for row in 2..<5 {
+    for col in 2..<5 {
+      if !(row == 3 && (col == 2 || col == 3 || col == 4)) {
+        place_gem_for_test(row, col, Emerald)
+      }
+    }
+  }
+  begin_clear_phase([
+    Cell::{ row: 3, col: 2 },
+    Cell::{ row: 3, col: 3 },
+    Cell::{ row: 3, col: 4 },
+  ])
+  finalize_clear_phase()
+  inspect(non_empty_count_in_rect(2, 5, 2, 5), content="0")
+  inspect(game_state.score, content="90")
+}
+
+///|
+test "flash Amber clears the whole row and scores the extra clears" {
+  reset_logic_state_for_test()
+  for col in 0..<BOARD_COLS {
+    if col == 3 {
+      place_flash_gem_for_test(2, col, Amber)
+    } else if col == 2 || col == 4 {
+      place_gem_for_test(2, col, Amber)
+    } else {
+      place_gem_for_test(2, col, Ruby)
+    }
+  }
+  begin_clear_phase([
+    Cell::{ row: 2, col: 2 },
+    Cell::{ row: 2, col: 3 },
+    Cell::{ row: 2, col: 4 },
+  ])
+  finalize_clear_phase()
+  inspect(non_empty_count_in_rect(2, 3, 0, BOARD_COLS), content="0")
+  inspect(game_state.score, content="80")
+}
+
+///|
+test "flash Emerald refreshes freeze timer to 6 seconds" {
+  reset_logic_state_for_test()
+  game_state.time_freeze_remaining = 1.0
+  place_gem_for_test(1, 0, Emerald)
+  place_flash_gem_for_test(1, 1, Emerald)
+  place_gem_for_test(1, 2, Emerald)
+  begin_clear_phase([
+    Cell::{ row: 1, col: 0 },
+    Cell::{ row: 1, col: 1 },
+    Cell::{ row: 1, col: 2 },
+  ])
+  finalize_clear_phase()
+  inspect(game_state.time_freeze_remaining >= 5.99, content="true")
+}
+
+///|
+test "flash Pearl applies 3x score to this clear" {
+  reset_logic_state_for_test()
+  place_gem_for_test(4, 0, Pearl)
+  place_flash_gem_for_test(4, 1, Pearl)
+  place_gem_for_test(4, 2, Pearl)
+  begin_clear_phase([
+    Cell::{ row: 4, col: 0 },
+    Cell::{ row: 4, col: 1 },
+    Cell::{ row: 4, col: 2 },
+  ])
+  finalize_clear_phase()
+  inspect(game_state.score, content="90")
+}
+
+///|
+test "flash Amethyst refreshes x2 timer and active x2 doubles clear score" {
+  reset_logic_state_for_test()
+  game_state.score_bonus_remaining = 1.0
+  place_gem_for_test(0, 0, Amethyst)
+  place_flash_gem_for_test(0, 1, Amethyst)
+  place_gem_for_test(0, 2, Amethyst)
+  begin_clear_phase([
+    Cell::{ row: 0, col: 0 },
+    Cell::{ row: 0, col: 1 },
+    Cell::{ row: 0, col: 2 },
+  ])
+  finalize_clear_phase()
+  inspect(game_state.score, content="60")
+  inspect(game_state.score_bonus_remaining >= 9.99, content="true")
 }

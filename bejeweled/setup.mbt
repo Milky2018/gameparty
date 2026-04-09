@@ -208,6 +208,8 @@ fn reset_run_state() -> Unit {
   game_state.score = 0
   game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
+  game_state.time_freeze_remaining = 0.0
+  game_state.score_bonus_remaining = 0.0
   game_state.first_pick = None
   game_state.drag_origin = None
   game_state.drag_pointer_down = false
