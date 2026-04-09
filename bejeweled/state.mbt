@@ -74,6 +74,12 @@ const BEJEWELED_PROFILE_REPORT_SECONDS : Double = 1.0
 const BEJEWELED_PROFILE_WARMUP_SECONDS : Double = 2.5
 
 ///|
+const BEJEWELED_FONT_FAMILY : String = "MGS1Codec"
+
+///|
+const BEJEWELED_FONT_PATH : String = "bejeweled/assets/mgs1codec.ttf"
+
+///|
 enum GamePhase {
   Playing
   GameOver

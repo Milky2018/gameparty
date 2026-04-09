@@ -1,4 +1,16 @@
 ///|
+let bejeweled_font_registered : Ref[Bool] = { val: false }
+
+///|
+fn register_bejeweled_font_once() -> Unit {
+  if bejeweled_font_registered.val {
+    return
+  }
+  ignore(@asset.load_font(BEJEWELED_FONT_PATH, family=BEJEWELED_FONT_FAMILY))
+  bejeweled_font_registered.val = true
+}
+
+///|
 fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
   { r, g, b, a }
 }
@@ -26,7 +38,7 @@ fn text_entity(
   @ui.texts().set(entity, @ui.Text::new(content))
   @ui.text_fonts().set(
     entity,
-    @ui.TextFont::from_css("\{size_px}px sans-serif"),
+    @ui.TextFont::from_css("\{size_px}px \{BEJEWELED_FONT_FAMILY}"),
   )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color_css))
   @ui.text_layouts().set(
@@ -226,6 +238,7 @@ fn setup_profile() -> Unit {
 
 ///|
 pub fn startup_system(_world : @ecs.World) -> Unit {
+  register_bejeweled_font_once()
   setup_camera()
   setup_board_background()
   setup_static_text()
