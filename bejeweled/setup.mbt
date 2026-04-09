@@ -203,6 +203,8 @@ fn reset_run_state() -> Unit {
   game_state.pending_swap_a = None
   game_state.pending_swap_b = None
   game_state.pending_matches.clear()
+  game_state.pending_match_count = 0
+  game_state.pending_special_spawns.clear()
   game_state.active_tweens.clear()
   game_state.cascade_depth = 0
   game_state.game_over_reason = ""

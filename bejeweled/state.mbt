@@ -92,7 +92,6 @@ priv enum ResolutionPhase {
   SwapRollback
   Clear
   Fall
-  Refill
   CascadeCheck
 } derive(Eq)
 
@@ -133,13 +132,17 @@ pub impl Show for Cell with output(self, logger) {
 ///|
 priv struct Gem {
   kind : GemKind
+  flash : Bool
   entity : @entity.Entity
+  aura_entity : @entity.Entity
 }
 
 ///|
 priv struct GemTween {
   entity : @entity.Entity
+  aura_entity : @entity.Entity
   kind : GemKind
+  flash : Bool
   from_x : Double
   from_y : Double
   to_x : Double
@@ -151,6 +154,12 @@ priv struct GemTween {
   from_alpha : Double
   to_alpha : Double
   duration : Double
+}
+
+///|
+priv struct SpecialSpawn {
+  cell : Cell
+  kind : GemKind
 }
 
 ///|
@@ -169,6 +178,8 @@ priv struct GameState {
   mut pending_swap_a : Cell?
   mut pending_swap_b : Cell?
   mut pending_matches : Array[Cell]
+  mut pending_match_count : Int
+  mut pending_special_spawns : Array[SpecialSpawn]
   mut active_tweens : Array[GemTween]
   mut cascade_depth : Int
   mut debug_fps : Bool
@@ -205,6 +216,8 @@ let game_state : GameState = {
   pending_swap_a: None,
   pending_swap_b: None,
   pending_matches: [],
+  pending_match_count: 0,
+  pending_special_spawns: [],
   active_tweens: [],
   cascade_depth: 0,
   debug_fps: false,
@@ -265,6 +278,9 @@ let board_cell_entities : Array[@entity.Entity] = []
 let gem_entities : Array[@entity.Entity] = []
 
 ///|
+let gem_aura_entities : Array[@entity.Entity] = []
+
+///|
 let board : Array[GemKind?] = []
 
 ///|
@@ -272,12 +288,22 @@ let gem_lookup : Map[Cell, Gem] = Map::new()
 
 ///|
 let gem_image_paths : Array[String] = [
-  "bejeweled/assets/Bun.png", "bejeweled/assets/Go.png", "bejeweled/assets/Haskell.png",
+  "bejeweled/assets/Bun.png", "bejeweled/assets/Go.png", "bejeweled/assets/MoonBit.png",
   "bejeweled/assets/OCaml.png", "bejeweled/assets/Python.png", "bejeweled/assets/Rust.png",
 ]
 
 ///|
 let gem_image_handles : Array[@asset.ImageHandle] = []
+
+///|
+let gem_aura_colors : Array[@render.Color] = [
+  { r: 255U, g: 103U, b: 128U, a: 1.0 },
+  { r: 124U, g: 255U, b: 168U, a: 1.0 },
+  { r: 120U, g: 182U, b: 255U, a: 1.0 },
+  { r: 255U, g: 214U, b: 114U, a: 1.0 },
+  { r: 213U, g: 144U, b: 255U, a: 1.0 },
+  { r: 255U, g: 247U, b: 188U, a: 1.0 },
+]
 
 ///|
 let gem_names : Array[String] = [
@@ -330,6 +356,11 @@ fn ensure_gem_images_loaded() -> Unit {
 fn gem_image(kind : GemKind) -> @asset.ImageHandle {
   ensure_gem_images_loaded()
   gem_image_handles[gem_index(kind)]
+}
+
+///|
+fn gem_aura_color(kind : GemKind) -> @render.Color {
+  gem_aura_colors[gem_index(kind)]
 }
 
 ///|

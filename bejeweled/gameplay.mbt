@@ -181,7 +181,9 @@ fn smoothstep(t : Double) -> Double {
 ///|
 fn set_gem_visual(
   entity : @entity.Entity,
+  aura_entity : @entity.Entity,
   kind : GemKind,
+  flash : Bool,
   center : @math.Vec2D,
   z : Double,
   scale : Double,
@@ -207,24 +209,66 @@ fn set_gem_visual(
     @transform.Transform::from_xyz(top_left[X], top_left[Y], z),
   )
   set_entity_visible(entity, true)
+  if flash {
+    let pulse = 0.5 +
+      0.5 *
+      @cmath.sin(@time.elapsed() * 11.0 + center[X] * 0.021 + center[Y] * 0.017)
+    let aura_size_value = size_value * (1.24 + 0.18 * pulse)
+    let aura_size = @math.Vec2D(aura_size_value, aura_size_value)
+    let aura_top_left = @math.Vec2D(
+      center[X] - aura_size[X] * 0.5,
+      center[Y] - aura_size[Y] * 0.5,
+    )
+    let aura_color = {
+      ..gem_aura_color(kind),
+      a: clamp01(clamped_alpha * (0.22 + 0.34 * pulse)),
+    }
+    let aura_sprite = @sprite.Sprite::from_image(
+      gem_image(kind),
+      custom_size=Some(aura_size),
+    )
+    aura_sprite.color = aura_color
+    aura_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+    @sprite.sprites().set(aura_entity, aura_sprite)
+    @transform.transforms().set(
+      aura_entity,
+      @transform.Transform::from_xyz(
+        aura_top_left[X],
+        aura_top_left[Y],
+        z - 0.35,
+      ),
+    )
+    set_entity_visible(aura_entity, true)
+  } else {
+    set_entity_visible(aura_entity, false)
+  }
 }
 
 ///|
 fn create_gem_entity(cell : Cell, kind : GemKind) -> Gem {
   let entity = @entity.Entity::new()
+  let aura_entity = @entity.Entity::new()
   let (center, z) = cell_center(cell)
-  set_gem_visual(entity, kind, center, z, 1.0, 1.0)
-  Gem::{ kind, entity }
+  set_gem_visual(entity, aura_entity, kind, false, center, z, 1.0, 1.0)
+  Gem::{ kind, flash: false, entity, aura_entity }
 }
 
 ///|
-fn remove_entity_once(entity : @entity.Entity) -> Unit {
-  match gem_entities.search_by(fn(existing) { existing == entity }) {
+fn remove_gem_once(gem : Gem) -> Unit {
+  match gem_entities.search_by(fn(existing) { existing == gem.entity }) {
     Some(index) => ignore(gem_entities.remove(index))
     None => ()
   }
-  if entity.is_alive() {
-    entity.destroy()
+  match
+    gem_aura_entities.search_by(fn(existing) { existing == gem.aura_entity }) {
+    Some(index) => ignore(gem_aura_entities.remove(index))
+    None => ()
+  }
+  if gem.entity.is_alive() {
+    gem.entity.destroy()
+  }
+  if gem.aura_entity.is_alive() {
+    gem.aura_entity.destroy()
   }
 }
 
@@ -235,7 +279,13 @@ fn rebuild_visuals_from_board() -> Unit {
       entity.destroy()
     }
   }
+  for entity in gem_aura_entities {
+    if entity.is_alive() {
+      entity.destroy()
+    }
+  }
   gem_entities.clear()
+  gem_aura_entities.clear()
   gem_lookup.clear()
   for row in 0..<BOARD_ROWS {
     for col in 0..<BOARD_COLS {
@@ -244,6 +294,7 @@ fn rebuild_visuals_from_board() -> Unit {
           let cell = Cell::{ row, col }
           let gem = create_gem_entity(cell, kind)
           gem_entities.push(gem.entity)
+          gem_aura_entities.push(gem.aura_entity)
           gem_lookup.set(cell, gem)
         }
         None => ()
@@ -293,8 +344,7 @@ fn start_resolution_phase(
 
 ///|
 fn move_tween(
-  entity : @entity.Entity,
-  kind : GemKind,
+  gem : Gem,
   from_cell : Cell,
   to_cell : Cell,
   duration : Double,
@@ -302,8 +352,10 @@ fn move_tween(
   let (from_center, from_z) = cell_center(from_cell)
   let (to_center, to_z) = cell_center(to_cell)
   {
-    entity,
-    kind,
+    entity: gem.entity,
+    aura_entity: gem.aura_entity,
+    kind: gem.kind,
+    flash: gem.flash,
     from_x: from_center[X],
     from_y: from_center[Y],
     to_x: to_center[X],
@@ -323,15 +375,13 @@ fn move_tween(
 }
 
 ///|
-fn clear_tween(
-  entity : @entity.Entity,
-  kind : GemKind,
-  cell : Cell,
-) -> GemTween {
+fn clear_tween(gem : Gem, cell : Cell) -> GemTween {
   let (center, z) = cell_center(cell)
   {
-    entity,
-    kind,
+    entity: gem.entity,
+    aura_entity: gem.aura_entity,
+    kind: gem.kind,
+    flash: gem.flash,
     from_x: center[X],
     from_y: center[Y],
     to_x: center[X],
@@ -342,6 +392,28 @@ fn clear_tween(
     to_scale: 0.12,
     from_alpha: 1.0,
     to_alpha: 0.0,
+    duration: CLEAR_SECONDS,
+  }
+}
+
+///|
+fn promote_flash_tween(gem : Gem, cell : Cell) -> GemTween {
+  let (center, z) = cell_center(cell)
+  {
+    entity: gem.entity,
+    aura_entity: gem.aura_entity,
+    kind: gem.kind,
+    flash: true,
+    from_x: center[X],
+    from_y: center[Y],
+    to_x: center[X],
+    to_y: center[Y],
+    from_z: z,
+    to_z: z,
+    from_scale: 1.0,
+    to_scale: 1.18,
+    from_alpha: 1.0,
+    to_alpha: 1.0,
     duration: CLEAR_SECONDS,
   }
 }
@@ -367,17 +439,11 @@ fn begin_swap_forward_phase(a : Cell, b : Cell) -> Unit {
   game_state.pending_swap_b = Some(b)
   let tweens : Array[GemTween] = []
   match gem_lookup.get(a) {
-    Some(gem_a) =>
-      tweens.push(
-        move_tween(gem_a.entity, gem_a.kind, a, b, SWAP_FORWARD_SECONDS),
-      )
+    Some(gem_a) => tweens.push(move_tween(gem_a, a, b, SWAP_FORWARD_SECONDS))
     None => ()
   }
   match gem_lookup.get(b) {
-    Some(gem_b) =>
-      tweens.push(
-        move_tween(gem_b.entity, gem_b.kind, b, a, SWAP_FORWARD_SECONDS),
-      )
+    Some(gem_b) => tweens.push(move_tween(gem_b, b, a, SWAP_FORWARD_SECONDS))
     None => ()
   }
   if tweens.length() == 2 {
@@ -397,28 +463,12 @@ fn begin_swap_rollback_phase() -> Unit {
           let tweens : Array[GemTween] = []
           match gem_lookup.get(a) {
             Some(gem_a) =>
-              tweens.push(
-                move_tween(
-                  gem_a.entity,
-                  gem_a.kind,
-                  a,
-                  b,
-                  SWAP_ROLLBACK_SECONDS,
-                ),
-              )
+              tweens.push(move_tween(gem_a, a, b, SWAP_ROLLBACK_SECONDS))
             None => ()
           }
           match gem_lookup.get(b) {
             Some(gem_b) =>
-              tweens.push(
-                move_tween(
-                  gem_b.entity,
-                  gem_b.kind,
-                  b,
-                  a,
-                  SWAP_ROLLBACK_SECONDS,
-                ),
-              )
+              tweens.push(move_tween(gem_b, b, a, SWAP_ROLLBACK_SECONDS))
             None => ()
           }
           if tweens.length() == 2 {
@@ -434,16 +484,123 @@ fn begin_swap_rollback_phase() -> Unit {
 }
 
 ///|
+fn center_cell_of_group(group : Array[Cell]) -> Cell {
+  let mut row_sum = 0.0
+  let mut col_sum = 0.0
+  for cell in group {
+    row_sum += cell.row.to_double()
+    col_sum += cell.col.to_double()
+  }
+  let count = group.length().to_double()
+  let row_center = row_sum / count
+  let col_center = col_sum / count
+  let mut best = group[0]
+  let mut best_dist = 0.0
+  for i in 0..<group.length() {
+    let cell = group[i]
+    let row_delta = cell.row.to_double() - row_center
+    let col_delta = cell.col.to_double() - col_center
+    let dist = row_delta * row_delta + col_delta * col_delta
+    if i == 0 ||
+      dist < best_dist ||
+      (
+        dist == best_dist &&
+        (cell.row < best.row || (cell.row == best.row && cell.col < best.col))
+      ) {
+      best = cell
+      best_dist = dist
+    }
+  }
+  best
+}
+
+///|
+fn plan_special_spawns(
+  matches : Array[Cell],
+) -> (Array[Cell], Array[SpecialSpawn]) {
+  let matched_set : Map[Cell, Bool] = Map::new()
+  let clear_set : Map[Cell, Bool] = Map::new()
+  let visited : Map[Cell, Bool] = Map::new()
+  for cell in matches {
+    matched_set.set(cell, true)
+    clear_set.set(cell, true)
+  }
+  let spawns : Array[SpecialSpawn] = []
+  for start in matches {
+    if visited.get(start) is Some(_) {
+      continue
+    }
+    let kind = match board_get(start.row, start.col) {
+      Some(kind) => kind
+      None => continue
+    }
+    let queue : Array[Cell] = [start]
+    let group : Array[Cell] = []
+    visited.set(start, true)
+    let mut head = 0
+    while head < queue.length() {
+      let current = queue[head]
+      head += 1
+      group.push(current)
+      let neighbors : Array[Cell] = [
+        Cell::{ row: current.row - 1, col: current.col },
+        Cell::{ row: current.row + 1, col: current.col },
+        Cell::{ row: current.row, col: current.col - 1 },
+        Cell::{ row: current.row, col: current.col + 1 },
+      ]
+      for next in neighbors {
+        if !in_bounds(next.row, next.col) {
+          continue
+        }
+        if matched_set.get(next) is None {
+          continue
+        }
+        if visited.get(next) is Some(_) {
+          continue
+        }
+        if board_get(next.row, next.col) == Some(kind) {
+          visited.set(next, true)
+          queue.push(next)
+        }
+      }
+    }
+    if group.length() >= 5 {
+      let center_cell = center_cell_of_group(group)
+      clear_set.remove(center_cell)
+      spawns.push({ cell: center_cell, kind })
+    }
+  }
+  let clear_cells : Array[Cell] = []
+  for cell, _ in clear_set {
+    clear_cells.push(cell)
+  }
+  (clear_cells, spawns)
+}
+
+///|
 fn begin_clear_phase(matches : Array[Cell]) -> Unit {
-  game_state.pending_matches = matches
+  game_state.pending_match_count = matches.length()
+  let (clear_cells, special_spawns) = plan_special_spawns(matches)
+  game_state.pending_matches = clear_cells
+  game_state.pending_special_spawns = special_spawns
+  let special_anchor_cells : Map[Cell, Bool] = Map::new()
+  for spawn in game_state.pending_special_spawns {
+    special_anchor_cells.set(spawn.cell, true)
+  }
   let tweens : Array[GemTween] = []
   for cell in matches {
     if gem_lookup.get(cell) is Some(gem) {
-      tweens.push(clear_tween(gem.entity, gem.kind, cell))
+      if special_anchor_cells.get(cell) is Some(_) {
+        tweens.push(promote_flash_tween(gem, cell))
+      } else {
+        tweens.push(clear_tween(gem, cell))
+      }
     }
   }
   if tweens.is_empty() {
     game_state.pending_matches.clear()
+    game_state.pending_match_count = 0
+    game_state.pending_special_spawns.clear()
     set_input_ready_phase()
   } else {
     start_resolution_phase(Clear, tweens)
@@ -477,13 +634,7 @@ fn begin_fall_phase() -> Bool {
               gem_lookup.set(to, gem)
               let distance = (write_row - row).to_double()
               tweens.push(
-                move_tween(
-                  gem.entity,
-                  gem.kind,
-                  from,
-                  to,
-                  FALL_SECONDS_PER_CELL * distance,
-                ),
+                move_tween(gem, from, to, FALL_SECONDS_PER_CELL * distance),
               )
             }
           }
@@ -493,8 +644,22 @@ fn begin_fall_phase() -> Bool {
       }
       row -= 1
     }
+    let mut spawn_index = 0
     while write_row >= 0 {
-      board_set(write_row, col, None)
+      let kind = random_kind()
+      board_set(write_row, col, Some(kind))
+      let spawn_row = -1 - spawn_index
+      spawn_index += 1
+      let target = Cell::{ row: write_row, col }
+      let spawn = Cell::{ row: spawn_row, col }
+      let gem = create_gem_entity(target, kind)
+      gem_lookup.set(target, gem)
+      gem_entities.push(gem.entity)
+      gem_aura_entities.push(gem.aura_entity)
+      let distance = (write_row - spawn_row).to_double()
+      tweens.push(
+        move_tween(gem, spawn, target, REFILL_SECONDS_PER_CELL * distance),
+      )
       write_row -= 1
     }
   }
@@ -507,48 +672,12 @@ fn begin_fall_phase() -> Bool {
 }
 
 ///|
-fn begin_refill_phase() -> Bool {
-  let tweens : Array[GemTween] = []
-  for col in 0..<BOARD_COLS {
-    let mut spawn_index = 0
-    for row in 0..<BOARD_ROWS {
-      if board_get(row, col) is None {
-        let kind = random_kind()
-        board_set(row, col, Some(kind))
-        let spawn_row = -1 - spawn_index
-        spawn_index += 1
-        let target = Cell::{ row, col }
-        let spawn = Cell::{ row: spawn_row, col }
-        let entity = @entity.Entity::new()
-        let gem = Gem::{ kind, entity }
-        gem_lookup.set(target, gem)
-        gem_entities.push(entity)
-        let distance = (row - spawn_row).to_double()
-        tweens.push(
-          move_tween(
-            entity,
-            kind,
-            spawn,
-            target,
-            REFILL_SECONDS_PER_CELL * distance,
-          ),
-        )
-      }
-    }
-  }
-  if tweens.is_empty() {
-    false
-  } else {
-    start_resolution_phase(Refill, tweens)
-    true
-  }
-}
-
-///|
 fn finalize_clear_phase() -> Unit {
-  let cleared = game_state.pending_matches.length()
+  let cleared = game_state.pending_match_count
   if cleared <= 0 {
     game_state.pending_matches.clear()
+    game_state.pending_special_spawns.clear()
+    game_state.pending_match_count = 0
     return
   }
   game_state.score += score_for_matches(cleared)
@@ -560,10 +689,29 @@ fn finalize_clear_phase() -> Unit {
     board_set(cell.row, cell.col, None)
     if gem_lookup.get(cell) is Some(gem) {
       gem_lookup.remove(cell)
-      remove_entity_once(gem.entity)
+      remove_gem_once(gem)
+    }
+  }
+  for spawn in game_state.pending_special_spawns {
+    let cell = spawn.cell
+    board_set(cell.row, cell.col, Some(spawn.kind))
+    match gem_lookup.get(cell) {
+      Some(gem) => {
+        let promoted = { ..gem, kind: spawn.kind, flash: true }
+        gem_lookup.set(cell, promoted)
+      }
+      None => {
+        let created = create_gem_entity(cell, spawn.kind)
+        let promoted = { ..created, flash: true }
+        gem_lookup.set(cell, promoted)
+        gem_entities.push(promoted.entity)
+        gem_aura_entities.push(promoted.aura_entity)
+      }
     }
   }
   game_state.pending_matches.clear()
+  game_state.pending_special_spawns.clear()
+  game_state.pending_match_count = 0
 }
 
 ///|
@@ -607,6 +755,8 @@ fn complete_resolution_phase() -> Unit {
       game_state.pending_swap_b = None
       game_state.cascade_depth = 0
       game_state.pending_matches.clear()
+      game_state.pending_match_count = 0
+      game_state.pending_special_spawns.clear()
       set_input_ready_phase()
     }
     Clear => {
@@ -614,24 +764,17 @@ fn complete_resolution_phase() -> Unit {
       if begin_fall_phase() {
         return
       }
-      if begin_refill_phase() {
-        return
-      }
       begin_cascade_check_phase()
     }
-    Fall => {
-      if begin_refill_phase() {
-        return
-      }
-      begin_cascade_check_phase()
-    }
-    Refill => begin_cascade_check_phase()
+    Fall => begin_cascade_check_phase()
     CascadeCheck => {
       let matches = find_matches()
       if matches.is_empty() {
         game_state.pending_swap_a = None
         game_state.pending_swap_b = None
         game_state.pending_matches.clear()
+        game_state.pending_match_count = 0
+        game_state.pending_special_spawns.clear()
         game_state.cascade_depth = 0
         set_input_ready_phase()
         if game_state.moves_left <= 0 {
@@ -663,7 +806,16 @@ fn apply_active_tweens() -> Unit {
     let z = lerp(tween.from_z, tween.to_z, eased)
     let scale = lerp(tween.from_scale, tween.to_scale, eased)
     let alpha = lerp(tween.from_alpha, tween.to_alpha, eased)
-    set_gem_visual(tween.entity, tween.kind, center, z, scale, alpha)
+    set_gem_visual(
+      tween.entity,
+      tween.aura_entity,
+      tween.kind,
+      tween.flash,
+      center,
+      z,
+      scale,
+      alpha,
+    )
   }
 }
 

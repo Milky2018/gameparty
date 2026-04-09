@@ -11,6 +11,8 @@ fn reset_logic_state_for_test() -> Unit {
   game_state.pending_swap_a = None
   game_state.pending_swap_b = None
   game_state.pending_matches.clear()
+  game_state.pending_match_count = 0
+  game_state.pending_special_spawns.clear()
   game_state.active_tweens.clear()
   game_state.cascade_depth = 0
   game_state.game_over_reason = ""
@@ -20,7 +22,13 @@ fn reset_logic_state_for_test() -> Unit {
       entity.destroy()
     }
   }
+  for entity in gem_aura_entities {
+    if entity.is_alive() {
+      entity.destroy()
+    }
+  }
   gem_entities.clear()
+  gem_aura_entities.clear()
   gem_lookup.clear()
   board.clear()
   for _ in 0..<(BOARD_ROWS * BOARD_COLS) {
@@ -32,8 +40,15 @@ fn reset_logic_state_for_test() -> Unit {
 fn place_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
   board_set(row, col, Some(kind))
   let entity = @entity.Entity::new()
+  let aura_entity = @entity.Entity::new()
   gem_entities.push(entity)
-  gem_lookup.set(Cell::{ row, col }, Gem::{ kind, entity })
+  gem_aura_entities.push(aura_entity)
+  gem_lookup.set(Cell::{ row, col }, Gem::{
+    kind,
+    flash: false,
+    entity,
+    aura_entity,
+  })
 }
 
 ///|
@@ -67,6 +82,25 @@ fn non_empty_board_count_for_test() -> Int {
     }
   }
   count
+}
+
+///|
+fn flash_gem_count_for_test() -> Int {
+  let mut count = 0
+  for _, gem in gem_lookup {
+    if gem.flash {
+      count += 1
+    }
+  }
+  count
+}
+
+///|
+fn is_flash_gem(cell : Cell, kind : GemKind) -> Bool {
+  match gem_lookup.get(cell) {
+    Some(gem) => gem.flash && gem.kind == kind
+    None => false
+  }
 }
 
 ///|
@@ -112,13 +146,13 @@ test "swap validation rejects non-match and accepts match-making swap" {
 }
 
 ///|
-test "begin_fall_phase compresses columns downward" {
+test "begin_fall_phase applies falling and refill together" {
   reset_logic_state_for_test()
   place_gem_for_test(5, 3, Ruby)
   inspect(begin_fall_phase(), content="true")
   assert_true(game_state.resolution_phase is Fall)
   inspect(board_get(7, 3), content="Some(Ruby)")
-  inspect(board_get(5, 3), content="None")
+  inspect(board_get(5, 3) is Some(_), content="true")
 }
 
 ///|
@@ -203,8 +237,6 @@ test "cascade check can trigger a second clear round" {
   assert_true(game_state.resolution_phase is Clear)
   complete_resolution_phase()
   assert_true(game_state.resolution_phase is Fall)
-  complete_resolution_phase()
-  assert_true(game_state.resolution_phase is Refill)
   complete_resolution_phase()
   assert_true(game_state.resolution_phase is CascadeCheck)
   complete_resolution_phase()
@@ -314,4 +346,52 @@ test "selected frame visibility follows first_pick and input gate" {
   game_state.resolution_phase = InputReady
   game_state.phase = GameOver
   inspect(should_show_selected_frame(), content="false")
+}
+
+///|
+test "five-in-a-row creates one flash gem at the third cell" {
+  reset_logic_state_for_test()
+  let matches : Array[Cell] = []
+  for col in 0..<5 {
+    let cell = Cell::{ row: 7, col }
+    place_gem_for_test(cell.row, cell.col, Ruby)
+    matches.push(cell)
+  }
+  begin_clear_phase(matches)
+  assert_true(game_state.resolution_phase is Clear)
+  complete_resolution_phase()
+  inspect(flash_gem_count_for_test(), content="1")
+  inspect(is_flash_gem(Cell::{ row: 7, col: 2 }, Ruby), content="true")
+}
+
+///|
+test "six-in-a-row creates one flash gem at the third cell" {
+  reset_logic_state_for_test()
+  let matches : Array[Cell] = []
+  for col in 1..<7 {
+    let cell = Cell::{ row: 7, col }
+    place_gem_for_test(cell.row, cell.col, Emerald)
+    matches.push(cell)
+  }
+  begin_clear_phase(matches)
+  assert_true(game_state.resolution_phase is Clear)
+  complete_resolution_phase()
+  inspect(flash_gem_count_for_test(), content="1")
+  inspect(is_flash_gem(Cell::{ row: 7, col: 3 }, Emerald), content="true")
+}
+
+///|
+test "seven-in-a-row creates one flash gem at the fourth cell" {
+  reset_logic_state_for_test()
+  let matches : Array[Cell] = []
+  for col in 0..<7 {
+    let cell = Cell::{ row: 7, col }
+    place_gem_for_test(cell.row, cell.col, Sapphire)
+    matches.push(cell)
+  }
+  begin_clear_phase(matches)
+  assert_true(game_state.resolution_phase is Clear)
+  complete_resolution_phase()
+  inspect(flash_gem_count_for_test(), content="1")
+  inspect(is_flash_gem(Cell::{ row: 7, col: 3 }, Sapphire), content="true")
 }
