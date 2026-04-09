@@ -234,7 +234,6 @@ priv struct GameState {
   mut profile_slowest_frame : Double
   mut timer_text_cache : String
   mut score_text_cache : String
-  mut hint_text_cache : String
   mut overlay_text_cache : String
   mut game_over_reason : String
 }
@@ -274,7 +273,6 @@ let game_state : GameState = {
   profile_slowest_frame: 0.0,
   timer_text_cache: "",
   score_text_cache: "",
-  hint_text_cache: "",
   overlay_text_cache: "",
   game_over_reason: "",
 }
@@ -284,6 +282,12 @@ let rand : @random.Rand = @random.Rand::new()
 
 ///|
 let board_bg_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let title_glow_outer_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let title_glow_inner_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let title_entity : @entity.Entity = @entity.Entity::new()
@@ -308,9 +312,6 @@ let score_text_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let board_panel_entity : @entity.Entity = @entity.Entity::new()
-
-///|
-let hint_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let overlay_entity : @entity.Entity = @entity.Entity::new()
@@ -371,12 +372,6 @@ let gem_aura_colors : Array[@render.Color] = [
   { r: 255U, g: 247U, b: 188U, a: 1.0 },
 ]
 
-///|
-let gem_names : Array[String] = [
-  "Ruby", "Emerald", "Sapphire", "Amber", "Amethyst", "Pearl",
-]
-
-///|
 let sound_swap : Ref[@raylib.Sound?] = { val: None }
 
 ///|

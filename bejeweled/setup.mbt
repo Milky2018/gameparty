@@ -111,7 +111,31 @@ fn setup_camera() -> Unit {
 ///|
 fn setup_static_text() -> Unit {
   text_entity(
-    title_entity, "BEJEWELED", 32.0, 24.0, 40, "rgb(249,251,255)", 100.0,
+    title_glow_outer_entity,
+    "MOONBIT EATS YOU",
+    18.0,
+    10.0,
+    108,
+    "rgba(132,72,255,0.34)",
+    98.0,
+  )
+  text_entity(
+    title_glow_inner_entity,
+    "MOONBIT EATS YOU",
+    26.0,
+    18.0,
+    92,
+    "rgba(176,112,255,0.52)",
+    99.0,
+  )
+  text_entity(
+    title_entity,
+    "MOONBIT EATS YOU",
+    32.0,
+    24.0,
+    80,
+    "rgb(198,135,255)",
+    100.0,
   )
   let status_center_y = STATUS_BOX_TOP + STATUS_BOX_HEIGHT * 0.5
   let score_center_x = status_box_center_x(1)
@@ -172,7 +196,6 @@ fn setup_static_text() -> Unit {
     STATUS_BOX_WIDTH * 0.9,
     STATUS_BOX_HEIGHT * 0.9,
   )
-  text_entity(hint_entity, "", 32.0, 654.0, 20, "rgb(196,205,220)", 100.0)
   text_entity(
     overlay_text_entity,
     "",
@@ -294,7 +317,6 @@ fn reset_run_state() -> Unit {
   game_state.game_over_reason = ""
   game_state.timer_text_cache = ""
   game_state.score_text_cache = ""
-  game_state.hint_text_cache = ""
   game_state.overlay_text_cache = ""
   board.clear()
   for _ in 0..<(BOARD_ROWS * BOARD_COLS) {

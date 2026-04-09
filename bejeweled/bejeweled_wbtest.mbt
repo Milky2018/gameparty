@@ -197,17 +197,6 @@ test "fill_board_without_initial_matches creates a match-free board" {
 }
 
 ///|
-test "selected hint text reflects the picked gem" {
-  reset_logic_state_for_test()
-  board_set(0, 0, Some(Ruby))
-  game_state.first_pick = Some(Cell::{ row: 0, col: 0 })
-  inspect(
-    selected_hint_text(),
-    content="Selected Ruby at 1,1. Pick an adjacent gem.",
-  )
-}
-
-///|
 test "invalid swap plays forward then rollback and restores board" {
   reset_logic_state_for_test()
   place_gem_for_test(0, 0, Ruby)

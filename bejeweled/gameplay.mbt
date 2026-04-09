@@ -1,24 +1,3 @@
-///|
-fn selected_hint_text() -> String {
-  if game_state.phase == GameOver {
-    return "Round ended. Press R, Enter, or Space to restart."
-  }
-  if game_state.resolution_phase != InputReady {
-    return "Resolving board..."
-  }
-  match game_state.first_pick {
-    Some(cell) =>
-      match board_get(cell.row, cell.col) {
-        Some(kind) =>
-          "Selected \{gem_names[gem_index(kind)]} at \{cell.row + 1},\{cell.col + 1}. Pick an adjacent gem."
-        None => "Selected empty cell. Pick an adjacent gem."
-      }
-    None =>
-      "Click or drag adjacent gems to swap. Match 3+ to clear. R/Enter/Space restart. F3 toggle FPS. Esc quit."
-  }
-}
-
-///|
 fn clamp01(value : Double) -> Double {
   if value <= 0.0 {
     0.0
@@ -1034,11 +1013,6 @@ pub fn render_system(_world : @ecs.World) -> Unit {
   if game_state.score_text_cache != score {
     @ui.texts().set(score_text_entity, @ui.Text::new(score))
     game_state.score_text_cache = score
-  }
-  let hint = selected_hint_text()
-  if game_state.hint_text_cache != hint {
-    @ui.texts().set(hint_entity, @ui.Text::new(hint))
-    game_state.hint_text_cache = hint
   }
   set_entity_visible(timer_fx_entity, game_state.time_freeze_remaining > 0.0)
   set_entity_visible(score_fx_entity, game_state.score_bonus_remaining > 0.0)
