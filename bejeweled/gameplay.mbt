@@ -195,8 +195,11 @@ fn set_gem_visual(
     center[X] - size[X] * 0.5,
     center[Y] - size[Y] * 0.5,
   )
-  let color = { ..gem_color(kind), a: clamped_alpha }
-  let sprite = @sprite.Sprite::from_color(color, size)
+  let sprite = @sprite.Sprite::from_image(
+    gem_image(kind),
+    custom_size=Some(size),
+  )
+  sprite.color = { r: 255U, g: 255U, b: 255U, a: clamped_alpha }
   sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(

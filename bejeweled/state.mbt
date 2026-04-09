@@ -271,14 +271,13 @@ let board : Array[GemKind?] = []
 let gem_lookup : Map[Cell, Gem] = Map::new()
 
 ///|
-let gem_colors : Array[@render.Color] = [
-  { r: 235U, g: 72U, b: 84U, a: 1.0 },
-  { r: 76U, g: 213U, b: 111U, a: 1.0 },
-  { r: 78U, g: 150U, b: 255U, a: 1.0 },
-  { r: 245U, g: 181U, b: 66U, a: 1.0 },
-  { r: 183U, g: 110U, b: 255U, a: 1.0 },
-  { r: 246U, g: 234U, b: 173U, a: 1.0 },
+let gem_image_paths : Array[String] = [
+  "bejeweled/assets/Bun.png", "bejeweled/assets/Go.png", "bejeweled/assets/Haskell.png",
+  "bejeweled/assets/OCaml.png", "bejeweled/assets/Python.png", "bejeweled/assets/Rust.png",
 ]
+
+///|
+let gem_image_handles : Array[@asset.ImageHandle] = []
 
 ///|
 let gem_names : Array[String] = [
@@ -319,8 +318,18 @@ fn cell_center(cell : Cell) -> (@math.Vec2D, Double) {
 }
 
 ///|
-fn gem_color(kind : GemKind) -> @render.Color {
-  gem_colors[gem_index(kind)]
+fn ensure_gem_images_loaded() -> Unit {
+  if gem_image_handles.is_empty() {
+    for path in gem_image_paths {
+      gem_image_handles.push(@asset.load_image(path))
+    }
+  }
+}
+
+///|
+fn gem_image(kind : GemKind) -> @asset.ImageHandle {
+  ensure_gem_images_loaded()
+  gem_image_handles[gem_index(kind)]
 }
 
 ///|
