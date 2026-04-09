@@ -50,10 +50,10 @@ const FALL_SECONDS_PER_CELL : Double = 0.08
 const REFILL_SECONDS_PER_CELL : Double = 0.08
 
 ///|
-const FLASH_TIME_FREEZE_SCALE : Double = 0.5
+const FLASH_TIME_FREEZE_SCALE : Double = 0.0
 
 ///|
-const FLASH_EMERALD_FREEZE_SECONDS : Double = 6.0
+const FLASH_EMERALD_FREEZE_SECONDS : Double = 5.0
 
 ///|
 const FLASH_AMETHYST_SCORE_SECONDS : Double = 10.0

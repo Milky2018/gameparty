@@ -513,7 +513,7 @@ test "flash Amber clears the whole row and scores the extra clears" {
 }
 
 ///|
-test "flash Emerald refreshes freeze timer to 6 seconds" {
+test "flash Emerald refreshes freeze timer to 5 seconds" {
   reset_logic_state_for_test()
   game_state.time_freeze_remaining = 1.0
   place_gem_for_test(1, 0, Emerald)
@@ -525,7 +525,7 @@ test "flash Emerald refreshes freeze timer to 6 seconds" {
     Cell::{ row: 1, col: 2 },
   ])
   finalize_clear_phase()
-  inspect(game_state.time_freeze_remaining >= 5.99, content="true")
+  inspect(game_state.time_freeze_remaining >= 4.99, content="true")
 }
 
 ///|
