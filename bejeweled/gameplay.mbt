@@ -72,14 +72,11 @@ fn set_gem_visual(
   )
   set_entity_visible(entity, true)
   if flash {
-    let pulse = 0.5 +
-      0.5 *
-      @cmath.sin(@time.elapsed() * 11.0 + center[X] * 0.021 + center[Y] * 0.017)
-    // Keep the glow energy high, but clip it to one board cell so it never bleeds
-    // into neighbor cells.
-    let aura_virtual_scale = 1.24 + 0.18 * pulse
+    // Keep the glow strong but static (non-flickering), and clip it to one board
+    // cell so it never bleeds into neighbor cells.
+    let aura_virtual_scale = FLASH_AURA_SCALE
     let aura_virtual_size_value = size_value * aura_virtual_scale
-    let aura_clip_size_value = CELL_SIZE - BOARD_GAP
+    let aura_clip_size_value = CELL_SIZE - BOARD_GAP * FLASH_AURA_CLIP_GAP_FACTOR
     let aura_size = @math.Vec2D(aura_clip_size_value, aura_clip_size_value)
     let aura_top_left = @math.Vec2D(
       center[X] - aura_size[X] * 0.5,
@@ -104,7 +101,7 @@ fn set_gem_visual(
     )
     let aura_color = {
       ..gem_aura_color(kind),
-      a: clamp01(clamped_alpha * (0.18 + 0.26 * pulse)),
+      a: clamp01(clamped_alpha * FLASH_AURA_ALPHA),
     }
     let aura_sprite = @sprite.Sprite::from_image(
       gem_image(kind),

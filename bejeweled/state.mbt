@@ -62,6 +62,15 @@ const FLASH_PEARL_SCORE_MULTIPLIER : Int = 3
 const FLASH_AMETHYST_SCORE_MULTIPLIER : Int = 2
 
 ///|
+const FLASH_AURA_SCALE : Double = 1.56
+
+///|
+const FLASH_AURA_ALPHA : Double = 0.88
+
+///|
+const FLASH_AURA_CLIP_GAP_FACTOR : Double = 0.2
+
+///|
 const SELECT_FRAME_THICKNESS : Double = 4.0
 
 ///|
@@ -298,6 +307,9 @@ let score_fx_entity : @entity.Entity = @entity.Entity::new()
 let score_text_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
+let board_panel_entity : @entity.Entity = @entity.Entity::new()
+
+///|
 let hint_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
@@ -317,9 +329,6 @@ let selected_frame_left_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
 let selected_frame_right_entity : @entity.Entity = @entity.Entity::new()
-
-///|
-let board_cell_entities : Array[@entity.Entity] = []
 
 ///|
 let gem_entities : Array[@entity.Entity] = []

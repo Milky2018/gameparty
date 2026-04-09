@@ -94,7 +94,7 @@ fn panel_entity(
 fn setup_board_background() -> Unit {
   panel_entity(
     board_bg_entity,
-    color_rgba(10U, 15U, 28U, 1.0),
+    color_rgba(204U, 209U, 217U, 1.0),
     VIEWPORT_WIDTH * 0.5,
     VIEWPORT_HEIGHT * 0.5,
     VIEWPORT_WIDTH,
@@ -118,7 +118,7 @@ fn setup_static_text() -> Unit {
   let timer_center_x = status_box_center_x(0)
   panel_entity(
     score_panel_entity,
-    color_rgba(13U, 24U, 44U, 0.92),
+    color_rgba(58U, 64U, 74U, 0.94),
     score_center_x,
     status_center_y,
     STATUS_BOX_WIDTH,
@@ -127,7 +127,7 @@ fn setup_static_text() -> Unit {
   )
   panel_entity(
     timer_panel_entity,
-    color_rgba(13U, 24U, 44U, 0.92),
+    color_rgba(58U, 64U, 74U, 0.94),
     timer_center_x,
     status_center_y,
     STATUS_BOX_WIDTH,
@@ -209,28 +209,19 @@ fn setup_static_text() -> Unit {
 
 ///|
 fn setup_board_entities() -> Unit {
-  board_cell_entities.clear()
-  for row in 0..<BOARD_ROWS {
-    for col in 0..<BOARD_COLS {
-      let entity = @entity.Entity::new()
-      let cell_x = BOARD_ORIGIN_X +
-        col.to_double() * CELL_SIZE +
-        CELL_SIZE * 0.5
-      let cell_y = BOARD_ORIGIN_Y +
-        row.to_double() * CELL_SIZE +
-        CELL_SIZE * 0.5
-      panel_entity(
-        entity,
-        color_rgba(19U, 30U, 50U, 0.95),
-        cell_x,
-        cell_y,
-        CELL_SIZE - BOARD_GAP,
-        CELL_SIZE - BOARD_GAP,
-        50.0,
-      )
-      board_cell_entities.push(entity)
-    }
-  }
+  let board_width = BOARD_COLS.to_double() * CELL_SIZE - BOARD_GAP
+  let board_height = BOARD_ROWS.to_double() * CELL_SIZE - BOARD_GAP
+  let board_center_x = BOARD_ORIGIN_X + BOARD_COLS.to_double() * CELL_SIZE * 0.5
+  let board_center_y = BOARD_ORIGIN_Y + BOARD_ROWS.to_double() * CELL_SIZE * 0.5
+  panel_entity(
+    board_panel_entity,
+    color_rgba(66U, 72U, 84U, 0.96),
+    board_center_x,
+    board_center_y,
+    board_width,
+    board_height,
+    50.0,
+  )
 }
 
 ///|
