@@ -286,7 +286,6 @@ fn reset_run_state() -> Unit {
   game_state.resolution_elapsed = 0.0
   game_state.resolution_duration = 0.0
   game_state.score = 0
-  game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
   game_state.time_freeze_remaining = 0.0
   game_state.score_bonus_remaining = 0.0
@@ -312,6 +311,11 @@ fn reset_run_state() -> Unit {
   }
   fill_board_without_initial_matches()
   rebuild_visuals_from_board()
+  if has_playable_swap() {
+    set_input_ready_phase()
+  } else {
+    begin_deadlock_clear_phase()
+  }
 }
 
 ///|

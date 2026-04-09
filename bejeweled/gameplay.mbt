@@ -401,6 +401,34 @@ fn begin_clear_phase(matches : Array[Cell]) -> Unit {
 }
 
 ///|
+fn begin_deadlock_clear_phase() -> Unit {
+  let clear_cells : Array[Cell] = []
+  let tweens : Array[GemTween] = []
+  for row in 0..<BOARD_ROWS {
+    for col in 0..<BOARD_COLS {
+      let cell = Cell::{ row, col }
+      if board_get(row, col) is Some(_) {
+        clear_cells.push(cell)
+        if gem_lookup.get(cell) is Some(gem) {
+          tweens.push(clear_tween(gem, cell))
+        }
+      }
+    }
+  }
+  game_state.pending_matches = clear_cells
+  game_state.pending_match_count = 0
+  game_state.pending_special_spawns.clear()
+  if tweens.is_empty() {
+    if begin_fall_phase() {
+      return
+    }
+    begin_cascade_check_phase()
+  } else {
+    start_resolution_phase(DeadlockClear, tweens)
+  }
+}
+
+///|
 fn begin_cascade_check_phase() -> Unit {
   game_state.resolution_phase = CascadeCheck
   game_state.resolution_elapsed = 0.0
@@ -538,6 +566,20 @@ fn finalize_clear_phase() -> Unit {
 }
 
 ///|
+fn finalize_deadlock_clear_phase() -> Unit {
+  for cell in game_state.pending_matches {
+    board_set(cell.row, cell.col, None)
+    if gem_lookup.get(cell) is Some(gem) {
+      gem_lookup.remove(cell)
+      remove_gem_once(gem)
+    }
+  }
+  game_state.pending_matches.clear()
+  game_state.pending_special_spawns.clear()
+  game_state.pending_match_count = 0
+}
+
+///|
 fn complete_resolution_phase() -> Unit {
   match game_state.resolution_phase {
     InputReady => ()
@@ -552,7 +594,6 @@ fn complete_resolution_phase() -> Unit {
               if matches.is_empty() {
                 begin_swap_rollback_phase()
               } else {
-                game_state.moves_left -= 1
                 game_state.cascade_depth = 0
                 begin_clear_phase(matches)
               }
@@ -590,6 +631,13 @@ fn complete_resolution_phase() -> Unit {
       begin_cascade_check_phase()
     }
     Fall => begin_cascade_check_phase()
+    DeadlockClear => {
+      finalize_deadlock_clear_phase()
+      if begin_fall_phase() {
+        return
+      }
+      begin_cascade_check_phase()
+    }
     CascadeCheck => {
       let matches = find_matches()
       if matches.is_empty() {
@@ -599,11 +647,10 @@ fn complete_resolution_phase() -> Unit {
         game_state.pending_match_count = 0
         game_state.pending_special_spawns.clear()
         game_state.cascade_depth = 0
-        set_input_ready_phase()
-        if game_state.moves_left <= 0 {
-          game_state.phase = GameOver
-          game_state.game_over_reason = "No moves left"
-          play_sound_ref(sound_gameover)
+        if has_playable_swap() {
+          set_input_ready_phase()
+        } else {
+          begin_deadlock_clear_phase()
         }
       } else {
         game_state.cascade_depth += 1
@@ -869,7 +916,7 @@ fn maybe_report_profile() -> Unit {
     1000.0 / slowest_frame_ms
   }
   println(
-    "[bejeweled][profile] elapsed=\{sample_s}s frames=\{game_state.profile_frame_count} fps_avg=\{fps_avg} fps_window=\{fps_window} fps_frame_dt=\{fps_frame_dt} fps_min=\{min_fps} input_avg_ms=\{input_ms} update_avg_ms=\{update_ms} render_avg_ms=\{render_ms} slowest_frame_ms=\{slowest_frame_ms} score=\{game_state.score} moves=\{game_state.moves_left} time_left=\{game_state.time_left}",
+    "[bejeweled][profile] elapsed=\{sample_s}s frames=\{game_state.profile_frame_count} fps_avg=\{fps_avg} fps_window=\{fps_window} fps_frame_dt=\{fps_frame_dt} fps_min=\{min_fps} input_avg_ms=\{input_ms} update_avg_ms=\{update_ms} render_avg_ms=\{render_ms} slowest_frame_ms=\{slowest_frame_ms} score=\{game_state.score} time_left=\{game_state.time_left}",
   )
   game_state.profile_last_report_at = now
   game_state.profile_frame_count = 0
@@ -970,7 +1017,7 @@ fn score_text() -> String {
   } else {
     ""
   }
-  "SCORE\n\{game_state.score}\nMOVES \{game_state.moves_left}\{fps_text}"
+  "SCORE\n\{game_state.score}\{fps_text}"
 }
 
 ///|

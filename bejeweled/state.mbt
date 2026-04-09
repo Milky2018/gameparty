@@ -29,9 +29,6 @@ const BOARD_GAP : Double = 6.0
 const GEM_COUNT : Int = 6
 
 ///|
-const MOVE_LIMIT : Int = 32
-
-///|
 const GAME_TIME_LIMIT : Double = 180.0
 
 ///|
@@ -122,6 +119,7 @@ priv enum ResolutionPhase {
   SwapRollback
   Clear
   Fall
+  DeadlockClear
   CascadeCheck
 } derive(Eq)
 
@@ -199,7 +197,6 @@ priv struct GameState {
   mut resolution_elapsed : Double
   mut resolution_duration : Double
   mut score : Int
-  mut moves_left : Int
   mut time_left : Double
   mut time_freeze_remaining : Double
   mut score_bonus_remaining : Double
@@ -240,7 +237,6 @@ let game_state : GameState = {
   resolution_elapsed: 0.0,
   resolution_duration: 0.0,
   score: 0,
-  moves_left: MOVE_LIMIT,
   time_left: GAME_TIME_LIMIT,
   time_freeze_remaining: 0.0,
   score_bonus_remaining: 0.0,

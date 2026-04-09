@@ -128,6 +128,35 @@ fn swap_cells(a : Cell, b : Cell) -> Unit {
 }
 
 ///|
+fn swap_creates_match(a : Cell, b : Cell) -> Bool {
+  if board_get(a.row, a.col) is None || board_get(b.row, b.col) is None {
+    return false
+  }
+  swap_cells(a, b)
+  let has_match = !find_matches().is_empty()
+  swap_cells(a, b)
+  has_match
+}
+
+///|
+fn has_playable_swap() -> Bool {
+  for row in 0..<BOARD_ROWS {
+    for col in 0..<BOARD_COLS {
+      let cell = Cell::{ row, col }
+      if col + 1 < BOARD_COLS &&
+        swap_creates_match(cell, Cell::{ row, col: col + 1 }) {
+        return true
+      }
+      if row + 1 < BOARD_ROWS &&
+        swap_creates_match(cell, Cell::{ row: row + 1, col }) {
+        return true
+      }
+    }
+  }
+  false
+}
+
+///|
 fn score_for_matches(count : Int) -> Int {
   if count <= 0 {
     0

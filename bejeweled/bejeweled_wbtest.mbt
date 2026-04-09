@@ -2,7 +2,6 @@
 fn reset_logic_state_for_test() -> Unit {
   game_state.phase = Playing
   game_state.score = 0
-  game_state.moves_left = MOVE_LIMIT
   game_state.time_left = GAME_TIME_LIMIT
   game_state.time_freeze_remaining = 0.0
   game_state.score_bonus_remaining = 0.0
@@ -241,7 +240,6 @@ test "valid swap resolves through clear fall refill and returns input ready" {
   assert_true(game_state.resolution_phase is Clear)
   ignore(resolve_until_input_ready(16))
   assert_true(game_state.resolution_phase is InputReady)
-  inspect(game_state.moves_left, content="31")
   inspect(game_state.score >= 30, content="true")
   inspect(
     gem_lookup_count() == non_empty_board_count_for_test(),
@@ -251,6 +249,46 @@ test "valid swap resolves through clear fall refill and returns input ready" {
     alive_gem_entity_count() == non_empty_board_count_for_test(),
     content="true",
   )
+}
+
+///|
+fn fill_deadlock_pattern_for_test() -> Unit {
+  let pattern : Array[Array[GemKind]] = [
+    [Ruby, Emerald, Sapphire, Amber, Ruby, Emerald, Sapphire, Amber],
+    [Sapphire, Amber, Ruby, Emerald, Sapphire, Amber, Ruby, Emerald],
+    [Emerald, Ruby, Amber, Sapphire, Emerald, Ruby, Amber, Sapphire],
+    [Amber, Sapphire, Emerald, Ruby, Amber, Sapphire, Emerald, Ruby],
+    [Ruby, Emerald, Sapphire, Amber, Ruby, Emerald, Sapphire, Amber],
+    [Sapphire, Amber, Ruby, Emerald, Sapphire, Amber, Ruby, Emerald],
+    [Emerald, Ruby, Amber, Sapphire, Emerald, Ruby, Amber, Sapphire],
+    [Amber, Sapphire, Emerald, Ruby, Amber, Sapphire, Emerald, Ruby],
+  ]
+  for row in 0..<BOARD_ROWS {
+    for col in 0..<BOARD_COLS {
+      place_gem_for_test(row, col, pattern[row][col])
+    }
+  }
+}
+
+///|
+test "deadlock pattern has no immediate matches and no playable swap" {
+  reset_logic_state_for_test()
+  fill_deadlock_pattern_for_test()
+  inspect(find_matches().is_empty(), content="true")
+  inspect(has_playable_swap(), content="false")
+}
+
+///|
+test "deadlock clear wipes board without scoring then refills" {
+  reset_logic_state_for_test()
+  fill_deadlock_pattern_for_test()
+  game_state.score = 120
+  begin_deadlock_clear_phase()
+  assert_true(game_state.resolution_phase is DeadlockClear)
+  complete_resolution_phase()
+  assert_true(game_state.resolution_phase is Fall)
+  inspect(game_state.score, content="120")
+  inspect(non_empty_board_count_for_test(), content="64")
 }
 
 ///|
