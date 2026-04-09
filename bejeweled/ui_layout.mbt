@@ -98,8 +98,8 @@ fn setup_flash_gem_legend() -> Unit {
   )
   let kinds : Array[GemKind] = [Sapphire, Ruby, Emerald, Amber, Pearl, Amethyst]
   let descriptions : Array[String] = [
-    "Sapphire: convert one color", "Ruby: blast nearby 3x3", "Emerald: freeze timer 5s",
-    "Amber: clear one row", "Pearl: x3 this clear", "Amethyst: x2 score for 10s",
+    "Convert one color", "Blast nearby 3x3", "Freeze timer 5s", "Clear one row",
+    "x3 this clear", "x2 score for 10s",
   ]
   let icon_x = panel_left + 42.0
   let text_x = panel_left + 88.0

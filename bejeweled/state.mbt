@@ -17,7 +17,7 @@ const BOARD_COLS : Int = 8
 const CELL_SIZE : Double = 68.0
 
 ///|
-const BOARD_ORIGIN_X : Double = 280.0
+const BOARD_ORIGIN_X : Double = 240.0
 
 ///|
 const BOARD_ORIGIN_Y : Double = 86.0
