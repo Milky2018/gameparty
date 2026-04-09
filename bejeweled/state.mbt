@@ -314,6 +314,42 @@ let score_text_entity : @entity.Entity = @entity.Entity::new()
 let board_panel_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
+let flash_legend_panel_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let flash_legend_title_entity : @entity.Entity = @entity.Entity::new()
+
+///|
+let flash_legend_icon_entities : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let flash_legend_aura_entities : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
+let flash_legend_text_entities : Array[@entity.Entity] = [
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+  @entity.Entity::new(),
+]
+
+///|
 let overlay_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
@@ -372,6 +408,7 @@ let gem_aura_colors : Array[@render.Color] = [
   { r: 255U, g: 247U, b: 188U, a: 1.0 },
 ]
 
+///|
 let sound_swap : Ref[@raylib.Sound?] = { val: None }
 
 ///|

@@ -1,3 +1,4 @@
+///|
 fn clamp01(value : Double) -> Double {
   if value <= 0.0 {
     0.0
@@ -55,7 +56,8 @@ fn set_gem_visual(
     // cell so it never bleeds into neighbor cells.
     let aura_virtual_scale = FLASH_AURA_SCALE
     let aura_virtual_size_value = size_value * aura_virtual_scale
-    let aura_clip_size_value = CELL_SIZE - BOARD_GAP * FLASH_AURA_CLIP_GAP_FACTOR
+    let aura_clip_size_value = CELL_SIZE -
+      BOARD_GAP * FLASH_AURA_CLIP_GAP_FACTOR
     let aura_size = @math.Vec2D(aura_clip_size_value, aura_clip_size_value)
     let aura_top_left = @math.Vec2D(
       center[X] - aura_size[X] * 0.5,
