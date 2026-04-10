@@ -50,6 +50,7 @@ RAY_DIR="$ROOT_DIR/.mooncakes/tonyfettes/raylib/internal/raylib"
 FS_NATIVE_C="$ROOT_DIR/.mooncakes/moonbitlang/x/fs/fs_native.c"
 NETPLAY_STUB_C="$ROOT_DIR/netplay/transport_native_stub.c"
 EMCC_OPT_LEVEL="${EMCC_OPT_LEVEL:--O1}"
+EMCC_ENABLE_ASYNCIFY="${EMCC_ENABLE_ASYNCIFY:-0}"
 
 SOURCES=(
   "$C_FILE"
@@ -91,19 +92,26 @@ OUT_DIR="$ROOT_DIR/web/$GAME"
 mkdir -p "$OUT_DIR"
 
 echo "[web-build] compiling $GAME (${MODE})..."
+EMCC_FLAGS=(
+  -include string.h
+  -I"$HOME/.moon/include"
+  -I"$RAY_DIR"
+  -DPLATFORM_WEB
+  -DGRAPHICS_API_OPENGL_ES2
+  -sUSE_GLFW=3
+  -sALLOW_MEMORY_GROWTH=1
+  -sFORCE_FILESYSTEM=1
+  --preload-file "$ROOT_DIR/assets@/assets"
+  "$EMCC_OPT_LEVEL"
+)
+
+if [[ "$EMCC_ENABLE_ASYNCIFY" == "1" ]]; then
+  EMCC_FLAGS+=(-sASYNCIFY)
+fi
+
 emcc \
-  -include string.h \
   "${SOURCES[@]}" \
-  -I"$HOME/.moon/include" \
-  -I"$RAY_DIR" \
-  -DPLATFORM_WEB \
-  -DGRAPHICS_API_OPENGL_ES2 \
-  -sUSE_GLFW=3 \
-  -sASYNCIFY \
-  -sALLOW_MEMORY_GROWTH=1 \
-  -sFORCE_FILESYSTEM=1 \
-  --preload-file "$ROOT_DIR/assets@/assets" \
-  "$EMCC_OPT_LEVEL" \
+  "${EMCC_FLAGS[@]}" \
   -o "$OUT_DIR/index.html"
 
 echo "[web-build] output: $OUT_DIR/index.html"
