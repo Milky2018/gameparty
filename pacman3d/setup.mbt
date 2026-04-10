@@ -7,7 +7,7 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 const PACMAN_UPSTREAM_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
-const PACMAN_UPSTREAM_FONT_PATH : String = "assets/pacman3d/ThaleahFat.ttf"
+const PACMAN_UPSTREAM_FONT_PATH : String = "assets/shared/fonts/ThaleahFat.ttf"
 
 ///|
 const CEILING_TILE_TEXTURE_PATH : String = "assets/pacman3d/ceiling_tile.png"

@@ -2,7 +2,7 @@
 const ANGRYRABBITS_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
-const ANGRYRABBITS_FONT_PATH : String = "assets/angryrabbits/ThaleahFat.ttf"
+const ANGRYRABBITS_FONT_PATH : String = "assets/shared/fonts/ThaleahFat.ttf"
 
 ///|
 let angryrabbits_font_registered : Ref[Bool] = { val: false }

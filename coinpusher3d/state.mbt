@@ -188,7 +188,7 @@ const LUCKY_BONUS_SCORE : Int = 35
 const HUD_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
-const HUD_FONT_PATH : String = "assets/coinpusher3d/ThaleahFat.ttf"
+const HUD_FONT_PATH : String = "assets/shared/fonts/ThaleahFat.ttf"
 
 ///|
 const TABLE_TOP_PATH : String = "assets/coinpusher3d/textures/table_top.png"
