@@ -1,5 +1,5 @@
 ///|
-const DEFAULT_LEVEL_PATH : String = "angryrabbits/assets/levels/level_01.ldtk"
+const DEFAULT_LEVEL_PATH : String = "assets/angryrabbits/levels/level_01.ldtk"
 
 ///|
 const LDTK_ENTITIES_LAYER : String = "Entities"

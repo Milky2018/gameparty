@@ -1,11 +1,11 @@
 ///|
-const RABBIT_SCENE_PATH : String = "mooncraft/assets/models/rabbit.gltf"
+const RABBIT_SCENE_PATH : String = "assets/mooncraft/models/rabbit.gltf"
 
 ///|
-const SNOWMAN_SCENE_PATH : String = "mooncraft/assets/models/snowman_on.gltf"
+const SNOWMAN_SCENE_PATH : String = "assets/mooncraft/models/snowman_on.gltf"
 
 ///|
-const ZOMBIE_SCENE_PATH : String = "mooncraft/assets/models/zombie.gltf"
+const ZOMBIE_SCENE_PATH : String = "assets/mooncraft/models/zombie.gltf"
 
 ///|
 fn load_demo_scene_handles_once() -> Unit {

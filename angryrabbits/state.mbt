@@ -42,7 +42,7 @@ const RABBIT_RADIUS : Double = 18.0
 
 ///|
 /// Atlas texture used by runtime sprite slicing.
-const ANGRYRABBITS_SPRITES_PATH : String = "angryrabbits/assets/sprites.png"
+const ANGRYRABBITS_SPRITES_PATH : String = "assets/angryrabbits/sprites.png"
 
 ///|
 /// Rabbit sprite source top-left X in `sprites.png`.

@@ -114,7 +114,6 @@ fn register_render_assets_once() -> Unit {
   }
 
   register_font_once()
-  install_embedded_assets()
 
   table_mesh_handle.val = Some(
     @render3d.register_mesh_asset(
@@ -699,7 +698,6 @@ fn reset_runtime_scene() -> Unit {
 
 ///|
 pub fn startup_system(_world : @ecs.World) -> Unit {
-  install_embedded_assets()
   register_render_assets_once()
   setup_camera_and_lighting()
   setup_hud_entities()

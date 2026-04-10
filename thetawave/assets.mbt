@@ -1,227 +1,227 @@
 ///|
-const MENU_BG_TEXTURE : String = "thetawave/assets/texture/main_menu_background_54.png"
+const MENU_BG_TEXTURE : String = "assets/thetawave/texture/main_menu_background_54.png"
 
 ///|
-const GAME_BG_TEXTURE : String = "thetawave/assets/texture/main_menu_background_54.png"
+const GAME_BG_TEXTURE : String = "assets/thetawave/texture/main_menu_background_54.png"
 
 ///|
-const GAME_OVER_BG_TEXTURE : String = "thetawave/assets/texture/game_over_background.png"
+const GAME_OVER_BG_TEXTURE : String = "assets/thetawave/texture/game_over_background.png"
 
 ///|
-const VICTORY_BG_TEXTURE : String = "thetawave/assets/texture/victory_background.png"
+const VICTORY_BG_TEXTURE : String = "assets/thetawave/texture/victory_background.png"
 
 ///|
-const CAPTAIN_TEXTURE : String = "thetawave/assets/texture/captain_character.png"
+const CAPTAIN_TEXTURE : String = "assets/thetawave/texture/captain_character.png"
 
 ///|
-const JUGGERNAUT_TEXTURE : String = "thetawave/assets/texture/juggernaut_character.png"
+const JUGGERNAUT_TEXTURE : String = "assets/thetawave/texture/juggernaut_character.png"
 
 ///|
-const CAPTAIN_OUTLINE_TEXTURE : String = "thetawave/assets/texture/captain_character_outline.png"
+const CAPTAIN_OUTLINE_TEXTURE : String = "assets/thetawave/texture/captain_character_outline.png"
 
 ///|
-const JUGGERNAUT_OUTLINE_TEXTURE : String = "thetawave/assets/texture/juggernaut_character_outline.png"
+const JUGGERNAUT_OUTLINE_TEXTURE : String = "assets/thetawave/texture/juggernaut_character_outline.png"
 
 ///|
-const CAPTAIN_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/captain_description.png"
+const CAPTAIN_DESCRIPTION_TEXTURE : String = "assets/thetawave/texture/captain_description.png"
 
 ///|
-const JUGGERNAUT_DESCRIPTION_TEXTURE : String = "thetawave/assets/texture/juggernaut_description.png"
+const JUGGERNAUT_DESCRIPTION_TEXTURE : String = "assets/thetawave/texture/juggernaut_description.png"
 
 ///|
-const THETAWAVE_LOGO_TEXTURE : String = "thetawave/assets/texture/logo.png"
+const THETAWAVE_LOGO_TEXTURE : String = "assets/thetawave/texture/logo.png"
 
 ///|
-const MENU_BUTTON_SPRITESHEET_TEXTURE : String = "thetawave/assets/texture/menu_button_spritesheet.png"
+const MENU_BUTTON_SPRITESHEET_TEXTURE : String = "assets/thetawave/texture/menu_button_spritesheet.png"
 
 ///|
-const RESTART_GAME_PROMPT_TEXTURE : String = "thetawave/assets/texture/restart_game_prompt_keyboard.png"
+const RESTART_GAME_PROMPT_TEXTURE : String = "assets/thetawave/texture/restart_game_prompt_keyboard.png"
 
 ///|
-const PAWN_TEXTURE : String = "thetawave/assets/texture/pawn_spritesheet.png"
+const PAWN_TEXTURE : String = "assets/thetawave/texture/pawn_spritesheet.png"
 
 ///|
-const DRONE_TEXTURE : String = "thetawave/assets/texture/drone_spritesheet.png"
+const DRONE_TEXTURE : String = "assets/thetawave/texture/drone_spritesheet.png"
 
 ///|
-const TUTORIAL_DRONE_TEXTURE : String = "thetawave/assets/texture/tutorial_drone_spritesheet.png"
+const TUTORIAL_DRONE_TEXTURE : String = "assets/thetawave/texture/tutorial_drone_spritesheet.png"
 
 ///|
-const SHELLY_TEXTURE : String = "thetawave/assets/texture/shelly_spritesheet.png"
+const SHELLY_TEXTURE : String = "assets/thetawave/texture/shelly_spritesheet.png"
 
 ///|
-const STRAFER_TEXTURE : String = "thetawave/assets/texture/strafer_spritesheet.png"
+const STRAFER_TEXTURE : String = "assets/thetawave/texture/strafer_spritesheet.png"
 
 ///|
-const MISSILE_LAUNCHER_TEXTURE : String = "thetawave/assets/texture/missile_launcher_spritesheet.png"
+const MISSILE_LAUNCHER_TEXTURE : String = "assets/thetawave/texture/missile_launcher_spritesheet.png"
 
 ///|
-const MISSILE_TEXTURE : String = "thetawave/assets/texture/missile_spritesheet.png"
+const MISSILE_TEXTURE : String = "assets/thetawave/texture/missile_spritesheet.png"
 
 ///|
-const MONEY_ASTEROID_TEXTURE : String = "thetawave/assets/texture/money_asteroid_spritesheet.png"
+const MONEY_ASTEROID_TEXTURE : String = "assets/thetawave/texture/money_asteroid_spritesheet.png"
 
 ///|
-const HAULER_TEXTURE : String = "thetawave/assets/texture/hauler_front.png"
+const HAULER_TEXTURE : String = "assets/thetawave/texture/hauler_front.png"
 
 ///|
-const HAULER_MIDDLE_TEXTURE : String = "thetawave/assets/texture/hauler_middle.png"
+const HAULER_MIDDLE_TEXTURE : String = "assets/thetawave/texture/hauler_middle.png"
 
 ///|
-const HAULER_BACK_TEXTURE : String = "thetawave/assets/texture/hauler_back.png"
+const HAULER_BACK_TEXTURE : String = "assets/thetawave/texture/hauler_back.png"
 
 ///|
-const HAULER_THRUSTERS_TEXTURE : String = "thetawave/assets/texture/hauler_thrusters_spritesheet.png"
+const HAULER_THRUSTERS_TEXTURE : String = "assets/thetawave/texture/hauler_thrusters_spritesheet.png"
 
 ///|
-const CRUSTLING_TEXTURE : String = "thetawave/assets/texture/crustling_spritesheet.png"
+const CRUSTLING_TEXTURE : String = "assets/thetawave/texture/crustling_spritesheet.png"
 
 ///|
-const FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/repeater_head_spritesheet.png"
+const FERRITHARAX_TEXTURE : String = "assets/thetawave/texture/repeater_head_spritesheet.png"
 
 ///|
-const FERRITHARAX_BODY_TEXTURE : String = "thetawave/assets/texture/repeater_body_spritesheet.png"
+const FERRITHARAX_BODY_TEXTURE : String = "assets/thetawave/texture/repeater_body_spritesheet.png"
 
 ///|
-const FERRITHARAX_LEFT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/repeater_left_shoulder_spritesheet.png"
+const FERRITHARAX_LEFT_SHOULDER_TEXTURE : String = "assets/thetawave/texture/repeater_left_shoulder_spritesheet.png"
 
 ///|
-const FERRITHARAX_RIGHT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/repeater_right_shoulder_spritesheet.png"
+const FERRITHARAX_RIGHT_SHOULDER_TEXTURE : String = "assets/thetawave/texture/repeater_right_shoulder_spritesheet.png"
 
 ///|
-const FERRITHARAX_LEFT_ARM_TEXTURE : String = "thetawave/assets/texture/repeater_left_arm_spritesheet.png"
+const FERRITHARAX_LEFT_ARM_TEXTURE : String = "assets/thetawave/texture/repeater_left_arm_spritesheet.png"
 
 ///|
-const FERRITHARAX_RIGHT_ARM_TEXTURE : String = "thetawave/assets/texture/repeater_right_arm_spritesheet.png"
+const FERRITHARAX_RIGHT_ARM_TEXTURE : String = "assets/thetawave/texture/repeater_right_arm_spritesheet.png"
 
 ///|
-const FERRITHARAX_LEFT_CLAW_TEXTURE : String = "thetawave/assets/texture/repeater_left_claw_spritesheet.png"
+const FERRITHARAX_LEFT_CLAW_TEXTURE : String = "assets/thetawave/texture/repeater_left_claw_spritesheet.png"
 
 ///|
-const FERRITHARAX_RIGHT_CLAW_TEXTURE : String = "thetawave/assets/texture/repeater_right_claw_spritesheet.png"
+const FERRITHARAX_RIGHT_CLAW_TEXTURE : String = "assets/thetawave/texture/repeater_right_claw_spritesheet.png"
 
 ///|
-const MECHA_FERRITHARAX_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_head.png"
+const MECHA_FERRITHARAX_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_head.png"
 
 ///|
-const MECHA_FERRITHARAX_BODY_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_body.png"
+const MECHA_FERRITHARAX_BODY_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_body.png"
 
 ///|
-const MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_left_shoulder.png"
+const MECHA_FERRITHARAX_LEFT_SHOULDER_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_left_shoulder.png"
 
 ///|
-const MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_right_shoulder.png"
+const MECHA_FERRITHARAX_RIGHT_SHOULDER_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_right_shoulder.png"
 
 ///|
-const MECHA_FERRITHARAX_LEFT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_left_arm.png"
+const MECHA_FERRITHARAX_LEFT_ARM_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_left_arm.png"
 
 ///|
-const MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_right_arm.png"
+const MECHA_FERRITHARAX_RIGHT_ARM_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_right_arm.png"
 
 ///|
-const MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_left_claw.png"
+const MECHA_FERRITHARAX_LEFT_CLAW_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_left_claw.png"
 
 ///|
-const MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_ferritharax_right_claw.png"
+const MECHA_FERRITHARAX_RIGHT_CLAW_TEXTURE : String = "assets/thetawave/texture/mecha_ferritharax_right_claw.png"
 
 ///|
-const MECHA_SAUCETRON_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_head.png"
+const MECHA_SAUCETRON_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_head.png"
 
 ///|
-const MECHA_SAUCETRON_BODY_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_body.png"
+const MECHA_SAUCETRON_BODY_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_body.png"
 
 ///|
-const MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_left_shoulder.png"
+const MECHA_SAUCETRON_LEFT_SHOULDER_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_left_shoulder.png"
 
 ///|
-const MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_right_shoulder.png"
+const MECHA_SAUCETRON_RIGHT_SHOULDER_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_right_shoulder.png"
 
 ///|
-const MECHA_SAUCETRON_LEFT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_left_arm.png"
+const MECHA_SAUCETRON_LEFT_ARM_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_left_arm.png"
 
 ///|
-const MECHA_SAUCETRON_RIGHT_ARM_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_right_arm.png"
+const MECHA_SAUCETRON_RIGHT_ARM_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_right_arm.png"
 
 ///|
-const MECHA_SAUCETRON_LEFT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_left_claw.png"
+const MECHA_SAUCETRON_LEFT_CLAW_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_left_claw.png"
 
 ///|
-const MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE : String = "thetawave/assets/texture/mecha_saucetron_right_claw.png"
+const MECHA_SAUCETRON_RIGHT_CLAW_TEXTURE : String = "assets/thetawave/texture/mecha_saucetron_right_claw.png"
 
 ///|
-const PLAYER_BULLET_TEXTURE : String = "thetawave/assets/texture/ally_bullet.png"
+const PLAYER_BULLET_TEXTURE : String = "assets/thetawave/texture/ally_bullet.png"
 
 ///|
-const PLAYER_BLAST_TEXTURE : String = "thetawave/assets/texture/ally_blast.png"
+const PLAYER_BLAST_TEXTURE : String = "assets/thetawave/texture/ally_blast.png"
 
 ///|
-const ENEMY_BULLET_TEXTURE : String = "thetawave/assets/texture/enemy_bullet.png"
+const ENEMY_BULLET_TEXTURE : String = "assets/thetawave/texture/enemy_bullet.png"
 
 ///|
-const ENEMY_BLAST_TEXTURE : String = "thetawave/assets/texture/enemy_blast.png"
+const ENEMY_BLAST_TEXTURE : String = "assets/thetawave/texture/enemy_blast.png"
 
 ///|
-const CONSUMABLE_MONEY_TEXTURE : String = "thetawave/assets/texture/money1_spritesheet.png"
+const CONSUMABLE_MONEY_TEXTURE : String = "assets/thetawave/texture/money1_spritesheet.png"
 
 ///|
-const CONSUMABLE_MONEY3_TEXTURE : String = "thetawave/assets/texture/money5_spritesheet.png"
+const CONSUMABLE_MONEY3_TEXTURE : String = "assets/thetawave/texture/money5_spritesheet.png"
 
 ///|
-const CONSUMABLE_HEALTH_TEXTURE : String = "thetawave/assets/texture/health_wrench_spritesheet.png"
+const CONSUMABLE_HEALTH_TEXTURE : String = "assets/thetawave/texture/health_wrench_spritesheet.png"
 
 ///|
-const CONSUMABLE_ARMOR_TEXTURE : String = "thetawave/assets/texture/armor_spritesheet.png"
+const CONSUMABLE_ARMOR_TEXTURE : String = "assets/thetawave/texture/armor_spritesheet.png"
 
 ///|
-const CONSUMABLE_GAIN_PROJECTILES_TEXTURE : String = "thetawave/assets/texture/power_glow.png"
+const CONSUMABLE_GAIN_PROJECTILES_TEXTURE : String = "assets/thetawave/texture/power_glow.png"
 
 ///|
-const ITEM_ENHANCED_PLATING_TEXTURE : String = "thetawave/assets/texture/power_label.png"
+const ITEM_ENHANCED_PLATING_TEXTURE : String = "assets/thetawave/texture/power_label.png"
 
 ///|
-const HEALTH_BAR_LABEL_TEXTURE : String = "thetawave/assets/texture/health_bar_label.png"
+const HEALTH_BAR_LABEL_TEXTURE : String = "assets/thetawave/texture/health_bar_label.png"
 
 ///|
-const DEFENSE_BAR_LABEL_TEXTURE : String = "thetawave/assets/texture/defense_bar_label.png"
+const DEFENSE_BAR_LABEL_TEXTURE : String = "assets/thetawave/texture/defense_bar_label.png"
 
 ///|
-const WARNING_GRADIENT_TEXTURE : String = "thetawave/assets/texture/warning_gradient.png"
+const WARNING_GRADIENT_TEXTURE : String = "assets/thetawave/texture/warning_gradient.png"
 
 ///|
-const DEFENSE_GRADIENT_TEXTURE : String = "thetawave/assets/texture/defense_gradient.png"
+const DEFENSE_GRADIENT_TEXTURE : String = "assets/thetawave/texture/defense_gradient.png"
 
 ///|
-const ABILITY_SQUARE_LEFT_TEXTURE : String = "thetawave/assets/texture/ability_square_left.png"
+const ABILITY_SQUARE_LEFT_TEXTURE : String = "assets/thetawave/texture/ability_square_left.png"
 
 ///|
-const BLAST_ABILITY_TEXTURE : String = "thetawave/assets/texture/blast_ability.png"
+const BLAST_ABILITY_TEXTURE : String = "assets/thetawave/texture/blast_ability.png"
 
 ///|
-const BULLET_ABILITY_TEXTURE : String = "thetawave/assets/texture/bullet_ability.png"
+const BULLET_ABILITY_TEXTURE : String = "assets/thetawave/texture/bullet_ability.png"
 
 ///|
-const MEGABLAST_ABILITY_TEXTURE : String = "thetawave/assets/texture/megablast_ability.png"
+const MEGABLAST_ABILITY_TEXTURE : String = "assets/thetawave/texture/megablast_ability.png"
 
 ///|
-const CHARGE_ABILITY_TEXTURE : String = "thetawave/assets/texture/charge_ability.png"
+const CHARGE_ABILITY_TEXTURE : String = "assets/thetawave/texture/charge_ability.png"
 
 ///|
-const DAMAGE_ICON_TEXTURE : String = "thetawave/assets/texture/damage_icon.png"
+const DAMAGE_ICON_TEXTURE : String = "assets/thetawave/texture/damage_icon.png"
 
 ///|
-const HEALTH_ICON_TEXTURE : String = "thetawave/assets/texture/health_icon.png"
+const HEALTH_ICON_TEXTURE : String = "assets/thetawave/texture/health_icon.png"
 
 ///|
-const RANGE_ICON_TEXTURE : String = "thetawave/assets/texture/range_icon.png"
+const RANGE_ICON_TEXTURE : String = "assets/thetawave/texture/range_icon.png"
 
 ///|
-const FIRE_RATE_ICON_TEXTURE : String = "thetawave/assets/texture/fire_rate_icon.png"
+const FIRE_RATE_ICON_TEXTURE : String = "assets/thetawave/texture/fire_rate_icon.png"
 
 ///|
-const SIZE_ICON_TEXTURE : String = "thetawave/assets/texture/size_icon.png"
+const SIZE_ICON_TEXTURE : String = "assets/thetawave/texture/size_icon.png"
 
 ///|
-const SPEED_ICON_TEXTURE : String = "thetawave/assets/texture/speed_icon.png"
+const SPEED_ICON_TEXTURE : String = "assets/thetawave/texture/speed_icon.png"
 
 ///|
 const FONT_LUNCHDS_ALIAS : String = "Lunchds"
@@ -233,13 +233,13 @@ const FONT_SPACE_MADNESS_ALIAS : String = "SpaceMadness"
 const FONT_WIBLETOWN_ALIAS : String = "Wibletown"
 
 ///|
-const FONT_LUNCHDS_PATH : String = "thetawave/assets/fonts/Lunchds.ttf"
+const FONT_LUNCHDS_PATH : String = "assets/thetawave/fonts/Lunchds.ttf"
 
 ///|
-const FONT_SPACE_MADNESS_PATH : String = "thetawave/assets/fonts/SpaceMadness.ttf"
+const FONT_SPACE_MADNESS_PATH : String = "assets/thetawave/fonts/SpaceMadness.ttf"
 
 ///|
-const FONT_WIBLETOWN_PATH : String = "thetawave/assets/fonts/wibletown-regular.otf"
+const FONT_WIBLETOWN_PATH : String = "assets/thetawave/fonts/wibletown-regular.otf"
 
 ///|
 const UI_FONT_SMALL : String = "16px Lunchds"
@@ -251,31 +251,31 @@ const UI_FONT_MEDIUM : String = "18px Lunchds"
 const GAMEPLAY_SPRITE_SCALE : Double = 1.0
 
 ///|
-const SFX_PLAYER_FIRE : String = "thetawave/assets/sounds/player_fire_blast.wav"
+const SFX_PLAYER_FIRE : String = "assets/thetawave/sounds/player_fire_blast.wav"
 
 ///|
-const SFX_ENEMY_FIRE : String = "thetawave/assets/sounds/enemy_fire_blast.wav"
+const SFX_ENEMY_FIRE : String = "assets/thetawave/sounds/enemy_fire_blast.wav"
 
 ///|
-const SFX_DEFENSE_HEAL : String = "thetawave/assets/sounds/defense_heal.wav"
+const SFX_DEFENSE_HEAL : String = "assets/thetawave/sounds/defense_heal.wav"
 
 ///|
-const SFX_DEFENSE_DAMAGE : String = "thetawave/assets/sounds/defense_damage.wav"
+const SFX_DEFENSE_DAMAGE : String = "assets/thetawave/sounds/defense_damage.wav"
 
 ///|
-const SFX_PLAYER_HIT : String = "thetawave/assets/sounds/player_hit.wav"
+const SFX_PLAYER_HIT : String = "assets/thetawave/sounds/player_hit.wav"
 
 ///|
-const SFX_MEGABLAST : String = "thetawave/assets/sounds/megablast_ability.wav"
+const SFX_MEGABLAST : String = "assets/thetawave/sounds/megablast_ability.wav"
 
 ///|
-const SFX_CONSUMABLE_PICKUP : String = "thetawave/assets/sounds/consumable_pickup.wav"
+const SFX_CONSUMABLE_PICKUP : String = "assets/thetawave/sounds/consumable_pickup.wav"
 
 ///|
-const SFX_MENU_INPUT_SUCCESS : String = "thetawave/assets/sounds/menu_input_success.wav"
+const SFX_MENU_INPUT_SUCCESS : String = "assets/thetawave/sounds/menu_input_success.wav"
 
 ///|
-const MUSIC_GAME_LOOP : String = "thetawave/assets/sounds/deflector_soundtrack.mp3"
+const MUSIC_GAME_LOOP : String = "assets/thetawave/sounds/deflector_soundtrack.mp3"
 
 ///|
 fn animated_sprite(

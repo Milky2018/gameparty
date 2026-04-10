@@ -134,10 +134,10 @@ const MENU_NORMAL_COLOR : String = HUD_TEXT_COLOR
 const BOMBMAN_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
-const BOMBMAN_FONT_PATH : String = "bombman/assets/ThaleahFat.ttf"
+const BOMBMAN_FONT_PATH : String = "assets/bombman/ThaleahFat.ttf"
 
 ///|
-const BOMBMAN_SPRITES_PATH : String = "bombman/assets/bomberman.png"
+const BOMBMAN_SPRITES_PATH : String = "assets/bombman/bomberman.png"
 
 ///|
 const BOMBMAN_SPRITE_TILE_SIZE : Double = 16.0

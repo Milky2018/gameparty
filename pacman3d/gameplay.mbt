@@ -288,7 +288,7 @@ fn check_dot_collection() -> Unit {
       @render3d.point_lights3d().remove(dots[i].entity)
       dots[i].entity.destroy()
       dots[i].minimap_entity.destroy()
-      play_audio("pacman3d/assets/coin.wav")
+      play_audio("assets/pacman3d/coin.wav")
       if all_dots_collected() {
         next_level()
         reset_level_entities()
@@ -424,7 +424,7 @@ pub fn player_input_system(_world : @ecs.World) -> Unit {
 
   check_dot_collection()
   if check_ghost_collision() {
-    play_audio("pacman3d/assets/hurt.wav")
+    play_audio("assets/pacman3d/hurt.wav")
     reset_level_entities()
   }
   sync_camera_transform()

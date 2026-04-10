@@ -73,9 +73,9 @@ These shortcuts use the keys currently exposed by Selene's input API. The intend
 
 ## Assets and Notices
 
-Runtime textures, GUI images, and demo assets are copied from the upstream Mooncraft project into `mooncraft/assets/` for compatibility with the native prototype.
+Runtime textures, GUI images, and demo assets are copied from the upstream Mooncraft project into `assets/mooncraft/` for compatibility with the native prototype.
 
-See [assets/README.md](/Users/zhengyu/Documents/projects/gameparty/mooncraft/assets/README.md) for the Minecraft EULA and upstream asset notice.
+See [assets/README.md](/Users/zhengyu/Documents/projects/gameparty/assets/mooncraft/README.md) for the Minecraft EULA and upstream asset notice.
 
 ## Verification
 

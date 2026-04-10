@@ -1,7 +1,6 @@
 ///|
 pub fn startup_system(_world : @ecs.World) -> Unit {
   if !ui_initialized.val {
-    install_embedded_assets()
     preload_assets()
     initialize_scene()
     initialize_ui()
@@ -17,8 +16,8 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
 
 ///|
 let game_background_textures : Array[String] = [
-  "thetawave/assets/texture/backgrounds/background_1.png", "thetawave/assets/texture/backgrounds/background_2.png",
-  "thetawave/assets/texture/backgrounds/background_3.png",
+  "assets/thetawave/texture/backgrounds/background_1.png", "assets/thetawave/texture/backgrounds/background_2.png",
+  "assets/thetawave/texture/backgrounds/background_3.png",
 ]
 
 ///|

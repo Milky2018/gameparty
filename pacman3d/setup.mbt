@@ -7,25 +7,25 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 const PACMAN_UPSTREAM_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
-const PACMAN_UPSTREAM_FONT_PATH : String = "pacman3d/assets/ThaleahFat.ttf"
+const PACMAN_UPSTREAM_FONT_PATH : String = "assets/pacman3d/ThaleahFat.ttf"
 
 ///|
-const CEILING_TILE_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile.png"
+const CEILING_TILE_TEXTURE_PATH : String = "assets/pacman3d/ceiling_tile.png"
 
 ///|
-const CEILING_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/ceiling_tile_albedo.png"
+const CEILING_TILE_ALBEDO_TEXTURE_PATH : String = "assets/pacman3d/ceiling_tile_albedo.png"
 
 ///|
-const WALL_TILE_TEXTURE_PATH : String = "pacman3d/assets/wall_tile.png"
+const WALL_TILE_TEXTURE_PATH : String = "assets/pacman3d/wall_tile.png"
 
 ///|
-const WALL_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/wall_tile_albedo.png"
+const WALL_TILE_ALBEDO_TEXTURE_PATH : String = "assets/pacman3d/wall_tile_albedo.png"
 
 ///|
-const FLOOR_TILE_TEXTURE_PATH : String = "pacman3d/assets/floor_tile.png"
+const FLOOR_TILE_TEXTURE_PATH : String = "assets/pacman3d/floor_tile.png"
 
 ///|
-const FLOOR_TILE_ALBEDO_TEXTURE_PATH : String = "pacman3d/assets/floor_tile_albedo.png"
+const FLOOR_TILE_ALBEDO_TEXTURE_PATH : String = "assets/pacman3d/floor_tile_albedo.png"
 
 ///|
 let pacman_upstream_font_registered : Ref[Bool] = { val: false }
@@ -1045,7 +1045,6 @@ fn reset_run() -> Unit {
 ///|
 pub fn startup_system(_world : @ecs.World) -> Unit {
   register_pacman_upstream_font_once()
-  install_embedded_assets()
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(light_entity)
   ensure_entity_alive(player_light_entity)

@@ -4,7 +4,7 @@ This package reads level data from an LDtk project file via `selene/ldtk`.
 
 ## File
 
-- Default level file: `angryrabbits/assets/levels/level_01.ldtk`
+- Default level file: `assets/angryrabbits/levels/level_01.ldtk`
 - Loader behavior: use the first level from `project.indexed_levels()`
 - Keep `externalLevels` disabled in LDtk for now. AngryRabbits currently loads a single in-file `.ldtk` project.
 

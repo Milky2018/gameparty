@@ -32,13 +32,14 @@ This repository currently contains these playable prototypes and ports:
 - `cmd/bejeweled`: run Bejeweled directly.
 - `cmd/jackal`: run Jackal directly.
 - `cmd/kofarena`: run KOFArena directly.
-- `thetawave/`: Thetawave package and assets.
-- `pacman3d/`: Pacman 3D package and assets.
-- `angryrabbits/`: Angry Rabbits package and assets.
-- `bombman/`: Bombman package and assets.
+- `assets/`: shared asset root (`assets/<game>/...`).
+- `thetawave/`: Thetawave package and tests.
+- `pacman3d/`: Pacman 3D package and tests.
+- `angryrabbits/`: Angry Rabbits package and tests.
+- `bombman/`: Bombman package and tests.
 - `mooncraft_core/`: pure MoonBit world/block/item/generation core reused by Mooncraft.
-- `mooncraft/`: Selene ECS runtime, assets, and tests for Mooncraft.
-- `coinpusher3d/`: CoinPusher3D package, assets, and tests.
+- `mooncraft/`: Selene ECS runtime and tests for Mooncraft.
+- `coinpusher3d/`: CoinPusher3D package and tests.
 - `tankbattle/`: TankBattle package and tests.
 - `supermario/`: SuperMario package and tests.
 - `plantvszombies/`: PlantVsZombies package and tests.
@@ -51,7 +52,6 @@ This repository currently contains these playable prototypes and ports:
 
 - MoonBit toolchain
 - Native target toolchain for your platform
-- `selene-embed-assets` available in `PATH`
 
 ## Run
 
@@ -109,26 +109,26 @@ FPS_MIN=58 FPS_MAX=64 RUN_TIMEOUT=60 PRECHECK=0 tools/review_all_games.sh
 
 ## Asset Loading
 
-Game packages use pre-build asset generation:
+All builds now load assets directly from the filesystem under the root `assets/` directory.
 
-- `debug` builds read assets from local `assets/` directories.
-- `release` builds embed assets through `selene-embed-assets` and `:embed`.
+- Game-local assets: `assets/<game>/...`
+- Cross-game shared assets: `assets/shared/...`
 
-The generated embedded asset blobs are excluded from module publishing in [moon.mod.json](/Users/zhengyu/Documents/projects/gameparty/moon.mod.json).
+For native distribution, copy the `assets/` directory next to the executable (or keep a working directory that can resolve `assets/...` paths).
 
 ## Current Status
 
 ### Thetawave
 
 - Ported into the shared `gameparty` repository.
-- Uses embedded assets in `release` mode and local assets in `debug` mode.
+- Uses filesystem assets from `assets/thetawave/...` in both debug and release.
 - Remaining Selene-vs-upstream parity gaps are tracked in [PORTING_BLOCKERS.md](/Users/zhengyu/Documents/projects/gameparty/thetawave/PORTING_BLOCKERS.md).
 
 ### Pacman 3D
 
 - Runs as a true 3D game using Selene `render3d`.
 - Uses textured floor, wall, and ceiling tiles sourced from the Pac-Man tileset.
-- Shares the release embedded asset flow with the rest of the repository.
+- Uses filesystem assets from `assets/pacman3d/...` in both debug and release.
 
 ### Mooncraft
 

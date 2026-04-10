@@ -2,7 +2,7 @@
 test "icon_texture_to_asset_path flattens slashes" {
   inspect(
     icon_texture_to_asset_path("classic/oak_log"),
-    content="mooncraft/assets/textures/classic__oak_log.png",
+    content="assets/mooncraft/textures/classic__oak_log.png",
   )
 }
 

@@ -14,10 +14,10 @@ const ATLAS_COLUMNS : Int = 8
 const ATLAS_ROWS : Int = 11
 
 ///|
-const ATLAS_PATH : String = "mooncraft/assets/generated/block_item_atlas.png"
+const ATLAS_PATH : String = "assets/mooncraft/generated/block_item_atlas.png"
 
 ///|
-const GUI_WINDOW_PATH : String = "mooncraft/assets/gui/window.png"
+const GUI_WINDOW_PATH : String = "assets/mooncraft/gui/window.png"
 
 ///|
 let mooncraft_asset_path_prefixes : Array[String] = [
@@ -619,7 +619,7 @@ fn current_catalog_entry() -> CatalogEntry? {
 ///|
 fn icon_texture_to_asset_path(texture_name : String) -> String {
   let builder = StringBuilder::new()
-  builder.write_string("mooncraft/assets/textures/")
+  builder.write_string("assets/mooncraft/textures/")
   let mut first = true
   for part in texture_name.split("/") {
     if !first {

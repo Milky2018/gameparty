@@ -188,28 +188,28 @@ const LUCKY_BONUS_SCORE : Int = 35
 const HUD_FONT_FAMILY : String = "ThaleahFat"
 
 ///|
-const HUD_FONT_PATH : String = "coinpusher3d/assets/ThaleahFat.ttf"
+const HUD_FONT_PATH : String = "assets/coinpusher3d/ThaleahFat.ttf"
 
 ///|
-const TABLE_TOP_PATH : String = "coinpusher3d/assets/textures/table_top.png"
+const TABLE_TOP_PATH : String = "assets/coinpusher3d/textures/table_top.png"
 
 ///|
-const TABLE_SIDE_PATH : String = "coinpusher3d/assets/textures/table_side.png"
+const TABLE_SIDE_PATH : String = "assets/coinpusher3d/textures/table_side.png"
 
 ///|
-const PUSHER_PATH : String = "coinpusher3d/assets/textures/pusher.png"
+const PUSHER_PATH : String = "assets/coinpusher3d/textures/pusher.png"
 
 ///|
-const COIN_PATH : String = "coinpusher3d/assets/textures/coin.png"
+const COIN_PATH : String = "assets/coinpusher3d/textures/coin.png"
 
 ///|
-const SFX_COIN_DROP_PATH : String = "coinpusher3d/assets/sounds/coin_drop.wav"
+const SFX_COIN_DROP_PATH : String = "assets/coinpusher3d/sounds/coin_drop.wav"
 
 ///|
-const SFX_CHEST_PICK_PATH : String = "coinpusher3d/assets/sounds/chest_pick.wav"
+const SFX_CHEST_PICK_PATH : String = "assets/coinpusher3d/sounds/chest_pick.wav"
 
 ///|
-const MUSIC_RUN_LOOP_PATH : String = "coinpusher3d/assets/music/run_loop.mp3"
+const MUSIC_RUN_LOOP_PATH : String = "assets/coinpusher3d/music/run_loop.mp3"
 
 ///|
 const DEBUG_CAPTURE_ENV : String = "COINPUSHER3D_CAPTURE"

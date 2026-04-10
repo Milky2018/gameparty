@@ -98,7 +98,7 @@ const BEJEWELED_PROFILE_WARMUP_SECONDS : Double = 2.5
 const BEJEWELED_FONT_FAMILY : String = "MGS1Codec"
 
 ///|
-const BEJEWELED_FONT_PATH : String = "bejeweled/assets/mgs1codec.ttf"
+const BEJEWELED_FONT_PATH : String = "assets/bejeweled/mgs1codec.ttf"
 
 ///|
 const STATUS_BOX_WIDTH : Double = 220.0
@@ -381,8 +381,8 @@ let gem_lookup : Map[Cell, Gem] = Map::new()
 
 ///|
 let gem_image_paths : Array[String] = [
-  "bejeweled/assets/Bun.png", "bejeweled/assets/Go.png", "bejeweled/assets/MoonBit.png",
-  "bejeweled/assets/OCaml.png", "bejeweled/assets/Python.png", "bejeweled/assets/Rust.png",
+  "assets/bejeweled/Bun.png", "assets/bejeweled/Go.png", "assets/bejeweled/MoonBit.png",
+  "assets/bejeweled/OCaml.png", "assets/bejeweled/Python.png", "assets/bejeweled/Rust.png",
 ]
 
 ///|
