@@ -78,6 +78,35 @@ moon run cmd/kofarena
 moon run cmd/topdown_rogue_proto
 ```
 
+## Web (Emscripten)
+
+You can build web outputs from MoonBit native-generated C artifacts (without changing MoonBit target).
+
+```bash
+# Build one game to web/<game>/index.html
+scripts/build_web_game.sh bejeweled
+
+# Build all cmd/* games
+scripts/build_web_all_games.sh
+
+# Optional release build
+scripts/build_web_game.sh bejeweled --release
+scripts/build_web_all_games.sh --release
+
+# Regenerate gallery page (auto-called by build_web_game.sh)
+scripts/gen_web_gallery.sh
+
+# Serve and open gallery
+cd web && python3 -m http.server 4173
+# open http://127.0.0.1:4173/
+```
+
+Notes:
+
+- Requires `emcc` (`brew install emscripten` on macOS).
+- Current build chain uses `native -> C -> emcc` and keeps MoonBit target as `native`.
+- Use `EMCC_OPT_LEVEL` to tune compile speed/size, e.g. `EMCC_OPT_LEVEL=-O0 scripts/build_web_all_games.sh`.
+
 `bombman` netplay is now fully menu-driven (no `BOMBMAN_NET_*` env vars):
 
 1. In main menu, enter `NETWORK BATTLE`.
