@@ -1,0 +1,257 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/topdown_platform"
+
+import {
+  "Milky2018/selene/ecs",
+  "Milky2018/selene/math",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
+pub fn combat_system(@ecs.World) -> Unit
+
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn intent_system(@ecs.World) -> Unit
+
+pub fn movement_collision_system(@ecs.World) -> Unit
+
+pub fn render_sync_system(@ecs.World) -> Unit
+
+pub fn run(TopDownPluginDef) -> Unit
+
+pub fn setup_plugin(TopDownPluginDef) -> Unit
+
+pub fn spawn_loot_system(@ecs.World) -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
+
+pub fn state_transition_system(@ecs.World) -> Unit
+
+pub fn validate_plugin(TopDownPluginDef) -> String?
+
+// Errors
+
+// Types and methods
+pub(all) struct ArchetypeDef {
+  id : String
+  max_hp : Int
+  move_speed : Double
+  radius : Double
+  touch_damage : Int
+  score_value : Int
+  sprites : DirectionalSprites
+  drop_table_id : String?
+  primary_skill_id : String?
+  secondary_skill_id : String?
+}
+
+pub struct CombatState {
+  mut move_intent : @math.Vec2D
+  mut primary_requested : Bool
+  mut secondary_requested : Bool
+  mut attack_flash_ttl : Double
+}
+
+pub(all) struct DirectionalSprites {
+  up : SpriteAnimDef
+  down : SpriteAnimDef
+  left : SpriteAnimDef
+  right : SpriteAnimDef
+}
+
+pub(all) struct DropItemDef {
+  id : String
+  image : String
+  weight : Int
+  heal : Int
+  score_bonus : Int
+}
+
+pub(all) struct DropTableDef {
+  id : String
+  chance : Double
+  items : Array[DropItemDef]
+}
+
+pub(all) enum Facing {
+  Up
+  Down
+  Left
+  Right
+} derive(Eq, @debug.Debug)
+
+pub(all) struct ImageVisualDef {
+  path : String
+  scale : Double
+  y_offset : Double
+}
+
+pub struct LootState {
+  mut live_pickups : Int
+}
+
+pub(all) struct MapDef {
+  tile_size : Double
+  rows : Array[String]
+  legend : Map[Char, TileOrSpawnRule]
+}
+
+pub(all) struct PluginMeta {
+  id : String
+  name : String
+  version : String
+}
+
+pub(all) struct PluginRuntimeState {
+  phase : RunPhase
+  score : Int
+  player_hp : Int
+  player_hp_max : Int
+  wave : Int
+  waves_total : Int
+  time_left : Double
+  enemies_alive : Int
+  enemies_killed : Int
+  pickups_collected : Int
+}
+
+pub struct PluginRuntimeStateResource {
+  mut snapshot : PluginRuntimeState
+}
+
+pub(all) struct ProgressionDef {
+  run_seconds : Double
+  player_archetype_id : String
+}
+
+pub(all) enum RunPhase {
+  Boot
+  Playing
+  Won
+  Lost
+} derive(Eq, @debug.Debug)
+
+pub struct RunState {
+  mut phase : RunPhase
+  mut elapsed : Double
+  mut time_left : Double
+  mut score : Int
+  mut enemies_killed : Int
+  mut pickups_collected : Int
+  mut status_message : String
+}
+
+pub(all) struct SkillDef {
+  id : String
+  kind : SkillKind
+  cooldown : Double
+  damage : Int
+  range : Double
+  projectile_speed : Double
+  projectile_radius : Double
+}
+
+pub(all) enum SkillKind {
+  Melee
+  Projectile
+} derive(Eq, @debug.Debug)
+
+pub struct SpawnCursor {
+  mut wave_index : Int
+  mut entry_index : Int
+  mut spawned_in_entry : Int
+  mut wait_timer : Double
+  mut wave_started : Bool
+  mut all_spawned : Bool
+}
+
+pub struct SpawnState {
+  mut cursor : SpawnCursor
+}
+
+pub(all) struct SpriteAnimDef {
+  image : String
+  frame_width : Double
+  frame_height : Double
+  columns : Int
+  frame_count : Int
+  fps : Double
+  scale : Double
+}
+
+pub(all) enum TileKind {
+  Floor
+  Wall
+  PlayerSpawn
+  EnemySpawn
+  Interact
+} derive(Eq, @debug.Debug)
+
+pub(all) struct TileOrSpawnRule {
+  kind : TileKind
+  floor_image : ImageVisualDef?
+  prop_image : ImageVisualDef?
+  blocks : Bool
+}
+
+pub(all) struct TopDownHooks {
+  on_run_start : ((PluginRuntimeState) -> Unit)?
+  on_enemy_killed : ((PluginRuntimeState, String) -> Unit)?
+  on_pickup : ((PluginRuntimeState, String) -> Unit)?
+}
+
+pub(all) struct TopDownPluginDef {
+  meta : PluginMeta
+  map : MapDef
+  archetypes : Array[ArchetypeDef]
+  skills : Array[SkillDef]
+  waves : Array[WaveDef]
+  drops : Array[DropTableDef]
+  progression : ProgressionDef
+  ui_theme : UiThemeDef
+  hooks : TopDownHooks?
+}
+
+pub struct UiState {
+  mut title_text : String
+  mut hud_text : String
+  mut message_text : String
+}
+
+pub(all) struct UiThemeDef {
+  title : String
+  font_path : String
+  font_family : String
+  hud_color_css : String
+}
+
+pub(all) struct WaveDef {
+  id : Int
+  start_delay : Double
+  entries : Array[WaveEntryDef]
+}
+
+pub(all) struct WaveEntryDef {
+  archetype_id : String
+  count : Int
+  spawn_interval : Double
+}
+
+pub struct WorldState {
+  mut tile_size : Double
+  mut rows : Int
+  mut cols : Int
+  mut world_width : Double
+  mut world_height : Double
+  mut player_spawn : @math.Vec2D
+  enemy_spawns : Array[@math.Vec2D]
+  blocking_rects : Array[@math.Rect]
+}
+
+// Type aliases
+
+// Traits
+

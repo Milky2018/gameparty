@@ -17,6 +17,8 @@ This repository currently contains these playable prototypes and ports:
 - `jackal`: a top-down run-and-gun prototype built with pure primitives and procedural audio.
 - `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
 - `netplay`: a standalone networking layer subpackage for host-authoritative input sync (library-only, no `cmd/*` entry).
+- `topdown_platform`: a reusable top-down data+hooks platform package.
+- `topdown_rogue_proto`: the first data-driven ARPG roguelite plugin on top of `topdown_platform`.
 
 ## Included Packages
 
@@ -32,6 +34,7 @@ This repository currently contains these playable prototypes and ports:
 - `cmd/bejeweled`: run Bejeweled directly.
 - `cmd/jackal`: run Jackal directly.
 - `cmd/kofarena`: run KOFArena directly.
+- `cmd/topdown_rogue_proto`: run the top-down roguelite prototype directly.
 - `assets/`: shared asset root (`assets/<game>/...`).
 - `thetawave/`: Thetawave package and tests.
 - `pacman3d/`: Pacman 3D package and tests.
@@ -47,6 +50,8 @@ This repository currently contains these playable prototypes and ports:
 - `jackal/`: Jackal package and tests.
 - `kofarena/`: KOFArena package and tests.
 - `netplay/`: shared networking-layer package for future multiplayer integration.
+- `topdown_platform/`: reusable top-down platform package and tests.
+- `topdown_rogue_proto/`: first plugin package and tests.
 
 ## Requirements
 
@@ -70,6 +75,7 @@ moon run cmd/plantvszombies
 moon run cmd/bejeweled
 moon run cmd/jackal
 moon run cmd/kofarena
+moon run cmd/topdown_rogue_proto
 ```
 
 `bombman` netplay is now fully menu-driven (no `BOMBMAN_NET_*` env vars):
