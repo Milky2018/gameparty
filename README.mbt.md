@@ -18,6 +18,7 @@ This repository currently contains these playable prototypes and ports:
 - `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
 - `netplay`: a standalone networking layer subpackage for host-authoritative input sync (library-only, no `cmd/*` entry).
 - `topdown_platform`: a reusable top-down data+hooks platform package.
+- `topdown_pluginkit`: shared plugin helpers for fast top-down data authoring.
 - `topdown_rogue_proto`: the first data-driven ARPG roguelite plugin on top of `topdown_platform`.
 
 ## Included Packages
@@ -51,6 +52,7 @@ This repository currently contains these playable prototypes and ports:
 - `kofarena/`: KOFArena package and tests.
 - `netplay/`: shared networking-layer package for future multiplayer integration.
 - `topdown_platform/`: reusable top-down platform package and tests.
+- `topdown_pluginkit/`: shared helper package for topdown plugin construction.
 - `topdown_rogue_proto/`: first plugin package and tests.
 
 ## Requirements
@@ -174,9 +176,14 @@ For native distribution, copy the `assets/` directory next to the executable (or
 
 ### New Primitive-Only Prototypes
 
-- `tankbattle`, `supermario`, `plantvszombies`, `bejeweled`, `jackal`, and `kofarena` intentionally avoid external art assets.
+- `tankbattle`, `supermario`, `bejeweled`, and `kofarena` intentionally avoid external art assets.
 - Their runtime visuals are built from Selene/raylib primitive drawing and mesh/material paths.
 - Their runtime audio uses procedural synthesis (`Wave::load_sound` from generated sample buffers), not packaged music/sfx files.
+
+### TopDown Platformized Prototypes
+
+- `jackal` and `plantvszombies` are now reset onto `topdown_platform` as data-driven plugins.
+- Both reuse platform systems (movement/collision/combat/waves/drops/HUD) and keep only game-specific content data in their own package.
 
 ## Engine Issues
 
