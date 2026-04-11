@@ -48,7 +48,7 @@ fi
 
 RAY_DIR="$ROOT_DIR/.mooncakes/tonyfettes/raylib/internal/raylib"
 FS_NATIVE_C="$ROOT_DIR/.mooncakes/moonbitlang/x/fs/fs_native.c"
-NETPLAY_STUB_C="$ROOT_DIR/netplay/transport_native_stub.c"
+NETPLAY_WEB_STUB_C="$ROOT_DIR/scripts/netplay_transport_web_stub.c"
 EMCC_OPT_LEVEL="${EMCC_OPT_LEVEL:--O1}"
 EMCC_ENABLE_ASYNCIFY="${EMCC_ENABLE_ASYNCIFY:-1}"
 EMCC_ASYNCIFY_IGNORE_INDIRECT="${EMCC_ASYNCIFY_IGNORE_INDIRECT:-1}"
@@ -57,7 +57,7 @@ SOURCES=(
   "$C_FILE"
   "$RUNTIME_C"
   "$FS_NATIVE_C"
-  "$NETPLAY_STUB_C"
+  "$NETPLAY_WEB_STUB_C"
   "$RAY_DIR/rcore.c"
   "$RAY_DIR/rshapes.c"
   "$RAY_DIR/rtextures.c"
@@ -113,6 +113,12 @@ if [[ "$EMCC_ENABLE_ASYNCIFY" == "1" ]]; then
   if [[ "$EMCC_ASYNCIFY_IGNORE_INDIRECT" == "1" ]]; then
     EMCC_FLAGS+=(-sASYNCIFY_IGNORE_INDIRECT=1)
   fi
+fi
+
+if [[ -n "${EMCC_EXTRA_FLAGS:-}" ]]; then
+  # shellcheck disable=SC2206
+  EXTRA_FLAGS=( $EMCC_EXTRA_FLAGS )
+  EMCC_FLAGS+=("${EXTRA_FLAGS[@]}")
 fi
 
 emcc \

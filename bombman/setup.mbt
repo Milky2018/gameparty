@@ -264,36 +264,23 @@ fn entity_animation_finished(
 }
 
 ///|
-fn parse_color_component_int(part : StringView) -> Int? {
-  let token = part.to_string().trim().to_string()
-  if token == "" {
-    return None
+fn parse_font_size_px(font : String) -> Double {
+  let trimmed = font.trim().to_string()
+  let mut first_token = ""
+  for token_view in trimmed.split(" ") {
+    let token = token_view.to_string().trim().to_string()
+    if token != "" {
+      first_token = token
+      break
+    }
   }
-  Some(@string.parse_int(token)) catch {
-    _ => None
+  if first_token == "" {
+    return 16.0
   }
-}
-
-///|
-fn parse_color_alpha(part : StringView) -> Double? {
-  let token = part.to_string().trim().to_string()
-  if token == "" {
-    return None
+  let number_text = first_token.replace(old="px", new="")
+  @string.parse_double(number_text) catch {
+    _ => 16.0
   }
-  Some(@string.parse_double(token)) catch {
-    _ => None
-  }
-}
-
-///|
-fn clamp_color_byte(value : Int) -> UInt {
-  let clamped = if value < 0 { 0 } else if value > 255 { 255 } else { value }
-  clamped.reinterpret_as_uint()
-}
-
-///|
-fn clamp_color_alpha(value : Double) -> Double {
-  clamp_double(value, 0.0, 1.0)
 }
 
 ///|
@@ -313,44 +300,8 @@ fn normalize_css_color_string(color : String) -> String {
 }
 
 ///|
-fn parse_css_rgb_components(color : String) -> (UInt, UInt, UInt, Double)? {
-  let trimmed = normalize_css_color_string(color)
-  let is_rgb = trimmed.has_prefix("rgb(") && trimmed.has_suffix(")")
-  let is_rgba = trimmed.has_prefix("rgba(") && trimmed.has_suffix(")")
-  if !is_rgb && !is_rgba {
-    return None
-  }
-  let body = if is_rgba {
-    trimmed.replace(old="rgba(", new="").replace(old=")", new="")
-  } else {
-    trimmed.replace(old="rgb(", new="").replace(old=")", new="")
-  }
-  let parts : Array[StringView] = []
-  for part in body.split(",") {
-    parts.push(part)
-  }
-  if (is_rgba && parts.length() != 4) || (is_rgb && parts.length() != 3) {
-    return None
-  }
-  guard parse_color_component_int(parts[0]) is Some(r) else { return None }
-  guard parse_color_component_int(parts[1]) is Some(g) else { return None }
-  guard parse_color_component_int(parts[2]) is Some(b) else { return None }
-  let alpha = if is_rgba {
-    guard parse_color_alpha(parts[3]) is Some(a) else { return None }
-    clamp_color_alpha(a)
-  } else {
-    1.0
-  }
-  Some((clamp_color_byte(r), clamp_color_byte(g), clamp_color_byte(b), alpha))
-}
-
-///|
 fn sprite_color(color : String) -> @render.Color {
-  let normalized = normalize_css_color_string(color)
-  match parse_css_rgb_components(color) {
-    Some((r, g, b, a)) => { r, g, b, a }
-    None => @sprite.color_from_css(normalized)
-  }
+  @sprite.color_from_css(normalize_css_color_string(color))
 }
 
 ///|
@@ -390,7 +341,13 @@ fn set_text_entity(
     None => true
   }
   if style_changed {
-    @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+    @ui.text_fonts().set(
+      entity,
+      @ui.TextFont::new(
+        family=BOMBMAN_FONT_FAMILY,
+        size=parse_font_size_px(font),
+      ),
+    )
     @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
     @ui.text_layouts().set(
       entity,
@@ -428,7 +385,13 @@ fn set_text_entity_center(
     None => true
   }
   if style_changed {
-    @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
+    @ui.text_fonts().set(
+      entity,
+      @ui.TextFont::new(
+        family=BOMBMAN_FONT_FAMILY,
+        size=parse_font_size_px(font),
+      ),
+    )
     @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
     @ui.text_layouts().set(
       entity,
