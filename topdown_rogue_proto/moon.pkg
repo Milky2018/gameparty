@@ -1,3 +1,4 @@
 import {
   "Milky2018/gameparty/topdown_platform",
+  "Milky2018/gameparty/topdown_pluginkit" @kit,
 }

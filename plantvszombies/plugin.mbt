@@ -1,140 +1,34 @@
 ///|
-fn visual(
-  path : String,
-  scale? : Double = 1.0,
-  y_offset? : Double = 0.0,
-) -> @topdown_platform.ImageVisualDef {
-  { path, scale, y_offset }
-}
-
-///|
-fn sprite_strip(
-  image : String,
-  scale? : Double = 2.2,
-  fps? : Double = 10.0,
-) -> @topdown_platform.SpriteAnimDef {
-  {
-    image,
-    frame_width: 480.0,
-    frame_height: 480.0,
-    columns: 4,
-    frame_count: 12,
-    fps,
-    scale,
-  }
-}
-
-///|
-fn floor_rule(path : String) -> @topdown_platform.TileOrSpawnRule {
-  {
-    kind: @topdown_platform.Floor,
-    floor_image: Some(visual(path)),
-    prop_image: None,
-    blocks: false,
-    enemy_spawn_tag: None,
-  }
-}
-
-///|
-fn wall_rule(
-  floor : String,
-  prop : String,
-) -> @topdown_platform.TileOrSpawnRule {
-  {
-    kind: @topdown_platform.Wall,
-    floor_image: Some(visual(floor)),
-    prop_image: Some(visual(prop, scale=1.12, y_offset=-8.0)),
-    blocks: true,
-    enemy_spawn_tag: None,
-  }
-}
-
-///|
-fn player_spawn_rule(path : String) -> @topdown_platform.TileOrSpawnRule {
-  {
-    kind: @topdown_platform.PlayerSpawn,
-    floor_image: Some(visual(path)),
-    prop_image: None,
-    blocks: false,
-    enemy_spawn_tag: None,
-  }
-}
-
-///|
-fn lane_spawn_rule(
-  path : String,
-  lane_tag : String,
-) -> @topdown_platform.TileOrSpawnRule {
-  {
-    kind: @topdown_platform.EnemySpawn,
-    floor_image: Some(visual(path)),
-    prop_image: None,
-    blocks: false,
-    enemy_spawn_tag: Some(lane_tag),
-  }
-}
-
-///|
 fn build_legend() -> Map[Char, @topdown_platform.TileOrSpawnRule] {
   let legend : Map[Char, @topdown_platform.TileOrSpawnRule] = Map::new()
-  let ground = "assets/top-down-summer/Top-Down Simple Summer_Ground 43.png"
-  legend.set('.', floor_rule(ground))
-  legend.set(',', floor_rule(ground))
-  legend.set('P', player_spawn_rule(ground))
-  legend.set('1', lane_spawn_rule(ground, "lane1"))
-  legend.set('2', lane_spawn_rule(ground, "lane2"))
-  legend.set('3', lane_spawn_rule(ground, "lane3"))
-  legend.set('4', lane_spawn_rule(ground, "lane4"))
-  legend.set('5', lane_spawn_rule(ground, "lane5"))
+  let floor = @kit.summer_ground_43
+  legend.set('.', @kit.floor_tile(floor))
+  legend.set(',', @kit.floor_tile(floor))
+  legend.set('P', @kit.player_spawn_tile(floor))
+  legend.set('1', @kit.enemy_spawn_tile(floor, "lane1"))
+  legend.set('2', @kit.enemy_spawn_tile(floor, "lane2"))
+  legend.set('3', @kit.enemy_spawn_tile(floor, "lane3"))
+  legend.set('4', @kit.enemy_spawn_tile(floor, "lane4"))
+  legend.set('5', @kit.enemy_spawn_tile(floor, "lane5"))
   legend.set(
     '#',
-    wall_rule(
-      ground, "assets/top-down-summer/Top-Down Simple Summer_Prop - Rock 02.png",
+    @kit.wall_tile(
+      floor, "assets/top-down-summer/Top-Down Simple Summer_Prop - Rock 02.png",
     ),
   )
   legend.set(
     'H',
-    wall_rule(
-      ground, "assets/top-down-summer/Top-Down Simple Summer_Prop - House.png",
+    @kit.wall_tile(
+      floor, "assets/top-down-summer/Top-Down Simple Summer_Prop - House.png",
     ),
   )
   legend.set(
     'T',
-    wall_rule(
-      ground, "assets/top-down-summer/Top-Down Simple Summer_Prop - Tree Small.png",
+    @kit.wall_tile(
+      floor, "assets/top-down-summer/Top-Down Simple Summer_Prop - Tree Small.png",
     ),
   )
   legend
-}
-
-///|
-fn gardener_sprites() -> @topdown_platform.DirectionalSprites {
-  {
-    up: sprite_strip("assets/assassin/Back - Running.png"),
-    down: sprite_strip("assets/assassin/Front - Running.png"),
-    left: sprite_strip("assets/assassin/Left - Running.png"),
-    right: sprite_strip("assets/assassin/Right - Running.png"),
-  }
-}
-
-///|
-fn zombie_sprites() -> @topdown_platform.DirectionalSprites {
-  {
-    up: sprite_strip("assets/thug/Back - Running.png"),
-    down: sprite_strip("assets/thug/Front - Running.png"),
-    left: sprite_strip("assets/thug/Left - Running.png"),
-    right: sprite_strip("assets/thug/Right - Running.png"),
-  }
-}
-
-///|
-fn conehead_sprites() -> @topdown_platform.DirectionalSprites {
-  {
-    up: sprite_strip("assets/robber/Back - Running.png"),
-    down: sprite_strip("assets/robber/Front - Running.png"),
-    left: sprite_strip("assets/robber/Left - Running.png"),
-    right: sprite_strip("assets/robber/Right - Running.png"),
-  }
 }
 
 ///|
@@ -142,9 +36,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
   meta: { id: "plantvszombies", name: "Plants VS Zombies TD", version: "2.0.0" },
   map: {
     tile_size: 64.0,
-    default_floor_image: visual(
-      "assets/top-down-summer/Top-Down Simple Summer_Ground 43.png",
-    ),
+    default_floor_image: @kit.visual(@kit.summer_ground_43),
     rows: [
       "####################", "#1................##", "#..TTT....,........#", "#2................##",
       "#..TTT....H........#", "#3.......P.........#", "#..TTT....,........#", "#4................##",
@@ -162,7 +54,11 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       radius: 20.0,
       touch_damage: 0,
       score_value: 0,
-      sprites: gardener_sprites(),
+      sprites: @kit.humanoid_running_sprites(
+        "assets/assassin",
+        scale=2.2,
+        fps=10.0,
+      ),
       drop_table_id: None,
       primary_skill_id: Some("pea_shot"),
       secondary_skill_id: Some("shovel_smash"),
@@ -176,7 +72,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       radius: 19.0,
       touch_damage: 2,
       score_value: 30,
-      sprites: zombie_sprites(),
+      sprites: @kit.humanoid_running_sprites("assets/thug", scale=2.2, fps=10.0),
       drop_table_id: Some("sun"),
       primary_skill_id: Some("zombie_bite"),
       secondary_skill_id: None,
@@ -190,7 +86,11 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       radius: 20.0,
       touch_damage: 2,
       score_value: 55,
-      sprites: conehead_sprites(),
+      sprites: @kit.humanoid_running_sprites(
+        "assets/robber",
+        scale=2.2,
+        fps=10.0,
+      ),
       drop_table_id: Some("sun"),
       primary_skill_id: Some("spore_glob"),
       secondary_skill_id: None,
@@ -239,54 +139,24 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       id: 1,
       start_delay: 1.0,
       entries: [
-        {
-          archetype_id: "zombie",
-          count: 4,
-          spawn_interval: 0.95,
-          spawn_tag: Some("lane2"),
-        },
-        {
-          archetype_id: "zombie",
-          count: 4,
-          spawn_interval: 0.95,
-          spawn_tag: Some("lane4"),
-        },
+        @kit.wave_entry("zombie", 4, 0.95, spawn_tag=Some("lane2")),
+        @kit.wave_entry("zombie", 4, 0.95, spawn_tag=Some("lane4")),
       ],
     },
     {
       id: 2,
       start_delay: 1.2,
       entries: [
-        {
-          archetype_id: "zombie",
-          count: 7,
-          spawn_interval: 0.78,
-          spawn_tag: Some("lane1"),
-        },
-        {
-          archetype_id: "conehead",
-          count: 4,
-          spawn_interval: 1.15,
-          spawn_tag: Some("lane5"),
-        },
+        @kit.wave_entry("zombie", 7, 0.78, spawn_tag=Some("lane1")),
+        @kit.wave_entry("conehead", 4, 1.15, spawn_tag=Some("lane5")),
       ],
     },
     {
       id: 3,
       start_delay: 1.4,
       entries: [
-        {
-          archetype_id: "zombie",
-          count: 8,
-          spawn_interval: 0.72,
-          spawn_tag: Some("lane3"),
-        },
-        {
-          archetype_id: "conehead",
-          count: 6,
-          spawn_interval: 0.95,
-          spawn_tag: Some("lane2"),
-        },
+        @kit.wave_entry("zombie", 8, 0.72, spawn_tag=Some("lane3")),
+        @kit.wave_entry("conehead", 6, 0.95, spawn_tag=Some("lane2")),
       ],
     },
   ],
@@ -313,12 +183,9 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     },
   ],
   progression: { run_seconds: 300.0, player_archetype_id: "gardener" },
-  ui_theme: {
-    title: "PLANTS VS ZOMBIES TD",
-    font_path: "assets/shared/fonts/ThaleahFat.ttf",
-    font_family: "ThaleahFat",
-    hud_color_css: "rgb(235,246,227)",
-    control_hint: "WASD move  LMB pea shot  SPACE shovel  ESC quit",
-  },
+  ui_theme: @kit.ui_theme(
+    "PLANTS VS ZOMBIES TD", "assets/shared/fonts/ThaleahFat.ttf", "ThaleahFat", "rgb(235,246,227)",
+    "WASD move  LMB pea shot  SPACE shovel  ESC quit",
+  ),
   hooks: None,
 }
