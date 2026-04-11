@@ -6,13 +6,25 @@ import {
 }
 
 // Values
+pub fn drop_item(String, String, Int, heal? : Int, score_bonus? : Int) -> @topdown_platform.DropItemDef
+
+pub fn drop_table(String, Double, Array[@topdown_platform.DropItemDef]) -> @topdown_platform.DropTableDef
+
 pub fn enemy_spawn_tile(String, String) -> @topdown_platform.TileOrSpawnRule
 
 pub fn floor_tile(String) -> @topdown_platform.TileOrSpawnRule
 
+pub fn humanoid_archetype(String, String, @topdown_platform.EnemyAiMode, Double, Int, Double, Double, Int, Int, drop_table_id? : String?, primary_skill_id? : String?, secondary_skill_id? : String?, sprite_scale? : Double, sprite_fps? : Double) -> @topdown_platform.ArchetypeDef
+
 pub fn humanoid_running_sprites(String, scale? : Double, fps? : Double) -> @topdown_platform.DirectionalSprites
 
+pub fn map_def(Array[String], Map[Char, @topdown_platform.TileOrSpawnRule], tile_size? : Double, default_floor_path? : String) -> @topdown_platform.MapDef
+
+pub fn melee_skill(String, Double, Int, Double) -> @topdown_platform.SkillDef
+
 pub fn player_spawn_tile(String) -> @topdown_platform.TileOrSpawnRule
+
+pub fn projectile_skill(String, Double, Int, Double, Double, Double) -> @topdown_platform.SkillDef
 
 pub fn sprite_strip(String, scale? : Double, fps? : Double, frame_width? : Double, frame_height? : Double, columns? : Int, frame_count? : Int) -> @topdown_platform.SpriteAnimDef
 
