@@ -2,21 +2,13 @@
 package "Milky2018/gameparty/jackal"
 
 import {
-  "Milky2018/selene/ecs",
+  "Milky2018/gameparty/topdown_platform",
 }
 
 // Values
-pub fn capture_after_render_system(@ecs.World) -> Unit
-
-pub fn input_system(@ecs.World) -> Unit
-
-pub fn render_sync_system(@ecs.World) -> Unit
+pub let plugin : @topdown_platform.TopDownPluginDef
 
 pub fn run() -> Unit
-
-pub fn simulation_system(@ecs.World) -> Unit
-
-pub fn startup_system(@ecs.World) -> Unit
 
 // Errors
 
