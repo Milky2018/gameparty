@@ -10,7 +10,7 @@ fn visual(
 ///|
 fn sprite_strip(
   image : String,
-  scale? : Double = 1.35,
+  scale? : Double = 2.4,
   fps? : Double = 12.0,
 ) -> @topdown_platform.SpriteAnimDef {
   {
@@ -31,6 +31,7 @@ fn summer_floor(path : String) -> @topdown_platform.TileOrSpawnRule {
     floor_image: Some(visual(path)),
     prop_image: None,
     blocks: false,
+    enemy_spawn_tag: None,
   }
 }
 
@@ -44,6 +45,7 @@ fn summer_wall(
     floor_image: Some(visual(floor)),
     prop_image: Some(visual(prop, scale=1.2, y_offset=-10.0)),
     blocks: true,
+    enemy_spawn_tag: None,
   }
 }
 
@@ -54,16 +56,21 @@ fn summer_player_spawn(path : String) -> @topdown_platform.TileOrSpawnRule {
     floor_image: Some(visual(path)),
     prop_image: None,
     blocks: false,
+    enemy_spawn_tag: None,
   }
 }
 
 ///|
-fn summer_enemy_spawn(path : String) -> @topdown_platform.TileOrSpawnRule {
+fn summer_enemy_spawn(
+  path : String,
+  spawn_tag : String,
+) -> @topdown_platform.TileOrSpawnRule {
   {
     kind: @topdown_platform.EnemySpawn,
     floor_image: Some(visual(path)),
     prop_image: None,
     blocks: false,
+    enemy_spawn_tag: Some(spawn_tag),
   }
 }
 
@@ -75,7 +82,10 @@ fn build_legend() -> Map[Char, @topdown_platform.TileOrSpawnRule] {
   legend.set(',', summer_floor(base_floor))
   legend.set('~', summer_floor(base_floor))
   legend.set('P', summer_player_spawn(base_floor))
-  legend.set('S', summer_enemy_spawn(base_floor))
+  legend.set('S', summer_enemy_spawn(base_floor, "main"))
+  legend.set('N', summer_enemy_spawn(base_floor, "north"))
+  legend.set('W', summer_enemy_spawn(base_floor, "west"))
+  legend.set('E', summer_enemy_spawn(base_floor, "east"))
   legend.set(
     '#',
     summer_wall(
@@ -173,16 +183,21 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
   },
   map: {
     tile_size: 64.0,
+    default_floor_image: visual(
+      "assets/top-down-summer/Top-Down Simple Summer_Ground 43.png",
+    ),
     rows: [
-      "####################", "#...,...,T.....,..S#", "#..####......##....#", "#..#..#..,,,..#....#",
-      "#..#..#..TTT..#....#", "#..#..#........#...#", "#..####....,....S..#", "#....P....H........#",
-      "#....S.......TT....#", "#.....,........,...#", "####################",
+      "####################", "#...,...,T.....,..N#", "#..####......##....#", "#..#..#..,,,..#....#",
+      "#..#..#..TTT..#....#", "#..#..#........#...#", "#..####....,....W..#", "#....P....H........#",
+      "#....E.......TT..S.#", "#.....,........,...#", "####################",
     ],
     legend: build_legend(),
   },
   archetypes: [
     {
       id: "player_assassin",
+      ai_mode: @topdown_platform.Chase,
+      preferred_range: 0.0,
       max_hp: 12,
       move_speed: 180.0,
       radius: 20.0,
@@ -195,6 +210,8 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     },
     {
       id: "robber",
+      ai_mode: @topdown_platform.HoldDistance,
+      preferred_range: 190.0,
       max_hp: 4,
       move_speed: 120.0,
       radius: 18.0,
@@ -202,11 +219,13 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       score_value: 35,
       sprites: robber_sprites(),
       drop_table_id: Some("common"),
-      primary_skill_id: None,
+      primary_skill_id: Some("robber_shot"),
       secondary_skill_id: None,
     },
     {
       id: "thug",
+      ai_mode: @topdown_platform.Chase,
+      preferred_range: 0.0,
       max_hp: 6,
       move_speed: 90.0,
       radius: 20.0,
@@ -214,11 +233,13 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       score_value: 55,
       sprites: thug_sprites(),
       drop_table_id: Some("common"),
-      primary_skill_id: None,
+      primary_skill_id: Some("thug_smash"),
       secondary_skill_id: None,
     },
     {
       id: "assassin_elite",
+      ai_mode: @topdown_platform.Wander,
+      preferred_range: 0.0,
       max_hp: 8,
       move_speed: 130.0,
       radius: 20.0,
@@ -226,7 +247,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       score_value: 80,
       sprites: assassin_sprites(),
       drop_table_id: Some("elite"),
-      primary_skill_id: None,
+      primary_skill_id: Some("elite_blade"),
       secondary_skill_id: None,
     },
   ],
@@ -249,30 +270,87 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
       projectile_speed: 420.0,
       projectile_radius: 5.0,
     },
+    {
+      id: "robber_shot",
+      kind: @topdown_platform.Projectile,
+      cooldown: 1.15,
+      damage: 1,
+      range: 260.0,
+      projectile_speed: 360.0,
+      projectile_radius: 4.0,
+    },
+    {
+      id: "thug_smash",
+      kind: @topdown_platform.Melee,
+      cooldown: 0.85,
+      damage: 2,
+      range: 40.0,
+      projectile_speed: 0.0,
+      projectile_radius: 0.0,
+    },
+    {
+      id: "elite_blade",
+      kind: @topdown_platform.Projectile,
+      cooldown: 0.9,
+      damage: 2,
+      range: 290.0,
+      projectile_speed: 420.0,
+      projectile_radius: 4.5,
+    },
   ],
   waves: [
     {
       id: 1,
       start_delay: 1.0,
       entries: [
-        { archetype_id: "robber", count: 5, spawn_interval: 0.7 },
-        { archetype_id: "thug", count: 2, spawn_interval: 1.0 },
+        {
+          archetype_id: "robber",
+          count: 5,
+          spawn_interval: 0.7,
+          spawn_tag: Some("north"),
+        },
+        {
+          archetype_id: "thug",
+          count: 2,
+          spawn_interval: 1.0,
+          spawn_tag: Some("west"),
+        },
       ],
     },
     {
       id: 2,
       start_delay: 1.2,
       entries: [
-        { archetype_id: "robber", count: 7, spawn_interval: 0.55 },
-        { archetype_id: "thug", count: 4, spawn_interval: 0.8 },
+        {
+          archetype_id: "robber",
+          count: 7,
+          spawn_interval: 0.55,
+          spawn_tag: Some("east"),
+        },
+        {
+          archetype_id: "thug",
+          count: 4,
+          spawn_interval: 0.8,
+          spawn_tag: Some("main"),
+        },
       ],
     },
     {
       id: 3,
       start_delay: 1.5,
       entries: [
-        { archetype_id: "thug", count: 6, spawn_interval: 0.65 },
-        { archetype_id: "assassin_elite", count: 3, spawn_interval: 1.0 },
+        {
+          archetype_id: "thug",
+          count: 6,
+          spawn_interval: 0.65,
+          spawn_tag: Some("west"),
+        },
+        {
+          archetype_id: "assassin_elite",
+          count: 3,
+          spawn_interval: 1.0,
+          spawn_tag: Some("east"),
+        },
       ],
     },
   ],
@@ -324,6 +402,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     font_path: "assets/shared/fonts/ThaleahFat.ttf",
     font_family: "ThaleahFat",
     hud_color_css: "rgb(226,238,252)",
+    control_hint: "WASD move  LMB primary  SPACE secondary  ESC quit",
   },
   hooks: Some({
     on_run_start: Some(on_run_start),

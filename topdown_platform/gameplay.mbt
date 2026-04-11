@@ -159,6 +159,8 @@ fn spawn_enemy(archetype_id : String, position : @math.Vec2D) -> Unit {
         moving: false,
         anim_elapsed: 0.0,
         last_sprite_path: "",
+        ai_wander_dir: @math.Vec2D(0.0, 0.0),
+        ai_wander_timer: 0.0,
       })
     }
     None => ()
@@ -440,7 +442,48 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
   while i < enemy_runtimes.length() {
     let mut enemy = enemy_runtimes[i]
     let archetype = archetype_for(enemy)
-    let dir = vec_normalize(player_pos - enemy.position)
+    let to_player = player_pos - enemy.position
+    let distance = vec_length(to_player)
+    let mut dir = @math.Vec2D(0.0, 0.0)
+    match archetype.ai_mode {
+      Chase => dir = vec_normalize(to_player)
+      HoldDistance => {
+        let preferred = archetype.preferred_range.max(1.0)
+        if distance > preferred * 1.15 {
+          dir = vec_normalize(to_player)
+        } else if distance < preferred * 0.85 {
+          dir = vec_normalize(enemy.position - player_pos)
+        } else {
+          enemy.ai_wander_timer -= dt
+          if enemy.ai_wander_timer <= 0.0 {
+            let sign = if rand.int(limit=2) == 0 { -1.0 } else { 1.0 }
+            let toward = vec_normalize(to_player)
+            enemy.ai_wander_dir = @math.Vec2D(
+              -toward[Y] * sign,
+              toward[X] * sign,
+            )
+            enemy.ai_wander_timer = 0.45 + rand.double() * 0.35
+          }
+          dir = enemy.ai_wander_dir
+        }
+      }
+      Wander => {
+        enemy.ai_wander_timer -= dt
+        if enemy.ai_wander_timer <= 0.0 {
+          let raw_dir = @math.Vec2D(
+            rand.double() * 2.0 - 1.0,
+            rand.double() * 2.0 - 1.0,
+          )
+          enemy.ai_wander_dir = if vec_length(raw_dir) <= 0.001 {
+            @math.Vec2D(1.0, 0.0)
+          } else {
+            vec_normalize(raw_dir)
+          }
+          enemy.ai_wander_timer = 0.55 + rand.double() * 1.1
+        }
+        dir = enemy.ai_wander_dir
+      }
+    }
     let is_moving = vec_length(dir) > 0.001
     enemy.facing = facing_from_vector(dir, enemy.facing)
     enemy.position = move_with_collision(
@@ -451,21 +494,6 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
     enemy.moving = is_moving
     enemy.anim_elapsed = if is_moving { enemy.anim_elapsed + dt } else { 0.0 }
     enemy.attack_cd = (enemy.attack_cd - dt).max(0.0)
-    if enemy.attack_cd <= 0.0 {
-      match player_runtime.val {
-        Some(player) =>
-          if circle_intersects_circle(
-              enemy.position,
-              archetype.radius,
-              player.position,
-              archetype_for(player).radius,
-            ) {
-            apply_damage_to_player(archetype.touch_damage.max(1))
-            enemy.attack_cd = 0.9
-          }
-        None => ()
-      }
-    }
     enemy = sync_actor_visual(enemy, ENEMY_Z)
     enemy_runtimes[i] = enemy
     i += 1
@@ -520,6 +548,55 @@ fn process_player_attack_request(skill_id : String) -> Unit {
     }
     None => ()
   }
+}
+
+///|
+fn enemy_try_attack_player(
+  enemy : ActorRuntime,
+  player : ActorRuntime,
+) -> ActorRuntime {
+  let enemy = enemy
+  if enemy.attack_cd > 0.0 || run_state.phase != Playing {
+    return enemy
+  }
+  let archetype = archetype_for(enemy)
+  let player_radius = archetype_for(player).radius
+  let to_player = player.position - enemy.position
+  let distance = vec_length(to_player)
+  match archetype.primary_skill_id {
+    Some(skill_id) => {
+      let skill = skill_by_id_or_abort(skill_id)
+      match skill.kind {
+        Melee =>
+          if distance <= skill.range + archetype.radius + player_radius {
+            apply_damage_to_player(skill.damage.max(1))
+            enemy.attack_cd = skill.cooldown.max(0.12)
+          }
+        Projectile =>
+          if distance <= skill.range && distance > 0.001 {
+            spawn_projectile(
+              true,
+              enemy.position,
+              vec_normalize(to_player),
+              skill,
+            )
+            enemy.attack_cd = skill.cooldown.max(0.12)
+          }
+      }
+    }
+    None =>
+      if archetype.touch_damage > 0 &&
+        circle_intersects_circle(
+          enemy.position,
+          archetype.radius,
+          player.position,
+          player_radius,
+        ) {
+        apply_damage_to_player(archetype.touch_damage.max(1))
+        enemy.attack_cd = 0.9
+      }
+  }
+  enemy
 }
 
 ///|
@@ -687,6 +764,9 @@ pub fn combat_system(_world : @ecs.World) -> Unit {
           None => ()
         }
       }
+      for i = 0; i < enemy_runtimes.length(); i = i + 1 {
+        enemy_runtimes[i] = enemy_try_attack_player(enemy_runtimes[i], player)
+      }
     }
     None => ()
   }
@@ -697,6 +777,18 @@ pub fn combat_system(_world : @ecs.World) -> Unit {
 ///|
 fn wave_finished_spawn(state : SpawnCursor) -> Bool {
   state.wave_index >= plugin().waves.length()
+}
+
+///|
+fn spawn_point_indices_for_tag(tag : String?) -> Array[Int] {
+  let indices : Array[Int] = []
+  for idx = 0; idx < world_state.enemy_spawns.length(); idx = idx + 1 {
+    let spawn = world_state.enemy_spawns[idx]
+    if tag is None || spawn.tag == tag {
+      indices.push(idx)
+    }
+  }
+  indices
 }
 
 ///|
@@ -718,13 +810,21 @@ pub fn spawn_loot_system(_world : @ecs.World) -> Unit {
       let entry = wave.entries[cursor.entry_index]
       cursor.wait_timer -= dt
       if cursor.wait_timer <= 0.0 {
+        let spawn_indices = spawn_point_indices_for_tag(entry.spawn_tag)
+        if spawn_indices.length() == 0 {
+          cursor.wait_timer = entry.spawn_interval.max(0.15)
+          spawn_state.cursor = cursor
+          update_pickups()
+          return
+        }
         let spawn_index = (
             run_state.enemies_killed +
             enemy_runtimes.length() +
             cursor.spawned_in_entry
           ) %
-          world_state.enemy_spawns.length()
-        spawn_enemy(entry.archetype_id, world_state.enemy_spawns[spawn_index])
+          spawn_indices.length()
+        let spawn_pos = world_state.enemy_spawns[spawn_indices[spawn_index]].position
+        spawn_enemy(entry.archetype_id, spawn_pos)
         cursor.spawned_in_entry += 1
         cursor.wait_timer = entry.spawn_interval
       }
@@ -799,7 +899,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
   ui_state.hud_text = "\{hp_line}  Score \{run_state.score}  Wave \{spawn_state.cursor.wave_index.min(plugin().waves.length()) + 1}/\{plugin().waves.length()}  Time \{run_state.time_left.floor().to_int()}s"
   sync_text(hud_entity, hud_cache, ui_state.hud_text)
   ui_state.message_text = if run_state.phase == Playing {
-    "WASD move  LMB primary  SPACE secondary  ESC quit"
+    plugin().ui_theme.control_hint
   } else {
     run_state.status_message
   }

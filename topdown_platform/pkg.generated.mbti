@@ -37,6 +37,8 @@ pub fn validate_plugin(TopDownPluginDef) -> String?
 // Types and methods
 pub(all) struct ArchetypeDef {
   id : String
+  ai_mode : EnemyAiMode
+  preferred_range : Double
   max_hp : Int
   move_speed : Double
   radius : Double
@@ -76,6 +78,17 @@ pub(all) struct DropTableDef {
   items : Array[DropItemDef]
 }
 
+pub(all) enum EnemyAiMode {
+  Chase
+  HoldDistance
+  Wander
+} derive(Eq, @debug.Debug)
+
+pub struct EnemySpawnPoint {
+  position : @math.Vec2D
+  tag : String?
+}
+
 pub(all) enum Facing {
   Up
   Down
@@ -95,6 +108,7 @@ pub struct LootState {
 
 pub(all) struct MapDef {
   tile_size : Double
+  default_floor_image : ImageVisualDef
   rows : Array[String]
   legend : Map[Char, TileOrSpawnRule]
 }
@@ -195,6 +209,7 @@ pub(all) struct TileOrSpawnRule {
   floor_image : ImageVisualDef?
   prop_image : ImageVisualDef?
   blocks : Bool
+  enemy_spawn_tag : String?
 }
 
 pub(all) struct TopDownHooks {
@@ -226,6 +241,7 @@ pub(all) struct UiThemeDef {
   font_path : String
   font_family : String
   hud_color_css : String
+  control_hint : String
 }
 
 pub(all) struct WaveDef {
@@ -238,6 +254,7 @@ pub(all) struct WaveEntryDef {
   archetype_id : String
   count : Int
   spawn_interval : Double
+  spawn_tag : String?
 }
 
 pub struct WorldState {
@@ -247,7 +264,7 @@ pub struct WorldState {
   mut world_width : Double
   mut world_height : Double
   mut player_spawn : @math.Vec2D
-  enemy_spawns : Array[@math.Vec2D]
+  enemy_spawns : Array[EnemySpawnPoint]
   blocking_rects : Array[@math.Rect]
 }
 

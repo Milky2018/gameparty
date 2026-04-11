@@ -22,6 +22,13 @@ pub(all) enum SkillKind {
 } derive(Eq, Debug)
 
 ///|
+pub(all) enum EnemyAiMode {
+  Chase
+  HoldDistance
+  Wander
+} derive(Eq, Debug)
+
+///|
 pub(all) enum Facing {
   Up
   Down
@@ -42,6 +49,7 @@ pub(all) struct TileOrSpawnRule {
   floor_image : ImageVisualDef?
   prop_image : ImageVisualDef?
   blocks : Bool
+  enemy_spawn_tag : String?
 }
 
 ///|
@@ -54,6 +62,7 @@ pub(all) struct ImageVisualDef {
 ///|
 pub(all) struct MapDef {
   tile_size : Double
+  default_floor_image : ImageVisualDef
   rows : Array[String]
   legend : Map[Char, TileOrSpawnRule]
 }
@@ -80,6 +89,8 @@ pub(all) struct DirectionalSprites {
 ///|
 pub(all) struct ArchetypeDef {
   id : String
+  ai_mode : EnemyAiMode
+  preferred_range : Double
   max_hp : Int
   move_speed : Double
   radius : Double
@@ -107,6 +118,7 @@ pub(all) struct WaveEntryDef {
   archetype_id : String
   count : Int
   spawn_interval : Double
+  spawn_tag : String?
 }
 
 ///|
@@ -144,6 +156,7 @@ pub(all) struct UiThemeDef {
   font_path : String
   font_family : String
   hud_color_css : String
+  control_hint : String
 }
 
 ///|

@@ -66,6 +66,8 @@ priv struct ActorRuntime {
   mut moving : Bool
   mut anim_elapsed : Double
   mut last_sprite_path : String
+  mut ai_wander_dir : @math.Vec2D
+  mut ai_wander_timer : Double
 }
 
 ///|
@@ -100,6 +102,12 @@ pub struct SpawnCursor {
 }
 
 ///|
+pub struct EnemySpawnPoint {
+  position : @math.Vec2D
+  tag : String?
+}
+
+///|
 pub struct RunState {
   mut phase : RunPhase
   mut elapsed : Double
@@ -118,7 +126,7 @@ pub struct WorldState {
   mut world_width : Double
   mut world_height : Double
   mut player_spawn : @math.Vec2D
-  enemy_spawns : Array[@math.Vec2D]
+  enemy_spawns : Array[EnemySpawnPoint]
   blocking_rects : Array[@math.Rect]
 }
 

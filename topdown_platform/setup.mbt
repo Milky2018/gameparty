@@ -175,12 +175,7 @@ fn parse_world_map() -> Unit {
       let floor = @entity.Entity::new()
       let floor_image = match rule.floor_image {
         Some(visual) => visual
-        None =>
-          {
-            path: "assets/top-down-summer/Top-Down Simple Summer_Ground 01.png",
-            scale: 1.0,
-            y_offset: 0.0,
-          }
+        None => map.default_floor_image
       }
       set_image_sprite_entity(
         floor,
@@ -219,7 +214,11 @@ fn parse_world_map() -> Unit {
       }
       match rule.kind {
         PlayerSpawn => world_state.player_spawn = center
-        EnemySpawn => world_state.enemy_spawns.push(center)
+        EnemySpawn =>
+          world_state.enemy_spawns.push({
+            position: center,
+            tag: rule.enemy_spawn_tag,
+          })
         _ => ()
       }
 
@@ -353,6 +352,8 @@ fn spawn_player() -> Unit {
     moving: false,
     anim_elapsed: 0.0,
     last_sprite_path: "",
+    ai_wander_dir: @math.Vec2D(0.0, 0.0),
+    ai_wander_timer: 0.0,
   })
 }
 

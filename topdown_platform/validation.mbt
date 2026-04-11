@@ -77,12 +77,33 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
   if plugin.map.tile_size <= 1.0 {
     return Some("plugin.map.tile_size must be > 1.0")
   }
+  match
+    validate_visual(plugin.map.default_floor_image, "map.default_floor_image") {
+    Some(err) => return Some(err)
+    None => ()
+  }
   for row in plugin.map.rows {
     if row.length() != width {
       return Some("plugin.map.rows must have equal width")
     }
   }
   for code, rule in plugin.map.legend {
+    match rule.kind {
+      EnemySpawn =>
+        match rule.enemy_spawn_tag {
+          Some(tag) =>
+            if tag == "" {
+              return Some("legend '\{code}' enemy_spawn_tag must not be empty")
+            }
+          None => ()
+        }
+      _ =>
+        if rule.enemy_spawn_tag is Some(_) {
+          return Some(
+            "legend '\{code}' enemy_spawn_tag is only valid for EnemySpawn tiles",
+          )
+        }
+    }
     match rule.floor_image {
       Some(visual) =>
         match validate_visual(visual, "legend '\{code}' floor") {
@@ -103,6 +124,7 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
 
   let mut player_spawns = 0
   let mut enemy_spawns = 0
+  let enemy_spawn_tags : Array[String] = []
   for row = 0; row < plugin.map.rows.length(); row = row + 1 {
     let line = plugin.map.rows[row]
     for col = 0; col < width; col = col + 1 {
@@ -111,7 +133,24 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
         Some(rule) =>
           match rule.kind {
             PlayerSpawn => player_spawns += 1
-            EnemySpawn => enemy_spawns += 1
+            EnemySpawn => {
+              enemy_spawns += 1
+              match rule.enemy_spawn_tag {
+                Some(tag) => {
+                  let mut exists = false
+                  for saved in enemy_spawn_tags {
+                    if saved == tag {
+                      exists = true
+                      break
+                    }
+                  }
+                  if !exists {
+                    enemy_spawn_tags.push(tag)
+                  }
+                }
+                None => ()
+              }
+            }
             _ => ()
           }
         None => return Some("map legend missing char '\{ch}'")
@@ -143,6 +182,14 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
     }
     if archetype.radius <= 2.0 {
       return Some("archetype '\{archetype.id}' radius must be > 2")
+    }
+    if archetype.preferred_range < 0.0 {
+      return Some("archetype '\{archetype.id}' preferred_range must be >= 0")
+    }
+    if archetype.ai_mode == HoldDistance && archetype.preferred_range <= 0.0 {
+      return Some(
+        "archetype '\{archetype.id}' HoldDistance ai requires preferred_range > 0",
+      )
     }
     match
       validate_anim(
@@ -221,6 +268,26 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
       if entry.spawn_interval < 0.0 {
         return Some("wave '\{wave.id}' entry spawn_interval must be >= 0")
       }
+      match entry.spawn_tag {
+        Some(tag) =>
+          if tag == "" {
+            return Some("wave '\{wave.id}' entry spawn_tag must not be empty")
+          } else {
+            let mut found = false
+            for existing in enemy_spawn_tags {
+              if existing == tag {
+                found = true
+                break
+              }
+            }
+            if !found {
+              return Some(
+                "wave '\{wave.id}' entry spawn_tag '\{tag}' has no matching EnemySpawn tile",
+              )
+            }
+          }
+        None => ()
+      }
     }
   }
 
@@ -253,6 +320,9 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
 
   if plugin.progression.run_seconds <= 0.0 {
     return Some("progression.run_seconds must be > 0")
+  }
+  if plugin.ui_theme.control_hint == "" {
+    return Some("ui_theme.control_hint must not be empty")
   }
 
   None
