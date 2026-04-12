@@ -16,28 +16,44 @@ pub fn ui_theme(
 }
 
 ///|
+pub fn sprite_region(
+  path : String,
+  x : Double,
+  y : Double,
+  width : Double,
+  height : Double,
+) -> SpriteRegion {
+  {
+    path,
+    rect: { position: @math.Vec2D(x, y), size: @math.Vec2D(width, height) },
+  }
+}
+
+///|
 pub fn sprite_pack(
-  player_idle_path? : String? = None,
-  enemy_goomba_path? : String? = None,
-  enemy_koopa_path? : String? = None,
-  tile_ground_path? : String? = None,
-  tile_brick_path? : String? = None,
-  tile_pipe_path? : String? = None,
-  tile_spike_path? : String? = None,
-  tile_question_path? : String? = None,
-  tile_used_path? : String? = None,
+  player_idle_region? : SpriteRegion? = None,
+  player_run_regions? : Array[SpriteRegion]? = None,
+  enemy_goomba_regions? : Array[SpriteRegion]? = None,
+  enemy_koopa_regions? : Array[SpriteRegion]? = None,
+  tile_ground_region? : SpriteRegion? = None,
+  tile_brick_region? : SpriteRegion? = None,
+  tile_pipe_region? : SpriteRegion? = None,
+  tile_spike_region? : SpriteRegion? = None,
+  tile_question_region? : SpriteRegion? = None,
+  tile_used_region? : SpriteRegion? = None,
   background_path? : String? = None,
 ) -> SpritePack {
   {
-    player_idle_path,
-    enemy_goomba_path,
-    enemy_koopa_path,
-    tile_ground_path,
-    tile_brick_path,
-    tile_pipe_path,
-    tile_spike_path,
-    tile_question_path,
-    tile_used_path,
+    player_idle_region,
+    player_run_regions,
+    enemy_goomba_regions,
+    enemy_koopa_regions,
+    tile_ground_region,
+    tile_brick_region,
+    tile_pipe_region,
+    tile_spike_region,
+    tile_question_region,
+    tile_used_region,
     background_path,
   }
 }

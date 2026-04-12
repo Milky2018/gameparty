@@ -246,16 +246,23 @@ pub(all) struct UiTheme {
 }
 
 ///|
+pub(all) struct SpriteRegion {
+  path : String
+  rect : @math.Rect
+}
+
+///|
 pub(all) struct SpritePack {
-  player_idle_path : String?
-  enemy_goomba_path : String?
-  enemy_koopa_path : String?
-  tile_ground_path : String?
-  tile_brick_path : String?
-  tile_pipe_path : String?
-  tile_spike_path : String?
-  tile_question_path : String?
-  tile_used_path : String?
+  player_idle_region : SpriteRegion?
+  player_run_regions : Array[SpriteRegion]?
+  enemy_goomba_regions : Array[SpriteRegion]?
+  enemy_koopa_regions : Array[SpriteRegion]?
+  tile_ground_region : SpriteRegion?
+  tile_brick_region : SpriteRegion?
+  tile_pipe_region : SpriteRegion?
+  tile_spike_region : SpriteRegion?
+  tile_question_region : SpriteRegion?
+  tile_used_region : SpriteRegion?
   background_path : String?
 }
 

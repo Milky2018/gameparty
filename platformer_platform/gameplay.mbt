@@ -76,6 +76,14 @@ fn player_touches_hazard(rect : @math.Rect) -> Bool {
 }
 
 ///|
+const MAX_SIM_DELTA_SECONDS : Double = 1.0 / 60.0
+
+///|
+fn sim_delta() -> Double {
+  clamp_double(@time.delta(), 0.0, MAX_SIM_DELTA_SECONDS)
+}
+
+///|
 fn update_dash_crystal_respawns(delta : Double) -> Unit {
   let expired : Array[Int] = []
   for idx, timer in dash_crystal_respawn_timers {
@@ -446,7 +454,7 @@ fn handle_player_input() -> Unit {
     player_state.val.jump_buffer = movement.jump_buffer
   } else {
     player_state.val.jump_buffer = clamp_double(
-      player_state.val.jump_buffer - @time.delta(),
+      player_state.val.jump_buffer - sim_delta(),
       0.0,
       movement.jump_buffer,
     )
@@ -514,7 +522,7 @@ fn update_player() -> Unit {
     return
   }
   let movement = current_movement_profile()
-  let delta = @time.delta()
+  let delta = sim_delta()
   if player_state.val.startup_grace_timer > 0.0 {
     player_state.val.startup_grace_timer = clamp_double(
       player_state.val.startup_grace_timer - delta,
@@ -747,7 +755,7 @@ fn update_enemies() -> Unit {
   if game_phase.val != Playing {
     return
   }
-  let delta = @time.delta()
+  let delta = sim_delta()
   for entity in enemy_entities_order {
     match enemy_entities.get(entity) {
       Some(enemy) => {
@@ -858,7 +866,7 @@ fn update_items() -> Unit {
   if game_phase.val != Playing {
     return
   }
-  let delta = @time.delta()
+  let delta = sim_delta()
   let player_hitbox = player_rect()
   for entity in item_entities_order {
     match item_entities.get(entity) {
@@ -936,7 +944,7 @@ fn update_fireballs() -> Unit {
   if game_phase.val != Playing {
     return
   }
-  let delta = @time.delta()
+  let delta = sim_delta()
   for entity in fireball_entities_order {
     match fireball_entities.get(entity) {
       Some(fireball) => {
@@ -1041,7 +1049,7 @@ fn update_system(_world : @ecs.World) -> Unit {
   if game_phase.val != Playing {
     return
   }
-  update_dash_crystal_respawns(@time.delta())
+  update_dash_crystal_respawns(sim_delta())
   update_player()
   update_enemies()
   update_items()
@@ -1084,6 +1092,61 @@ fn camera_system(_world : @ecs.World) -> Unit {
 }
 
 ///|
+const PLAYER_ANIM_FPS : Double = 10.0
+
+///|
+const ENEMY_ANIM_FPS : Double = 8.0
+
+///|
+fn animated_region(
+  regions : Array[SpriteRegion]?,
+  fps : Double,
+  phase_offset? : Double = 0.0,
+) -> SpriteRegion? {
+  match regions {
+    Some(frames) =>
+      if frames.length() == 0 {
+        None
+      } else {
+        let frame_index = @cmath.floor(@time.elapsed() * fps + phase_offset).to_int() %
+          frames.length()
+        Some(frames[frame_index])
+      }
+    None => None
+  }
+}
+
+///|
+fn player_visual_region() -> (SpriteRegion?, Bool) {
+  let flip_x = !player_state.val.facing_right
+  let speed_x = player_state.val.velocity[X]
+  let moving_speed = if speed_x < 0.0 { -speed_x } else { speed_x }
+  let moving = moving_speed > 8.0
+  if moving {
+    match animated_region(sprite_regions_for_player_run(), PLAYER_ANIM_FPS) {
+      Some(region) => (Some(region), flip_x)
+      None => (sprite_region_for_player_idle(), flip_x)
+    }
+  } else {
+    (sprite_region_for_player_idle(), flip_x)
+  }
+}
+
+///|
+fn enemy_visual_region(enemy : EnemyState) -> (SpriteRegion?, Bool) {
+  let flip_x = !enemy.facing_right
+  let phase = enemy.center[X] * 0.03125
+  (
+    animated_region(
+      sprite_regions_for_enemy(enemy.kind),
+      ENEMY_ANIM_FPS,
+      phase_offset=phase,
+    ),
+    flip_x,
+  )
+}
+
+///|
 fn sync_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
   for idx in 0..<solid_blocks.length() {
@@ -1097,8 +1160,9 @@ fn sync_system(_world : @ecs.World) -> Unit {
       set_visibility(entity, false)
       continue
     }
-    set_sprite_entity(
+    set_sprite_entity_with_image(
       entity,
+      sprite_region_for_tile(block.kind),
       block_color(block.kind),
       block.size,
       block.base_center,
@@ -1111,12 +1175,15 @@ fn sync_system(_world : @ecs.World) -> Unit {
       Big => rgb(64U, 138U, 236U)
       Fire => rgb(255U, 191U, 103U)
     }
-    set_sprite_entity(
+    let (player_region, player_flip_x) = player_visual_region()
+    set_sprite_entity_with_image(
       player_entity,
+      player_region,
       player_color,
       vec2(PLAYER_WIDTH, player_height()),
       player_state.val.center,
       5.0,
+      flip_x=player_flip_x,
     )
     let mut player_visible = true
     if player_state.val.hurt_timer > 0.0 {
@@ -1132,12 +1199,15 @@ fn sync_system(_world : @ecs.World) -> Unit {
     match enemy_entities.get(entity) {
       Some(enemy) =>
         if enemy.alive {
-          set_sprite_entity(
+          let (enemy_region, enemy_flip_x) = enemy_visual_region(enemy)
+          set_sprite_entity_with_image(
             entity,
+            enemy_region,
             enemy_color(enemy.kind),
             vec2(ENEMY_WIDTH, ENEMY_HEIGHT),
             enemy.center,
             4.0,
+            flip_x=enemy_flip_x,
           )
         } else {
           set_visibility(entity, false)

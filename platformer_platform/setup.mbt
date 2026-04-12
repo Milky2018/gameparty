@@ -28,41 +28,49 @@ fn image_handle_for(path : String) -> @asset.ImageHandle {
 }
 
 ///|
-fn sprite_path_for_tile(kind : TileKind) -> String? {
+fn sprite_region_for_tile(kind : TileKind) -> SpriteRegion? {
   match sprite_pack_state.val {
     Some(pack) =>
       match kind {
-        Ground => pack.tile_ground_path
-        Brick => pack.tile_brick_path
-        Pipe => pack.tile_pipe_path
-        Spike => pack.tile_spike_path
-        DashCrystal => pack.tile_question_path
-        Spring => pack.tile_question_path
-        QuestionMushroom => pack.tile_question_path
-        QuestionFlower => pack.tile_question_path
-        QuestionCoin => pack.tile_question_path
-        UsedBlock => pack.tile_used_path
+        Ground => pack.tile_ground_region
+        Brick => pack.tile_brick_region
+        Pipe => pack.tile_pipe_region
+        Spike => pack.tile_spike_region
+        DashCrystal => pack.tile_question_region
+        Spring => pack.tile_question_region
+        QuestionMushroom => pack.tile_question_region
+        QuestionFlower => pack.tile_question_region
+        QuestionCoin => pack.tile_question_region
+        UsedBlock => pack.tile_used_region
       }
     None => None
   }
 }
 
 ///|
-fn sprite_path_for_enemy(kind : EnemyKind) -> String? {
+fn sprite_regions_for_enemy(kind : EnemyKind) -> Array[SpriteRegion]? {
   match sprite_pack_state.val {
     Some(pack) =>
       match kind {
-        Goomba => pack.enemy_goomba_path
-        Koopa => pack.enemy_koopa_path
+        Goomba => pack.enemy_goomba_regions
+        Koopa => pack.enemy_koopa_regions
       }
     None => None
   }
 }
 
 ///|
-fn sprite_path_for_player() -> String? {
+fn sprite_region_for_player_idle() -> SpriteRegion? {
   match sprite_pack_state.val {
-    Some(pack) => pack.player_idle_path
+    Some(pack) => pack.player_idle_region
+    None => None
+  }
+}
+
+///|
+fn sprite_regions_for_player_run() -> Array[SpriteRegion]? {
+  match sprite_pack_state.val {
+    Some(pack) => pack.player_run_regions
     None => None
   }
 }
@@ -115,6 +123,36 @@ fn set_sprite_entity(
 
 ///|
 fn set_sprite_entity_with_image(
+  entity : @entity.Entity,
+  region : SpriteRegion?,
+  fallback_color : @render.Color,
+  size : @math.Vec2D,
+  center : @math.Vec2D,
+  z : Double,
+  flip_x? : Bool = false,
+) -> Unit {
+  ensure_entity_alive(entity)
+  let sprite = match region {
+    Some(region) => {
+      let sprite = @sprite.Sprite::from_image(
+        image_handle_for(region.path),
+        custom_size=Some(size),
+      )
+      sprite.rect = Some(region.rect)
+      sprite
+    }
+    None => @sprite.Sprite::from_color(fallback_color, size)
+  }
+  sprite.flip_x = flip_x
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  let top_left = vec2(center[X] - size[X] * 0.5, center[Y] - size[Y] * 0.5)
+  @sprite.sprites().set(entity, sprite)
+  @transform.transforms().set(entity, transform_2d(top_left, z))
+  set_visibility(entity, true)
+}
+
+///|
+fn set_sprite_entity_with_full_image(
   entity : @entity.Entity,
   image_path : String?,
   fallback_color : @render.Color,
@@ -230,7 +268,7 @@ fn spawn_background(level : LevelSpec) -> Unit {
   let sky = @entity.Entity::new()
   match sprite_path_for_background() {
     Some(path) =>
-      set_sprite_entity_with_image(
+      set_sprite_entity_with_full_image(
         sky,
         Some(path),
         background_color,
@@ -283,7 +321,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
     let entity = @entity.Entity::new()
     set_sprite_entity_with_image(
       entity,
-      sprite_path_for_tile(block.kind),
+      sprite_region_for_tile(block.kind),
       block_color(block.kind),
       block.size,
       block.base_center,
@@ -346,7 +384,7 @@ fn spawn_player(level : LevelSpec) -> Unit {
   ensure_entity_alive(player_entity)
   set_sprite_entity_with_image(
     player_entity,
-    sprite_path_for_player(),
+    sprite_region_for_player_idle(),
     player_sprite_color,
     vec2(PLAYER_WIDTH, PLAYER_HEIGHT_SMALL),
     level.player_spawn,
@@ -373,9 +411,14 @@ fn spawn_enemy(spawn : EnemySpawn) -> Unit {
     patrol_right: spawn.patrol_right,
   })
   enemy_entities_order.push(entity)
+  let enemy_regions = sprite_regions_for_enemy(spawn.kind)
+  let enemy_region = match enemy_regions {
+    Some(regions) if regions.length() > 0 => Some(regions[0])
+    _ => None
+  }
   set_sprite_entity_with_image(
     entity,
-    sprite_path_for_enemy(spawn.kind),
+    enemy_region,
     enemy_color(spawn.kind),
     vec2(ENEMY_WIDTH, ENEMY_HEIGHT),
     spawn.center,

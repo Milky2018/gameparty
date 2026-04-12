@@ -2,34 +2,24 @@
 const TILE_SIZE : Double = 48.0
 
 ///|
-const SMA_BG_PATH : String = "assets/supermario/sma/backgrounds.png"
+const SMA_MARIO_SHEET_PATH : String = "assets/supermario/sma/mario.gif"
 
 ///|
-const SMA_MARIO_IDLE_PATH : String = "assets/supermario/sma/cut/mario_idle.png"
+const SMA_ENEMIES_SHEET_PATH : String = "assets/supermario/sma/enemies.gif"
 
 ///|
-const SMA_GOOMBA_PATH : String = "assets/supermario/sma/cut/enemy_goomba.png"
+const SMA_TILES_SHEET_PATH : String = "assets/supermario/sma/tiles.png"
 
 ///|
-const SMA_KOOPA_PATH : String = "assets/supermario/sma/cut/enemy_koopa.png"
-
-///|
-const SMA_GROUND_PATH : String = "assets/supermario/sma/cut/tile_ground.png"
-
-///|
-const SMA_BRICK_PATH : String = "assets/supermario/sma/cut/tile_brick.png"
-
-///|
-const SMA_PIPE_PATH : String = "assets/supermario/sma/cut/tile_pipe.png"
-
-///|
-const SMA_SPIKE_PATH : String = "assets/supermario/sma/cut/tile_spike.png"
-
-///|
-const SMA_QUESTION_PATH : String = "assets/supermario/sma/cut/tile_question.png"
-
-///|
-const SMA_USED_PATH : String = "assets/supermario/sma/cut/tile_used.png"
+fn atlas(
+  path : String,
+  x : Double,
+  y : Double,
+  w : Double,
+  h : Double,
+) -> @platformer_platform.SpriteRegion {
+  @platformer_platform.sprite_region(path, x, y, w, h)
+}
 
 ///|
 fn vec2(x : Double, y : Double) -> @math.Vec2D {
@@ -326,16 +316,40 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     ),
     sprites=Some(
       @platformer_platform.sprite_pack(
-        player_idle_path=Some(SMA_MARIO_IDLE_PATH),
-        enemy_goomba_path=Some(SMA_GOOMBA_PATH),
-        enemy_koopa_path=Some(SMA_KOOPA_PATH),
-        tile_ground_path=Some(SMA_GROUND_PATH),
-        tile_brick_path=Some(SMA_BRICK_PATH),
-        tile_pipe_path=Some(SMA_PIPE_PATH),
-        tile_spike_path=Some(SMA_SPIKE_PATH),
-        tile_question_path=Some(SMA_QUESTION_PATH),
-        tile_used_path=Some(SMA_USED_PATH),
-        background_path=Some(SMA_BG_PATH),
+        player_idle_region=Some(
+          atlas(SMA_MARIO_SHEET_PATH, 1.0, 5.0, 16.0, 26.0),
+        ),
+        player_run_regions=Some([
+          atlas(SMA_MARIO_SHEET_PATH, 1.0, 5.0, 16.0, 26.0),
+          atlas(SMA_MARIO_SHEET_PATH, 22.0, 4.0, 15.0, 27.0),
+          atlas(SMA_MARIO_SHEET_PATH, 40.0, 4.0, 16.0, 27.0),
+        ]),
+        enemy_goomba_regions=Some([
+          atlas(SMA_ENEMIES_SHEET_PATH, 103.0, 39.0, 16.0, 16.0),
+          atlas(SMA_ENEMIES_SHEET_PATH, 85.0, 39.0, 16.0, 16.0),
+        ]),
+        enemy_koopa_regions=Some([
+          atlas(SMA_ENEMIES_SHEET_PATH, 31.0, 38.0, 16.0, 16.0),
+          atlas(SMA_ENEMIES_SHEET_PATH, 49.0, 40.0, 16.0, 16.0),
+        ]),
+        tile_ground_region=Some(
+          atlas(SMA_TILES_SHEET_PATH, 0.0, 32.0, 16.0, 16.0),
+        ),
+        tile_brick_region=Some(
+          atlas(SMA_TILES_SHEET_PATH, 0.0, 0.0, 16.0, 16.0),
+        ),
+        tile_pipe_region=Some(
+          atlas(SMA_TILES_SHEET_PATH, 0.0, 80.0, 16.0, 16.0),
+        ),
+        tile_spike_region=Some(
+          atlas(SMA_TILES_SHEET_PATH, 56.0, 144.0, 16.0, 16.0),
+        ),
+        tile_question_region=Some(
+          atlas(SMA_TILES_SHEET_PATH, 124.0, 160.0, 16.0, 16.0),
+        ),
+        tile_used_region=Some(
+          atlas(SMA_TILES_SHEET_PATH, 108.0, 160.0, 16.0, 16.0),
+        ),
       ),
     ),
   )
