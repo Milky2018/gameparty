@@ -233,6 +233,7 @@ fn startup_system(_world : @ecs.World) -> Unit {
   } else {
     true
   }
+  register_mooncraft_font_once()
   let system_started_at = profile_phase_begin("startup.system")
   @ui.set_ui_scale_mode(@ui.UiScaleMode::Viewport)
   let materials_started_at = profile_phase_begin("startup.register_materials")

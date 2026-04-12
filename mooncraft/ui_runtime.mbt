@@ -1,4 +1,18 @@
 ///|
+
+///|
+let mooncraft_font_registered : Ref[Bool] = { val: false }
+
+///|
+fn register_mooncraft_font_once() -> Unit {
+  if mooncraft_font_registered.val {
+    return
+  }
+  ignore(@asset.load_font(MOONCRAFT_FONT_PATH, family=MOONCRAFT_FONT_FAMILY))
+  mooncraft_font_registered.val = true
+}
+
+///|
 fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -31,7 +45,7 @@ fn setup_text_entity(
   @ui.texts().set(entity, @ui.Text::new(content))
   @ui.text_fonts().set(
     entity,
-    @ui.TextFont::from_css("\{font_size}px monospace"),
+    @ui.TextFont::from_css("\{font_size}px \{MOONCRAFT_FONT_FAMILY}"),
   )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(

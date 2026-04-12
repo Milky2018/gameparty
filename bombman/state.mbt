@@ -131,10 +131,10 @@ const MENU_SELECTED_COLOR : String = "rgb(255, 220, 120)"
 const MENU_NORMAL_COLOR : String = HUD_TEXT_COLOR
 
 ///|
-const BOMBMAN_FONT_FAMILY : String = "ThaleahFat"
+const BOMBMAN_FONT_FAMILY : String = "MGS1Codec"
 
 ///|
-const BOMBMAN_FONT_PATH : String = "assets/shared/fonts/ThaleahFat.ttf"
+const BOMBMAN_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
 const BOMBMAN_SPRITES_PATH : String = "assets/bombman/bomberman.png"

@@ -289,6 +289,7 @@ fn setup_round_over_phase() -> Unit {
 ///|
 fn startup_level_setup() -> Unit {
   set_profile_from_env()
+  register_tankbattle_font_once()
   let startup_started_at = @time.elapsed()
 
   let init_levels_started_at = @time.elapsed()

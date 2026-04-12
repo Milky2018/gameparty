@@ -141,7 +141,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
   ],
   progression: { run_seconds: 300.0, player_archetype_id: "gardener" },
   ui_theme: @kit.ui_theme(
-    "PLANTS VS ZOMBIES TD", "assets/shared/fonts/ThaleahFat.ttf", "ThaleahFat", "rgb(235,246,227)",
+    "PLANTS VS ZOMBIES TD", "assets/shared/fonts/mgs1codec.ttf", "MGS1Codec", "rgb(235,246,227)",
     "WASD move  LMB pea shot  SPACE shovel  ESC quit",
   ),
   hooks: None,

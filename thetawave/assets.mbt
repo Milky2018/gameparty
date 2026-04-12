@@ -224,28 +224,28 @@ const SIZE_ICON_TEXTURE : String = "assets/thetawave/texture/size_icon.png"
 const SPEED_ICON_TEXTURE : String = "assets/thetawave/texture/speed_icon.png"
 
 ///|
-const FONT_LUNCHDS_ALIAS : String = "Lunchds"
+const FONT_LUNCHDS_ALIAS : String = "MGS1Codec"
 
 ///|
-const FONT_SPACE_MADNESS_ALIAS : String = "SpaceMadness"
+const FONT_SPACE_MADNESS_ALIAS : String = "MGS1Codec"
 
 ///|
-const FONT_WIBLETOWN_ALIAS : String = "Wibletown"
+const FONT_WIBLETOWN_ALIAS : String = "MGS1Codec"
 
 ///|
-const FONT_LUNCHDS_PATH : String = "assets/thetawave/fonts/Lunchds.ttf"
+const FONT_LUNCHDS_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
-const FONT_SPACE_MADNESS_PATH : String = "assets/thetawave/fonts/SpaceMadness.ttf"
+const FONT_SPACE_MADNESS_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
-const FONT_WIBLETOWN_PATH : String = "assets/thetawave/fonts/wibletown-regular.otf"
+const FONT_WIBLETOWN_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
-const UI_FONT_SMALL : String = "16px Lunchds"
+const UI_FONT_SMALL : String = "16px MGS1Codec"
 
 ///|
-const UI_FONT_MEDIUM : String = "18px Lunchds"
+const UI_FONT_MEDIUM : String = "18px MGS1Codec"
 
 ///|
 const GAMEPLAY_SPRITE_SCALE : Double = 1.0

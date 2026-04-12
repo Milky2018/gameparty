@@ -2445,7 +2445,7 @@ const TUTORIAL_PHASE_LINE_BASE_Y : Double = 8.0
 const TUTORIAL_PHASE_LINE_STEP_Y : Double = 12.0
 
 ///|
-const TUTORIAL_PHASE_LINE_FONT : String = "10px Lunchds"
+const TUTORIAL_PHASE_LINE_FONT : String = "10px MGS1Codec"
 
 ///|
 fn hide_tutorial_phase_data_lines() -> Unit {
@@ -2688,7 +2688,7 @@ fn update_character_selection_widgets_for_slot(
   let join_prompt_text = text_state(
     join_prompt_content,
     color="white",
-    font="8px Lunchds",
+    font="8px MGS1Codec",
     baseline=Top,
     align=Center,
   )
@@ -2732,7 +2732,7 @@ fn update_character_selection_widgets_for_slot(
   let character_name_text = text_state(
     character_config(character).name,
     color="rgb(255, 215, 0)",
-    font="9px Lunchds",
+    font="9px MGS1Codec",
     baseline=Top,
     align=Center,
   )
@@ -2741,11 +2741,11 @@ fn update_character_selection_widgets_for_slot(
   let slot1_text = text_state(
     clip_text_to_width(
       character_slot_ability_description(character, 1),
-      "7px Lunchds",
+      "7px MGS1Codec",
       ability_text_max_width,
     ),
     color="white",
-    font="7px Lunchds",
+    font="7px MGS1Codec",
     baseline=Top,
     align=Left,
   )
@@ -2754,11 +2754,11 @@ fn update_character_selection_widgets_for_slot(
   let slot2_text = text_state(
     clip_text_to_width(
       character_slot_ability_description(character, 2),
-      "7px Lunchds",
+      "7px MGS1Codec",
       ability_text_max_width,
     ),
     color="white",
-    font="7px Lunchds",
+    font="7px MGS1Codec",
     baseline=Top,
     align=Left,
   )
@@ -2794,7 +2794,7 @@ fn update_character_selection_widgets_for_slot(
       "Not Ready"
     },
     color=if ready { "rgb(80, 255, 120)" } else { "rgb(220,220,220)" },
-    font="8px Lunchds",
+    font="8px MGS1Codec",
     baseline=Top,
     align=Center,
   )
@@ -3168,11 +3168,11 @@ fn ui_main_menu() -> Unit {
   set_ui_visible(game_state.banner_ui, true)
   update_main_menu_button_sprites()
 
-  game_state.score_text.font = "16px Lunchds"
-  game_state.hull_text.font = "16px Lunchds"
-  game_state.shield_text.font = "16px Lunchds"
-  game_state.defense_text.font = "16px Lunchds"
-  game_state.stage_text.font = "22px SpaceMadness"
+  game_state.score_text.font = "16px MGS1Codec"
+  game_state.hull_text.font = "16px MGS1Codec"
+  game_state.shield_text.font = "16px MGS1Codec"
+  game_state.defense_text.font = "16px MGS1Codec"
+  game_state.stage_text.font = "22px MGS1Codec"
   game_state.timer_text.font = UI_FONT_SMALL
   game_state.banner_text.font = UI_FONT_SMALL
   game_state.score_text.color = "black"
@@ -3232,13 +3232,13 @@ fn ui_character_selection() -> Unit {
   }
   update_character_selection_widgets()
 
-  game_state.score_text.font = "11px Lunchds"
-  game_state.hull_text.font = "8px Lunchds"
-  game_state.shield_text.font = "8px Lunchds"
-  game_state.defense_text.font = "8px Lunchds"
-  game_state.stage_text.font = "10px Lunchds"
-  game_state.timer_text.font = "8px Lunchds"
-  game_state.banner_text.font = "8px Lunchds"
+  game_state.score_text.font = "11px MGS1Codec"
+  game_state.hull_text.font = "8px MGS1Codec"
+  game_state.shield_text.font = "8px MGS1Codec"
+  game_state.defense_text.font = "8px MGS1Codec"
+  game_state.stage_text.font = "10px MGS1Codec"
+  game_state.timer_text.font = "8px MGS1Codec"
+  game_state.banner_text.font = "8px MGS1Codec"
   game_state.score_text.color = "white"
   game_state.hull_text.color = "white"
   game_state.shield_text.color = "white"
@@ -3315,10 +3315,10 @@ fn ui_in_game() -> Unit {
     } else {
       "Victory"
     }
-    game_state.score_text.font = "24px Lunchds"
-    game_state.hull_text.font = "24px Lunchds"
-    game_state.shield_text.font = "24px Lunchds"
-    game_state.defense_text.font = "24px Lunchds"
+    game_state.score_text.font = "24px MGS1Codec"
+    game_state.hull_text.font = "24px MGS1Codec"
+    game_state.shield_text.font = "24px MGS1Codec"
+    game_state.defense_text.font = "24px MGS1Codec"
     game_state.score_text.color = "white"
     game_state.hull_text.color = "white"
     game_state.shield_text.color = "white"
@@ -3331,7 +3331,7 @@ fn ui_in_game() -> Unit {
     game_state.hull_text.baseline = Top
     game_state.shield_text.baseline = Top
     game_state.defense_text.baseline = Top
-    game_state.stage_text.font = "54px SpaceMadness"
+    game_state.stage_text.font = "54px MGS1Codec"
     game_state.stage_text.align = Center
     game_state.timer_text.align = Center
     game_state.banner_text.align = Center
@@ -3351,13 +3351,13 @@ fn ui_in_game() -> Unit {
   update_border_gradient_widgets()
   apply_in_game_layout()
 
-  game_state.score_text.font = "20px Lunchds"
+  game_state.score_text.font = "20px MGS1Codec"
   game_state.hull_text.font = UI_FONT_SMALL
   game_state.shield_text.font = UI_FONT_SMALL
   game_state.defense_text.font = UI_FONT_SMALL
-  game_state.stage_text.font = "19px Lunchds"
-  game_state.timer_text.font = "19px Lunchds"
-  game_state.banner_text.font = "36px SpaceMadness"
+  game_state.stage_text.font = "19px MGS1Codec"
+  game_state.timer_text.font = "19px MGS1Codec"
+  game_state.banner_text.font = "36px MGS1Codec"
   game_state.score_text.color = "white"
   game_state.hull_text.color = "white"
   game_state.shield_text.color = "white"

@@ -858,7 +858,7 @@ fn initialize_ui() -> Unit {
     text_state(
       "Fires energy blasts.",
       color="white",
-      font="14px Lunchds",
+      font="14px MGS1Codec",
       baseline=Top,
       align=Left,
     ),
@@ -879,7 +879,7 @@ fn initialize_ui() -> Unit {
     text_state(
       "Fires large, high damage, blasts.",
       color="white",
-      font="14px Lunchds",
+      font="14px MGS1Codec",
       baseline=Top,
       align=Left,
     ),
@@ -966,7 +966,7 @@ fn initialize_ui() -> Unit {
     text_state(
       "Fires lead bullets.",
       color="white",
-      font="14px Lunchds",
+      font="14px MGS1Codec",
       baseline=Top,
       align=Left,
     ),
@@ -987,7 +987,7 @@ fn initialize_ui() -> Unit {
     text_state(
       "Charge in a direction.",
       color="white",
-      font="14px Lunchds",
+      font="14px MGS1Codec",
       baseline=Top,
       align=Left,
     ),

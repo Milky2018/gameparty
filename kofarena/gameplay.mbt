@@ -841,7 +841,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     "KOF ARENA",
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 68.0),
     "rgb(255,248,238)",
-    font="52px sans-serif",
+    font="52px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -855,7 +855,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     },
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 126.0),
     "rgb(222,231,242)",
-    font="16px monospace",
+    font="16px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -869,7 +869,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     },
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 154.0),
     "rgb(198,210,225)",
-    font="14px monospace",
+    font="14px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -881,7 +881,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     },
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 30.0),
     "rgb(255,248,238)",
-    font="32px sans-serif",
+    font="32px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -896,7 +896,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     },
     @math.Vec2D(26.0, 26.0),
     "rgb(210,220,230)",
-    font="20px sans-serif",
+    font="20px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -908,7 +908,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     },
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 240.0),
     "rgb(255,244,210)",
-    font="50px sans-serif",
+    font="50px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
 

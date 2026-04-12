@@ -216,28 +216,28 @@ fn setup_hud() -> Unit {
     hud_title_entity,
     "SUPER MARIO",
     vec2(28.0, 24.0),
-    "34px monospace",
+    "34px MGS1Codec",
     hud_color_white,
   )
   set_text_entity(
     hud_sub_entity,
     "",
     vec2(28.0, 68.0),
-    "22px monospace",
+    "22px MGS1Codec",
     hud_color_soft,
   )
   set_text_entity(
     hud_hint_entity,
     "",
     vec2(28.0, VIEWPORT_HEIGHT - 36.0),
-    "20px monospace",
+    "20px MGS1Codec",
     hud_color_soft,
   )
   set_text_entity(
     hud_message_entity,
     "",
     vec2(VIEWPORT_WIDTH * 0.5 - 220.0, VIEWPORT_HEIGHT * 0.5 - 30.0),
-    "48px monospace",
+    "48px MGS1Codec",
     hud_color_gold,
   )
   set_visibility(hud_overlay_entity, false)

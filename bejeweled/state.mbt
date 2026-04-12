@@ -98,7 +98,7 @@ const BEJEWELED_PROFILE_WARMUP_SECONDS : Double = 2.5
 const BEJEWELED_FONT_FAMILY : String = "MGS1Codec"
 
 ///|
-const BEJEWELED_FONT_PATH : String = "assets/bejeweled/mgs1codec.ttf"
+const BEJEWELED_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
 const STATUS_BOX_WIDTH : Double = 220.0

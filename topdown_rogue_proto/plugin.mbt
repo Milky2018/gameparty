@@ -207,7 +207,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
   ],
   progression: { run_seconds: 300.0, player_archetype_id: "player_assassin" },
   ui_theme: @kit.ui_theme(
-    "TOPDOWN ROGUE PROTO", "assets/shared/fonts/ThaleahFat.ttf", "ThaleahFat", "rgb(226,238,252)",
+    "TOPDOWN ROGUE PROTO", "assets/shared/fonts/mgs1codec.ttf", "MGS1Codec", "rgb(226,238,252)",
     "WASD move  LMB primary  SPACE secondary  ESC quit",
   ),
   hooks: Some({

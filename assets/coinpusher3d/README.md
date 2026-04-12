@@ -13,4 +13,4 @@ This folder contains visual/audio assets used by `coinpusher3d`.
 - `textures/table_top.png`, `textures/table_side.png`: adapted from in-repo `pacman3d` textures.
 - `textures/coin.png`, `textures/pusher.png`: adapted from in-repo `mooncraft` textures.
 - `ui/chest_panel.png`, `ui/hud_bg.png`, `sounds/*`, `music/run_loop.mp3`: adapted from in-repo `thetawave` assets.
-- `../shared/fonts/ThaleahFat.ttf`: shared in-repo game font asset.
+- `../shared/fonts/mgs1codec.ttf`: shared in-repo game font asset.

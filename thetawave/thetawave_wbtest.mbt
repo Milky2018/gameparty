@@ -1070,20 +1070,21 @@ test "character selection text clipping respects lane width constraints" {
   let long_line = "Fires extremely long ability text that must be clipped to fit lane."
   let left = clip_text_to_width(
     long_line,
-    "7px Lunchds",
+    "7px MGS1Codec",
     CS_LEFT_ABILITY_TEXT_MAX_WIDTH,
   )
   let right = clip_text_to_width(
     long_line,
-    "7px Lunchds",
+    "7px MGS1Codec",
     CS_RIGHT_ABILITY_TEXT_MAX_WIDTH,
   )
 
   assert_true(
-    text_with_font_width(left, "7px Lunchds") <= CS_LEFT_ABILITY_TEXT_MAX_WIDTH,
+    text_with_font_width(left, "7px MGS1Codec") <=
+    CS_LEFT_ABILITY_TEXT_MAX_WIDTH,
   )
   assert_true(
-    text_with_font_width(right, "7px Lunchds") <=
+    text_with_font_width(right, "7px MGS1Codec") <=
     CS_RIGHT_ABILITY_TEXT_MAX_WIDTH,
   )
   assert_true(
@@ -1311,22 +1312,22 @@ test "character selection ability descriptions fit both player lanes for all cha
       let desc = character_slot_ability_description(character, slot)
       let left = clip_text_to_width(
         desc,
-        "7px Lunchds",
+        "7px MGS1Codec",
         CS_LEFT_ABILITY_TEXT_MAX_WIDTH,
       )
       let right = clip_text_to_width(
         desc,
-        "7px Lunchds",
+        "7px MGS1Codec",
         CS_RIGHT_ABILITY_TEXT_MAX_WIDTH,
       )
       assert_true(left.length() > 0)
       assert_true(right.length() > 0)
       assert_true(
-        text_with_font_width(left, "7px Lunchds") <=
+        text_with_font_width(left, "7px MGS1Codec") <=
         CS_LEFT_ABILITY_TEXT_MAX_WIDTH,
       )
       assert_true(
-        text_with_font_width(right, "7px Lunchds") <=
+        text_with_font_width(right, "7px MGS1Codec") <=
         CS_RIGHT_ABILITY_TEXT_MAX_WIDTH,
       )
     }

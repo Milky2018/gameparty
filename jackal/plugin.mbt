@@ -168,7 +168,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
   ],
   progression: { run_seconds: 360.0, player_archetype_id: "commando" },
   ui_theme: @kit.ui_theme(
-    "JACKAL RELOADED", "assets/shared/fonts/ThaleahFat.ttf", "ThaleahFat", "rgb(236,245,255)",
+    "JACKAL RELOADED", "assets/shared/fonts/mgs1codec.ttf", "MGS1Codec", "rgb(236,245,255)",
     "WASD move  LMB fire  SPACE knife  ESC quit",
   ),
   hooks: None,

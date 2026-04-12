@@ -1,5 +1,5 @@
 ({
-    "font.lunchds": File( path: "fonts/Lunchds.ttf"),
+    "font.lunchds": File( path: "../shared/fonts/mgs1codec.ttf"),
     "thetawave_logo.layout": TextureAtlasLayout (
         tile_size_x: 3368,
         tile_size_y: 1410,

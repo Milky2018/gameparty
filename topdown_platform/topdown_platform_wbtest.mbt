@@ -146,8 +146,8 @@ fn test_plugin() -> TopDownPluginDef {
     progression: { run_seconds: 120.0, player_archetype_id: "player" },
     ui_theme: {
       title: "test",
-      font_path: "assets/shared/fonts/ThaleahFat.ttf",
-      font_family: "ThaleahFat",
+      font_path: "assets/shared/fonts/mgs1codec.ttf",
+      font_family: "MGS1Codec",
       hud_color_css: "rgb(220,235,250)",
       control_hint: "WASD move  LMB primary  SPACE secondary  ESC quit",
     },

@@ -92,6 +92,12 @@ const HUD_MUTED_COLOR : String = "rgb(171, 181, 189)"
 const TITLE_COLOR : String = "rgb(255, 225, 136)"
 
 ///|
+const TANKBATTLE_FONT_FAMILY : String = "MGS1Codec"
+
+///|
+const TANKBATTLE_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
+
+///|
 const DEBUG_ENV : String = "TANKBATTLE_CAPTURE"
 
 ///|
@@ -235,6 +241,9 @@ priv struct ProceduralSounds {
 
 ///|
 let phase : Ref[GamePhase] = { val: MainMenu }
+
+///|
+let tankbattle_font_registered : Ref[Bool] = { val: false }
 
 ///|
 let current_level : Ref[Int] = { val: 0 }
@@ -801,6 +810,15 @@ fn hide_entity(entity : @entity.Entity) -> Unit {
 }
 
 ///|
+fn register_tankbattle_font_once() -> Unit {
+  if tankbattle_font_registered.val {
+    return
+  }
+  ignore(@asset.load_font(TANKBATTLE_FONT_PATH, family=TANKBATTLE_FONT_FAMILY))
+  tankbattle_font_registered.val = true
+}
+
+///|
 fn set_rect_entity(
   entity : @entity.Entity,
   position : @math.Vec2D,
@@ -828,7 +846,10 @@ fn set_text_entity_center(
 ) -> Unit {
   ensure_entity_alive(entity)
   @ui.texts().set(entity, @ui.Text::new(text))
-  @ui.text_fonts().set(entity, @ui.TextFont::new(size~))
+  @ui.text_fonts().set(
+    entity,
+    @ui.TextFont::new(family=TANKBATTLE_FONT_FAMILY, size~),
+  )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(
     entity,

@@ -1,8 +1,8 @@
 ///|
-const ANGRYRABBITS_FONT_FAMILY : String = "ThaleahFat"
+const ANGRYRABBITS_FONT_FAMILY : String = "MGS1Codec"
 
 ///|
-const ANGRYRABBITS_FONT_PATH : String = "assets/shared/fonts/ThaleahFat.ttf"
+const ANGRYRABBITS_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
 let angryrabbits_font_registered : Ref[Bool] = { val: false }

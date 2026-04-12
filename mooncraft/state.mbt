@@ -20,6 +20,12 @@ const ATLAS_PATH : String = "assets/mooncraft/generated/block_item_atlas.png"
 const GUI_WINDOW_PATH : String = "assets/mooncraft/gui/window.png"
 
 ///|
+const MOONCRAFT_FONT_FAMILY : String = "MGS1Codec"
+
+///|
+const MOONCRAFT_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
+
+///|
 let mooncraft_asset_path_prefixes : Array[String] = [
   "", "../", "../../", "../../../",
 ]

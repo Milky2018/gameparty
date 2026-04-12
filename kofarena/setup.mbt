@@ -5,6 +5,24 @@ let text_content_cache : Map[@entity.Entity, String] = Map::new()
 let text_style_cache : Map[@entity.Entity, String] = Map::new()
 
 ///|
+const KOF_FONT_FAMILY : String = "MGS1Codec"
+
+///|
+const KOF_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
+
+///|
+let kof_font_registered : Ref[Bool] = { val: false }
+
+///|
+fn register_kof_font_once() -> Unit {
+  if kof_font_registered.val {
+    return
+  }
+  ignore(@asset.load_font(KOF_FONT_PATH, family=KOF_FONT_FAMILY))
+  kof_font_registered.val = true
+}
+
+///|
 fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
   { r, g, b, a }
 }
@@ -56,7 +74,7 @@ fn set_text_entity(
   content : String,
   center : @math.Vec2D,
   color : String,
-  font? : String = "28px sans-serif",
+  font? : String = "28px \{KOF_FONT_FAMILY}",
   zindex? : Int = UI_ZINDEX,
 ) -> Unit {
   ensure_entity_alive(entity)
@@ -242,7 +260,7 @@ fn setup_hud_entities() -> Unit {
     "KOF ARENA",
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 68.0),
     "rgb(255,248,238)",
-    font="52px sans-serif",
+    font="52px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -250,7 +268,7 @@ fn setup_hud_entities() -> Unit {
     "ENTER START  F2 P2 MODE  F3 FPS  ESC EXIT",
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 126.0),
     "rgb(222,231,242)",
-    font="16px monospace",
+    font="16px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -258,7 +276,7 @@ fn setup_hud_entities() -> Unit {
     "",
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 154.0),
     "rgb(198,210,225)",
-    font="14px monospace",
+    font="14px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -266,7 +284,7 @@ fn setup_hud_entities() -> Unit {
     "",
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 30.0),
     "rgb(255,248,238)",
-    font="32px sans-serif",
+    font="32px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -274,7 +292,7 @@ fn setup_hud_entities() -> Unit {
     "",
     @math.Vec2D(26.0, 26.0),
     "rgb(210,220,230)",
-    font="20px sans-serif",
+    font="20px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_text_entity(
@@ -282,7 +300,7 @@ fn setup_hud_entities() -> Unit {
     "",
     @math.Vec2D(VIEWPORT_WIDTH * 0.5, 240.0),
     "rgb(255,244,210)",
-    font="50px sans-serif",
+    font="50px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_rect_entity(
@@ -365,6 +383,7 @@ fn assign_fighter_entities() -> Unit {
 
 ///|
 pub fn startup_system(_world : @ecs.World) -> Unit {
+  register_kof_font_once()
   capture_enabled.val = match @env.get_env_var(CAPTURE_ENV) {
     Some(value) => value == "1" || value == "true" || value == "TRUE"
     None => false
