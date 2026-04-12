@@ -2,6 +2,36 @@
 const TILE_SIZE : Double = 48.0
 
 ///|
+const SMA_BG_PATH : String = "assets/supermario/sma/backgrounds.png"
+
+///|
+const SMA_MARIO_IDLE_PATH : String = "assets/supermario/sma/cut/mario_idle.png"
+
+///|
+const SMA_GOOMBA_PATH : String = "assets/supermario/sma/cut/enemy_goomba.png"
+
+///|
+const SMA_KOOPA_PATH : String = "assets/supermario/sma/cut/enemy_koopa.png"
+
+///|
+const SMA_GROUND_PATH : String = "assets/supermario/sma/cut/tile_ground.png"
+
+///|
+const SMA_BRICK_PATH : String = "assets/supermario/sma/cut/tile_brick.png"
+
+///|
+const SMA_PIPE_PATH : String = "assets/supermario/sma/cut/tile_pipe.png"
+
+///|
+const SMA_SPIKE_PATH : String = "assets/supermario/sma/cut/tile_spike.png"
+
+///|
+const SMA_QUESTION_PATH : String = "assets/supermario/sma/cut/tile_question.png"
+
+///|
+const SMA_USED_PATH : String = "assets/supermario/sma/cut/tile_used.png"
+
+///|
 fn vec2(x : Double, y : Double) -> @math.Vec2D {
   @math.Vec2D(x, y)
 }
@@ -293,6 +323,20 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     @platformer_platform.ui_theme(
       "SUPER MARIO",
       hud_hint="A/D or arrows: move  SPACE/UP: jump  X/CTRL: fire  R: restart  F3: debug  ESC: quit",
+    ),
+    sprites=Some(
+      @platformer_platform.sprite_pack(
+        player_idle_path=Some(SMA_MARIO_IDLE_PATH),
+        enemy_goomba_path=Some(SMA_GOOMBA_PATH),
+        enemy_koopa_path=Some(SMA_KOOPA_PATH),
+        tile_ground_path=Some(SMA_GROUND_PATH),
+        tile_brick_path=Some(SMA_BRICK_PATH),
+        tile_pipe_path=Some(SMA_PIPE_PATH),
+        tile_spike_path=Some(SMA_SPIKE_PATH),
+        tile_question_path=Some(SMA_QUESTION_PATH),
+        tile_used_path=Some(SMA_USED_PATH),
+        background_path=Some(SMA_BG_PATH),
+      ),
     ),
   )
 }

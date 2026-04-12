@@ -16,6 +16,33 @@ pub fn ui_theme(
 }
 
 ///|
+pub fn sprite_pack(
+  player_idle_path? : String? = None,
+  enemy_goomba_path? : String? = None,
+  enemy_koopa_path? : String? = None,
+  tile_ground_path? : String? = None,
+  tile_brick_path? : String? = None,
+  tile_pipe_path? : String? = None,
+  tile_spike_path? : String? = None,
+  tile_question_path? : String? = None,
+  tile_used_path? : String? = None,
+  background_path? : String? = None,
+) -> SpritePack {
+  {
+    player_idle_path,
+    enemy_goomba_path,
+    enemy_koopa_path,
+    tile_ground_path,
+    tile_brick_path,
+    tile_pipe_path,
+    tile_spike_path,
+    tile_question_path,
+    tile_used_path,
+    background_path,
+  }
+}
+
+///|
 pub fn movement_profile(
   move_speed? : Double = PLAYER_MOVE_SPEED,
   jump_speed? : Double = PLAYER_JUMP_SPEED,
@@ -115,8 +142,9 @@ pub fn plugin(
   meta : PluginMeta,
   levels : Array[LevelSpec],
   ui_theme : UiTheme,
+  sprites? : SpritePack? = None,
   movement? : MovementProfile? = None,
   hooks? : PlatformerHooks? = None,
 ) -> PlatformerPluginDef {
-  { meta, levels, ui_theme, movement, hooks }
+  { meta, levels, ui_theme, sprites, movement, hooks }
 }

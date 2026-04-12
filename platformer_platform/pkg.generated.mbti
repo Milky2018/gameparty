@@ -18,9 +18,11 @@ pub fn meta(String, String, version? : String) -> PluginMeta
 
 pub fn movement_profile(move_speed? : Double, jump_speed? : Double, gravity? : Double, max_fall_speed? : Double, coyote_time? : Double, jump_buffer? : Double, max_air_dashes? : Int, dash_speed? : Double, dash_duration? : Double, dash_cooldown? : Double, allow_wall_jump? : Bool, wall_slide_speed? : Double, wall_jump_speed_x? : Double, wall_jump_speed_y? : Double, wall_stamina_max? : Double, wall_stamina_drain_per_second? : Double, wall_jump_stamina_cost? : Double, spring_boost_speed? : Double) -> MovementProfile
 
-pub fn plugin(PluginMeta, Array[LevelSpec], UiTheme, movement? : MovementProfile?, hooks? : PlatformerHooks?) -> PlatformerPluginDef
+pub fn plugin(PluginMeta, Array[LevelSpec], UiTheme, sprites? : SpritePack?, movement? : MovementProfile?, hooks? : PlatformerHooks?) -> PlatformerPluginDef
 
 pub fn run(PlatformerPluginDef) -> Unit
+
+pub fn sprite_pack(player_idle_path? : String?, enemy_goomba_path? : String?, enemy_koopa_path? : String?, tile_ground_path? : String?, tile_brick_path? : String?, tile_pipe_path? : String?, tile_spike_path? : String?, tile_question_path? : String?, tile_used_path? : String?, background_path? : String?) -> SpritePack
 
 pub fn ui_theme(String, hud_hint? : String) -> UiTheme
 
@@ -94,6 +96,7 @@ pub(all) struct PlatformerPluginDef {
   meta : PluginMeta
   levels : Array[LevelSpec]
   ui_theme : UiTheme
+  sprites : SpritePack?
   movement : MovementProfile?
   hooks : PlatformerHooks?
 }
@@ -125,6 +128,19 @@ pub(all) struct SolidBlock {
   size : @math.Vec2D
   mut kind : TileKind
   payload : ItemKind?
+}
+
+pub(all) struct SpritePack {
+  player_idle_path : String?
+  enemy_goomba_path : String?
+  enemy_koopa_path : String?
+  tile_ground_path : String?
+  tile_brick_path : String?
+  tile_pipe_path : String?
+  tile_spike_path : String?
+  tile_question_path : String?
+  tile_used_path : String?
+  background_path : String?
 }
 
 pub(all) enum TileKind {

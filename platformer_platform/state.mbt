@@ -246,6 +246,20 @@ pub(all) struct UiTheme {
 }
 
 ///|
+pub(all) struct SpritePack {
+  player_idle_path : String?
+  enemy_goomba_path : String?
+  enemy_koopa_path : String?
+  tile_ground_path : String?
+  tile_brick_path : String?
+  tile_pipe_path : String?
+  tile_spike_path : String?
+  tile_question_path : String?
+  tile_used_path : String?
+  background_path : String?
+}
+
+///|
 pub(all) struct MovementProfile {
   move_speed : Double
   jump_speed : Double
@@ -291,6 +305,7 @@ pub(all) struct PlatformerPluginDef {
   meta : PluginMeta
   levels : Array[LevelSpec]
   ui_theme : UiTheme
+  sprites : SpritePack?
   movement : MovementProfile?
   hooks : PlatformerHooks?
 }

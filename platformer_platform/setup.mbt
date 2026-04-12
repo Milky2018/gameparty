@@ -8,12 +8,71 @@ const PLATFORMER_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 let platformer_font_registered : Ref[Bool] = { val: false }
 
 ///|
+let sprite_pack_state : Ref[SpritePack?] = { val: None }
+
+///|
+let image_cache : Map[String, @asset.ImageHandle] = Map::new()
+
+///|
 fn register_platformer_font_once() -> Unit {
   if platformer_font_registered.val {
     return
   }
   ignore(@asset.load_font(PLATFORMER_FONT_PATH, family=PLATFORMER_FONT_FAMILY))
   platformer_font_registered.val = true
+}
+
+///|
+fn image_handle_for(path : String) -> @asset.ImageHandle {
+  image_cache.get_or_init(path, fn() { @asset.load_image(path) })
+}
+
+///|
+fn sprite_path_for_tile(kind : TileKind) -> String? {
+  match sprite_pack_state.val {
+    Some(pack) =>
+      match kind {
+        Ground => pack.tile_ground_path
+        Brick => pack.tile_brick_path
+        Pipe => pack.tile_pipe_path
+        Spike => pack.tile_spike_path
+        DashCrystal => pack.tile_question_path
+        Spring => pack.tile_question_path
+        QuestionMushroom => pack.tile_question_path
+        QuestionFlower => pack.tile_question_path
+        QuestionCoin => pack.tile_question_path
+        UsedBlock => pack.tile_used_path
+      }
+    None => None
+  }
+}
+
+///|
+fn sprite_path_for_enemy(kind : EnemyKind) -> String? {
+  match sprite_pack_state.val {
+    Some(pack) =>
+      match kind {
+        Goomba => pack.enemy_goomba_path
+        Koopa => pack.enemy_koopa_path
+      }
+    None => None
+  }
+}
+
+///|
+fn sprite_path_for_player() -> String? {
+  match sprite_pack_state.val {
+    Some(pack) => pack.player_idle_path
+    None => None
+  }
+}
+
+///|
+fn sprite_path_for_background() -> String? {
+  match sprite_pack_state.val {
+    Some(pack) => pack.background_path
+    None => None
+  }
 }
 
 ///|
@@ -47,6 +106,28 @@ fn set_sprite_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(color, size)
+  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  let top_left = vec2(center[X] - size[X] * 0.5, center[Y] - size[Y] * 0.5)
+  @sprite.sprites().set(entity, sprite)
+  @transform.transforms().set(entity, transform_2d(top_left, z))
+  set_visibility(entity, true)
+}
+
+///|
+fn set_sprite_entity_with_image(
+  entity : @entity.Entity,
+  image_path : String?,
+  fallback_color : @render.Color,
+  size : @math.Vec2D,
+  center : @math.Vec2D,
+  z : Double,
+) -> Unit {
+  ensure_entity_alive(entity)
+  let sprite = match image_path {
+    Some(path) =>
+      @sprite.Sprite::from_image(image_handle_for(path), custom_size=Some(size))
+    None => @sprite.Sprite::from_color(fallback_color, size)
+  }
   sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
   let top_left = vec2(center[X] - size[X] * 0.5, center[Y] - size[Y] * 0.5)
   @sprite.sprites().set(entity, sprite)
@@ -147,13 +228,25 @@ fn clear_fireballs() -> Unit {
 ///|
 fn spawn_background(level : LevelSpec) -> Unit {
   let sky = @entity.Entity::new()
-  set_sprite_entity(
-    sky,
-    background_color,
-    vec2(level.world_width + 600.0, WORLD_HEIGHT + 240.0),
-    vec2(level.world_width * 0.5, WORLD_HEIGHT * 0.42),
-    -200.0,
-  )
+  match sprite_path_for_background() {
+    Some(path) =>
+      set_sprite_entity_with_image(
+        sky,
+        Some(path),
+        background_color,
+        vec2(level.world_width + 600.0, WORLD_HEIGHT + 240.0),
+        vec2(level.world_width * 0.5, WORLD_HEIGHT * 0.42),
+        -200.0,
+      )
+    None =>
+      set_sprite_entity(
+        sky,
+        background_color,
+        vec2(level.world_width + 600.0, WORLD_HEIGHT + 240.0),
+        vec2(level.world_width * 0.5, WORLD_HEIGHT * 0.42),
+        -200.0,
+      )
+  }
   static_entities.push(sky)
 
   let near_hill = @entity.Entity::new()
@@ -188,8 +281,9 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
   spawn_background(level)
   for block in level.blocks {
     let entity = @entity.Entity::new()
-    set_sprite_entity(
+    set_sprite_entity_with_image(
       entity,
+      sprite_path_for_tile(block.kind),
       block_color(block.kind),
       block.size,
       block.base_center,
@@ -250,8 +344,9 @@ fn spawn_player(level : LevelSpec) -> Unit {
     alive: true,
   }
   ensure_entity_alive(player_entity)
-  set_sprite_entity(
+  set_sprite_entity_with_image(
     player_entity,
+    sprite_path_for_player(),
     player_sprite_color,
     vec2(PLAYER_WIDTH, PLAYER_HEIGHT_SMALL),
     level.player_spawn,
@@ -278,8 +373,9 @@ fn spawn_enemy(spawn : EnemySpawn) -> Unit {
     patrol_right: spawn.patrol_right,
   })
   enemy_entities_order.push(entity)
-  set_sprite_entity(
+  set_sprite_entity_with_image(
     entity,
+    sprite_path_for_enemy(spawn.kind),
     enemy_color(spawn.kind),
     vec2(ENEMY_WIDTH, ENEMY_HEIGHT),
     spawn.center,
@@ -407,6 +503,7 @@ fn set_current_level(level_index : Int) -> Unit {
 ///|
 fn startup_system(_world : @ecs.World) -> Unit {
   ignore(current_plugin())
+  sprite_pack_state.val = current_plugin().sprites
   register_platformer_font_once()
   set_profile_from_env()
   let startup_started_at = @time.elapsed()
