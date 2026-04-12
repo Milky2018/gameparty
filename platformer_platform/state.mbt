@@ -260,6 +260,7 @@ pub(all) struct SpritePack {
   tile_ground_region : SpriteRegion?
   tile_brick_region : SpriteRegion?
   tile_pipe_region : SpriteRegion?
+  tile_pipe_body_region : SpriteRegion?
   tile_spike_region : SpriteRegion?
   tile_question_region : SpriteRegion?
   tile_used_region : SpriteRegion?

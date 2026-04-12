@@ -22,7 +22,7 @@ pub fn plugin(PluginMeta, Array[LevelSpec], UiTheme, sprites? : SpritePack?, mov
 
 pub fn run(PlatformerPluginDef) -> Unit
 
-pub fn sprite_pack(player_idle_region? : SpriteRegion?, player_run_regions? : Array[SpriteRegion]?, enemy_goomba_regions? : Array[SpriteRegion]?, enemy_koopa_regions? : Array[SpriteRegion]?, tile_ground_region? : SpriteRegion?, tile_brick_region? : SpriteRegion?, tile_pipe_region? : SpriteRegion?, tile_spike_region? : SpriteRegion?, tile_question_region? : SpriteRegion?, tile_used_region? : SpriteRegion?, background_path? : String?) -> SpritePack
+pub fn sprite_pack(player_idle_region? : SpriteRegion?, player_run_regions? : Array[SpriteRegion]?, enemy_goomba_regions? : Array[SpriteRegion]?, enemy_koopa_regions? : Array[SpriteRegion]?, tile_ground_region? : SpriteRegion?, tile_brick_region? : SpriteRegion?, tile_pipe_region? : SpriteRegion?, tile_pipe_body_region? : SpriteRegion?, tile_spike_region? : SpriteRegion?, tile_question_region? : SpriteRegion?, tile_used_region? : SpriteRegion?, background_path? : String?) -> SpritePack
 
 pub fn sprite_region(String, Double, Double, Double, Double) -> SpriteRegion
 
@@ -140,6 +140,7 @@ pub(all) struct SpritePack {
   tile_ground_region : SpriteRegion?
   tile_brick_region : SpriteRegion?
   tile_pipe_region : SpriteRegion?
+  tile_pipe_body_region : SpriteRegion?
   tile_spike_region : SpriteRegion?
   tile_question_region : SpriteRegion?
   tile_used_region : SpriteRegion?

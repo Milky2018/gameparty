@@ -48,6 +48,18 @@ fn sprite_region_for_tile(kind : TileKind) -> SpriteRegion? {
 }
 
 ///|
+fn sprite_region_for_pipe_body() -> SpriteRegion? {
+  match sprite_pack_state.val {
+    Some(pack) =>
+      match pack.tile_pipe_body_region {
+        Some(region) => Some(region)
+        None => pack.tile_pipe_region
+      }
+    None => None
+  }
+}
+
+///|
 fn sprite_regions_for_enemy(kind : EnemyKind) -> Array[SpriteRegion]? {
   match sprite_pack_state.val {
     Some(pack) =>

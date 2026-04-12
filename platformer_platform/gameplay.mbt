@@ -1118,7 +1118,7 @@ fn animated_region(
 
 ///|
 fn player_visual_region() -> (SpriteRegion?, Bool) {
-  let flip_x = !player_state.val.facing_right
+  let flip_x = player_state.val.facing_right
   let speed_x = player_state.val.velocity[X]
   let moving_speed = if speed_x < 0.0 { -speed_x } else { speed_x }
   let moving = moving_speed > 8.0
@@ -1147,6 +1147,47 @@ fn enemy_visual_region(enemy : EnemyState) -> (SpriteRegion?, Bool) {
 }
 
 ///|
+fn same_lane(a : Double, b : Double) -> Bool {
+  let diff = a - b
+  if diff < 0.0 {
+    -diff < 0.01
+  } else {
+    diff < 0.01
+  }
+}
+
+///|
+fn has_pipe_above(idx : Int) -> Bool {
+  let block = solid_blocks[idx]
+  let target_y = block.base_center[Y] - block.size[Y]
+  for check_idx in 0..<solid_blocks.length() {
+    if check_idx == idx {
+      continue
+    }
+    let candidate = solid_blocks[check_idx]
+    if candidate.kind != Pipe {
+      continue
+    }
+    if same_lane(candidate.base_center[X], block.base_center[X]) &&
+      same_lane(candidate.base_center[Y], target_y) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn sprite_region_for_block(idx : Int, block : SolidBlock) -> SpriteRegion? {
+  if block.kind == Pipe {
+    if has_pipe_above(idx) {
+      return sprite_region_for_pipe_body()
+    }
+    return sprite_region_for_tile(Pipe)
+  }
+  sprite_region_for_tile(block.kind)
+}
+
+///|
 fn sync_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
   for idx in 0..<solid_blocks.length() {
@@ -1162,7 +1203,7 @@ fn sync_system(_world : @ecs.World) -> Unit {
     }
     set_sprite_entity_with_image(
       entity,
-      sprite_region_for_tile(block.kind),
+      sprite_region_for_block(idx, block),
       block_color(block.kind),
       block.size,
       block.base_center,
