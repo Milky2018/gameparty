@@ -1,0 +1,151 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/platformer_platform"
+
+import {
+  "Milky2018/selene/math",
+}
+
+// Values
+pub fn block(@math.Vec2D, @math.Vec2D, TileKind, payload? : ItemKind?) -> SolidBlock
+
+pub fn enemy_spawn(@math.Vec2D, Double, Double, facing_right? : Bool, kind? : EnemyKind) -> EnemySpawn
+
+pub fn hooks(on_run_start? : ((RuntimeSnapshot) -> Unit)?, on_enemy_stomped? : ((RuntimeSnapshot, EnemyKind) -> Unit)?, on_item_collected? : ((RuntimeSnapshot, ItemKind) -> Unit)?, on_level_won? : ((RuntimeSnapshot, Int) -> Unit)?) -> PlatformerHooks
+
+pub fn level(String, @math.Vec2D, @math.Vec2D, @math.Vec2D, Double, Array[SolidBlock], enemy_spawns? : Array[EnemySpawn]) -> LevelSpec
+
+pub fn meta(String, String, version? : String) -> PluginMeta
+
+pub fn movement_profile(move_speed? : Double, jump_speed? : Double, gravity? : Double, max_fall_speed? : Double, coyote_time? : Double, jump_buffer? : Double, max_air_dashes? : Int, dash_speed? : Double, dash_duration? : Double, dash_cooldown? : Double, allow_wall_jump? : Bool, wall_slide_speed? : Double, wall_jump_speed_x? : Double, wall_jump_speed_y? : Double, wall_stamina_max? : Double, wall_stamina_drain_per_second? : Double, wall_jump_stamina_cost? : Double, spring_boost_speed? : Double) -> MovementProfile
+
+pub fn plugin(PluginMeta, Array[LevelSpec], UiTheme, movement? : MovementProfile?, hooks? : PlatformerHooks?) -> PlatformerPluginDef
+
+pub fn run(PlatformerPluginDef) -> Unit
+
+pub fn ui_theme(String, hud_hint? : String) -> UiTheme
+
+// Errors
+
+// Types and methods
+pub(all) enum EnemyKind {
+  Goomba
+  Koopa
+} derive(Eq)
+
+pub(all) struct EnemySpawn {
+  kind : EnemyKind
+  center : @math.Vec2D
+  patrol_left : Double
+  patrol_right : Double
+  facing_right : Bool
+}
+
+pub(all) enum GamePhase {
+  Playing
+  Won
+  Lost
+} derive(Eq)
+
+pub(all) enum ItemKind {
+  Mushroom
+  FireFlower
+  Coin
+} derive(Eq)
+
+pub(all) struct LevelSpec {
+  name : String
+  player_spawn : @math.Vec2D
+  goal_center : @math.Vec2D
+  goal_size : @math.Vec2D
+  world_width : Double
+  blocks : Array[SolidBlock]
+  enemy_spawns : Array[EnemySpawn]
+}
+
+pub(all) struct MovementProfile {
+  move_speed : Double
+  jump_speed : Double
+  gravity : Double
+  max_fall_speed : Double
+  coyote_time : Double
+  jump_buffer : Double
+  max_air_dashes : Int
+  dash_speed : Double
+  dash_duration : Double
+  dash_cooldown : Double
+  allow_wall_jump : Bool
+  wall_slide_speed : Double
+  wall_jump_speed_x : Double
+  wall_jump_speed_y : Double
+  wall_stamina_max : Double
+  wall_stamina_drain_per_second : Double
+  wall_jump_stamina_cost : Double
+  spring_boost_speed : Double
+}
+
+pub(all) struct PlatformerHooks {
+  on_run_start : ((RuntimeSnapshot) -> Unit)?
+  on_enemy_stomped : ((RuntimeSnapshot, EnemyKind) -> Unit)?
+  on_item_collected : ((RuntimeSnapshot, ItemKind) -> Unit)?
+  on_level_won : ((RuntimeSnapshot, Int) -> Unit)?
+}
+
+pub(all) struct PlatformerPluginDef {
+  meta : PluginMeta
+  levels : Array[LevelSpec]
+  ui_theme : UiTheme
+  movement : MovementProfile?
+  hooks : PlatformerHooks?
+}
+
+pub(all) struct PluginMeta {
+  id : String
+  name : String
+  version : String
+}
+
+pub(all) enum PowerState {
+  Small
+  Big
+  Fire
+} derive(Eq)
+
+pub(all) struct RuntimeSnapshot {
+  phase : GamePhase
+  level_index : Int
+  level_name : String
+  power : PowerState
+  score : Int
+  coins : Int
+  enemies_alive : Int
+}
+
+pub(all) struct SolidBlock {
+  base_center : @math.Vec2D
+  size : @math.Vec2D
+  mut kind : TileKind
+  payload : ItemKind?
+}
+
+pub(all) enum TileKind {
+  Ground
+  Brick
+  Pipe
+  Spike
+  DashCrystal
+  Spring
+  QuestionMushroom
+  QuestionFlower
+  QuestionCoin
+  UsedBlock
+} derive(Eq)
+
+pub(all) struct UiTheme {
+  title : String
+  hud_hint : String
+}
+
+// Type aliases
+
+// Traits
+

@@ -85,6 +85,8 @@ fn create_audio_bank() -> AudioBank {
     stomp: sound_from_tone(220.0, 0.14, 0.76),
     hit: sound_from_tone(146.0, 0.18, 0.74),
     goal: sound_from_tone(988.0, 0.22, 0.72),
+    collect: sound_from_tone(1240.0, 0.09, 0.66),
+    shoot: sound_from_tone(540.0, 0.1, 0.62),
   }
 }
 

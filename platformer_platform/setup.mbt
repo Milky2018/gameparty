@@ -1,4 +1,22 @@
 ///|
+const PLATFORMER_FONT_FAMILY : String = "MGS1Codec"
+
+///|
+const PLATFORMER_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
+
+///|
+let platformer_font_registered : Ref[Bool] = { val: false }
+
+///|
+fn register_platformer_font_once() -> Unit {
+  if platformer_font_registered.val {
+    return
+  }
+  ignore(@asset.load_font(PLATFORMER_FONT_PATH, family=PLATFORMER_FONT_FAMILY))
+  platformer_font_registered.val = true
+}
+
+///|
 fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -34,6 +52,39 @@ fn set_sprite_entity(
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(top_left, z))
   set_visibility(entity, true)
+}
+
+///|
+fn block_color(kind : TileKind) -> @render.Color {
+  match kind {
+    Ground => ground_color
+    Brick => brick_color
+    Pipe => pipe_color
+    Spike => spike_color
+    DashCrystal => dash_crystal_color
+    Spring => spring_color
+    QuestionMushroom => question_block_color
+    QuestionFlower => question_block_color
+    QuestionCoin => question_block_color
+    UsedBlock => used_block_color
+  }
+}
+
+///|
+fn enemy_color(kind : EnemyKind) -> @render.Color {
+  match kind {
+    Goomba => enemy_sprite_color
+    Koopa => rgb(90U, 174U, 84U)
+  }
+}
+
+///|
+fn item_color(kind : ItemKind) -> @render.Color {
+  match kind {
+    Mushroom => mushroom_color
+    FireFlower => flower_color
+    Coin => coin_color
+  }
 }
 
 ///|
@@ -76,6 +127,24 @@ fn clear_enemies() -> Unit {
 }
 
 ///|
+fn clear_items() -> Unit {
+  for entity, _ in item_entities {
+    entity.destroy()
+  }
+  item_entities.clear()
+  item_entities_order.clear()
+}
+
+///|
+fn clear_fireballs() -> Unit {
+  for entity, _ in fireball_entities {
+    entity.destroy()
+  }
+  fireball_entities.clear()
+  fireball_entities_order.clear()
+}
+
+///|
 fn spawn_background(level : LevelSpec) -> Unit {
   let sky = @entity.Entity::new()
   set_sprite_entity(
@@ -112,16 +181,22 @@ fn spawn_background(level : LevelSpec) -> Unit {
 fn spawn_level_entities(level : LevelSpec) -> Unit {
   clear_static_entities()
   clear_enemies()
+  clear_items()
+  clear_fireballs()
+  block_entities.clear()
+  dash_crystal_respawn_timers.clear()
   spawn_background(level)
   for block in level.blocks {
     let entity = @entity.Entity::new()
-    let color = match block.kind {
-      Ground => ground_color
-      Brick => brick_color
-      Pipe => pipe_color
-    }
-    set_sprite_entity(entity, color, block.size, block.center, 0.0)
+    set_sprite_entity(
+      entity,
+      block_color(block.kind),
+      block.size,
+      block.base_center,
+      0.0,
+    )
     static_entities.push(entity)
+    block_entities.push(entity)
   }
   let goal_pole = @entity.Entity::new()
   set_sprite_entity(
@@ -148,21 +223,37 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
 
 ///|
 fn spawn_player(level : LevelSpec) -> Unit {
+  let movement = current_movement_profile()
+  let kept_score = player_state.val.score
+  let kept_coins = player_state.val.coin_count
+  let kept_power = player_state.val.power
   player_state.val = {
     center: level.player_spawn,
     velocity: @math.Vec2D::zero(),
+    facing_right: true,
     on_ground: false,
     coyote_timer: 0.0,
     jump_buffer: 0.0,
     hurt_timer: 0.0,
     startup_grace_timer: PLAYER_STARTUP_GRACE_SECONDS,
+    fire_cooldown_timer: 0.0,
+    dash_timer: 0.0,
+    dash_cooldown_timer: 0.0,
+    air_dashes_left: movement.max_air_dashes,
+    wall_contact_dir: 0,
+    dash_dir: @math.Vec2D::zero(),
+    wall_stamina: movement.wall_stamina_max,
+    spring_cooldown_timer: 0.0,
+    power: kept_power,
+    score: kept_score,
+    coin_count: kept_coins,
     alive: true,
   }
   ensure_entity_alive(player_entity)
   set_sprite_entity(
     player_entity,
     player_sprite_color,
-    vec2(PLAYER_WIDTH, PLAYER_HEIGHT),
+    vec2(PLAYER_WIDTH, PLAYER_HEIGHT_SMALL),
     level.player_spawn,
     5.0,
   )
@@ -170,17 +261,16 @@ fn spawn_player(level : LevelSpec) -> Unit {
 
 ///|
 fn spawn_enemy(spawn : EnemySpawn) -> Unit {
+  let speed = if spawn.kind == Koopa {
+    ENEMY_MOVE_SPEED * 0.82
+  } else {
+    ENEMY_MOVE_SPEED
+  }
   let entity = @entity.Entity::new()
   enemy_entities.set(entity, {
+    kind: spawn.kind,
     center: spawn.center,
-    velocity: vec2(
-      if spawn.facing_right {
-        ENEMY_MOVE_SPEED
-      } else {
-        -ENEMY_MOVE_SPEED
-      },
-      0.0,
-    ),
+    velocity: vec2(if spawn.facing_right { speed } else { -speed }, 0.0),
     facing_right: spawn.facing_right,
     on_ground: false,
     alive: true,
@@ -190,10 +280,62 @@ fn spawn_enemy(spawn : EnemySpawn) -> Unit {
   enemy_entities_order.push(entity)
   set_sprite_entity(
     entity,
-    enemy_sprite_color,
+    enemy_color(spawn.kind),
     vec2(ENEMY_WIDTH, ENEMY_HEIGHT),
     spawn.center,
     4.0,
+  )
+}
+
+///|
+fn spawn_item(
+  kind : ItemKind,
+  center : @math.Vec2D,
+  velocity? : @math.Vec2D = @math.Vec2D::zero(),
+  emerging? : Bool = false,
+) -> Unit {
+  let entity = @entity.Entity::new()
+  item_entities.set(entity, {
+    kind,
+    center,
+    velocity,
+    emerging,
+    emerge_target_y: center[Y] - TILE_SIZE,
+    alive: true,
+  })
+  item_entities_order.push(entity)
+  set_sprite_entity(
+    entity,
+    item_color(kind),
+    vec2(ITEM_WIDTH, ITEM_HEIGHT),
+    center,
+    4.5,
+  )
+}
+
+///|
+fn spawn_player_fireball(center : @math.Vec2D, facing_right : Bool) -> Unit {
+  let entity = @entity.Entity::new()
+  fireball_entities.set(entity, {
+    center,
+    velocity: vec2(
+      if facing_right {
+        FIREBALL_SPEED_X
+      } else {
+        -FIREBALL_SPEED_X
+      },
+      -120.0,
+    ),
+    lifetime: FIREBALL_MAX_LIFETIME_SECONDS,
+    alive: true,
+  })
+  fireball_entities_order.push(entity)
+  set_sprite_entity(
+    entity,
+    fireball_color,
+    vec2(FIREBALL_SIZE, FIREBALL_SIZE),
+    center,
+    4.6,
   )
 }
 
@@ -205,6 +347,7 @@ fn set_message_visible(visible : Bool) -> Unit {
 
 ///|
 fn setup_hud() -> Unit {
+  let theme = current_plugin().ui_theme
   set_sprite_entity(
     hud_overlay_entity,
     hud_color_dark,
@@ -214,30 +357,30 @@ fn setup_hud() -> Unit {
   )
   set_text_entity(
     hud_title_entity,
-    "SUPER MARIO",
+    theme.title,
     vec2(28.0, 24.0),
-    "34px monospace",
+    "34px \{PLATFORMER_FONT_FAMILY}",
     hud_color_white,
   )
   set_text_entity(
     hud_sub_entity,
     "",
     vec2(28.0, 68.0),
-    "22px monospace",
+    "22px \{PLATFORMER_FONT_FAMILY}",
     hud_color_soft,
   )
   set_text_entity(
     hud_hint_entity,
     "",
     vec2(28.0, VIEWPORT_HEIGHT - 36.0),
-    "20px monospace",
+    "20px \{PLATFORMER_FONT_FAMILY}",
     hud_color_soft,
   )
   set_text_entity(
     hud_message_entity,
     "",
     vec2(VIEWPORT_WIDTH * 0.5 - 220.0, VIEWPORT_HEIGHT * 0.5 - 30.0),
-    "48px monospace",
+    "48px \{PLATFORMER_FONT_FAMILY}",
     hud_color_gold,
   )
   set_visibility(hud_overlay_entity, false)
@@ -262,14 +405,19 @@ fn set_current_level(level_index : Int) -> Unit {
 }
 
 ///|
-pub fn startup_system(_world : @ecs.World) -> Unit {
+fn startup_system(_world : @ecs.World) -> Unit {
+  ignore(current_plugin())
+  register_platformer_font_once()
   set_profile_from_env()
   let startup_started_at = @time.elapsed()
 
   let levels_started_at = @time.elapsed()
   level_specs.clear()
-  for level in build_level_specs() {
+  for level in current_plugin().levels {
     level_specs.push(level)
+  }
+  if level_specs.is_empty() {
+    abort("platformer_platform: plugin has no levels")
   }
   profile_phase("startup/build-levels", levels_started_at)
 
@@ -315,7 +463,11 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
   current_level_index.val = 0
   game_phase.val = Playing
   debug_overlay.val = false
+  player_state.val.score = 0
+  player_state.val.coin_count = 0
+  player_state.val.power = Small
   set_current_level(current_level_index.val)
+  run_hook_on_start()
   profile_phase("startup/first-scene", scene_started_at)
   if profile_enabled.val {
     profile_started_at.val = @time.elapsed()

@@ -12,11 +12,13 @@ This repository currently contains these playable prototypes and ports:
 - `coinpusher3d`: a 3D roguelike coin-pusher run with chest upgrades and physics-driven scoring.
 - `tankbattle`: a 2D tank-battle prototype built with pure primitives and procedural audio.
 - `supermario`: a 2D side-scroller prototype built with pure primitives and procedural audio.
+- `celeste`: a Celeste-style 2D platformer built as a plugin on `platformer_platform`.
 - `plantvszombies`: a lane-defense prototype built with pure primitives and procedural audio.
 - `bejeweled`: a match-3 prototype built with pure primitives and procedural audio.
 - `jackal`: a top-down run-and-gun prototype built with pure primitives and procedural audio.
 - `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
 - `netplay`: a standalone networking layer subpackage for host-authoritative input sync (library-only, no `cmd/*` entry).
+- `platformer_platform`: a reusable side-scrolling platform action runtime (data + hooks plugin style).
 - `topdown_platform`: a reusable top-down data+hooks platform package.
 - `topdown_pluginkit`: shared plugin helpers for fast top-down data authoring.
 - `topdown_rogue_proto`: the first data-driven ARPG roguelite plugin on top of `topdown_platform`.
@@ -31,6 +33,7 @@ This repository currently contains these playable prototypes and ports:
 - `cmd/coinpusher3d`: run CoinPusher3D directly.
 - `cmd/tankbattle`: run TankBattle directly.
 - `cmd/supermario`: run SuperMario directly.
+- `cmd/celeste`: run Celeste directly.
 - `cmd/plantvszombies`: run PlantVsZombies directly.
 - `cmd/bejeweled`: run Bejeweled directly.
 - `cmd/jackal`: run Jackal directly.
@@ -46,11 +49,13 @@ This repository currently contains these playable prototypes and ports:
 - `coinpusher3d/`: CoinPusher3D package and tests.
 - `tankbattle/`: TankBattle package and tests.
 - `supermario/`: SuperMario package and tests.
+- `celeste/`: Celeste plugin package and tests.
 - `plantvszombies/`: PlantVsZombies package and tests.
 - `bejeweled/`: Bejeweled package and tests.
 - `jackal/`: Jackal package and tests.
 - `kofarena/`: KOFArena package and tests.
 - `netplay/`: shared networking-layer package for future multiplayer integration.
+- `platformer_platform/`: reusable side-scroller platform package and tests.
 - `topdown_platform/`: reusable top-down platform package and tests.
 - `topdown_pluginkit/`: shared helper package for topdown plugin construction.
 - `topdown_rogue_proto/`: first plugin package and tests.
@@ -73,6 +78,7 @@ moon run cmd/mooncraft
 moon run cmd/coinpusher3d
 moon run cmd/tankbattle
 moon run cmd/supermario
+moon run cmd/celeste
 moon run cmd/plantvszombies
 moon run cmd/bejeweled
 moon run cmd/jackal
@@ -177,6 +183,7 @@ For native distribution, copy the `assets/` directory next to the executable (or
 ### New Primitive-Only Prototypes
 
 - `tankbattle`, `supermario`, `bejeweled`, and `kofarena` intentionally avoid external art assets.
+- `celeste` currently follows the same primitive-only visual style and focuses on movement feel.
 - Their runtime visuals are built from Selene/raylib primitive drawing and mesh/material paths.
 - Their runtime audio uses procedural synthesis (`Wave::load_sound` from generated sample buffers), not packaged music/sfx files.
 

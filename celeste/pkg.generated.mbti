@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/gameparty/supermario"
+package "Milky2018/gameparty/celeste"
 
 import {
   "Milky2018/gameparty/platformer_platform",

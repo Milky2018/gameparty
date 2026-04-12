@@ -1,57 +1,22 @@
 ///|
-test "rect intersection works for overlap and separation" {
-  let a : @math.Rect = {
-    position: @math.Vec2D(0.0, 0.0),
-    size: @math.Vec2D(10.0, 10.0),
-  }
-  let b : @math.Rect = {
-    position: @math.Vec2D(5.0, 5.0),
-    size: @math.Vec2D(10.0, 10.0),
-  }
-  let c : @math.Rect = {
-    position: @math.Vec2D(20.0, 20.0),
-    size: @math.Vec2D(4.0, 4.0),
-  }
-  inspect(a.intersects(b), content="true")
-  inspect(a.intersects(c), content="false")
+test "supermario plugin exposes two valid levels" {
+  let plugin = plugin_def()
+  inspect(plugin.meta.id, content="supermario")
+  inspect(plugin.levels.length(), content="2")
+  inspect(plugin.levels[0].name, content="Green Plains")
+  inspect(plugin.levels[1].name, content="Castle Gauntlet")
 }
 
 ///|
-test "stomp logic only triggers when landing from above" {
-  let player_before : @math.Rect = {
-    position: @math.Vec2D(0.0, 0.0),
-    size: @math.Vec2D(30.0, 40.0),
+test "question blocks in plugin carry payloads" {
+  let plugin = plugin_def()
+  let level = plugin.levels[0]
+  let mut found_payload = false
+  for block in level.blocks {
+    if block.payload is Some(_) {
+      found_payload = true
+      break
+    }
   }
-  let player_after : @math.Rect = {
-    position: @math.Vec2D(0.0, 20.0),
-    size: @math.Vec2D(30.0, 40.0),
-  }
-  let enemy = {
-    center: @math.Vec2D(10.0, 55.0),
-    velocity: @math.Vec2D::zero(),
-    facing_right: true,
-    on_ground: true,
-    alive: true,
-    patrol_left: 0.0,
-    patrol_right: 100.0,
-  }
-  player_state.val.velocity = @math.Vec2D(0.0, 10.0)
-  inspect(stomp_check(player_before, player_after, enemy), content="true")
-  player_state.val.velocity = @math.Vec2D(0.0, -10.0)
-  inspect(stomp_check(player_before, player_after, enemy), content="false")
-}
-
-///|
-test "enemy patrol turn helper respects bounds" {
-  let enemy = {
-    center: @math.Vec2D(50.0, 50.0),
-    velocity: @math.Vec2D::zero(),
-    facing_right: true,
-    on_ground: true,
-    alive: true,
-    patrol_left: 20.0,
-    patrol_right: 60.0,
-  }
-  inspect(enemy_should_turn(enemy, 61.0), content="true")
-  inspect(enemy_should_turn(enemy, 40.0), content="false")
+  inspect(found_payload, content="true")
 }
