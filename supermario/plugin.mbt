@@ -5,19 +5,16 @@ const TILE_SIZE : Double = 48.0
 const SUPERMARIO_JUMP_SPEED : Double = 720.0
 
 ///|
-const SMA_MARIO_SHEET_PATH : String = "assets/supermario/sma/mario_keyed.png"
+const SFC_MARIO_SHEET_PATH : String = "assets/supermario/sfc/runtime_mario.png"
 
 ///|
-const SMA_ENEMIES_SHEET_PATH : String = "assets/supermario/sma/enemies.gif"
+const SFC_ENEMIES_SHEET_PATH : String = "assets/supermario/sfc/runtime_enemies.png"
 
 ///|
-const SMB_ENEMIES_SHEET_PATH : String = "assets/supermario/nes/enemies_keyed.png"
+const SFC_TILES_SHEET_PATH : String = "assets/supermario/sfc/runtime_tiles.png"
 
 ///|
-const SMA_TILES_SHEET_PATH : String = "assets/supermario/sma/tiles.png"
-
-///|
-const SMA_MISC_SHEET_PATH : String = "assets/supermario/sma/misc_keyed.png"
+const SFC_PIPES_SHEET_PATH : String = "assets/supermario/sfc/runtime_pipes.png"
 
 ///|
 fn atlas(
@@ -326,41 +323,41 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     sprites=Some(
       @platformer_platform.sprite_pack(
         player_idle_region=Some(
-          atlas(SMA_MARIO_SHEET_PATH, 1.0, 5.0, 16.0, 26.0),
+          atlas(SFC_MARIO_SHEET_PATH, 88.0, 76.0, 16.0, 28.0),
         ),
         player_run_regions=Some([
-          atlas(SMA_MARIO_SHEET_PATH, 1.0, 5.0, 16.0, 26.0),
-          atlas(SMA_MARIO_SHEET_PATH, 22.0, 4.0, 15.0, 27.0),
-          atlas(SMA_MARIO_SHEET_PATH, 40.0, 4.0, 16.0, 27.0),
+          atlas(SFC_MARIO_SHEET_PATH, 8.0, 76.0, 16.0, 28.0),
+          atlas(SFC_MARIO_SHEET_PATH, 48.0, 76.0, 16.0, 27.0),
+          atlas(SFC_MARIO_SHEET_PATH, 88.0, 76.0, 16.0, 28.0),
         ]),
         enemy_goomba_regions=Some([
-          atlas(SMB_ENEMIES_SHEET_PATH, 0.0, 0.0, 16.0, 16.0),
-          atlas(SMB_ENEMIES_SHEET_PATH, 32.0, 0.0, 16.0, 16.0),
+          atlas(SFC_ENEMIES_SHEET_PATH, 12.0, 326.0, 16.0, 15.0),
+          atlas(SFC_ENEMIES_SHEET_PATH, 52.0, 326.0, 16.0, 16.0),
         ]),
         enemy_koopa_regions=Some([
-          atlas(SMA_ENEMIES_SHEET_PATH, 61.0, 75.0, 16.0, 16.0),
-          atlas(SMA_ENEMIES_SHEET_PATH, 97.0, 75.0, 16.0, 16.0),
+          atlas(SFC_ENEMIES_SHEET_PATH, 52.0, 160.0, 16.0, 27.0),
+          atlas(SFC_ENEMIES_SHEET_PATH, 212.0, 160.0, 16.0, 27.0),
         ]),
         tile_ground_region=Some(
-          atlas(SMA_TILES_SHEET_PATH, 0.0, 32.0, 16.0, 16.0),
+          atlas(SFC_TILES_SHEET_PATH, 448.0, 256.0, 16.0, 16.0),
         ),
         tile_brick_region=Some(
-          atlas(SMA_TILES_SHEET_PATH, 0.0, 0.0, 16.0, 16.0),
+          atlas(SFC_TILES_SHEET_PATH, 176.0, 176.0, 16.0, 16.0),
         ),
         tile_pipe_region=Some(
-          atlas(SMA_MISC_SHEET_PATH, 395.0, 276.0, 44.0, 25.0),
+          atlas(SFC_PIPES_SHEET_PATH, 16.0, 80.0, 16.0, 16.0),
         ),
         tile_pipe_body_region=Some(
-          atlas(SMA_MISC_SHEET_PATH, 395.0, 301.0, 44.0, 25.0),
+          atlas(SFC_PIPES_SHEET_PATH, 16.0, 96.0, 16.0, 16.0),
         ),
         tile_spike_region=Some(
-          atlas(SMA_TILES_SHEET_PATH, 56.0, 144.0, 16.0, 16.0),
+          atlas(SFC_TILES_SHEET_PATH, 224.0, 320.0, 16.0, 16.0),
         ),
         tile_question_region=Some(
-          atlas(SMA_TILES_SHEET_PATH, 124.0, 160.0, 16.0, 16.0),
+          atlas(SFC_TILES_SHEET_PATH, 208.0, 176.0, 16.0, 16.0),
         ),
         tile_used_region=Some(
-          atlas(SMA_TILES_SHEET_PATH, 108.0, 160.0, 16.0, 16.0),
+          atlas(SFC_TILES_SHEET_PATH, 192.0, 176.0, 16.0, 16.0),
         ),
       ),
     ),
