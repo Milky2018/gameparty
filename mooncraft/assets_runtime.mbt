@@ -98,7 +98,7 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
       let uv = uvs[i]
       let layer = mesh.layers[i].round().to_int()
       println(
-        "[mooncraft][mesh-vtx \{i}] layer=\{layer} uv=\{uv} raw_uv=(\{mesh.uvs[i * 2]},\{mesh.uvs[i * 2 + 1]})",
+        "[mooncraft][mesh-vtx \{i}] layer=\{layer} uv=\{debug_vec2_string(uv)} raw_uv=(\{mesh.uvs[i * 2]},\{mesh.uvs[i * 2 + 1]})",
       )
     }
     println(

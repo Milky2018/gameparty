@@ -196,6 +196,16 @@ const DEBUG_SHOW_MARKER : Bool = false
 const DEBUG_VERBOSE_STARTUP : Bool = false
 
 ///|
+fn debug_vec2_string(value : @math.Vec2D) -> String {
+  "(\{value[X]}, \{value[Y]})"
+}
+
+///|
+fn debug_vec3_string(value : @math.Vec3) -> String {
+  "(\{value.x}, \{value.y}, \{value.z})"
+}
+
+///|
 pub(all) struct WorldSession {
   seed : UInt64
   world_type : @level.WorldType

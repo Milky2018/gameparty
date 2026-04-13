@@ -186,7 +186,7 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
       None => "hit=<none>"
     }
     println(
-      "[mooncraft][startup] seed=\{seed} world=\{world_type_name(world_type)} player=\{player_controller.val.position} on_ground=\{player_controller.val.on_ground} yaw=\{player_controller.val.yaw} pitch=\{player_controller.val.pitch} column_ready=\{player_chunk_column_loaded()} \{hit_text}",
+      "[mooncraft][startup] seed=\{seed} world=\{world_type_name(world_type)} player=\{debug_vec3_string(player_controller.val.position)} on_ground=\{player_controller.val.on_ground} yaw=\{player_controller.val.yaw} pitch=\{player_controller.val.pitch} column_ready=\{player_chunk_column_loaded()} \{hit_text}",
     )
     match player_chunk_mesh_counts() {
       Some((normal_count, leaf_count, translucent_count)) =>

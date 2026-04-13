@@ -697,7 +697,8 @@ test "missing block color field still loads level" {
         )
       Ok(level) => {
         assert_eq(level.blocks.length(), 1)
-        assert_eq(level.blocks[0].size, @math.Vec2D(32.0, 64.0))
+        assert_eq(level.blocks[0].size[X], 32.0)
+        assert_eq(level.blocks[0].size[Y], 64.0)
       }
     }
   })

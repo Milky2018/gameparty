@@ -17,6 +17,16 @@ fn setup_test_text_entity(entity : @entity.Entity, text : TextState) -> Unit {
 }
 
 ///|
+fn assert_vec2_eq(
+  actual : @math.Vec2D,
+  expected_x : Double,
+  expected_y : Double,
+) -> Unit raise {
+  assert_eq(actual[X], expected_x)
+  assert_eq(actual[Y], expected_y)
+}
+
+///|
 test "clamp keeps value inside bounds" {
   assert_eq(clamp(5.0, 0.0, 10.0), 5.0)
   assert_eq(clamp(-1.0, 0.0, 10.0), 0.0)
@@ -388,26 +398,31 @@ test "ferritharax phase logic uses protect windows and deterministic targets" {
 
 ///|
 test "ferritharax arm offsets differ by side and variant" {
-  assert_eq(
+  assert_vec2_eq(
     ferritharax_arm_missile_offset(Ferritharax, true),
-    @math.Vec2D(-80.0, -76.0),
+    -80.0,
+    -76.0,
   )
-  assert_eq(
+  assert_vec2_eq(
     ferritharax_arm_missile_offset(Ferritharax, false),
-    @math.Vec2D(80.0, -76.0),
+    80.0,
+    -76.0,
   )
-  assert_eq(
+  assert_vec2_eq(
     ferritharax_arm_missile_offset(MechaSaucetron, true),
-    @math.Vec2D(-82.0, -72.0),
+    -82.0,
+    -72.0,
   )
 
-  assert_eq(
+  assert_vec2_eq(
     ferritharax_arm_weapon_offset(MechaFerritharax, true),
-    @math.Vec2D(-77.0, -54.0),
+    -77.0,
+    -54.0,
   )
-  assert_eq(
+  assert_vec2_eq(
     ferritharax_arm_weapon_offset(MechaSaucetron, false),
-    @math.Vec2D(77.0, -52.0),
+    77.0,
+    -52.0,
   )
 }
 

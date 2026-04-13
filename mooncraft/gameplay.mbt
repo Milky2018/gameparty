@@ -218,7 +218,7 @@ pub fn update_system(_world : @ecs.World) -> Unit {
     let below = get_block_long_id(wx, wy - 1, wz)
     let feet = get_block_long_id(wx, wy, wz)
     println(
-      "[mooncraft][frame \{debug_update_counter.val}] pos=\{position} vel=\{player_controller.val.velocity} on_ground=\{player_controller.val.on_ground} below=\{below} feet=\{feet}",
+      "[mooncraft][frame \{debug_update_counter.val}] pos=\{debug_vec3_string(position)} vel=\{debug_vec3_string(player_controller.val.velocity)} on_ground=\{player_controller.val.on_ground} below=\{below} feet=\{feet}",
     )
     debug_update_counter.val += 1
   }
@@ -346,12 +346,12 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
   }
   let camera_text = match frame.camera {
     Some(camera) =>
-      "camera_pos=\{camera.position} camera_target=\{camera.target} items=\{frame.items.length()}"
+      "camera_pos=\{debug_vec3_string(camera.position)} camera_target=\{debug_vec3_string(camera.target)} items=\{frame.items.length()}"
     None => "camera_pos=<none> items=\{frame.items.length()}"
   }
   let first_item_text = match frame.items.get(0) {
     Some(item) =>
-      "first_item_translation=\{item.transform.translation} scale=\{item.transform.scale}"
+      "first_item_translation=\{debug_vec3_string(item.transform.translation)} scale=\{debug_vec3_string(item.transform.scale)}"
     None => "first_item_translation=<none>"
   }
   println("[mooncraft][capture] \{camera_text}")
@@ -367,7 +367,8 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
       let transform_text = match record.opaque_entity {
         Some(entity) =>
           match @transform.transforms().get(entity) {
-            Some(transform) => "opaque_transform=\{transform.translation}"
+            Some(transform) =>
+              "opaque_transform=\{debug_vec3_string(transform.translation)}"
             None => "opaque_transform=<none>"
           }
         None => "opaque_transform=<missing>"

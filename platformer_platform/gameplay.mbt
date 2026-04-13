@@ -4,6 +4,29 @@ fn rect_intersects(a : @math.Rect, b : @math.Rect) -> Bool {
 }
 
 ///|
+fn debug_vec2_string(value : @math.Vec2D) -> String {
+  "(\{value[X]}, \{value[Y]})"
+}
+
+///|
+fn debug_transform_option_string(value : @transform.Transform?) -> String {
+  match value {
+    Some(transform) =>
+      "translation=(\{transform.translation.x}, \{transform.translation.y}, \{transform.translation.z}) scale=(\{transform.scale.x}, \{transform.scale.y}, \{transform.scale.z})"
+    None => "<none>"
+  }
+}
+
+///|
+fn debug_visibility_option_string(value : @visibility.Visibility?) -> String {
+  match value {
+    Some(Visible) => "Visible"
+    Some(Hidden) => "Hidden"
+    None => "<none>"
+  }
+}
+
+///|
 fn player_height() -> Double {
   if player_state.val.power == Small {
     PLAYER_HEIGHT_SMALL
@@ -1349,7 +1372,7 @@ fn hud_system(_world : @ecs.World) -> Unit {
         update_text_entity_if_changed(
           hud_message_entity,
           last_hud_message_text,
-          "FPS \{fps}  P=\{player_state.val.center}  LVL=\{current_level_index.val}",
+          "FPS \{fps}  P=\{debug_vec2_string(player_state.val.center)}  LVL=\{current_level_index.val}",
         )
         set_message_visible(true)
       }
@@ -1377,8 +1400,10 @@ fn capture_system(_world : @ecs.World) -> Unit {
   let player_transform = @transform.transforms().get(player_entity)
   let has_player_sprite = @sprite.sprites().contains(player_entity)
   let player_visibility = @visibility.visibilities().get(player_entity)
+  let player_transform_text = debug_transform_option_string(player_transform)
+  let player_visibility_text = debug_visibility_option_string(player_visibility)
   println(
-    "[platformer][capture] player_alive=\{player_state.val.alive} player_center=\{player_state.val.center} has_sprite=\{has_player_sprite} transform=\{player_transform} visibility=\{player_visibility}",
+    "[platformer][capture] player_alive=\{player_state.val.alive} player_center=\{debug_vec2_string(player_state.val.center)} has_sprite=\{has_player_sprite} transform=\{player_transform_text} visibility=\{player_visibility_text}",
   )
   @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
   println("[platformer][capture] path=\{DEBUG_CAPTURE_PATH}")
