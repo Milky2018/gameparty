@@ -2,6 +2,9 @@
 const TILE_SIZE : Double = 48.0
 
 ///|
+const SUPERMARIO_JUMP_SPEED : Double = 720.0
+
+///|
 const SMA_MARIO_SHEET_PATH : String = "assets/supermario/sma/mario_keyed.png"
 
 ///|
@@ -360,6 +363,9 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
           atlas(SMA_TILES_SHEET_PATH, 108.0, 160.0, 16.0, 16.0),
         ),
       ),
+    ),
+    movement=Some(
+      @platformer_platform.movement_profile(jump_speed=SUPERMARIO_JUMP_SPEED),
     ),
   )
 }
