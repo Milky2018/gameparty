@@ -2,7 +2,7 @@
 const TILE_SIZE : Double = 48.0
 
 ///|
-const SMA_MARIO_SHEET_PATH : String = "assets/supermario/sma/mario.gif"
+const SMA_MARIO_SHEET_PATH : String = "assets/supermario/sma/mario_keyed.png"
 
 ///|
 const SMA_ENEMIES_SHEET_PATH : String = "assets/supermario/sma/enemies.gif"
