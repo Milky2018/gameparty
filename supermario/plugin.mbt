@@ -14,7 +14,28 @@ const SFC_ENEMIES_SHEET_PATH : String = "assets/supermario/sfc/runtime_enemies.p
 const SFC_TILES_SHEET_PATH : String = "assets/supermario/sfc/runtime_tiles.png"
 
 ///|
-const SFC_PIPES_SHEET_PATH : String = "assets/supermario/sfc/runtime_pipes.png"
+const MARIO_FRAME_ORIGIN_X : Double = 8.0
+
+///|
+const MARIO_FRAME_ORIGIN_Y : Double = 76.0
+
+///|
+const MARIO_FRAME_STEP_X : Double = 40.0
+
+///|
+const MARIO_FRAME_STEP_Y : Double = 40.0
+
+///|
+const ENEMY_FRAME_ORIGIN_X : Double = 12.0
+
+///|
+const ENEMY_FRAME_ORIGIN_Y : Double = 160.0
+
+///|
+const ENEMY_FRAME_STEP_X : Double = 40.0
+
+///|
+const ENEMY_FRAME_STEP_Y : Double = 40.0
 
 ///|
 fn atlas(
@@ -30,6 +51,97 @@ fn atlas(
 ///|
 fn vec2(x : Double, y : Double) -> @math.Vec2D {
   @math.Vec2D(x, y)
+}
+
+///|
+fn frame_from_grid(
+  path : String,
+  origin_x : Double,
+  origin_y : Double,
+  step_x : Double,
+  step_y : Double,
+  col : Int,
+  row : Int,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  atlas(
+    path,
+    origin_x + col.to_double() * step_x,
+    origin_y + row.to_double() * step_y,
+    width,
+    height,
+  )
+}
+
+///|
+fn mario_frame(
+  col : Int,
+  row : Int,
+  width? : Double = 16.0,
+  height? : Double = 28.0,
+) -> @platformer_platform.SpriteRegion {
+  frame_from_grid(
+    SFC_MARIO_SHEET_PATH,
+    MARIO_FRAME_ORIGIN_X,
+    MARIO_FRAME_ORIGIN_Y,
+    MARIO_FRAME_STEP_X,
+    MARIO_FRAME_STEP_Y,
+    col,
+    row,
+    width~,
+    height~,
+  )
+}
+
+///|
+fn enemy_frame(
+  col : Int,
+  row : Int,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  frame_from_grid(
+    SFC_ENEMIES_SHEET_PATH,
+    ENEMY_FRAME_ORIGIN_X,
+    ENEMY_FRAME_ORIGIN_Y,
+    ENEMY_FRAME_STEP_X,
+    ENEMY_FRAME_STEP_Y,
+    col,
+    row,
+    width~,
+    height~,
+  )
+}
+
+///|
+fn tile_frame(
+  col : Int,
+  row : Int,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  frame_from_grid(
+    SFC_TILES_SHEET_PATH,
+    0.0,
+    0.0,
+    16.0,
+    16.0,
+    col,
+    row,
+    width~,
+    height~,
+  )
+}
+
+///|
+fn tile_frame_with_offset(
+  x : Double,
+  y : Double,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  atlas(SFC_TILES_SHEET_PATH, x, y, width, height)
 }
 
 ///|
@@ -322,43 +434,27 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     ),
     sprites=Some(
       @platformer_platform.sprite_pack(
-        player_idle_region=Some(
-          atlas(SFC_MARIO_SHEET_PATH, 88.0, 76.0, 16.0, 28.0),
-        ),
+        player_idle_region=Some(mario_frame(4, 0)),
         player_run_regions=Some([
-          atlas(SFC_MARIO_SHEET_PATH, 8.0, 76.0, 16.0, 28.0),
-          atlas(SFC_MARIO_SHEET_PATH, 48.0, 76.0, 16.0, 27.0),
-          atlas(SFC_MARIO_SHEET_PATH, 88.0, 76.0, 16.0, 28.0),
+          mario_frame(3, 1),
+          mario_frame(4, 1),
+          mario_frame(5, 1),
         ]),
         enemy_goomba_regions=Some([
-          atlas(SFC_ENEMIES_SHEET_PATH, 12.0, 326.0, 16.0, 15.0),
-          atlas(SFC_ENEMIES_SHEET_PATH, 52.0, 326.0, 16.0, 16.0),
+          enemy_frame(0, 4, height=16.0),
+          enemy_frame(1, 4, height=16.0),
         ]),
         enemy_koopa_regions=Some([
-          atlas(SFC_ENEMIES_SHEET_PATH, 52.0, 160.0, 16.0, 27.0),
-          atlas(SFC_ENEMIES_SHEET_PATH, 212.0, 160.0, 16.0, 27.0),
+          enemy_frame(1, 0, height=27.0),
+          enemy_frame(2, 0, height=27.0),
         ]),
-        tile_ground_region=Some(
-          atlas(SFC_TILES_SHEET_PATH, 448.0, 256.0, 16.0, 16.0),
-        ),
-        tile_brick_region=Some(
-          atlas(SFC_TILES_SHEET_PATH, 176.0, 176.0, 16.0, 16.0),
-        ),
-        tile_pipe_region=Some(
-          atlas(SFC_PIPES_SHEET_PATH, 16.0, 80.0, 16.0, 16.0),
-        ),
-        tile_pipe_body_region=Some(
-          atlas(SFC_PIPES_SHEET_PATH, 16.0, 96.0, 16.0, 16.0),
-        ),
-        tile_spike_region=Some(
-          atlas(SFC_TILES_SHEET_PATH, 224.0, 320.0, 16.0, 16.0),
-        ),
-        tile_question_region=Some(
-          atlas(SFC_TILES_SHEET_PATH, 208.0, 176.0, 16.0, 16.0),
-        ),
-        tile_used_region=Some(
-          atlas(SFC_TILES_SHEET_PATH, 192.0, 176.0, 16.0, 16.0),
-        ),
+        tile_ground_region=Some(tile_frame(9, 16)),
+        tile_brick_region=Some(tile_frame(9, 14)),
+        tile_pipe_region=Some(tile_frame(9, 15)),
+        tile_pipe_body_region=Some(tile_frame(9, 16)),
+        tile_spike_region=Some(tile_frame(7, 16)),
+        tile_question_region=Some(tile_frame_with_offset(207.0, 181.0)),
+        tile_used_region=Some(tile_frame_with_offset(192.0, 165.0)),
       ),
     ),
     movement=Some(

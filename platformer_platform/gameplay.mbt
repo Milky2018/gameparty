@@ -1118,7 +1118,7 @@ fn animated_region(
 
 ///|
 fn player_visual_region() -> (SpriteRegion?, Bool) {
-  let flip_x = player_state.val.facing_right
+  let flip_x = !player_state.val.facing_right
   let speed_x = player_state.val.velocity[X]
   let moving_speed = if speed_x < 0.0 { -speed_x } else { speed_x }
   let moving = moving_speed > 8.0
