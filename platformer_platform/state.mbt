@@ -253,8 +253,10 @@ pub(all) struct SpriteRegion {
 
 ///|
 pub(all) struct SpritePack {
-  player_idle_region : SpriteRegion?
-  player_run_regions : Array[SpriteRegion]?
+  player_idle_left_region : SpriteRegion?
+  player_idle_right_region : SpriteRegion?
+  player_run_left_regions : Array[SpriteRegion]?
+  player_run_right_regions : Array[SpriteRegion]?
   enemy_goomba_regions : Array[SpriteRegion]?
   enemy_koopa_regions : Array[SpriteRegion]?
   tile_ground_region : SpriteRegion?

@@ -31,8 +31,10 @@ pub fn sprite_region(
 
 ///|
 pub fn sprite_pack(
-  player_idle_region? : SpriteRegion? = None,
-  player_run_regions? : Array[SpriteRegion]? = None,
+  player_idle_left_region? : SpriteRegion? = None,
+  player_idle_right_region? : SpriteRegion? = None,
+  player_run_left_regions? : Array[SpriteRegion]? = None,
+  player_run_right_regions? : Array[SpriteRegion]? = None,
   enemy_goomba_regions? : Array[SpriteRegion]? = None,
   enemy_koopa_regions? : Array[SpriteRegion]? = None,
   tile_ground_region? : SpriteRegion? = None,
@@ -45,8 +47,10 @@ pub fn sprite_pack(
   background_path? : String? = None,
 ) -> SpritePack {
   {
-    player_idle_region,
-    player_run_regions,
+    player_idle_left_region,
+    player_idle_right_region,
+    player_run_left_regions,
+    player_run_right_regions,
     enemy_goomba_regions,
     enemy_koopa_regions,
     tile_ground_region,

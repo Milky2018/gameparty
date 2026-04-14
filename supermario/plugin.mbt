@@ -493,11 +493,17 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     ),
     sprites=Some(
       @platformer_platform.sprite_pack(
-        player_idle_region=Some(mario_frame(4, 0)),
-        player_run_regions=Some([
-          mario_frame(3, 1),
-          mario_frame(4, 1),
-          mario_frame(5, 1),
+        player_idle_left_region=Some(mario_frame(4, 0)),
+        player_idle_right_region=Some(mario_frame(5, 0)),
+        player_run_left_regions=Some([
+          mario_frame(0, 0),
+          mario_frame(1, 0),
+          mario_frame(4, 0),
+        ]),
+        player_run_right_regions=Some([
+          mario_frame(9, 0),
+          mario_frame(8, 0),
+          mario_frame(5, 0),
         ]),
         enemy_goomba_regions=Some([
           enemy_frame(0, 4, height=16.0),

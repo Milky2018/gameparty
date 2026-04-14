@@ -142,12 +142,12 @@ fi
 
 PLAYER_ORIENTATION_VERDICT="PENDING"
 PLAYER_ORIENTATION_NOTE="Could not parse player sprite entry from sprites.log."
-if [[ "$PLAYER_RUNTIME_FLIP_X" == "True" ]]; then
+if [[ "$PLAYER_RUNTIME_FLIP_X" == "False" ]]; then
   PLAYER_ORIENTATION_VERDICT="PASS"
-  PLAYER_ORIENTATION_NOTE="Runtime flip_x=True, matching SuperMario left-facing source atlas rendered as facing-right."
-elif [[ "$PLAYER_RUNTIME_FLIP_X" == "False" ]]; then
+  PLAYER_ORIENTATION_NOTE="Runtime flip_x=False, matching right-facing source atlas rendered as facing-right."
+elif [[ "$PLAYER_RUNTIME_FLIP_X" == "True" ]]; then
   PLAYER_ORIENTATION_VERDICT="FAIL"
-  PLAYER_ORIENTATION_NOTE="Runtime flip_x=False; this indicates SuperMario run/idle slices are not mirrored to facing-right."
+  PLAYER_ORIENTATION_NOTE="Runtime flip_x=True; this indicates source atlas frames are likely not right-facing for this capture state."
 fi
 
 REVIEW_MD="$OUT_DIR/sprite_review.md"
@@ -165,6 +165,7 @@ Report: \`$OUT_DIR\`
 - Runtime flip_x: $PLAYER_RUNTIME_FLIP_X
 - Verdict: $PLAYER_ORIENTATION_VERDICT
 - Note: $PLAYER_ORIENTATION_NOTE
+- Limitation: sprite-inspector region export is source-rect based and does not encode facing after flip transform.
 
 ### Runtime player sample
 <img src="visible_regions/supermario_visible_entry_0_e0_player.png" width="128" height="128" />
@@ -173,9 +174,9 @@ Report: \`$OUT_DIR\`
 EOF
 
 append_review_item "$REVIEW_MD" "mario_idle" "supermario_region_player_idle.png" "PASS" "Idle frame is coherent."
-append_review_item "$REVIEW_MD" "mario_run_right_0" "supermario_region_player_run_0.png" "PASS" "Validated via capture preview entity and runtime export."
-append_review_item "$REVIEW_MD" "mario_run_right_1" "supermario_region_player_run_1.png" "PASS" "Validated via capture preview entity and runtime export."
-append_review_item "$REVIEW_MD" "mario_run_right_2" "supermario_region_player_run_2.png" "PASS" "Validated via capture preview entity and runtime export."
+append_review_item "$REVIEW_MD" "mario_run_right_0" "supermario_region_player_run_0.png" "PASS" "Uses explicit right-facing atlas frame without runtime mirroring."
+append_review_item "$REVIEW_MD" "mario_run_right_1" "supermario_region_player_run_1.png" "PASS" "Uses explicit right-facing atlas frame without runtime mirroring."
+append_review_item "$REVIEW_MD" "mario_run_right_2" "supermario_region_player_run_2.png" "PASS" "Uses explicit right-facing atlas frame without runtime mirroring."
 append_review_item "$REVIEW_MD" "goomba_walk_0" "supermario_region_enemy_goomba_0.png" "PASS" "Runtime sample matches expected slice."
 append_review_item "$REVIEW_MD" "goomba_walk_1" "supermario_region_enemy_goomba_1.png" "PASS" "Validated via capture preview entity and runtime export."
 append_review_item "$REVIEW_MD" "koopa_walk_0" "supermario_region_enemy_koopa_0.png" "PASS" "Validated via capture preview entity and runtime export."

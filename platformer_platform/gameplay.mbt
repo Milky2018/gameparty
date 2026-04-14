@@ -1212,17 +1212,18 @@ fn animated_region(
 
 ///|
 fn player_visual_region() -> (SpriteRegion?, Bool) {
-  let flip_x = player_state.val.facing_right
+  let idle_region = sprite_region_for_player_idle(player_state.val.facing_right)
+  let run_regions = sprite_regions_for_player_run(player_state.val.facing_right)
   let speed_x = player_state.val.velocity[X]
   let moving_speed = if speed_x < 0.0 { -speed_x } else { speed_x }
   let moving = moving_speed > 8.0
   if moving {
-    match animated_region(sprite_regions_for_player_run(), PLAYER_ANIM_FPS) {
-      Some(region) => (Some(region), flip_x)
-      None => (sprite_region_for_player_idle(), flip_x)
+    match animated_region(run_regions, PLAYER_ANIM_FPS) {
+      Some(region) => (Some(region), false)
+      None => (idle_region, false)
     }
   } else {
-    (sprite_region_for_player_idle(), flip_x)
+    (idle_region, false)
   }
 }
 
@@ -1472,12 +1473,12 @@ fn capture_system(_world : @ecs.World) -> Unit {
     Some(sprite_pack) => {
       spawn_capture_preview_entity(
         "player_idle",
-        sprite_pack.player_idle_region,
+        sprite_pack.player_idle_right_region,
         size=vec2(34.0, 44.0),
       )
       spawn_capture_preview_array(
         "player_run",
-        sprite_pack.player_run_regions,
+        sprite_pack.player_run_right_regions,
         size=vec2(34.0, 44.0),
       )
       spawn_capture_preview_array(
@@ -1555,8 +1556,11 @@ fn capture_system(_world : @ecs.World) -> Unit {
   )
   match current_plugin().sprites {
     Some(sprite_pack) => {
-      capture_export_region("player_idle", sprite_pack.player_idle_region)
-      capture_export_region_array("player_run", sprite_pack.player_run_regions)
+      capture_export_region("player_idle", sprite_pack.player_idle_right_region)
+      capture_export_region_array(
+        "player_run",
+        sprite_pack.player_run_right_regions,
+      )
       capture_export_region_array(
         "enemy_goomba",
         sprite_pack.enemy_goomba_regions,

@@ -72,18 +72,58 @@ fn sprite_regions_for_enemy(kind : EnemyKind) -> Array[SpriteRegion]? {
 }
 
 ///|
-fn sprite_region_for_player_idle() -> SpriteRegion? {
+fn sprite_region_for_player_idle(facing_right : Bool) -> SpriteRegion? {
   match sprite_pack_state.val {
-    Some(pack) => pack.player_idle_region
+    Some(pack) =>
+      if facing_right {
+        pack.player_idle_right_region
+      } else {
+        pack.player_idle_left_region
+      }
     None => None
   }
 }
 
 ///|
-fn sprite_regions_for_player_run() -> Array[SpriteRegion]? {
+fn sprite_regions_for_player_run(facing_right : Bool) -> Array[SpriteRegion]? {
   match sprite_pack_state.val {
-    Some(pack) => pack.player_run_regions
+    Some(pack) =>
+      if facing_right {
+        pack.player_run_right_regions
+      } else {
+        pack.player_run_left_regions
+      }
     None => None
+  }
+}
+
+///|
+fn validate_player_sprite_pack(pack : SpritePack) -> Unit {
+  if pack.player_idle_left_region is None ||
+    pack.player_idle_right_region is None {
+    abort(
+      "platformer_platform: SpritePack requires both player_idle_left_region and player_idle_right_region",
+    )
+  }
+  if pack.player_run_left_regions is None ||
+    pack.player_run_right_regions is None {
+    abort(
+      "platformer_platform: SpritePack requires both player_run_left_regions and player_run_right_regions",
+    )
+  }
+  match pack.player_run_left_regions {
+    Some(regions) =>
+      if regions.length() == 0 {
+        abort("platformer_platform: player_run_left_regions must not be empty")
+      }
+    None => ()
+  }
+  match pack.player_run_right_regions {
+    Some(regions) =>
+      if regions.length() == 0 {
+        abort("platformer_platform: player_run_right_regions must not be empty")
+      }
+    None => ()
   }
 }
 
@@ -446,9 +486,10 @@ fn spawn_player(level : LevelSpec) -> Unit {
   }
   ensure_entity_alive(player_entity)
   set_entity_name(player_entity, "player")
+  let idle_region = sprite_region_for_player_idle(true)
   set_sprite_entity_with_image(
     player_entity,
-    sprite_region_for_player_idle(),
+    idle_region,
     player_sprite_color,
     vec2(PLAYER_WIDTH, PLAYER_HEIGHT_SMALL),
     level.player_spawn,
@@ -622,6 +663,10 @@ fn set_current_level(level_index : Int) -> Unit {
 fn startup_system(_world : @ecs.World) -> Unit {
   ignore(current_plugin())
   sprite_pack_state.val = current_plugin().sprites
+  match sprite_pack_state.val {
+    Some(pack) => validate_player_sprite_pack(pack)
+    None => ()
+  }
   register_platformer_font_once()
   set_profile_from_env()
   let startup_started_at = @time.elapsed()
