@@ -103,6 +103,44 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 }
 
 ///|
+fn set_entity_name(entity : @entity.Entity, value : String) -> Unit {
+  @name.names().set(entity, @name.Name::new(value))
+}
+
+///|
+fn tile_kind_name(kind : TileKind) -> String {
+  match kind {
+    Ground => "ground"
+    Brick => "brick"
+    Pipe => "pipe"
+    Spike => "spike"
+    DashCrystal => "dash_crystal"
+    Spring => "spring"
+    QuestionMushroom => "question_mushroom"
+    QuestionFlower => "question_flower"
+    QuestionCoin => "question_coin"
+    UsedBlock => "used_block"
+  }
+}
+
+///|
+fn enemy_kind_name(kind : EnemyKind) -> String {
+  match kind {
+    Goomba => "goomba"
+    Koopa => "koopa"
+  }
+}
+
+///|
+fn item_kind_name(kind : ItemKind) -> String {
+  match kind {
+    Mushroom => "mushroom"
+    FireFlower => "fire_flower"
+    Coin => "coin"
+  }
+}
+
+///|
 fn set_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
   @visibility.visibilities().set(entity, if visible { Visible } else { Hidden })
 }
@@ -278,6 +316,7 @@ fn clear_fireballs() -> Unit {
 ///|
 fn spawn_background(level : LevelSpec) -> Unit {
   let sky = @entity.Entity::new()
+  set_entity_name(sky, "level_sky")
   let mut has_custom_background = false
   match sprite_path_for_background() {
     Some(path) => {
@@ -307,6 +346,7 @@ fn spawn_background(level : LevelSpec) -> Unit {
   }
 
   let near_hill = @entity.Entity::new()
+  set_entity_name(near_hill, "level_near_hill")
   set_sprite_entity(
     near_hill,
     near_hill_color,
@@ -317,6 +357,7 @@ fn spawn_background(level : LevelSpec) -> Unit {
   static_entities.push(near_hill)
 
   let far_hill = @entity.Entity::new()
+  set_entity_name(far_hill, "level_far_hill")
   set_sprite_entity(
     far_hill,
     far_hill_color,
@@ -336,8 +377,9 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
   block_entities.clear()
   dash_crystal_respawn_timers.clear()
   spawn_background(level)
-  for block in level.blocks {
+  for index, block in level.blocks {
     let entity = @entity.Entity::new()
+    set_entity_name(entity, "block_\{index}_\{tile_kind_name(block.kind)}")
     set_sprite_entity_with_image(
       entity,
       sprite_region_for_tile(block.kind),
@@ -350,6 +392,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
     block_entities.push(entity)
   }
   let goal_pole = @entity.Entity::new()
+  set_entity_name(goal_pole, "goal_pole")
   set_sprite_entity(
     goal_pole,
     rgb(233U, 235U, 240U),
@@ -359,6 +402,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
   )
   static_entities.push(goal_pole)
   let goal_flag = @entity.Entity::new()
+  set_entity_name(goal_flag, "goal_flag")
   set_sprite_entity(
     goal_flag,
     flag_color,
@@ -401,6 +445,7 @@ fn spawn_player(level : LevelSpec) -> Unit {
     alive: true,
   }
   ensure_entity_alive(player_entity)
+  set_entity_name(player_entity, "player")
   set_sprite_entity_with_image(
     player_entity,
     sprite_region_for_player_idle(),
@@ -419,6 +464,8 @@ fn spawn_enemy(spawn : EnemySpawn) -> Unit {
     ENEMY_MOVE_SPEED
   }
   let entity = @entity.Entity::new()
+  let enemy_index = enemy_entities_order.length()
+  set_entity_name(entity, "enemy_\{enemy_index}_\{enemy_kind_name(spawn.kind)}")
   enemy_entities.set(entity, {
     kind: spawn.kind,
     center: spawn.center,
@@ -453,6 +500,8 @@ fn spawn_item(
   emerging? : Bool = false,
 ) -> Unit {
   let entity = @entity.Entity::new()
+  let item_index = item_entities_order.length()
+  set_entity_name(entity, "item_\{item_index}_\{item_kind_name(kind)}")
   item_entities.set(entity, {
     kind,
     center,
@@ -474,6 +523,8 @@ fn spawn_item(
 ///|
 fn spawn_player_fireball(center : @math.Vec2, facing_right : Bool) -> Unit {
   let entity = @entity.Entity::new()
+  let fireball_index = fireball_entities_order.length()
+  set_entity_name(entity, "fireball_\{fireball_index}")
   fireball_entities.set(entity, {
     center,
     velocity: vec2(
@@ -506,6 +557,7 @@ fn set_message_visible(visible : Bool) -> Unit {
 ///|
 fn setup_hud() -> Unit {
   let theme = current_plugin().ui_theme
+  set_entity_name(hud_overlay_entity, "hud_overlay")
   set_sprite_entity(
     hud_overlay_entity,
     hud_color_dark,
@@ -513,6 +565,7 @@ fn setup_hud() -> Unit {
     vec2(VIEWPORT_WIDTH * 0.5, VIEWPORT_HEIGHT - 60.0),
     900.0,
   )
+  set_entity_name(hud_title_entity, "hud_title")
   set_text_entity(
     hud_title_entity,
     theme.title,
@@ -520,6 +573,7 @@ fn setup_hud() -> Unit {
     "34px \{PLATFORMER_FONT_FAMILY}",
     hud_color_white,
   )
+  set_entity_name(hud_sub_entity, "hud_sub")
   set_text_entity(
     hud_sub_entity,
     "",
@@ -527,6 +581,7 @@ fn setup_hud() -> Unit {
     "22px \{PLATFORMER_FONT_FAMILY}",
     hud_color_soft,
   )
+  set_entity_name(hud_hint_entity, "hud_hint")
   set_text_entity(
     hud_hint_entity,
     "",
@@ -534,6 +589,7 @@ fn setup_hud() -> Unit {
     "20px \{PLATFORMER_FONT_FAMILY}",
     hud_color_soft,
   )
+  set_entity_name(hud_message_entity, "hud_message")
   set_text_entity(
     hud_message_entity,
     "",
@@ -602,6 +658,7 @@ fn startup_system(_world : @ecs.World) -> Unit {
 
   let scene_started_at = @time.elapsed()
   ensure_entity_alive(camera_entity)
+  set_entity_name(camera_entity, "camera")
   @camera.cameras().set(
     camera_entity,
     @camera.Camera::new(is_active=true, order=0),

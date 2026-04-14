@@ -9,6 +9,77 @@ fn debug_vec2_string(value : @math.Vec2) -> String {
 }
 
 ///|
+fn debug_rect_string(value : @math.Rect) -> String {
+  "{x:\{value.position[X]}, y:\{value.position[Y]}, w:\{value.size[X]}, h:\{value.size[Y]}}"
+}
+
+///|
+fn capture_export_region(label : String, region : SpriteRegion?) -> Unit {
+  match region {
+    Some(value) => {
+      let path = "/tmp/supermario_region_\{label}.png"
+      let ok = @runtime_debug.export_texture_region_png(
+        value.path,
+        value.rect,
+        path,
+      )
+      println(
+        "[platformer][capture] exported_region=\{label} ok=\{ok} path=\{path} source=\{value.path} rect=\{debug_rect_string(value.rect)}",
+      )
+    }
+    None => ()
+  }
+}
+
+///|
+fn capture_export_region_array(
+  prefix : String,
+  regions : Array[SpriteRegion]?,
+) -> Unit {
+  match regions {
+    Some(values) =>
+      for i in 0..<values.length() {
+        let region = values[i]
+        capture_export_region("\{prefix}_\{i}", Some(region))
+      }
+    None => ()
+  }
+}
+
+///|
+fn spawn_capture_preview_entity(
+  name : String,
+  region : SpriteRegion?,
+  size? : @math.Vec2 = vec2(36.0, 36.0),
+) -> Unit {
+  let entity = @entity.Entity::new()
+  set_entity_name(entity, "capture_preview_\{name}")
+  set_sprite_entity_with_image(
+    entity,
+    region,
+    rgb(255U, 0U, 255U),
+    size,
+    vec2(-10000.0, -10000.0),
+    -500.0,
+  )
+}
+
+///|
+fn spawn_capture_preview_array(
+  prefix : String,
+  regions : Array[SpriteRegion]?,
+  size? : @math.Vec2 = vec2(36.0, 36.0),
+) -> Unit {
+  match regions {
+    Some(values) =>
+      for i in 0..<values.length() {
+        spawn_capture_preview_entity("\{prefix}_\{i}", Some(values[i]), size~)
+      }
+    None => ()
+  }
+}
+
+///|
 fn debug_transform_option_string(value : @transform.Transform?) -> String {
   match value {
     Some(transform) =>
@@ -1141,7 +1212,7 @@ fn animated_region(
 
 ///|
 fn player_visual_region() -> (SpriteRegion?, Bool) {
-  let flip_x = !player_state.val.facing_right
+  let flip_x = player_state.val.facing_right
   let speed_x = player_state.val.velocity[X]
   let moving_speed = if speed_x < 0.0 { -speed_x } else { speed_x }
   let moving = moving_speed > 8.0
@@ -1397,18 +1468,59 @@ fn capture_system(_world : @ecs.World) -> Unit {
   if @time.elapsed() - capture_started_at.val < DEBUG_CAPTURE_DELAY_SECONDS {
     return
   }
+  match current_plugin().sprites {
+    Some(sprite_pack) => {
+      spawn_capture_preview_entity(
+        "player_idle",
+        sprite_pack.player_idle_region,
+        size=vec2(34.0, 44.0),
+      )
+      spawn_capture_preview_array(
+        "player_run",
+        sprite_pack.player_run_regions,
+        size=vec2(34.0, 44.0),
+      )
+      spawn_capture_preview_array(
+        "enemy_goomba",
+        sprite_pack.enemy_goomba_regions,
+      )
+      spawn_capture_preview_array(
+        "enemy_koopa",
+        sprite_pack.enemy_koopa_regions,
+        size=vec2(34.0, 44.0),
+      )
+      spawn_capture_preview_entity(
+        "tile_ground",
+        sprite_pack.tile_ground_region,
+      )
+      spawn_capture_preview_entity("tile_brick", sprite_pack.tile_brick_region)
+      spawn_capture_preview_entity(
+        "tile_pipe_top",
+        sprite_pack.tile_pipe_region,
+      )
+      spawn_capture_preview_entity(
+        "tile_pipe_body",
+        sprite_pack.tile_pipe_body_region,
+      )
+      spawn_capture_preview_entity("tile_spike", sprite_pack.tile_spike_region)
+      spawn_capture_preview_entity(
+        "tile_question",
+        sprite_pack.tile_question_region,
+      )
+      spawn_capture_preview_entity("tile_used", sprite_pack.tile_used_region)
+    }
+    None => ()
+  }
   let player_transform = @transform.transforms().get(player_entity)
   let has_player_sprite = @sprite.sprites().contains(player_entity)
   let player_visibility = @visibility.visibilities().get(player_entity)
   let player_transform_text = debug_transform_option_string(player_transform)
   let player_visibility_text = debug_visibility_option_string(player_visibility)
   let sprite_entries = @runtime_debug.sprite_inspector_entries()
+  let supermario_entries : Array[@runtime_debug.SpriteInspectorEntry] = []
   let seen_signatures : Map[String, Bool] = Map::new()
   let mut printed = 0
   for entry in sprite_entries {
-    if printed >= 32 {
-      break
-    }
     match entry.image_path {
       Some(path) =>
         if path.contains("supermario/sfc/") {
@@ -1417,18 +1529,59 @@ fn capture_system(_world : @ecs.World) -> Unit {
             None => "none"
           }
           let signature = path + "|" + source_rect_signature
-          if !seen_signatures.contains(signature) {
+          if printed < 32 && !seen_signatures.contains(signature) {
             seen_signatures.set(signature, true)
             println("[platformer][sprite] \{entry.to_json().to_string()}")
             printed = printed + 1
           }
+          supermario_entries.push(entry)
         }
       None => ()
     }
   }
+  let exported_visible = @runtime_debug.export_sprite_inspector_regions(
+    supermario_entries,
+    "/tmp",
+    file_naming=fn(entry, index) {
+      let entity_name = match entry.entity_name {
+        Some(value) => value
+        None => "unnamed"
+      }
+      "supermario_visible_entry_\{index}_e\{entry.entity_id}_\{entity_name}.png"
+    },
+  )
+  println(
+    "[platformer][capture] exported_visible_regions=\{exported_visible} dir=/tmp",
+  )
+  match current_plugin().sprites {
+    Some(sprite_pack) => {
+      capture_export_region("player_idle", sprite_pack.player_idle_region)
+      capture_export_region_array("player_run", sprite_pack.player_run_regions)
+      capture_export_region_array(
+        "enemy_goomba",
+        sprite_pack.enemy_goomba_regions,
+      )
+      capture_export_region_array(
+        "enemy_koopa",
+        sprite_pack.enemy_koopa_regions,
+      )
+      capture_export_region("tile_ground", sprite_pack.tile_ground_region)
+      capture_export_region("tile_brick", sprite_pack.tile_brick_region)
+      capture_export_region("tile_pipe_top", sprite_pack.tile_pipe_region)
+      capture_export_region("tile_pipe_body", sprite_pack.tile_pipe_body_region)
+      capture_export_region("tile_spike", sprite_pack.tile_spike_region)
+      capture_export_region("tile_question", sprite_pack.tile_question_region)
+      capture_export_region("tile_used", sprite_pack.tile_used_region)
+    }
+    None => ()
+  }
   println(
     "[platformer][capture] player_alive=\{player_state.val.alive} player_center=\{debug_vec2_string(player_state.val.center)} has_sprite=\{has_player_sprite} transform=\{player_transform_text} visibility=\{player_visibility_text}",
   )
+  match @runtime_debug.capture_last_frame_metadata_json() {
+    Some(metadata) => println("[platformer][capture][metadata] \{metadata}")
+    None => ()
+  }
   let debug_capture_path = "/tmp/platformer_capture.png"
   let captured = @runtime_debug.capture_frame_png_to_file(debug_capture_path)
   if !captured {
