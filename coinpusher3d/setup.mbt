@@ -16,7 +16,7 @@ fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 }
 
 ///|
-fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
+fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
     translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
@@ -28,7 +28,7 @@ fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
 fn set_text_entity(
   entity : @entity.Entity,
   content : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   color : String,
   font? : String = "28px \{HUD_FONT_FAMILY}",
   zindex? : Int = UI_ZINDEX,
@@ -42,7 +42,7 @@ fn set_text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, zindex))
   set_entity_visibility(entity, true)
 }
@@ -51,13 +51,13 @@ fn set_text_entity(
 fn set_panel_color_entity(
   entity : @entity.Entity,
   color : @render.Color,
-  size : @math.Vec2D,
-  center : @math.Vec2D,
+  size : @math.Vec2,
+  center : @math.Vec2,
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(color, size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(0.0, 0.0))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(center, zindex))
   set_entity_visibility(entity, true)
@@ -287,8 +287,8 @@ fn setup_camera_and_lighting() -> Unit {
 
 ///|
 fn setup_hud_entities() -> Unit {
-  let panel_size = @math.Vec2D(VIEWPORT_WIDTH, 96.0)
-  let panel_center = @math.Vec2D(VIEWPORT_WIDTH * 0.5, VIEWPORT_HEIGHT - 48.0)
+  let panel_size = @math.Vec2(VIEWPORT_WIDTH, 96.0)
+  let panel_center = @math.Vec2(VIEWPORT_WIDTH * 0.5, VIEWPORT_HEIGHT - 48.0)
   set_panel_color_entity(
     hud_bg_entity,
     color_rgba(8U, 12U, 22U, 0.82),
@@ -300,7 +300,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     hud_main_entity,
     "",
-    @math.Vec2D(26.0, 22.0),
+    @math.Vec2(26.0, 22.0),
     "rgb(245,247,251)",
     font="32px \{HUD_FONT_FAMILY}",
     zindex=UI_ZINDEX + 2,
@@ -308,7 +308,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     hud_sub_entity,
     "",
-    @math.Vec2D(26.0, 62.0),
+    @math.Vec2(26.0, 62.0),
     "rgb(202,215,230)",
     font="24px \{HUD_FONT_FAMILY}",
     zindex=UI_ZINDEX + 2,
@@ -316,7 +316,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     hud_hint_entity,
     "",
-    @math.Vec2D(26.0, VIEWPORT_HEIGHT - 40.0),
+    @math.Vec2(26.0, VIEWPORT_HEIGHT - 40.0),
     "rgb(215,224,236)",
     font="22px \{HUD_FONT_FAMILY}",
     zindex=UI_ZINDEX + 2,
@@ -325,7 +325,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     chest_title_entity,
     "",
-    @math.Vec2D(310.0, 160.0),
+    @math.Vec2(310.0, 160.0),
     "rgb(255,244,204)",
     font="42px \{HUD_FONT_FAMILY}",
     zindex=UI_ZINDEX + 6,
@@ -344,14 +344,14 @@ fn setup_hud_entities() -> Unit {
     set_panel_color_entity(
       chest_option_panel_entities[i],
       color_rgba(20U, 36U, 58U, 0.9),
-      @math.Vec2D(panel_w, panel_h),
-      @math.Vec2D(x, y),
+      @math.Vec2(panel_w, panel_h),
+      @math.Vec2(x, y),
       UI_ZINDEX + 5,
     )
     set_text_entity(
       chest_option_text_entities[i],
       "",
-      @math.Vec2D(x - panel_w * 0.5 + 20.0, y - panel_h * 0.5 + 24.0),
+      @math.Vec2(x - panel_w * 0.5 + 20.0, y - panel_h * 0.5 + 24.0),
       "rgb(243,245,248)",
       font="24px \{HUD_FONT_FAMILY}",
       zindex=UI_ZINDEX + 7,
@@ -361,7 +361,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     summary_title_entity,
     "",
-    @math.Vec2D(320.0, 180.0),
+    @math.Vec2(320.0, 180.0),
     "rgb(251,236,191)",
     font="56px \{HUD_FONT_FAMILY}",
     zindex=UI_ZINDEX + 8,
@@ -369,7 +369,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     summary_body_entity,
     "",
-    @math.Vec2D(320.0, 260.0),
+    @math.Vec2(320.0, 260.0),
     "rgb(227,236,246)",
     font="32px \{HUD_FONT_FAMILY}",
     zindex=UI_ZINDEX + 8,

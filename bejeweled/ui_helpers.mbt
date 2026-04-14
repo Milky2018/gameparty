@@ -34,7 +34,7 @@ fn text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_xy(x, y, z))
   set_entity_visible(entity, true)
 }
@@ -45,7 +45,7 @@ fn set_centered_text_block(
   width : Double,
   height : Double,
 ) -> Unit {
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.0)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
   @text2d.text_bounds().set(entity, @text2d.TextBounds::new(width, height))
   @ui.text_layouts().set(
     entity,
@@ -71,8 +71,8 @@ fn panel_entity(
   h : Double,
   z : Double,
 ) -> Unit {
-  let sprite = @sprite.Sprite::from_color(color, @math.Vec2D(w, h))
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  let sprite = @sprite.Sprite::from_color(color, @math.Vec2(w, h))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_xy(x - w * 0.5, y - h * 0.5, z))
   set_entity_visible(entity, true)

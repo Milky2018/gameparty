@@ -196,7 +196,7 @@ priv struct Rect {
 ///|
 priv struct PlayerState {
   mut alive : Bool
-  mut center : @math.Vec2D
+  mut center : @math.Vec2
   mut direction : Direction
   mut turret_direction : Direction
   mut reload_timer : Double
@@ -205,7 +205,7 @@ priv struct PlayerState {
 ///|
 priv struct EnemyState {
   mut alive : Bool
-  mut center : @math.Vec2D
+  mut center : @math.Vec2
   mut direction : Direction
   mut turret_direction : Direction
   mut reload_timer : Double
@@ -214,7 +214,7 @@ priv struct EnemyState {
 
 ///|
 priv struct BulletState {
-  mut center : @math.Vec2D
+  mut center : @math.Vec2
   direction : Direction
   speed : Double
   mut life_time : Double
@@ -226,8 +226,8 @@ priv struct BulletState {
 priv struct LevelConfig {
   name : String
   tiles : Array[Array[Int]]
-  player_spawn : @math.Vec2D
-  enemy_spawns : Array[@math.Vec2D]
+  player_spawn : @math.Vec2
+  enemy_spawns : Array[@math.Vec2]
 }
 
 ///|
@@ -308,7 +308,7 @@ let bullets : Array[BulletState] = []
 ///|
 let player : PlayerState = {
   alive: false,
-  center: @math.Vec2D(0.0, 0.0),
+  center: @math.Vec2(0.0, 0.0),
   direction: Up,
   turret_direction: Up,
   reload_timer: 0.0,
@@ -318,7 +318,7 @@ let player : PlayerState = {
 let enemies : Array[EnemyState] = [
   {
     alive: false,
-    center: @math.Vec2D(0.0, 0.0),
+    center: @math.Vec2(0.0, 0.0),
     direction: Down,
     turret_direction: Down,
     reload_timer: 0.0,
@@ -326,7 +326,7 @@ let enemies : Array[EnemyState] = [
   },
   {
     alive: false,
-    center: @math.Vec2D(0.0, 0.0),
+    center: @math.Vec2(0.0, 0.0),
     direction: Down,
     turret_direction: Down,
     reload_timer: 0.0,
@@ -334,7 +334,7 @@ let enemies : Array[EnemyState] = [
   },
   {
     alive: false,
-    center: @math.Vec2D(0.0, 0.0),
+    center: @math.Vec2(0.0, 0.0),
     direction: Down,
     turret_direction: Down,
     reload_timer: 0.0,
@@ -342,7 +342,7 @@ let enemies : Array[EnemyState] = [
   },
   {
     alive: false,
-    center: @math.Vec2D(0.0, 0.0),
+    center: @math.Vec2(0.0, 0.0),
     direction: Down,
     turret_direction: Down,
     reload_timer: 0.0,
@@ -442,8 +442,8 @@ let key_stamp_right : Ref[Int] = { val: 0 }
 let key_stamp_counter : Ref[Int] = { val: 0 }
 
 ///|
-fn vec2(x : Double, y : Double) -> @math.Vec2D {
-  @math.Vec2D(x, y)
+fn vec2(x : Double, y : Double) -> @math.Vec2 {
+  @math.Vec2(x, y)
 }
 
 ///|
@@ -478,7 +478,7 @@ fn abs_double(value : Double) -> Double {
 }
 
 ///|
-fn direction_vector(direction : Direction) -> @math.Vec2D {
+fn direction_vector(direction : Direction) -> @math.Vec2 {
   match direction {
     Up => vec2(0.0, -1.0)
     Down => vec2(0.0, 1.0)
@@ -518,14 +518,14 @@ fn tile_in_bounds(x : Int, y : Int) -> Bool {
 }
 
 ///|
-fn world_to_grid(point : @math.Vec2D) -> (Int, Int) {
+fn world_to_grid(point : @math.Vec2) -> (Int, Int) {
   let x = ((point[X] - ARENA_ORIGIN_X) / TILE_SIZE).floor().to_int()
   let y = ((point[Y] - ARENA_ORIGIN_Y) / TILE_SIZE).floor().to_int()
   (x, y)
 }
 
 ///|
-fn grid_to_world_center(x : Int, y : Int) -> @math.Vec2D {
+fn grid_to_world_center(x : Int, y : Int) -> @math.Vec2 {
   vec2(
     ARENA_ORIGIN_X + (x.to_double() + 0.5) * TILE_SIZE,
     ARENA_ORIGIN_Y + (y.to_double() + 0.5) * TILE_SIZE,
@@ -782,7 +782,7 @@ fn play_lose_sound() -> Unit {
 
 ///|
 fn entity_transform_2d(
-  position : @math.Vec2D,
+  position : @math.Vec2,
   zindex : Int,
 ) -> @transform.Transform {
   {
@@ -821,14 +821,14 @@ fn register_tankbattle_font_once() -> Unit {
 ///|
 fn set_rect_entity(
   entity : @entity.Entity,
-  position : @math.Vec2D,
-  size : @math.Vec2D,
+  position : @math.Vec2,
+  size : @math.Vec2,
   color : String,
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   let top_left = vec2(position[X] - size[X] * 0.5, position[Y] - size[Y] * 0.5)
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, entity_transform_2d(top_left, zindex))
@@ -839,7 +839,7 @@ fn set_rect_entity(
 fn set_text_entity_center(
   entity : @entity.Entity,
   text : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   color : String,
   size : Double,
   zindex : Int,
@@ -856,7 +856,7 @@ fn set_text_entity_center(
     @ui.TextLayout::new(align=Center, baseline=Center, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.0)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
   show_entity(entity)
 }
@@ -880,7 +880,7 @@ fn update_text_entity_if_changed(
 
 ///|
 fn circle_overlaps_rect(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   rect : Rect,
 ) -> Bool {
@@ -893,9 +893,9 @@ fn circle_overlaps_rect(
 
 ///|
 fn circle_overlaps_circle(
-  a_center : @math.Vec2D,
+  a_center : @math.Vec2,
   a_radius : Double,
-  b_center : @math.Vec2D,
+  b_center : @math.Vec2,
   b_radius : Double,
 ) -> Bool {
   let dx = a_center[X] - b_center[X]
@@ -934,7 +934,7 @@ fn make_level(variant : Int) -> LevelConfig {
   }
 
   let player_spawn = grid_to_world_center(1, ARENA_ROWS - 2)
-  let enemy_spawns : Array[@math.Vec2D] = [
+  let enemy_spawns : Array[@math.Vec2] = [
     grid_to_world_center(ARENA_COLS - 2, 1),
     grid_to_world_center(ARENA_COLS - 2, ARENA_ROWS - 2),
     grid_to_world_center(ARENA_COLS / 2, 1),
@@ -1082,16 +1082,16 @@ fn tank_angle(direction : Direction) -> Double {
 
 ///|
 fn tank_barrel_position(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   direction : Direction,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   let v = direction_vector(direction)
   vec2(center[X] + v[X] * 16.0, center[Y] + v[Y] * 16.0)
 }
 
 ///|
 fn spawn_bullet_entity(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   direction : Direction,
   owner : BulletOwner,
 ) -> Unit {
@@ -1108,16 +1108,16 @@ fn spawn_bullet_entity(
 }
 
 ///|
-fn tank_body_size() -> @math.Vec2D {
+fn tank_body_size() -> @math.Vec2 {
   vec2(TANK_HALF_SIZE * 2.0, TANK_HALF_SIZE * 2.0)
 }
 
 ///|
-fn tank_barrel_size() -> @math.Vec2D {
+fn tank_barrel_size() -> @math.Vec2 {
   vec2(BARREL_LENGTH, BARREL_THICKNESS)
 }
 
 ///|
-fn bullet_size() -> @math.Vec2D {
+fn bullet_size() -> @math.Vec2 {
   vec2(8.0, 8.0)
 }

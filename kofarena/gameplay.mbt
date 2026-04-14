@@ -65,9 +65,9 @@ fn fighter_height(fighter : FighterState) -> Double {
 }
 
 ///|
-fn fighter_center(fighter : FighterState) -> @math.Vec2D {
+fn fighter_center(fighter : FighterState) -> @math.Vec2 {
   let height = fighter_height(fighter)
-  @math.Vec2D(fighter.x, fighter.y + height * 0.5)
+  @math.Vec2(fighter.x, fighter.y + height * 0.5)
 }
 
 ///|
@@ -723,8 +723,8 @@ pub fn gameplay_system(_world : @ecs.World) -> Unit {
 }
 
 ///|
-fn fighter_visual_size(fighter : FighterState) -> @math.Vec2D {
-  @math.Vec2D(HURTBOX_WIDTH, fighter_height(fighter))
+fn fighter_visual_size(fighter : FighterState) -> @math.Vec2 {
+  @math.Vec2(HURTBOX_WIDTH, fighter_height(fighter))
 }
 
 ///|
@@ -746,22 +746,20 @@ fn fighter_visual_color(fighter : FighterState) -> @render.Color {
 }
 
 ///|
-fn attack_visual_rect(
-  fighter : FighterState,
-) -> (Bool, @math.Vec2D, @math.Vec2D) {
+fn attack_visual_rect(fighter : FighterState) -> (Bool, @math.Vec2, @math.Vec2) {
   match fighter.attack_kind {
     Some(kind) => {
       if !attack_active(kind, fighter.attack_elapsed) {
-        return (false, @math.Vec2D(0.0, 0.0), @math.Vec2D(0.0, 0.0))
+        return (false, @math.Vec2(0.0, 0.0), @math.Vec2(0.0, 0.0))
       }
       let box = attack_box(fighter, kind)
       (
         true,
-        @math.Vec2D(box.x + box.w * 0.5, box.y + box.h * 0.5),
-        @math.Vec2D(box.w, box.h),
+        @math.Vec2(box.x + box.w * 0.5, box.y + box.h * 0.5),
+        @math.Vec2(box.w, box.h),
       )
     }
-    None => (false, @math.Vec2D(0.0, 0.0), @math.Vec2D(0.0, 0.0))
+    None => (false, @math.Vec2(0.0, 0.0), @math.Vec2(0.0, 0.0))
   }
 }
 
@@ -774,8 +772,8 @@ fn sync_bar(
 ) -> Unit {
   set_rect_entity(
     entity,
-    @math.Vec2D(center_x, 62.0),
-    @math.Vec2D(width, 18.0),
+    @math.Vec2(center_x, 62.0),
+    @math.Vec2(width, 18.0),
     color,
     UI_ZINDEX + 11,
   )
@@ -839,7 +837,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
   set_text_entity(
     title_entity,
     "KOF ARENA",
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 68.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 68.0),
     "rgb(255,248,238)",
     font="52px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -853,7 +851,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     } else {
       round_status_text()
     },
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 126.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 126.0),
     "rgb(222,231,242)",
     font="16px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -867,7 +865,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     } else {
       "PRESS ENTER OR R TO FIGHT AGAIN"
     },
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 154.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 154.0),
     "rgb(198,210,225)",
     font="14px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -879,7 +877,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     } else {
       "READY"
     },
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 30.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 30.0),
     "rgb(255,248,238)",
     font="32px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -894,7 +892,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     } else {
       ""
     },
-    @math.Vec2D(26.0, 26.0),
+    @math.Vec2(26.0, 26.0),
     "rgb(210,220,230)",
     font="20px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -906,7 +904,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
     } else {
       ""
     },
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 240.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 240.0),
     "rgb(255,244,210)",
     font="50px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,

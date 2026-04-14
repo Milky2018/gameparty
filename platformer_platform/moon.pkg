@@ -13,6 +13,7 @@ import {
   "Milky2018/selene/text2d",
   "Milky2018/selene/time",
   "Milky2018/selene/transform",
+  "Milky2018/selene/runtime_debug",
   "Milky2018/selene/visibility",
   "tonyfettes/raylib" @raylib,
   "moonbitlang/core/bytes",

@@ -108,7 +108,7 @@ fn set_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 }
 
 ///|
-fn transform_2d(center : @math.Vec2D, z : Double) -> @transform.Transform {
+fn transform_2d(center : @math.Vec2, z : Double) -> @transform.Transform {
   {
     translation: @math.Vec3::new(center[X], center[Y], z),
     rotation: @math.Quat::identity(),
@@ -120,13 +120,13 @@ fn transform_2d(center : @math.Vec2D, z : Double) -> @transform.Transform {
 fn set_sprite_entity(
   entity : @entity.Entity,
   color : @render.Color,
-  size : @math.Vec2D,
-  center : @math.Vec2D,
+  size : @math.Vec2,
+  center : @math.Vec2,
   z : Double,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(color, size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   let top_left = vec2(center[X] - size[X] * 0.5, center[Y] - size[Y] * 0.5)
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(top_left, z))
@@ -138,8 +138,8 @@ fn set_sprite_entity_with_image(
   entity : @entity.Entity,
   region : SpriteRegion?,
   fallback_color : @render.Color,
-  size : @math.Vec2D,
-  center : @math.Vec2D,
+  size : @math.Vec2,
+  center : @math.Vec2,
   z : Double,
   flip_x? : Bool = false,
 ) -> Unit {
@@ -156,7 +156,7 @@ fn set_sprite_entity_with_image(
     None => @sprite.Sprite::from_color(fallback_color, size)
   }
   sprite.flip_x = flip_x
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   let top_left = vec2(center[X] - size[X] * 0.5, center[Y] - size[Y] * 0.5)
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(top_left, z))
@@ -168,8 +168,8 @@ fn set_sprite_entity_with_full_image(
   entity : @entity.Entity,
   image_path : String?,
   fallback_color : @render.Color,
-  size : @math.Vec2D,
-  center : @math.Vec2D,
+  size : @math.Vec2,
+  center : @math.Vec2,
   z : Double,
 ) -> Unit {
   ensure_entity_alive(entity)
@@ -178,7 +178,7 @@ fn set_sprite_entity_with_full_image(
       @sprite.Sprite::from_image(image_handle_for(path), custom_size=Some(size))
     None => @sprite.Sprite::from_color(fallback_color, size)
   }
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   let top_left = vec2(center[X] - size[X] * 0.5, center[Y] - size[Y] * 0.5)
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(top_left, z))
@@ -222,7 +222,7 @@ fn item_color(kind : ItemKind) -> @render.Color {
 fn set_text_entity(
   entity : @entity.Entity,
   content : String,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   font_size : String,
   color : @render.Color,
 ) -> Unit {
@@ -235,7 +235,7 @@ fn set_text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(center, 1000.0))
   set_visibility(entity, true)
 }
@@ -278,8 +278,10 @@ fn clear_fireballs() -> Unit {
 ///|
 fn spawn_background(level : LevelSpec) -> Unit {
   let sky = @entity.Entity::new()
+  let mut has_custom_background = false
   match sprite_path_for_background() {
-    Some(path) =>
+    Some(path) => {
+      has_custom_background = true
       set_sprite_entity_with_full_image(
         sky,
         Some(path),
@@ -288,6 +290,7 @@ fn spawn_background(level : LevelSpec) -> Unit {
         vec2(level.world_width * 0.5, WORLD_HEIGHT * 0.42),
         -200.0,
       )
+    }
     None =>
       set_sprite_entity(
         sky,
@@ -298,6 +301,10 @@ fn spawn_background(level : LevelSpec) -> Unit {
       )
   }
   static_entities.push(sky)
+
+  if has_custom_background {
+    return
+  }
 
   let near_hill = @entity.Entity::new()
   set_sprite_entity(
@@ -373,7 +380,7 @@ fn spawn_player(level : LevelSpec) -> Unit {
   let kept_power = player_state.val.power
   player_state.val = {
     center: level.player_spawn,
-    velocity: @math.Vec2D::zero(),
+    velocity: @math.Vec2::zero(),
     facing_right: true,
     on_ground: false,
     coyote_timer: 0.0,
@@ -385,7 +392,7 @@ fn spawn_player(level : LevelSpec) -> Unit {
     dash_cooldown_timer: 0.0,
     air_dashes_left: movement.max_air_dashes,
     wall_contact_dir: 0,
-    dash_dir: @math.Vec2D::zero(),
+    dash_dir: @math.Vec2::zero(),
     wall_stamina: movement.wall_stamina_max,
     spring_cooldown_timer: 0.0,
     power: kept_power,
@@ -441,8 +448,8 @@ fn spawn_enemy(spawn : EnemySpawn) -> Unit {
 ///|
 fn spawn_item(
   kind : ItemKind,
-  center : @math.Vec2D,
-  velocity? : @math.Vec2D = @math.Vec2D::zero(),
+  center : @math.Vec2,
+  velocity? : @math.Vec2 = @math.Vec2::zero(),
   emerging? : Bool = false,
 ) -> Unit {
   let entity = @entity.Entity::new()
@@ -465,7 +472,7 @@ fn spawn_item(
 }
 
 ///|
-fn spawn_player_fireball(center : @math.Vec2D, facing_right : Bool) -> Unit {
+fn spawn_player_fireball(center : @math.Vec2, facing_right : Bool) -> Unit {
   let entity = @entity.Entity::new()
   fireball_entities.set(entity, {
     center,

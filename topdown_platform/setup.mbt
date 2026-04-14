@@ -106,7 +106,7 @@ fn ensure_text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_xy(x, y, z))
   set_entity_visible(entity, true)
 }
@@ -115,9 +115,9 @@ fn ensure_text_entity(
 fn ensure_world_background() -> Unit {
   let sprite = @sprite.Sprite::from_color(
     color_rgba(29U, 35U, 43U, 1.0),
-    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+    @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
   )
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(world_bg_entity, sprite)
   @transform.transforms().set(world_bg_entity, transform_xy(0.0, 0.0, 0.0))
   set_entity_visible(world_bg_entity, true)
@@ -127,16 +127,16 @@ fn ensure_world_background() -> Unit {
 fn set_image_sprite_entity(
   entity : @entity.Entity,
   visual : ImageVisualDef,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   base_size : Double,
   z : Double,
 ) -> Unit {
   let size = base_size * visual.scale
   let sprite = @sprite.Sprite::from_image(
     image_handle(visual.path),
-    custom_size=Some(@math.Vec2D(size, size)),
+    custom_size=Some(@math.Vec2(size, size)),
   )
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(
     entity,
@@ -168,7 +168,7 @@ fn parse_world_map() -> Unit {
     for col = 0; col < world_state.cols; col = col + 1 {
       let code = line.unsafe_get(col).unsafe_to_char()
       let rule = map.legend.get(code).unwrap()
-      let center = @math.Vec2D(
+      let center = @math.Vec2(
         (col.to_double() + 0.5) * world_state.tile_size,
         (row.to_double() + 0.5) * world_state.tile_size,
       )
@@ -202,11 +202,11 @@ fn parse_world_map() -> Unit {
 
       if rule.blocks || rule.kind == Wall {
         world_state.blocking_rects.push({
-          position: @math.Vec2D(
+          position: @math.Vec2(
             col.to_double() * world_state.tile_size + WALL_PADDING,
             row.to_double() * world_state.tile_size + WALL_PADDING,
           ),
-          size: @math.Vec2D(
+          size: @math.Vec2(
             world_state.tile_size - WALL_PADDING * 2.0,
             world_state.tile_size - WALL_PADDING * 2.0,
           ),
@@ -258,9 +258,9 @@ fn setup_ui_entities() -> Unit {
   )
   let flash = @sprite.Sprite::from_color(
     color_rgba(255U, 255U, 255U, 0.0),
-    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+    @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
   )
-  flash.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  flash.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(attack_flash_entity, flash)
   @transform.transforms().set(
     attack_flash_entity,
@@ -315,7 +315,7 @@ fn reset_run_state() -> Unit {
   run_state.pickups_collected = 0
   run_state.status_message = ""
 
-  combat_state.move_intent = @math.Vec2D(0.0, 0.0)
+  combat_state.move_intent = @math.Vec2(0.0, 0.0)
   combat_state.primary_requested = false
   combat_state.secondary_requested = false
   combat_state.attack_flash_ttl = 0.0
@@ -352,7 +352,7 @@ fn spawn_player() -> Unit {
     moving: false,
     anim_elapsed: 0.0,
     last_sprite_path: "",
-    ai_wander_dir: @math.Vec2D(0.0, 0.0),
+    ai_wander_dir: @math.Vec2(0.0, 0.0),
     ai_wander_timer: 0.0,
   })
 }

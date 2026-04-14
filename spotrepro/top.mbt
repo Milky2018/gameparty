@@ -164,7 +164,7 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
-fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
+fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
     translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
@@ -329,11 +329,11 @@ fn update_stage_visuals() -> Unit {
   @text2d.text2ds().set(label_entity, @text2d.Text2d::new())
   @text2d.text_anchors().set(
     label_entity,
-    @sprite.Anchor(@math.Vec2D(-0.5, 0.5)),
+    @sprite.Anchor(@math.Vec2(-0.5, 0.5)),
   )
   @transform.transforms().set(
     label_entity,
-    transform_2d(@math.Vec2D(12.0, 12.0), 400),
+    transform_2d(@math.Vec2(12.0, 12.0), 400),
   )
   @visibility.visibilities().set(label_entity, Visible)
 }
@@ -348,7 +348,7 @@ fn setup_camera() -> Unit {
   @camera3d.cameras3d().set(camera_entity, {
     ..@camera3d.Camera3DComponent::default(),
     projection: Orthographic,
-    orthographic_size: Some(@math.Vec2D(16.0, 16.0)),
+    orthographic_size: Some(@math.Vec2(16.0, 16.0)),
     near: 0.01,
     far: 100.0,
     clear_color: color_rgba(5U, 6U, 10U, 1.0),

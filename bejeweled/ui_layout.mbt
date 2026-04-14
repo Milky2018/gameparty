@@ -6,10 +6,10 @@ fn setup_flash_legend_icon(
   center_x : Double,
   center_y : Double,
 ) -> Unit {
-  let center = @math.Vec2D(center_x, center_y)
+  let center = @math.Vec2(center_x, center_y)
   let size_value = 38.0
-  let size = @math.Vec2D(size_value, size_value)
-  let top_left = @math.Vec2D(
+  let size = @math.Vec2(size_value, size_value)
+  let top_left = @math.Vec2(
     center[X] - size[X] * 0.5,
     center[Y] - size[Y] * 0.5,
   )
@@ -17,7 +17,7 @@ fn setup_flash_legend_icon(
     gem_image(kind),
     custom_size=Some(size),
   )
-  gem_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  gem_sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, gem_sprite)
   @transform.transforms().set(
     entity,
@@ -27,8 +27,8 @@ fn setup_flash_legend_icon(
 
   let aura_virtual_size_value = size_value * FLASH_AURA_SCALE
   let aura_clip_size_value = 46.0
-  let aura_size = @math.Vec2D(aura_clip_size_value, aura_clip_size_value)
-  let aura_top_left = @math.Vec2D(
+  let aura_size = @math.Vec2(aura_clip_size_value, aura_clip_size_value)
+  let aura_top_left = @math.Vec2(
     center[X] - aura_size[X] * 0.5,
     center[Y] - aura_size[Y] * 0.5,
   )
@@ -41,11 +41,11 @@ fn setup_flash_legend_icon(
     clip_ratio_unclamped
   }
   let source_size = gem_image_size(kind)
-  let source_clip_size = @math.Vec2D(
+  let source_clip_size = @math.Vec2(
     source_size[X] * clip_ratio,
     source_size[Y] * clip_ratio,
   )
-  let source_clip_pos = @math.Vec2D(
+  let source_clip_pos = @math.Vec2(
     (source_size[X] - source_clip_size[X]) * 0.5,
     (source_size[Y] - source_clip_size[Y]) * 0.5,
   )
@@ -62,7 +62,7 @@ fn setup_flash_legend_icon(
     FLASH_AURA_ALPHA
   }
   aura_sprite.color = { ..gem_aura_color(kind), a: aura_alpha }
-  aura_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  aura_sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(aura_entity, aura_sprite)
   @transform.transforms().set(
     aura_entity,
@@ -209,7 +209,7 @@ fn setup_static_text() -> Unit {
   )
   @text2d.text_anchors().set(
     overlay_text_entity,
-    @sprite.Anchor(@math.Vec2D(0.0, 0.0)),
+    @sprite.Anchor(@math.Vec2(0.0, 0.0)),
   )
   @text2d.text_bounds().set(
     overlay_text_entity,

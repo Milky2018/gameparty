@@ -93,7 +93,7 @@ fn handle_inventory_toggle() -> Unit {
       ..inventory_state.val,
       open: next_open,
       cursor: if next_open {
-        @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0)
+        @math.Vec2(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0)
       } else {
         inventory_state.val.cursor
       },
@@ -109,7 +109,7 @@ fn update_inventory_cursor() -> Unit {
   let movement = @inputs.mouse_movement.movement
   inventory_state.val = {
     ..inventory_state.val,
-    cursor: @math.Vec2D(
+    cursor: @math.Vec2(
       inventory_state.val.cursor[X] + movement[X],
       inventory_state.val.cursor[Y] + movement[Y],
     ),

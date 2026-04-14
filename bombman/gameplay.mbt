@@ -896,7 +896,7 @@ pub fn input_system(_world : @ecs.World) -> Unit {
 
 ///|
 fn circle_overlaps_rect(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   rect : Rect,
 ) -> Bool {
@@ -909,9 +909,9 @@ fn circle_overlaps_rect(
 
 ///|
 fn circle_overlaps_circle(
-  a_center : @math.Vec2D,
+  a_center : @math.Vec2,
   a_radius : Double,
-  b_center : @math.Vec2D,
+  b_center : @math.Vec2,
   b_radius : Double,
 ) -> Bool {
   let dx = a_center[X] - b_center[X]
@@ -922,7 +922,7 @@ fn circle_overlaps_circle(
 
 ///|
 fn solid_tile_rects_near(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   padding : Double,
 ) -> Array[Rect] {
@@ -959,12 +959,12 @@ fn solid_tile_rects_near(
 }
 
 ///|
-fn solid_bomb_centers_for_player(index : Int) -> Array[@math.Vec2D] {
+fn solid_bomb_centers_for_player(index : Int) -> Array[@math.Vec2] {
   movement_player_bomb_centers[index]
 }
 
 ///|
-fn solid_bomb_centers_for_enemy() -> Array[@math.Vec2D] {
+fn solid_bomb_centers_for_enemy() -> Array[@math.Vec2] {
   movement_enemy_bomb_centers
 }
 
@@ -998,7 +998,7 @@ fn resolve_circle_rects_on_x(
     return resolved_x
   }
   for rect in rects {
-    if circle_overlaps_rect(@math.Vec2D(resolved_x, y), radius, rect) {
+    if circle_overlaps_rect(@math.Vec2(resolved_x, y), radius, rect) {
       if delta_x > 0.0 {
         let candidate = rect.left - radius
         if resolved_x > candidate {
@@ -1028,7 +1028,7 @@ fn resolve_circle_rects_on_y(
     return resolved_y
   }
   for rect in rects {
-    if circle_overlaps_rect(@math.Vec2D(x, resolved_y), radius, rect) {
+    if circle_overlaps_rect(@math.Vec2(x, resolved_y), radius, rect) {
       if delta_y > 0.0 {
         let candidate = rect.top - radius
         if resolved_y > candidate {
@@ -1051,7 +1051,7 @@ fn resolve_circle_bombs_on_x(
   y : Double,
   radius : Double,
   delta_x : Double,
-  bomb_centers : Array[@math.Vec2D],
+  bomb_centers : Array[@math.Vec2],
 ) -> Double {
   let mut resolved_x = x
   if delta_x == 0.0 {
@@ -1064,7 +1064,7 @@ fn resolve_circle_bombs_on_x(
       continue
     }
     if circle_overlaps_circle(
-        @math.Vec2D(resolved_x, y),
+        @math.Vec2(resolved_x, y),
         radius,
         bomb_center,
         BOMB_RADIUS,
@@ -1092,7 +1092,7 @@ fn resolve_circle_bombs_on_y(
   y : Double,
   radius : Double,
   delta_y : Double,
-  bomb_centers : Array[@math.Vec2D],
+  bomb_centers : Array[@math.Vec2],
 ) -> Double {
   let mut resolved_y = y
   if delta_y == 0.0 {
@@ -1105,7 +1105,7 @@ fn resolve_circle_bombs_on_y(
       continue
     }
     if circle_overlaps_circle(
-        @math.Vec2D(x, resolved_y),
+        @math.Vec2(x, resolved_y),
         radius,
         bomb_center,
         BOMB_RADIUS,
@@ -1129,12 +1129,12 @@ fn resolve_circle_bombs_on_y(
 
 ///|
 fn move_circle_with_colliders(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   direction : Direction,
   distance : Double,
-  bomb_centers : Array[@math.Vec2D],
-) -> @math.Vec2D {
+  bomb_centers : Array[@math.Vec2],
+) -> @math.Vec2 {
   let direction_vec = direction_vector(direction)
   let delta_x = direction_vec[X] * distance
   let delta_y = direction_vec[Y] * distance
@@ -1152,7 +1152,7 @@ fn move_circle_with_colliders(
     delta_x,
     bomb_centers,
   )
-  let moved_x = @math.Vec2D(x, center[Y])
+  let moved_x = @math.Vec2(x, center[Y])
   let y = resolve_circle_bombs_on_y(
     moved_x[X],
     resolve_circle_rects_on_y(
@@ -1166,13 +1166,13 @@ fn move_circle_with_colliders(
     delta_y,
     bomb_centers,
   )
-  @math.Vec2D(moved_x[X], y)
+  @math.Vec2(moved_x[X], y)
 }
 
 ///|
 fn distance_moved_in_direction(
-  start : @math.Vec2D,
-  end_ : @math.Vec2D,
+  start : @math.Vec2,
+  end_ : @math.Vec2,
   direction : Direction,
 ) -> Double {
   match direction {
@@ -1183,17 +1183,17 @@ fn distance_moved_in_direction(
 
 ///|
 fn snap_center_for_direction(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   direction : Direction,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   match direction {
-    Up | Down => @math.Vec2D(nearest_lane_center_x(center[X]), center[Y])
-    Left | Right => @math.Vec2D(center[X], nearest_lane_center_y(center[Y]))
+    Up | Down => @math.Vec2(nearest_lane_center_x(center[X]), center[Y])
+    Left | Right => @math.Vec2(center[X], nearest_lane_center_y(center[Y]))
   }
 }
 
 ///|
-fn within_turn_assist(center : @math.Vec2D, direction : Direction) -> Bool {
+fn within_turn_assist(center : @math.Vec2, direction : Direction) -> Bool {
   match direction {
     Up | Down =>
       abs_double(center[X] - nearest_lane_center_x(center[X])) <= TURN_ASSIST_PX
@@ -1205,10 +1205,10 @@ fn within_turn_assist(center : @math.Vec2D, direction : Direction) -> Bool {
 ///|
 fn move_player_in_direction(
   player_index_ : Int,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   direction : Direction,
   distance : Double,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   move_circle_with_colliders(
     center,
     players[player_index_].radius,
@@ -1220,11 +1220,11 @@ fn move_player_in_direction(
 
 ///|
 fn move_enemy_in_direction(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   direction : Direction,
   distance : Double,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   move_circle_with_colliders(
     center,
     radius,
@@ -1591,7 +1591,7 @@ fn tick_soft_wall_breaks(delta : Double) -> Unit {
 }
 
 ///|
-fn enemy_at_junction(center : @math.Vec2D, step : Double) -> Bool {
+fn enemy_at_junction(center : @math.Vec2, step : Double) -> Bool {
   abs_double(center[X] - nearest_lane_center_x(center[X])) <=
   step + COLLISION_EPSILON &&
   abs_double(center[Y] - nearest_lane_center_y(center[Y])) <=
@@ -1664,7 +1664,7 @@ fn tick_enemies(delta : Double) -> Unit {
 }
 
 ///|
-fn flame_contains_center(center : @math.Vec2D) -> Bool {
+fn flame_contains_center(center : @math.Vec2) -> Bool {
   let (cell_x, cell_y) = world_to_cell(center)
   flames.any(fn(flame) {
     flame.damage_timer > 0.0 && flame.cell_x == cell_x && flame.cell_y == cell_y

@@ -25,7 +25,7 @@ pub fn sprite_region(
 ) -> SpriteRegion {
   {
     path,
-    rect: { position: @math.Vec2D(x, y), size: @math.Vec2D(width, height) },
+    rect: { position: @math.Vec2(x, y), size: @math.Vec2(width, height) },
   }
 }
 
@@ -105,8 +105,8 @@ pub fn movement_profile(
 
 ///|
 pub fn block(
-  center : @math.Vec2D,
-  size : @math.Vec2D,
+  center : @math.Vec2,
+  size : @math.Vec2,
   kind : TileKind,
   payload? : ItemKind? = None,
 ) -> SolidBlock {
@@ -115,7 +115,7 @@ pub fn block(
 
 ///|
 pub fn enemy_spawn(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   patrol_left : Double,
   patrol_right : Double,
   facing_right? : Bool = true,
@@ -127,9 +127,9 @@ pub fn enemy_spawn(
 ///|
 pub fn level(
   name : String,
-  player_spawn : @math.Vec2D,
-  goal_center : @math.Vec2D,
-  goal_size : @math.Vec2D,
+  player_spawn : @math.Vec2,
+  goal_center : @math.Vec2,
+  goal_size : @math.Vec2,
   world_width : Double,
   blocks : Array[SolidBlock],
   enemy_spawns? : Array[EnemySpawn] = [],

@@ -26,7 +26,7 @@ fn set_gem_visual(
   aura_entity : @entity.Entity,
   kind : GemKind,
   flash : Bool,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   z : Double,
   scale : Double,
   alpha : Double,
@@ -34,8 +34,8 @@ fn set_gem_visual(
   let clamped_scale = if scale <= 0.01 { 0.01 } else { scale }
   let clamped_alpha = clamp01(alpha)
   let size_value = CELL_SIZE * 0.75 * clamped_scale
-  let size = @math.Vec2D(size_value, size_value)
-  let top_left = @math.Vec2D(
+  let size = @math.Vec2(size_value, size_value)
+  let top_left = @math.Vec2(
     center[X] - size[X] * 0.5,
     center[Y] - size[Y] * 0.5,
   )
@@ -44,7 +44,7 @@ fn set_gem_visual(
     custom_size=Some(size),
   )
   sprite.color = { r: 255U, g: 255U, b: 255U, a: clamped_alpha }
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(
     entity,
@@ -58,8 +58,8 @@ fn set_gem_visual(
     let aura_virtual_size_value = size_value * aura_virtual_scale
     let aura_clip_size_value = CELL_SIZE -
       BOARD_GAP * FLASH_AURA_CLIP_GAP_FACTOR
-    let aura_size = @math.Vec2D(aura_clip_size_value, aura_clip_size_value)
-    let aura_top_left = @math.Vec2D(
+    let aura_size = @math.Vec2(aura_clip_size_value, aura_clip_size_value)
+    let aura_top_left = @math.Vec2(
       center[X] - aura_size[X] * 0.5,
       center[Y] - aura_size[Y] * 0.5,
     )
@@ -72,11 +72,11 @@ fn set_gem_visual(
       clip_ratio_unclamped
     }
     let source_size = gem_image_size(kind)
-    let source_clip_size = @math.Vec2D(
+    let source_clip_size = @math.Vec2(
       source_size[X] * clip_ratio,
       source_size[Y] * clip_ratio,
     )
-    let source_clip_pos = @math.Vec2D(
+    let source_clip_pos = @math.Vec2(
       (source_size[X] - source_clip_size[X]) * 0.5,
       (source_size[Y] - source_clip_size[Y]) * 0.5,
     )
@@ -93,7 +93,7 @@ fn set_gem_visual(
       size: source_clip_size,
     })
     aura_sprite.color = aura_color
-    aura_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+    aura_sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
     @sprite.sprites().set(aura_entity, aura_sprite)
     @transform.transforms().set(
       aura_entity,
@@ -647,7 +647,7 @@ fn apply_active_tweens() -> Unit {
       clamp01(game_state.resolution_elapsed / tween.duration)
     }
     let eased = smoothstep(local_t)
-    let center = @math.Vec2D(
+    let center = @math.Vec2(
       lerp(tween.from_x, tween.to_x, eased),
       lerp(tween.from_y, tween.to_y, eased),
     )

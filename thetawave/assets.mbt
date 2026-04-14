@@ -290,29 +290,29 @@ fn animated_sprite(
   ignore(fps)
   atlas_frame_sprite(
     texture,
-    @math.Vec2D(frame_width, frame_height),
-    @math.Vec2D::zero(),
+    @math.Vec2(frame_width, frame_height),
+    @math.Vec2::zero(),
     zindex,
-    offset=@math.Vec2D(-frame_width / 2.0, -frame_height / 2.0),
+    offset=@math.Vec2(-frame_width / 2.0, -frame_height / 2.0),
   )
 }
 
 ///|
 fn sprite_anchor_from_offset(
-  size : @math.Vec2D,
-  offset : @math.Vec2D,
+  size : @math.Vec2,
+  offset : @math.Vec2,
 ) -> @sprite.Anchor {
   let x = -offset[X] / size[X] - 0.5
   let y = offset[Y] / size[Y] + 0.5
-  @sprite.Anchor(@math.Vec2D(x, y))
+  @sprite.Anchor(@math.Vec2(x, y))
 }
 
 ///|
 fn image_sprite(
   texture : String,
-  size : @math.Vec2D,
+  size : @math.Vec2,
   zindex : Int,
-  offset? : @math.Vec2D = @math.Vec2D::zero(),
+  offset? : @math.Vec2 = @math.Vec2::zero(),
 ) -> @sprite.Sprite {
   ignore(zindex)
   let sprite = @sprite.Sprite::from_image(
@@ -326,10 +326,10 @@ fn image_sprite(
 ///|
 fn atlas_frame_sprite(
   texture : String,
-  size : @math.Vec2D,
-  atlas_offset : @math.Vec2D,
+  size : @math.Vec2,
+  atlas_offset : @math.Vec2,
   zindex : Int,
-  offset? : @math.Vec2D = @math.Vec2D::zero(),
+  offset? : @math.Vec2 = @math.Vec2::zero(),
 ) -> @sprite.Sprite {
   ignore(zindex)
   let sprite = @sprite.Sprite::from_image(
@@ -343,13 +343,13 @@ fn atlas_frame_sprite(
 
 ///|
 fn color_rect_sprite(
-  size : @math.Vec2D,
+  size : @math.Vec2,
   color : String,
   zindex : Int,
 ) -> @sprite.Sprite {
   ignore(zindex)
   let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   sprite
 }
 
@@ -357,9 +357,9 @@ fn color_rect_sprite(
 fn menu_logo_sprite() -> @sprite.Sprite {
   image_sprite(
     THETAWAVE_LOGO_TEXTURE,
-    @math.Vec2D(364.0, 152.0),
+    @math.Vec2(364.0, 152.0),
     90,
-    offset=@math.Vec2D::zero(),
+    offset=@math.Vec2::zero(),
   )
 }
 
@@ -368,10 +368,10 @@ fn menu_button_background_sprite(selected : Bool) -> @sprite.Sprite {
   let y_offset = if selected { 34.0 } else { 0.0 }
   atlas_frame_sprite(
     MENU_BUTTON_SPRITESHEET_TEXTURE,
-    @math.Vec2D(160.0, 34.0),
-    @math.Vec2D(0.0, y_offset),
+    @math.Vec2(160.0, 34.0),
+    @math.Vec2(0.0, y_offset),
     89,
-    offset=@math.Vec2D::zero(),
+    offset=@math.Vec2::zero(),
   )
 }
 
@@ -383,9 +383,9 @@ fn character_portrait_sprite(character : CharacterType) -> @sprite.Sprite {
   }
   image_sprite(
     texture,
-    @math.Vec2D(width * 4.0, height * 4.0),
+    @math.Vec2(width * 4.0, height * 4.0),
     90,
-    offset=@math.Vec2D(-width * 2.0, -height * 2.0),
+    offset=@math.Vec2(-width * 2.0, -height * 2.0),
   )
 }
 
@@ -401,9 +401,9 @@ fn character_carousel_portrait_sprite(
   let scale = if center { 4.0 } else { 3.0 }
   image_sprite(
     texture,
-    @math.Vec2D(width * scale, height * scale),
+    @math.Vec2(width * scale, height * scale),
     90,
-    offset=@math.Vec2D(-width * scale / 2.0, -height * scale / 2.0),
+    offset=@math.Vec2(-width * scale / 2.0, -height * scale / 2.0),
   )
 }
 
@@ -415,9 +415,9 @@ fn character_description_sprite(character : CharacterType) -> @sprite.Sprite {
   }
   image_sprite(
     texture,
-    @math.Vec2D(200.0, 150.0),
+    @math.Vec2(200.0, 150.0),
     90,
-    offset=@math.Vec2D(-100.0, -75.0),
+    offset=@math.Vec2(-100.0, -75.0),
   )
 }
 
@@ -425,9 +425,9 @@ fn character_description_sprite(character : CharacterType) -> @sprite.Sprite {
 fn character_ability_slot_sprite() -> @sprite.Sprite {
   image_sprite(
     ABILITY_SQUARE_LEFT_TEXTURE,
-    @math.Vec2D(32.0, 32.0),
+    @math.Vec2(32.0, 32.0),
     90,
-    offset=@math.Vec2D(-16.0, -16.0),
+    offset=@math.Vec2(-16.0, -16.0),
   )
 }
 
@@ -449,9 +449,9 @@ fn character_ability_icon_sprite(
   }
   image_sprite(
     texture,
-    @math.Vec2D(32.0, 32.0),
+    @math.Vec2(32.0, 32.0),
     91,
-    offset=@math.Vec2D(-16.0, -16.0),
+    offset=@math.Vec2(-16.0, -16.0),
   )
 }
 
@@ -467,9 +467,9 @@ fn character_stat_icon_sprite(stat : CharacterStatType) -> @sprite.Sprite {
   }
   image_sprite(
     texture,
-    @math.Vec2D(16.0, 16.0),
+    @math.Vec2(16.0, 16.0),
     90,
-    offset=@math.Vec2D(-8.0, -8.0),
+    offset=@math.Vec2(-8.0, -8.0),
   )
 }
 
@@ -477,9 +477,9 @@ fn character_stat_icon_sprite(stat : CharacterStatType) -> @sprite.Sprite {
 fn restart_prompt_sprite() -> @sprite.Sprite {
   image_sprite(
     RESTART_GAME_PROMPT_TEXTURE,
-    @math.Vec2D(200.0, 50.0),
+    @math.Vec2(200.0, 50.0),
     95,
-    offset=@math.Vec2D(-100.0, -25.0),
+    offset=@math.Vec2(-100.0, -25.0),
   )
 }
 
@@ -487,9 +487,9 @@ fn restart_prompt_sprite() -> @sprite.Sprite {
 fn hud_health_label_sprite() -> @sprite.Sprite {
   image_sprite(
     HEALTH_BAR_LABEL_TEXTURE,
-    @math.Vec2D(30.0, 266.0),
+    @math.Vec2(30.0, 266.0),
     92,
-    offset=@math.Vec2D(-15.0, -133.0),
+    offset=@math.Vec2(-15.0, -133.0),
   )
 }
 
@@ -497,9 +497,9 @@ fn hud_health_label_sprite() -> @sprite.Sprite {
 fn hud_defense_label_sprite() -> @sprite.Sprite {
   image_sprite(
     DEFENSE_BAR_LABEL_TEXTURE,
-    @math.Vec2D(200.0, 40.0),
+    @math.Vec2(200.0, 40.0),
     92,
-    offset=@math.Vec2D(-100.0, -20.0),
+    offset=@math.Vec2(-100.0, -20.0),
   )
 }
 
@@ -507,9 +507,9 @@ fn hud_defense_label_sprite() -> @sprite.Sprite {
 fn border_gradient_sprite(texture : String, height : Double) -> @sprite.Sprite {
   image_sprite(
     texture,
-    @math.Vec2D(VIEWPORT_WIDTH, height),
+    @math.Vec2(VIEWPORT_WIDTH, height),
     96,
-    offset=@math.Vec2D::zero(),
+    offset=@math.Vec2::zero(),
   )
 }
 
@@ -517,9 +517,9 @@ fn border_gradient_sprite(texture : String, height : Double) -> @sprite.Sprite {
 fn hud_ability_slot_sprite() -> @sprite.Sprite {
   image_sprite(
     ABILITY_SQUARE_LEFT_TEXTURE,
-    @math.Vec2D(32.0, 32.0),
+    @math.Vec2(32.0, 32.0),
     92,
-    offset=@math.Vec2D(-16.0, -16.0),
+    offset=@math.Vec2(-16.0, -16.0),
   )
 }
 
@@ -541,9 +541,9 @@ fn hud_ability_icon_sprite(
   }
   image_sprite(
     texture,
-    @math.Vec2D(32.0, 32.0),
+    @math.Vec2(32.0, 32.0),
     93,
-    offset=@math.Vec2D(-16.0, -16.0),
+    offset=@math.Vec2(-16.0, -16.0),
   )
 }
 
@@ -565,9 +565,9 @@ fn player_sprite(character : CharacterType) -> @sprite.Sprite {
   }
   image_sprite(
     texture,
-    @math.Vec2D(width, height),
+    @math.Vec2(width, height),
     20,
-    offset=@math.Vec2D(-width / 2.0, -height / 2.0),
+    offset=@math.Vec2(-width / 2.0, -height / 2.0),
   )
 }
 
@@ -590,9 +590,9 @@ fn enemy_sprite(kind : EnemyKind) -> @sprite.Sprite {
     MoneyAsteroid =>
       image_sprite(
         MONEY_ASTEROID_TEXTURE,
-        @math.Vec2D(21.0 * s, 21.0 * s),
+        @math.Vec2(21.0 * s, 21.0 * s),
         9,
-        offset=@math.Vec2D(-10.5 * s, -10.5 * s),
+        offset=@math.Vec2(-10.5 * s, -10.5 * s),
       )
     CrustlingRight =>
       animated_sprite(CRUSTLING_TEXTURE, 38.0 * s, 29.0 * s, 3, 4.0, 10)
@@ -607,9 +607,9 @@ fn enemy_sprite(kind : EnemyKind) -> @sprite.Sprite {
     Hauler =>
       image_sprite(
         HAULER_TEXTURE,
-        @math.Vec2D(18.0 * s, 15.0 * s),
+        @math.Vec2(18.0 * s, 15.0 * s),
         11,
-        offset=@math.Vec2D(-9.0 * s, -7.5 * s),
+        offset=@math.Vec2(-9.0 * s, -7.5 * s),
       )
   }
 }
@@ -633,15 +633,15 @@ fn projectile_sprite(
   }
   let size = match kind {
     Blast =>
-      @math.Vec2D(4.0 * GAMEPLAY_SPRITE_SCALE, 4.0 * GAMEPLAY_SPRITE_SCALE)
+      @math.Vec2(4.0 * GAMEPLAY_SPRITE_SCALE, 4.0 * GAMEPLAY_SPRITE_SCALE)
     Bullet =>
-      @math.Vec2D(5.0 * GAMEPLAY_SPRITE_SCALE, 5.0 * GAMEPLAY_SPRITE_SCALE)
+      @math.Vec2(5.0 * GAMEPLAY_SPRITE_SCALE, 5.0 * GAMEPLAY_SPRITE_SCALE)
   }
   image_sprite(
     texture,
     size,
     30,
-    offset=@math.Vec2D(-size[X] / 2.0, -size[Y] / 2.0),
+    offset=@math.Vec2(-size[X] / 2.0, -size[Y] / 2.0),
   )
 }
 
@@ -649,18 +649,18 @@ fn projectile_sprite(
 fn consumable_sprite(kind : ConsumableKind) -> @sprite.Sprite {
   let s = GAMEPLAY_SPRITE_SCALE
   let (texture, size) = match kind {
-    Money1 => (CONSUMABLE_MONEY_TEXTURE, @math.Vec2D(7.0 * s, 7.0 * s))
-    Money3 => (CONSUMABLE_MONEY3_TEXTURE, @math.Vec2D(10.0 * s, 11.0 * s))
-    HealthWrench => (CONSUMABLE_HEALTH_TEXTURE, @math.Vec2D(12.0 * s, 12.0 * s))
-    Armor => (CONSUMABLE_ARMOR_TEXTURE, @math.Vec2D(12.0 * s, 12.0 * s))
+    Money1 => (CONSUMABLE_MONEY_TEXTURE, @math.Vec2(7.0 * s, 7.0 * s))
+    Money3 => (CONSUMABLE_MONEY3_TEXTURE, @math.Vec2(10.0 * s, 11.0 * s))
+    HealthWrench => (CONSUMABLE_HEALTH_TEXTURE, @math.Vec2(12.0 * s, 12.0 * s))
+    Armor => (CONSUMABLE_ARMOR_TEXTURE, @math.Vec2(12.0 * s, 12.0 * s))
     GainProjectiles =>
-      (CONSUMABLE_GAIN_PROJECTILES_TEXTURE, @math.Vec2D(14.0 * s, 14.0 * s))
+      (CONSUMABLE_GAIN_PROJECTILES_TEXTURE, @math.Vec2(14.0 * s, 14.0 * s))
   }
   image_sprite(
     texture,
     size,
     18,
-    offset=@math.Vec2D(-size[X] / 2.0, -size[Y] / 2.0),
+    offset=@math.Vec2(-size[X] / 2.0, -size[Y] / 2.0),
   )
 }
 
@@ -669,13 +669,13 @@ fn item_sprite(kind : ItemKind) -> @sprite.Sprite {
   let s = GAMEPLAY_SPRITE_SCALE
   let (texture, size) = match kind {
     EnhancedPlating =>
-      (ITEM_ENHANCED_PLATING_TEXTURE, @math.Vec2D(24.0 * s, 10.0 * s))
+      (ITEM_ENHANCED_PLATING_TEXTURE, @math.Vec2(24.0 * s, 10.0 * s))
   }
   image_sprite(
     texture,
     size,
     19,
-    offset=@math.Vec2D(-size[X] / 2.0, -size[Y] / 2.0),
+    offset=@math.Vec2(-size[X] / 2.0, -size[Y] / 2.0),
   )
 }
 
@@ -685,7 +685,7 @@ fn background_sprite(kind : BackgroundKind) -> @sprite.Sprite {
     Menu => background_sprite_by_texture(MENU_BG_TEXTURE)
     CharacterSelection =>
       color_rect_sprite(
-        @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+        @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
         "black",
         -100,
       )
@@ -699,8 +699,8 @@ fn background_sprite(kind : BackgroundKind) -> @sprite.Sprite {
 fn background_sprite_by_texture(texture : String) -> @sprite.Sprite {
   image_sprite(
     texture,
-    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+    @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
     -100,
-    offset=@math.Vec2D::zero(),
+    offset=@math.Vec2::zero(),
   )
 }

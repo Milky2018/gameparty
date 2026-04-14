@@ -227,7 +227,7 @@ fn latest_held_direction() -> Direction? {
 
 ///|
 fn mouse_turret_direction(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   fallback : Direction,
 ) -> Direction {
   let mouse = @inputs.mouse.pos
@@ -261,7 +261,7 @@ fn active_enemy_count() -> Int {
 
 ///|
 fn solid_tile_rects_near(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   padding : Double,
 ) -> Array[Rect] {
@@ -336,11 +336,11 @@ fn resolve_circle_rects_on_y(
 
 ///|
 fn move_circle_with_tiles(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   direction : Direction,
   distance : Double,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   let rects = solid_tile_rects_near(center, radius, distance + 2.0)
   match direction {
     Up =>
@@ -380,7 +380,7 @@ fn move_circle_with_tiles(
 
 ///|
 fn tank_can_move(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   direction : Direction,
   distance : Double,
@@ -391,7 +391,7 @@ fn tank_can_move(
 }
 
 ///|
-fn direction_toward_player(center : @math.Vec2D) -> Direction {
+fn direction_toward_player(center : @math.Vec2) -> Direction {
   let dx = player.center[X] - center[X]
   let dy = player.center[Y] - center[Y]
   if abs_double(dx) >= abs_double(dy) {
@@ -455,7 +455,7 @@ fn enemy_should_fire(enemy : EnemyState) -> Bool {
 
 ///|
 fn spawn_bullet_from_tank(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   direction : Direction,
   owner : BulletOwner,
 ) -> Unit {

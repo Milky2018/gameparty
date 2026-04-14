@@ -51,7 +51,7 @@ pub(all) struct ArchetypeDef {
 }
 
 pub struct CombatState {
-  mut move_intent : @math.Vec2D
+  mut move_intent : @math.Vec2
   mut primary_requested : Bool
   mut secondary_requested : Bool
   mut attack_flash_ttl : Double
@@ -85,7 +85,7 @@ pub(all) enum EnemyAiMode {
 } derive(Eq, @debug.Debug)
 
 pub struct EnemySpawnPoint {
-  position : @math.Vec2D
+  position : @math.Vec2
   tag : String?
 }
 
@@ -263,7 +263,7 @@ pub struct WorldState {
   mut cols : Int
   mut world_width : Double
   mut world_height : Double
-  mut player_spawn : @math.Vec2D
+  mut player_spawn : @math.Vec2
   enemy_spawns : Array[EnemySpawnPoint]
   blocking_rects : Array[@math.Rect]
 }

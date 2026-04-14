@@ -206,8 +206,8 @@ pub(all) enum EnemyKind {
 
 ///|
 pub(all) struct SolidBlock {
-  base_center : @math.Vec2D
-  size : @math.Vec2D
+  base_center : @math.Vec2
+  size : @math.Vec2
   mut kind : TileKind
   payload : ItemKind?
 }
@@ -215,7 +215,7 @@ pub(all) struct SolidBlock {
 ///|
 pub(all) struct EnemySpawn {
   kind : EnemyKind
-  center : @math.Vec2D
+  center : @math.Vec2
   patrol_left : Double
   patrol_right : Double
   facing_right : Bool
@@ -224,9 +224,9 @@ pub(all) struct EnemySpawn {
 ///|
 pub(all) struct LevelSpec {
   name : String
-  player_spawn : @math.Vec2D
-  goal_center : @math.Vec2D
-  goal_size : @math.Vec2D
+  player_spawn : @math.Vec2
+  goal_center : @math.Vec2
+  goal_size : @math.Vec2
   world_width : Double
   blocks : Array[SolidBlock]
   enemy_spawns : Array[EnemySpawn]
@@ -320,8 +320,8 @@ pub(all) struct PlatformerPluginDef {
 
 ///|
 priv struct PlayerState {
-  mut center : @math.Vec2D
-  mut velocity : @math.Vec2D
+  mut center : @math.Vec2
+  mut velocity : @math.Vec2
   mut facing_right : Bool
   mut on_ground : Bool
   mut coyote_timer : Double
@@ -333,7 +333,7 @@ priv struct PlayerState {
   mut dash_cooldown_timer : Double
   mut air_dashes_left : Int
   mut wall_contact_dir : Int
-  mut dash_dir : @math.Vec2D
+  mut dash_dir : @math.Vec2
   mut wall_stamina : Double
   mut spring_cooldown_timer : Double
   mut power : PowerState
@@ -345,8 +345,8 @@ priv struct PlayerState {
 ///|
 priv struct EnemyState {
   kind : EnemyKind
-  mut center : @math.Vec2D
-  mut velocity : @math.Vec2D
+  mut center : @math.Vec2
+  mut velocity : @math.Vec2
   mut facing_right : Bool
   mut on_ground : Bool
   mut alive : Bool
@@ -357,8 +357,8 @@ priv struct EnemyState {
 ///|
 priv struct ItemState {
   kind : ItemKind
-  mut center : @math.Vec2D
-  mut velocity : @math.Vec2D
+  mut center : @math.Vec2
+  mut velocity : @math.Vec2
   mut emerging : Bool
   emerge_target_y : Double
   mut alive : Bool
@@ -366,8 +366,8 @@ priv struct ItemState {
 
 ///|
 priv struct FireballState {
-  mut center : @math.Vec2D
-  mut velocity : @math.Vec2D
+  mut center : @math.Vec2
+  mut velocity : @math.Vec2
   mut lifetime : Double
   mut alive : Bool
 }
@@ -433,8 +433,8 @@ let profile_slowest_frame : Ref[Double] = { val: 0.0 }
 ///|
 let player_state : Ref[PlayerState] = {
   val: {
-    center: @math.Vec2D::zero(),
-    velocity: @math.Vec2D::zero(),
+    center: @math.Vec2::zero(),
+    velocity: @math.Vec2::zero(),
     facing_right: true,
     on_ground: false,
     coyote_timer: 0.0,
@@ -446,7 +446,7 @@ let player_state : Ref[PlayerState] = {
     dash_cooldown_timer: 0.0,
     air_dashes_left: 0,
     wall_contact_dir: 0,
-    dash_dir: @math.Vec2D::zero(),
+    dash_dir: @math.Vec2::zero(),
     wall_stamina: 0.0,
     spring_cooldown_timer: 0.0,
     power: Small,
@@ -728,12 +728,12 @@ fn rgb(r : UInt, g : UInt, b : UInt, a? : Double = 1.0) -> @render.Color {
 }
 
 ///|
-fn vec2(x : Double, y : Double) -> @math.Vec2D {
-  @math.Vec2D(x, y)
+fn vec2(x : Double, y : Double) -> @math.Vec2 {
+  @math.Vec2(x, y)
 }
 
 ///|
-fn rect_from_center(center : @math.Vec2D, size : @math.Vec2D) -> @math.Rect {
+fn rect_from_center(center : @math.Vec2, size : @math.Vec2) -> @math.Rect {
   { position: center - size.scalar_mul(0.5), size }
 }
 

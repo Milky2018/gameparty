@@ -15,7 +15,7 @@ priv enum FormationSpawnKind {
 ///|
 priv struct FormationSpawn {
   kind : FormationSpawnKind
-  world_pos : @math.Vec2D
+  world_pos : @math.Vec2
 }
 
 ///|
@@ -34,17 +34,17 @@ priv struct RunStage {
   spawn_start_delay : Double
   formations : Array[Formation]
   boss_kind : EnemyKind?
-  boss_world_pos : @math.Vec2D?
+  boss_world_pos : @math.Vec2?
 }
 
 ///|
 fn spawn(kind : EnemyKind, x : Double, y : Double) -> FormationSpawn {
-  { kind: Enemy(kind), world_pos: @math.Vec2D(x, y) }
+  { kind: Enemy(kind), world_pos: @math.Vec2(x, y) }
 }
 
 ///|
 fn spawn_loot(kind : ConsumableKind, x : Double, y : Double) -> FormationSpawn {
-  { kind: Consumable(kind), world_pos: @math.Vec2D(x, y) }
+  { kind: Consumable(kind), world_pos: @math.Vec2(x, y) }
 }
 
 ///|
@@ -563,7 +563,7 @@ fn boss_stage(kind : EnemyKind) -> RunStage {
     spawn_start_delay: 5.0,
     formations: [],
     boss_kind: Some(kind),
-    boss_world_pos: Some(@math.Vec2D(0.0, 600.0)),
+    boss_world_pos: Some(@math.Vec2(0.0, 600.0)),
   }
 }
 
@@ -624,17 +624,14 @@ fn current_stage() -> RunStage? {
 }
 
 ///|
-fn spawn_from_world(world_pos : @math.Vec2D, radius : Double) -> @math.Vec2D {
+fn spawn_from_world(world_pos : @math.Vec2, radius : Double) -> @math.Vec2 {
   let x = VIEWPORT_WIDTH / 2.0 + world_pos[X] * WORLD_X_SCALE
   let y = -40.0 - (world_pos[Y] - 500.0) * WORLD_Y_SCALE
-  @math.Vec2D(clamp(x, radius, VIEWPORT_WIDTH - radius), y)
+  @math.Vec2(clamp(x, radius, VIEWPORT_WIDTH - radius), y)
 }
 
 ///|
-fn spawn_from_world_for(
-  kind : EnemyKind,
-  world_pos : @math.Vec2D,
-) -> @math.Vec2D {
+fn spawn_from_world_for(kind : EnemyKind, world_pos : @math.Vec2) -> @math.Vec2 {
   spawn_from_world(world_pos, enemy_radius(kind))
 }
 

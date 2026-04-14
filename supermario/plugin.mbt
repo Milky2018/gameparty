@@ -14,6 +14,15 @@ const SFC_ENEMIES_SHEET_PATH : String = "assets/supermario/sfc/runtime_enemies.p
 const SFC_TILES_SHEET_PATH : String = "assets/supermario/sfc/runtime_tiles.png"
 
 ///|
+const SFC_PIPES_SHEET_PATH : String = "assets/supermario/sfc/runtime_pipes.png"
+
+///|
+const SFC_GROUND_SHEET_PATH : String = "assets/supermario/sfc/tiles-ground_keyed.png"
+
+///|
+const SFC_BACKGROUND_PATH : String = "assets/supermario/sfc/runtime_background_02.png"
+
+///|
 const MARIO_FRAME_ORIGIN_X : Double = 8.0
 
 ///|
@@ -49,8 +58,8 @@ fn atlas(
 }
 
 ///|
-fn vec2(x : Double, y : Double) -> @math.Vec2D {
-  @math.Vec2D(x, y)
+fn vec2(x : Double, y : Double) -> @math.Vec2 {
+  @math.Vec2(x, y)
 }
 
 ///|
@@ -142,6 +151,56 @@ fn tile_frame_with_offset(
   height? : Double = 16.0,
 ) -> @platformer_platform.SpriteRegion {
   atlas(SFC_TILES_SHEET_PATH, x, y, width, height)
+}
+
+///|
+fn pipe_frame(
+  col : Int,
+  row : Int,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  frame_from_grid(
+    SFC_PIPES_SHEET_PATH,
+    0.0,
+    0.0,
+    16.0,
+    16.0,
+    col,
+    row,
+    width~,
+    height~,
+  )
+}
+
+///|
+fn pipe_frame_with_offset(
+  x : Double,
+  y : Double,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  atlas(SFC_PIPES_SHEET_PATH, x, y, width, height)
+}
+
+///|
+fn ground_frame(
+  col : Int,
+  row : Int,
+  width? : Double = 16.0,
+  height? : Double = 16.0,
+) -> @platformer_platform.SpriteRegion {
+  frame_from_grid(
+    SFC_GROUND_SHEET_PATH,
+    0.0,
+    0.0,
+    16.0,
+    16.0,
+    col,
+    row,
+    width~,
+    height~,
+  )
 }
 
 ///|
@@ -448,13 +507,14 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
           enemy_frame(1, 0, height=27.0),
           enemy_frame(2, 0, height=27.0),
         ]),
-        tile_ground_region=Some(tile_frame(9, 16)),
-        tile_brick_region=Some(tile_frame(9, 14)),
-        tile_pipe_region=Some(tile_frame(9, 15)),
-        tile_pipe_body_region=Some(tile_frame(9, 16)),
+        tile_ground_region=Some(ground_frame(44, 3)),
+        tile_brick_region=Some(tile_frame(4, 0)),
+        tile_pipe_region=Some(pipe_frame_with_offset(16.0, 81.0, height=15.0)),
+        tile_pipe_body_region=Some(pipe_frame(1, 6)),
         tile_spike_region=Some(tile_frame(7, 16)),
         tile_question_region=Some(tile_frame_with_offset(207.0, 181.0)),
-        tile_used_region=Some(tile_frame_with_offset(192.0, 165.0)),
+        tile_used_region=Some(tile_frame(4, 0)),
+        background_path=Some(SFC_BACKGROUND_PATH),
       ),
     ),
     movement=Some(

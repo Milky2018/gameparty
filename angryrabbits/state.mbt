@@ -29,10 +29,10 @@ let current_level_path : Ref[String] = { val: DEFAULT_LEVEL_PATH }
 let current_level : Ref[LevelDef?] = { val: None }
 
 ///|
-fn slingshot_anchor() -> @math.Vec2D {
+fn slingshot_anchor() -> @math.Vec2 {
   match current_level.val {
     Some(level) => level.slingshot_anchor
-    None => @math.Vec2D::zero()
+    None => @math.Vec2::zero()
   }
 }
 
@@ -359,8 +359,8 @@ priv enum CameraMode {
 ///|
 priv struct RabbitState {
   entity : @entity.Entity
-  center : @math.Vec2D
-  velocity : @math.Vec2D
+  center : @math.Vec2
+  velocity : @math.Vec2
   rotation : Double
   visible : Bool
   state : BirdState
@@ -371,9 +371,9 @@ priv struct RabbitState {
 ///|
 priv struct BlockState {
   entity : @entity.Entity
-  center : @math.Vec2D
-  size : @math.Vec2D
-  velocity : @math.Vec2D
+  center : @math.Vec2
+  size : @math.Vec2
+  velocity : @math.Vec2
   rotation : Double
   health : Double
   alive : Bool
@@ -382,9 +382,9 @@ priv struct BlockState {
 ///|
 priv struct TargetState {
   entity : @entity.Entity
-  center : @math.Vec2D
+  center : @math.Vec2
   radius : Double
-  velocity : @math.Vec2D
+  velocity : @math.Vec2
   rotation : Double
   health : Double
   alive : Bool
@@ -406,10 +406,10 @@ let shots_remaining : Ref[Int] = { val: MAX_SHOTS }
 let load_error_message : Ref[String] = { val: "" }
 
 ///|
-let rabbit_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let rabbit_center : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let rabbit_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let rabbit_velocity : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
 let rabbit_visible : Ref[Bool] = { val: true }
@@ -484,10 +484,10 @@ let target_entities : Array[@entity.Entity] = []
 let rabbit_motion_kind : Ref[RabbitMotionKind] = { val: RabbitMotionNone }
 
 ///|
-let rabbit_motion_start : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let rabbit_motion_start : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let rabbit_motion_end : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let rabbit_motion_end : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
 let rabbit_motion_duration : Ref[Double] = { val: 0.0 }
@@ -499,7 +499,7 @@ let rabbit_motion_elapsed : Ref[Double] = { val: 0.0 }
 let camera_mode : Ref[CameraMode] = { val: CameraIdle }
 
 ///|
-let camera_start_position : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let camera_start_position : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
 let camera_return_duration : Ref[Double] = { val: 0.0 }
@@ -508,7 +508,7 @@ let camera_return_duration : Ref[Double] = { val: 0.0 }
 let camera_return_elapsed : Ref[Double] = { val: 0.0 }
 
 ///|
-let camera_return_origin : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let camera_return_origin : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
 const DEBUG_TRACE_FIXED_FRAMES : Int = 6
@@ -517,31 +517,31 @@ const DEBUG_TRACE_FIXED_FRAMES : Int = 6
 let debug_text_entity : @entity.Entity = @entity.Entity::new()
 
 ///|
-let debug_mouse_screen : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_mouse_screen : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_mouse_world : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_mouse_world : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_drag_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_drag_center : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_release_screen : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_release_screen : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_release_mouse_world : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_release_mouse_world : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_release_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_release_center : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_launch_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_launch_velocity : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_physics_center : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_physics_center : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
-let debug_physics_velocity : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+let debug_physics_velocity : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 
 ///|
 let debug_last_event : Ref[String] = { val: "startup" }

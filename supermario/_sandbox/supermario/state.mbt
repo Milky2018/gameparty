@@ -95,14 +95,14 @@ priv enum TileKind {
 
 ///|
 priv struct SolidBlock {
-  center : @math.Vec2D
-  size : @math.Vec2D
+  center : @math.Vec2
+  size : @math.Vec2
   kind : TileKind
 }
 
 ///|
 priv struct EnemySpawn {
-  center : @math.Vec2D
+  center : @math.Vec2
   patrol_left : Double
   patrol_right : Double
   facing_right : Bool
@@ -111,9 +111,9 @@ priv struct EnemySpawn {
 ///|
 priv struct LevelSpec {
   name : String
-  player_spawn : @math.Vec2D
-  goal_center : @math.Vec2D
-  goal_size : @math.Vec2D
+  player_spawn : @math.Vec2
+  goal_center : @math.Vec2
+  goal_size : @math.Vec2
   world_width : Double
   blocks : Array[SolidBlock]
   enemy_spawns : Array[EnemySpawn]
@@ -121,8 +121,8 @@ priv struct LevelSpec {
 
 ///|
 priv struct PlayerState {
-  mut center : @math.Vec2D
-  mut velocity : @math.Vec2D
+  mut center : @math.Vec2
+  mut velocity : @math.Vec2
   mut facing_right : Bool
   mut on_ground : Bool
   mut coyote_timer : Double
@@ -133,8 +133,8 @@ priv struct PlayerState {
 
 ///|
 priv struct EnemyState {
-  mut center : @math.Vec2D
-  mut velocity : @math.Vec2D
+  mut center : @math.Vec2
+  mut velocity : @math.Vec2
   mut facing_right : Bool
   mut on_ground : Bool
   mut alive : Bool
@@ -171,8 +171,8 @@ let capture_taken : Ref[Bool] = { val: false }
 ///|
 let player_state : Ref[PlayerState] = {
   val: {
-    center: @math.Vec2D::zero(),
-    velocity: @math.Vec2D::zero(),
+    center: @math.Vec2::zero(),
+    velocity: @math.Vec2::zero(),
     facing_right: true,
     on_ground: false,
     coyote_timer: 0.0,
@@ -257,12 +257,12 @@ fn rgb(r : UInt, g : UInt, b : UInt, a? : Double = 1.0) -> @render.Color {
 }
 
 ///|
-fn vec2(x : Double, y : Double) -> @math.Vec2D {
-  @math.Vec2D(x, y)
+fn vec2(x : Double, y : Double) -> @math.Vec2 {
+  @math.Vec2(x, y)
 }
 
 ///|
-fn rect_from_center(center : @math.Vec2D, size : @math.Vec2D) -> @math.Rect {
+fn rect_from_center(center : @math.Vec2, size : @math.Vec2) -> @math.Rect {
   { position: center - size.scalar_mul(0.5), size }
 }
 
@@ -289,13 +289,13 @@ fn env_flag_enabled(name : String) -> Bool {
 }
 
 ///|
-fn make_block(center : @math.Vec2D, size : @math.Vec2D, kind : TileKind) -> SolidBlock {
+fn make_block(center : @math.Vec2, size : @math.Vec2, kind : TileKind) -> SolidBlock {
   { center, size, kind }
 }
 
 ///|
 fn make_enemy_spawn(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   patrol_left : Double,
   patrol_right : Double,
   facing_right : Bool,

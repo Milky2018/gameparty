@@ -57,11 +57,11 @@ fn anim_frame_rect(anim : SpriteAnimDef, frame_index : Int) -> @math.Rect {
   let col = frame_index % columns
   let row = frame_index / columns
   {
-    position: @math.Vec2D(
+    position: @math.Vec2(
       col.to_double() * anim.frame_width,
       row.to_double() * anim.frame_height,
     ),
-    size: @math.Vec2D(anim.frame_width, anim.frame_height),
+    size: @math.Vec2(anim.frame_width, anim.frame_height),
   }
 }
 
@@ -77,16 +77,16 @@ fn sync_actor_visual(actor : ActorRuntime, z : Double) -> ActorRuntime {
     @sprite.sprites().get(actor.entity) is None {
     let sprite = @sprite.Sprite::from_image(
       image_handle(path),
-      custom_size=Some(@math.Vec2D(size, size)),
+      custom_size=Some(@math.Vec2(size, size)),
     )
     sprite.rect = Some(frame_rect)
-    sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+    sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
     @sprite.sprites().set(actor.entity, sprite)
     actor.last_sprite_path = path
   } else {
     match @sprite.sprites().get(actor.entity) {
       Some(sprite) => {
-        sprite.custom_size = Some(@math.Vec2D(size, size))
+        sprite.custom_size = Some(@math.Vec2(size, size))
         sprite.rect = Some(frame_rect)
         @sprite.sprites().set(actor.entity, sprite)
       }
@@ -107,13 +107,13 @@ fn sync_actor_visual(actor : ActorRuntime, z : Double) -> ActorRuntime {
 
 ///|
 fn move_with_collision(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
-  delta : @math.Vec2D,
-) -> @math.Vec2D {
+  delta : @math.Vec2,
+) -> @math.Vec2 {
   let mut next = center
 
-  let trial_x = @math.Vec2D(next[X] + delta[X], next[Y])
+  let trial_x = @math.Vec2(next[X] + delta[X], next[Y])
   let mut blocked_x = false
   for rect in world_state.blocking_rects {
     if rect_intersects_circle(rect, trial_x, radius) {
@@ -122,10 +122,10 @@ fn move_with_collision(
     }
   }
   if !blocked_x {
-    next = @math.Vec2D(trial_x[X], next[Y])
+    next = @math.Vec2(trial_x[X], next[Y])
   }
 
-  let trial_y = @math.Vec2D(next[X], next[Y] + delta[Y])
+  let trial_y = @math.Vec2(next[X], next[Y] + delta[Y])
   let mut blocked_y = false
   for rect in world_state.blocking_rects {
     if rect_intersects_circle(rect, trial_y, radius) {
@@ -134,17 +134,17 @@ fn move_with_collision(
     }
   }
   if !blocked_y {
-    next = @math.Vec2D(next[X], trial_y[Y])
+    next = @math.Vec2(next[X], trial_y[Y])
   }
 
-  @math.Vec2D(
+  @math.Vec2(
     clamp_double(next[X], radius, world_state.world_width - radius),
     clamp_double(next[Y], radius, world_state.world_height - radius),
   )
 }
 
 ///|
-fn spawn_enemy(archetype_id : String, position : @math.Vec2D) -> Unit {
+fn spawn_enemy(archetype_id : String, position : @math.Vec2) -> Unit {
   match archetype_by_id(plugin(), archetype_id) {
     Some(archetype) => {
       let entity = @entity.Entity::new()
@@ -159,7 +159,7 @@ fn spawn_enemy(archetype_id : String, position : @math.Vec2D) -> Unit {
         moving: false,
         anim_elapsed: 0.0,
         last_sprite_path: "",
-        ai_wander_dir: @math.Vec2D(0.0, 0.0),
+        ai_wander_dir: @math.Vec2(0.0, 0.0),
         ai_wander_timer: 0.0,
       })
     }
@@ -168,7 +168,7 @@ fn spawn_enemy(archetype_id : String, position : @math.Vec2D) -> Unit {
 }
 
 ///|
-fn spawn_pickup(position : @math.Vec2D, item : DropItemDef) -> Unit {
+fn spawn_pickup(position : @math.Vec2, item : DropItemDef) -> Unit {
   let entity = @entity.Entity::new()
   dynamic_entities.push(entity)
   pickup_runtimes.push({
@@ -181,9 +181,9 @@ fn spawn_pickup(position : @math.Vec2D, item : DropItemDef) -> Unit {
   })
   let sprite = @sprite.Sprite::from_image(
     image_handle(item.image),
-    custom_size=Some(@math.Vec2D(38.0, 38.0)),
+    custom_size=Some(@math.Vec2(38.0, 38.0)),
   )
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(
     entity,
@@ -243,8 +243,8 @@ fn skill_by_id_or_abort(id : String) -> SkillDef {
 ///|
 fn spawn_projectile(
   owner_enemy : Bool,
-  origin : @math.Vec2D,
-  direction : @math.Vec2D,
+  origin : @math.Vec2,
+  direction : @math.Vec2,
   skill : SkillDef,
 ) -> Unit {
   let entity = @entity.Entity::new()
@@ -265,9 +265,9 @@ fn spawn_projectile(
     } else {
       color_rgba(120U, 220U, 255U, 1.0)
     },
-    @math.Vec2D(skill.projectile_radius * 2.0, skill.projectile_radius * 2.0),
+    @math.Vec2(skill.projectile_radius * 2.0, skill.projectile_radius * 2.0),
   )
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(
     entity,
@@ -352,7 +352,7 @@ pub fn input_system(_world : @ecs.World) -> Unit {
   }
   request_restart_if_needed()
   if run_state.phase != Playing {
-    combat_state.move_intent = @math.Vec2D(0.0, 0.0)
+    combat_state.move_intent = @math.Vec2(0.0, 0.0)
     combat_state.primary_requested = false
     combat_state.secondary_requested = false
     return
@@ -377,7 +377,7 @@ pub fn input_system(_world : @ecs.World) -> Unit {
     } else {
       0.0
     })
-  combat_state.move_intent = vec_normalize(@math.Vec2D(x, y))
+  combat_state.move_intent = vec_normalize(@math.Vec2(x, y))
   combat_state.primary_requested = @inputs.is_mouse_pressed(
     @inputs.MouseButton::Left,
   )
@@ -436,7 +436,7 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
 
   let player_pos = match player_runtime.val {
     Some(player) => player.position
-    None => @math.Vec2D(0.0, 0.0)
+    None => @math.Vec2(0.0, 0.0)
   }
   let mut i = 0
   while i < enemy_runtimes.length() {
@@ -444,7 +444,7 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
     let archetype = archetype_for(enemy)
     let to_player = player_pos - enemy.position
     let distance = vec_length(to_player)
-    let mut dir = @math.Vec2D(0.0, 0.0)
+    let mut dir = @math.Vec2(0.0, 0.0)
     match archetype.ai_mode {
       Chase => dir = vec_normalize(to_player)
       HoldDistance => {
@@ -458,7 +458,7 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
           if enemy.ai_wander_timer <= 0.0 {
             let sign = if rand.int(limit=2) == 0 { -1.0 } else { 1.0 }
             let toward = vec_normalize(to_player)
-            enemy.ai_wander_dir = @math.Vec2D(
+            enemy.ai_wander_dir = @math.Vec2(
               -toward[Y] * sign,
               toward[X] * sign,
             )
@@ -470,12 +470,12 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
       Wander => {
         enemy.ai_wander_timer -= dt
         if enemy.ai_wander_timer <= 0.0 {
-          let raw_dir = @math.Vec2D(
+          let raw_dir = @math.Vec2(
             rand.double() * 2.0 - 1.0,
             rand.double() * 2.0 - 1.0,
           )
           enemy.ai_wander_dir = if vec_length(raw_dir) <= 0.001 {
-            @math.Vec2D(1.0, 0.0)
+            @math.Vec2(1.0, 0.0)
           } else {
             vec_normalize(raw_dir)
           }
@@ -501,12 +501,12 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
 }
 
 ///|
-fn player_forward(player : ActorRuntime) -> @math.Vec2D {
+fn player_forward(player : ActorRuntime) -> @math.Vec2 {
   match player.facing {
-    Up => @math.Vec2D(0.0, -1.0)
-    Down => @math.Vec2D(0.0, 1.0)
-    Left => @math.Vec2D(-1.0, 0.0)
-    Right => @math.Vec2D(1.0, 0.0)
+    Up => @math.Vec2(0.0, -1.0)
+    Down => @math.Vec2(0.0, 1.0)
+    Left => @math.Vec2(-1.0, 0.0)
+    Right => @math.Vec2(1.0, 0.0)
   }
 }
 

@@ -40,7 +40,7 @@ fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 }
 
 ///|
-fn transform_2d(center : @math.Vec2D, zindex : Int) -> @transform.Transform {
+fn transform_2d(center : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
     translation: @math.Vec3::new(center[X], center[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
@@ -51,15 +51,15 @@ fn transform_2d(center : @math.Vec2D, zindex : Int) -> @transform.Transform {
 ///|
 fn set_rect_entity(
   entity : @entity.Entity,
-  center : @math.Vec2D,
-  size : @math.Vec2D,
+  center : @math.Vec2,
+  size : @math.Vec2,
   color : @render.Color,
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(color, size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
-  let top_left = @math.Vec2D(
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
+  let top_left = @math.Vec2(
     center[X] - size[X] * 0.5,
     center[Y] - size[Y] * 0.5,
   )
@@ -72,7 +72,7 @@ fn set_rect_entity(
 fn set_text_entity(
   entity : @entity.Entity,
   content : String,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   color : String,
   font? : String = "28px \{KOF_FONT_FAMILY}",
   zindex? : Int = UI_ZINDEX,
@@ -91,7 +91,7 @@ fn set_text_entity(
       @ui.TextLayout::new(align=Center, baseline=Center, wrap=NoWrap),
     )
     @text2d.text2ds().set(entity, @text2d.Text2d::new())
-    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.0)))
+    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
     text_style_cache.set(entity, style_key)
   }
   let content_changed = match text_content_cache.get(entity) {
@@ -133,8 +133,8 @@ fn set_stage_object_visual(entity : @entity.Entity, obj : StageObject) -> Unit {
   }
   set_rect_entity(
     entity,
-    @math.Vec2D(obj.rect.x + obj.rect.w * 0.5, obj.rect.y + obj.rect.h * 0.5),
-    @math.Vec2D(obj.rect.w, obj.rect.h),
+    @math.Vec2(obj.rect.x + obj.rect.w * 0.5, obj.rect.y + obj.rect.h * 0.5),
+    @math.Vec2(obj.rect.w, obj.rect.h),
     color,
     20,
   )
@@ -242,8 +242,8 @@ fn build_stage() -> Unit {
   }
   set_rect_entity(
     stage_bg_entity,
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, VIEWPORT_HEIGHT * 0.5),
-    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, VIEWPORT_HEIGHT * 0.5),
+    @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
     color_rgba(16U, 22U, 40U, 1.0),
     0,
   )
@@ -258,7 +258,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     title_entity,
     "KOF ARENA",
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 68.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 68.0),
     "rgb(255,248,238)",
     font="52px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -266,7 +266,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     menu_entity,
     "ENTER START  F2 P2 MODE  F3 FPS  ESC EXIT",
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 126.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 126.0),
     "rgb(222,231,242)",
     font="16px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -274,7 +274,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     info_entity,
     "",
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 154.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 154.0),
     "rgb(198,210,225)",
     font="14px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -282,7 +282,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     timer_entity,
     "",
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 30.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 30.0),
     "rgb(255,248,238)",
     font="32px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -290,7 +290,7 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     debug_entity,
     "",
-    @math.Vec2D(26.0, 26.0),
+    @math.Vec2(26.0, 26.0),
     "rgb(210,220,230)",
     font="20px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
@@ -298,36 +298,36 @@ fn setup_hud_entities() -> Unit {
   set_text_entity(
     banner_entity,
     "",
-    @math.Vec2D(VIEWPORT_WIDTH * 0.5, 240.0),
+    @math.Vec2(VIEWPORT_WIDTH * 0.5, 240.0),
     "rgb(255,244,210)",
     font="50px \{KOF_FONT_FAMILY}",
     zindex=UI_ZINDEX + 20,
   )
   set_rect_entity(
     p1_bar_back,
-    @math.Vec2D(42.0, 58.0),
-    @math.Vec2D(360.0, 26.0),
+    @math.Vec2(42.0, 58.0),
+    @math.Vec2(360.0, 26.0),
     color_rgba(24U, 30U, 44U, 0.9),
     UI_ZINDEX + 10,
   )
   set_rect_entity(
     p1_bar_fill,
-    @math.Vec2D(46.0, 62.0),
-    @math.Vec2D(352.0, 18.0),
+    @math.Vec2(46.0, 62.0),
+    @math.Vec2(352.0, 18.0),
     color_rgba(232U, 70U, 76U, 1.0),
     UI_ZINDEX + 11,
   )
   set_rect_entity(
     p2_bar_back,
-    @math.Vec2D(VIEWPORT_WIDTH - 402.0, 58.0),
-    @math.Vec2D(360.0, 26.0),
+    @math.Vec2(VIEWPORT_WIDTH - 402.0, 58.0),
+    @math.Vec2(360.0, 26.0),
     color_rgba(24U, 30U, 44U, 0.9),
     UI_ZINDEX + 10,
   )
   set_rect_entity(
     p2_bar_fill,
-    @math.Vec2D(VIEWPORT_WIDTH - 398.0, 62.0),
-    @math.Vec2D(352.0, 18.0),
+    @math.Vec2(VIEWPORT_WIDTH - 398.0, 62.0),
+    @math.Vec2(352.0, 18.0),
     color_rgba(66U, 152U, 244U, 1.0),
     UI_ZINDEX + 11,
   )
@@ -339,43 +339,43 @@ fn setup_hud_entities() -> Unit {
 fn assign_fighter_entities() -> Unit {
   set_rect_entity(
     left_fighter_entity,
-    @math.Vec2D(p1.x, p1.y),
-    @math.Vec2D(HURTBOX_WIDTH, HURTBOX_HEIGHT),
+    @math.Vec2(p1.x, p1.y),
+    @math.Vec2(HURTBOX_WIDTH, HURTBOX_HEIGHT),
     color_rgba(246U, 88U, 80U, 1.0),
     40,
   )
   set_rect_entity(
     right_fighter_entity,
-    @math.Vec2D(p2.x, p2.y),
-    @math.Vec2D(HURTBOX_WIDTH, HURTBOX_HEIGHT),
+    @math.Vec2(p2.x, p2.y),
+    @math.Vec2(HURTBOX_WIDTH, HURTBOX_HEIGHT),
     color_rgba(88U, 164U, 255U, 1.0),
     40,
   )
   set_rect_entity(
     left_attack_entity,
-    @math.Vec2D(-100.0, -100.0),
-    @math.Vec2D(1.0, 1.0),
+    @math.Vec2(-100.0, -100.0),
+    @math.Vec2(1.0, 1.0),
     color_rgba(255U, 198U, 72U, 0.35),
     41,
   )
   set_rect_entity(
     right_attack_entity,
-    @math.Vec2D(-100.0, -100.0),
-    @math.Vec2D(1.0, 1.0),
+    @math.Vec2(-100.0, -100.0),
+    @math.Vec2(1.0, 1.0),
     color_rgba(255U, 198U, 72U, 0.35),
     41,
   )
   set_rect_entity(
     left_crouch_entity,
-    @math.Vec2D(-100.0, -100.0),
-    @math.Vec2D(1.0, 1.0),
+    @math.Vec2(-100.0, -100.0),
+    @math.Vec2(1.0, 1.0),
     color_rgba(255U, 255U, 255U, 0.12),
     39,
   )
   set_rect_entity(
     right_crouch_entity,
-    @math.Vec2D(-100.0, -100.0),
-    @math.Vec2D(1.0, 1.0),
+    @math.Vec2(-100.0, -100.0),
+    @math.Vec2(1.0, 1.0),
     color_rgba(255U, 255U, 255U, 0.12),
     39,
   )

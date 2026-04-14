@@ -52,7 +52,7 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 }
 
 ///|
-fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
+fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
     translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
@@ -69,7 +69,7 @@ fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 fn setup_text_entity(
   entity : @entity.Entity,
   content : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   color : String,
 ) -> Unit {
   ensure_entity_alive(entity)
@@ -84,7 +84,7 @@ fn setup_text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, 200))
   set_entity_visibility(entity, true)
 }
@@ -92,14 +92,14 @@ fn setup_text_entity(
 ///|
 fn setup_color_rect_entity(
   entity : @entity.Entity,
-  size : @math.Vec2D,
-  position : @math.Vec2D,
+  size : @math.Vec2,
+  position : @math.Vec2,
   color : String,
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(position, zindex))
   set_entity_visibility(entity, true)
@@ -107,8 +107,8 @@ fn setup_color_rect_entity(
 
 ///|
 fn spawn_color_rect_entity(
-  size : @math.Vec2D,
-  position : @math.Vec2D,
+  size : @math.Vec2,
+  position : @math.Vec2,
   color : String,
   zindex : Int,
 ) -> @entity.Entity {
@@ -895,7 +895,7 @@ fn reset_level_entities() -> Unit {
         "rgb(51,51,51)"
       }
       let minimap_tile_entity = spawn_color_rect_entity(
-        @math.Vec2D(MINIMAP_CELL_SIZE, MINIMAP_CELL_SIZE),
+        @math.Vec2(MINIMAP_CELL_SIZE, MINIMAP_CELL_SIZE),
         minimap_tile_position,
         tile_color,
         160,
@@ -945,7 +945,7 @@ fn reset_level_entities() -> Unit {
           })
         }
         let minimap_dot_entity = spawn_color_rect_entity(
-          @math.Vec2D(MINIMAP_DOT_SIZE, MINIMAP_DOT_SIZE),
+          @math.Vec2(MINIMAP_DOT_SIZE, MINIMAP_DOT_SIZE),
           minimap_pos_for_world(world_x, world_z, MINIMAP_DOT_SIZE),
           "rgb(252,224,80)",
           170,
@@ -990,7 +990,7 @@ fn reset_level_entities() -> Unit {
           Slow => "rgb(0,128,255)"
         }
         let ghost_minimap_entity = spawn_color_rect_entity(
-          @math.Vec2D(MINIMAP_MARKER_SIZE, MINIMAP_MARKER_SIZE),
+          @math.Vec2(MINIMAP_MARKER_SIZE, MINIMAP_MARKER_SIZE),
           minimap_pos_for_world(world_x, world_z, MINIMAP_MARKER_SIZE),
           ghost_minimap_color,
           180,
@@ -1026,7 +1026,7 @@ fn reset_level_entities() -> Unit {
   }
   setup_color_rect_entity(
     minimap_player_entity,
-    @math.Vec2D(MINIMAP_MARKER_SIZE, MINIMAP_MARKER_SIZE),
+    @math.Vec2(MINIMAP_MARKER_SIZE, MINIMAP_MARKER_SIZE),
     minimap_pos_for_world(player_state.x, player_state.z, MINIMAP_MARKER_SIZE),
     "rgb(0,255,0)",
     190,
@@ -1092,23 +1092,23 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
   setup_text_entity(
     hud_title_ui,
     "",
-    @math.Vec2D(VIEWPORT_WIDTH - 140.0, 40.0),
+    @math.Vec2(VIEWPORT_WIDTH - 140.0, 40.0),
     "white",
   )
   setup_text_entity(
     hud_line1_ui,
     "",
-    @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 170.0, 30.0),
+    @math.Vec2(VIEWPORT_WIDTH / 2.0 - 170.0, 30.0),
     "rgb(0,255,0)",
   )
   setup_text_entity(
     hud_line2_ui,
     "",
-    @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 120.0, 70.0),
+    @math.Vec2(VIEWPORT_WIDTH / 2.0 - 120.0, 70.0),
     "rgb(0,255,0)",
   )
-  setup_text_entity(hud_line3_ui, "", @math.Vec2D(0.0, 0.0), "white")
-  setup_text_entity(hud_debug_ui, "", @math.Vec2D(8.0, 8.0), "rgb(180,255,180)")
+  setup_text_entity(hud_line3_ui, "", @math.Vec2(0.0, 0.0), "white")
+  setup_text_entity(hud_debug_ui, "", @math.Vec2(8.0, 8.0), "rgb(180,255,180)")
 
   @system.lock_mouse()
   mouse_locked_last_frame.val = @system.is_mouse_locked()

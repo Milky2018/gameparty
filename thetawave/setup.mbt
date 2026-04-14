@@ -378,12 +378,12 @@ fn background3d_quad_mesh_asset() -> @render3d.MeshAsset {
     @math.Vec3::new(-half_w, half_h, 0.0),
   ]
   let uvs = [
-    @math.Vec2D(0.0, 1.0),
-    @math.Vec2D(1.0, 1.0),
-    @math.Vec2D(1.0, 0.0),
-    @math.Vec2D(0.0, 1.0),
-    @math.Vec2D(1.0, 0.0),
-    @math.Vec2D(0.0, 0.0),
+    @math.Vec2(0.0, 1.0),
+    @math.Vec2(1.0, 1.0),
+    @math.Vec2(1.0, 0.0),
+    @math.Vec2(0.0, 1.0),
+    @math.Vec2(1.0, 0.0),
+    @math.Vec2(0.0, 0.0),
   ]
   @render3d.triangle_mesh(positions, uvs=Some(uvs))
 }
@@ -706,7 +706,7 @@ fn set_background(kind : BackgroundKind) -> Unit {
     background_sprite(kind)
   }
   @sprite.sprites().set(game_state.background, sprite)
-  set_entity_position(game_state.background, @math.Vec2D(0.0, 0.0))
+  set_entity_position(game_state.background, @math.Vec2(0.0, 0.0))
   set_background_sprite_visible(true)
 }
 
@@ -732,32 +732,32 @@ fn initialize_ui() -> Unit {
   setup_text_entity(
     game_state.score_ui,
     game_state.score_text,
-    @math.Vec2D(8.0, 8.0),
+    @math.Vec2(8.0, 8.0),
   )
   setup_text_entity(
     game_state.hull_ui,
     game_state.hull_text,
-    @math.Vec2D(8.0, 28.0),
+    @math.Vec2(8.0, 28.0),
   )
   setup_text_entity(
     game_state.shield_ui,
     game_state.shield_text,
-    @math.Vec2D(8.0, 48.0),
+    @math.Vec2(8.0, 48.0),
   )
   setup_text_entity(
     game_state.defense_ui,
     game_state.defense_text,
-    @math.Vec2D(8.0, 68.0),
+    @math.Vec2(8.0, 68.0),
   )
   setup_text_entity(
     game_state.stage_ui,
     game_state.stage_text,
-    @math.Vec2D(8.0, 88.0),
+    @math.Vec2(8.0, 88.0),
   )
   setup_text_entity(
     game_state.timer_ui,
     game_state.timer_text,
-    @math.Vec2D(VIEWPORT_WIDTH - 150.0, 8.0),
+    @math.Vec2(VIEWPORT_WIDTH - 150.0, 8.0),
   )
   for i in 0..<TUTORIAL_PHASE_DATA_LINE_COUNT {
     setup_text_entity(
@@ -769,68 +769,68 @@ fn initialize_ui() -> Unit {
         baseline=Top,
         align=Left,
       ),
-      @math.Vec2D(HUD_TOP_RIGHT_PANEL_X, 8.0 + i.to_double() * 12.0),
+      @math.Vec2(HUD_TOP_RIGHT_PANEL_X, 8.0 + i.to_double() * 12.0),
     )
   }
   setup_text_entity(
     game_state.banner_ui,
     game_state.banner_text,
-    @math.Vec2D(40.0, VIEWPORT_HEIGHT - 20.0),
+    @math.Vec2(40.0, VIEWPORT_HEIGHT - 20.0),
   )
   setup_picture_entity(
     game_state.menu_logo_ui,
     menu_logo_sprite(),
-    @math.Vec2D(58.0, 16.0),
+    @math.Vec2(58.0, 16.0),
   )
   setup_picture_entity(
     game_state.menu_button_start_ui,
     menu_button_background_sprite(false),
-    @math.Vec2D(160.0, 176.0),
+    @math.Vec2(160.0, 176.0),
   )
-  setup_button_entity(game_state.menu_button_start_ui, @math.Vec2D(160.0, 22.0))
+  setup_button_entity(game_state.menu_button_start_ui, @math.Vec2(160.0, 22.0))
   setup_picture_entity(
     game_state.menu_button_options_ui,
     menu_button_background_sprite(false),
-    @math.Vec2D(160.0, 198.0),
+    @math.Vec2(160.0, 198.0),
   )
   setup_button_entity(
     game_state.menu_button_options_ui,
-    @math.Vec2D(160.0, 22.0),
+    @math.Vec2(160.0, 22.0),
   )
   setup_picture_entity(
     game_state.menu_button_compendium_ui,
     menu_button_background_sprite(false),
-    @math.Vec2D(160.0, 220.0),
+    @math.Vec2(160.0, 220.0),
   )
   setup_button_entity(
     game_state.menu_button_compendium_ui,
-    @math.Vec2D(160.0, 22.0),
+    @math.Vec2(160.0, 22.0),
   )
   setup_picture_entity(
     game_state.menu_button_exit_ui,
     menu_button_background_sprite(false),
-    @math.Vec2D(160.0, 242.0),
+    @math.Vec2(160.0, 242.0),
   )
-  setup_button_entity(game_state.menu_button_exit_ui, @math.Vec2D(160.0, 22.0))
+  setup_button_entity(game_state.menu_button_exit_ui, @math.Vec2(160.0, 22.0))
   setup_picture_entity(
     game_state.character_portrait_ui,
     character_portrait_sprite(Captain),
-    @math.Vec2D(240.0, 118.0),
+    @math.Vec2(240.0, 118.0),
   )
   setup_picture_entity(
     game_state.character_description_ui,
     character_description_sprite(Captain),
-    @math.Vec2D(240.0, 242.0),
+    @math.Vec2(240.0, 242.0),
   )
   setup_picture_entity(
     character_left_portrait_ui,
     character_carousel_portrait_sprite(Juggernaut, false),
-    @math.Vec2D(172.0, 132.0),
+    @math.Vec2(172.0, 132.0),
   )
   setup_picture_entity(
     character_right_portrait_ui,
     character_carousel_portrait_sprite(Juggernaut, false),
-    @math.Vec2D(308.0, 132.0),
+    @math.Vec2(308.0, 132.0),
   )
   setup_text_entity(
     character_name_ui,
@@ -841,17 +841,17 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Center,
     ),
-    @math.Vec2D(240.0, 178.0),
+    @math.Vec2(240.0, 178.0),
   )
   setup_picture_entity(
     character_ability_slot1_ui,
     character_ability_slot_sprite(),
-    @math.Vec2D(130.0, 210.0),
+    @math.Vec2(130.0, 210.0),
   )
   setup_picture_entity(
     character_ability_slot1_icon_ui,
     character_ability_icon_sprite(Captain, 1),
-    @math.Vec2D(130.0, 210.0),
+    @math.Vec2(130.0, 210.0),
   )
   setup_text_entity(
     character_ability_slot1_text_ui,
@@ -862,17 +862,17 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Left,
     ),
-    @math.Vec2D(162.0, 202.0),
+    @math.Vec2(162.0, 202.0),
   )
   setup_picture_entity(
     character_ability_slot2_ui,
     character_ability_slot_sprite(),
-    @math.Vec2D(130.0, 244.0),
+    @math.Vec2(130.0, 244.0),
   )
   setup_picture_entity(
     character_ability_slot2_icon_ui,
     character_ability_icon_sprite(Captain, 2),
-    @math.Vec2D(130.0, 244.0),
+    @math.Vec2(130.0, 244.0),
   )
   setup_text_entity(
     character_ability_slot2_text_ui,
@@ -883,23 +883,23 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Left,
     ),
-    @math.Vec2D(162.0, 236.0),
+    @math.Vec2(162.0, 236.0),
   )
   for i in 0..<character_stats_order.length() {
     setup_picture_entity(
       character_stat_icon_uis[i],
       character_stat_icon_sprite(character_stats_order[i]),
-      @math.Vec2D(346.0, 202.0 + i.to_double() * 18.0),
+      @math.Vec2(346.0, 202.0 + i.to_double() * 18.0),
     )
     setup_picture_entity(
       character_stat_bg_uis[i],
-      color_rect_sprite(@math.Vec2D(72.0, 7.0), "rgba(255,255,255,0.15)", 89),
-      @math.Vec2D(388.0, 202.0 + i.to_double() * 18.0),
+      color_rect_sprite(@math.Vec2(72.0, 7.0), "rgba(255,255,255,0.15)", 89),
+      @math.Vec2(388.0, 202.0 + i.to_double() * 18.0),
     )
     setup_picture_entity(
       character_stat_fill_uis[i],
-      color_rect_sprite(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)", 90),
-      @math.Vec2D(353.0, 203.0 + i.to_double() * 18.0),
+      color_rect_sprite(@math.Vec2(0.0, 5.0), "rgba(255,255,255,0.95)", 90),
+      @math.Vec2(353.0, 203.0 + i.to_double() * 18.0),
     )
   }
   setup_text_entity(
@@ -911,7 +911,7 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Center,
     ),
-    @math.Vec2D(120.0, 188.0),
+    @math.Vec2(120.0, 188.0),
   )
   setup_text_entity(
     character_ready_text_ui,
@@ -922,23 +922,23 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Center,
     ),
-    @math.Vec2D(120.0, 282.0),
+    @math.Vec2(120.0, 282.0),
   )
 
   setup_picture_entity(
     character_p2_center_portrait_ui,
     character_carousel_portrait_sprite(Juggernaut, true),
-    @math.Vec2D(360.0, 130.0),
+    @math.Vec2(360.0, 130.0),
   )
   setup_picture_entity(
     character_p2_left_portrait_ui,
     character_carousel_portrait_sprite(Captain, false),
-    @math.Vec2D(316.0, 132.0),
+    @math.Vec2(316.0, 132.0),
   )
   setup_picture_entity(
     character_p2_right_portrait_ui,
     character_carousel_portrait_sprite(Captain, false),
-    @math.Vec2D(404.0, 132.0),
+    @math.Vec2(404.0, 132.0),
   )
   setup_text_entity(
     character_p2_name_ui,
@@ -949,17 +949,17 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Center,
     ),
-    @math.Vec2D(360.0, 176.0),
+    @math.Vec2(360.0, 176.0),
   )
   setup_picture_entity(
     character_p2_ability_slot1_ui,
     character_ability_slot_sprite(),
-    @math.Vec2D(302.0, 210.0),
+    @math.Vec2(302.0, 210.0),
   )
   setup_picture_entity(
     character_p2_ability_slot1_icon_ui,
     character_ability_icon_sprite(Juggernaut, 1),
-    @math.Vec2D(302.0, 210.0),
+    @math.Vec2(302.0, 210.0),
   )
   setup_text_entity(
     character_p2_ability_slot1_text_ui,
@@ -970,17 +970,17 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Left,
     ),
-    @math.Vec2D(334.0, 202.0),
+    @math.Vec2(334.0, 202.0),
   )
   setup_picture_entity(
     character_p2_ability_slot2_ui,
     character_ability_slot_sprite(),
-    @math.Vec2D(302.0, 244.0),
+    @math.Vec2(302.0, 244.0),
   )
   setup_picture_entity(
     character_p2_ability_slot2_icon_ui,
     character_ability_icon_sprite(Juggernaut, 2),
-    @math.Vec2D(302.0, 244.0),
+    @math.Vec2(302.0, 244.0),
   )
   setup_text_entity(
     character_p2_ability_slot2_text_ui,
@@ -991,23 +991,23 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Left,
     ),
-    @math.Vec2D(334.0, 236.0),
+    @math.Vec2(334.0, 236.0),
   )
   for i in 0..<character_stats_order.length() {
     setup_picture_entity(
       character_p2_stat_icon_uis[i],
       character_stat_icon_sprite(character_stats_order[i]),
-      @math.Vec2D(410.0, 202.0 + i.to_double() * 18.0),
+      @math.Vec2(410.0, 202.0 + i.to_double() * 18.0),
     )
     setup_picture_entity(
       character_p2_stat_bg_uis[i],
-      color_rect_sprite(@math.Vec2D(56.0, 7.0), "rgba(255,255,255,0.15)", 89),
-      @math.Vec2D(442.0, 202.0 + i.to_double() * 18.0),
+      color_rect_sprite(@math.Vec2(56.0, 7.0), "rgba(255,255,255,0.15)", 89),
+      @math.Vec2(442.0, 202.0 + i.to_double() * 18.0),
     )
     setup_picture_entity(
       character_p2_stat_fill_uis[i],
-      color_rect_sprite(@math.Vec2D(0.0, 5.0), "rgba(255,255,255,0.95)", 90),
-      @math.Vec2D(414.0, 203.0 + i.to_double() * 18.0),
+      color_rect_sprite(@math.Vec2(0.0, 5.0), "rgba(255,255,255,0.95)", 90),
+      @math.Vec2(414.0, 203.0 + i.to_double() * 18.0),
     )
   }
   setup_text_entity(
@@ -1019,7 +1019,7 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Center,
     ),
-    @math.Vec2D(360.0, 188.0),
+    @math.Vec2(360.0, 188.0),
   )
   setup_text_entity(
     character_p2_ready_text_ui,
@@ -1030,100 +1030,100 @@ fn initialize_ui() -> Unit {
       baseline=Top,
       align=Center,
     ),
-    @math.Vec2D(360.0, 282.0),
+    @math.Vec2(360.0, 282.0),
   )
   setup_picture_entity(
     game_state.phase_prompt_ui,
     restart_prompt_sprite(),
-    @math.Vec2D(240.0, 244.0),
+    @math.Vec2(240.0, 244.0),
   )
   setup_picture_entity(
     game_state.warning_gradient_ui,
     border_gradient_sprite(WARNING_GRADIENT_TEXTURE, 0.0),
-    @math.Vec2D(0.0, VIEWPORT_HEIGHT),
+    @math.Vec2(0.0, VIEWPORT_HEIGHT),
   )
   setup_picture_entity(
     game_state.defense_gradient_ui,
     border_gradient_sprite(DEFENSE_GRADIENT_TEXTURE, 0.0),
-    @math.Vec2D(0.0, VIEWPORT_HEIGHT),
+    @math.Vec2(0.0, VIEWPORT_HEIGHT),
   )
   setup_picture_entity(
     game_state.hud_health_label_ui,
     hud_health_label_sprite(),
-    @math.Vec2D(16.0, 160.0),
+    @math.Vec2(16.0, 160.0),
   )
   setup_picture_entity(
     game_state.hud_health_bar_bg_ui,
-    color_rect_sprite(@math.Vec2D(12.0, 120.0), "rgba(128, 16, 24, 0.18)", 91),
-    @math.Vec2D(HUD_HEALTH_BAR_BG_X, 98.0),
+    color_rect_sprite(@math.Vec2(12.0, 120.0), "rgba(128, 16, 24, 0.18)", 91),
+    @math.Vec2(HUD_HEALTH_BAR_BG_X, 98.0),
   )
   setup_picture_entity(
     game_state.hud_health_bar_fill_ui,
-    color_rect_sprite(@math.Vec2D(10.0, 116.0), "rgba(220, 20, 60, 0.85)", 92),
-    @math.Vec2D(HUD_HEALTH_BAR_FILL_X, 100.0),
+    color_rect_sprite(@math.Vec2(10.0, 116.0), "rgba(220, 20, 60, 0.85)", 92),
+    @math.Vec2(HUD_HEALTH_BAR_FILL_X, 100.0),
   )
   setup_picture_entity(
     game_state.hud_shield_bar_bg_ui,
-    color_rect_sprite(@math.Vec2D(12.0, 120.0), "rgba(0, 96, 128, 0.18)", 91),
-    @math.Vec2D(HUD_SHIELD_BAR_BG_X, 98.0),
+    color_rect_sprite(@math.Vec2(12.0, 120.0), "rgba(0, 96, 128, 0.18)", 91),
+    @math.Vec2(HUD_SHIELD_BAR_BG_X, 98.0),
   )
   setup_picture_entity(
     game_state.hud_shield_bar_fill_ui,
-    color_rect_sprite(@math.Vec2D(10.0, 116.0), "rgba(0, 255, 255, 0.75)", 92),
-    @math.Vec2D(HUD_SHIELD_BAR_FILL_X, 100.0),
+    color_rect_sprite(@math.Vec2(10.0, 116.0), "rgba(0, 255, 255, 0.75)", 92),
+    @math.Vec2(HUD_SHIELD_BAR_FILL_X, 100.0),
   )
   setup_picture_entity(
     game_state.hud_defense_label_ui,
     hud_defense_label_sprite(),
-    @math.Vec2D(240.0, 300.0),
+    @math.Vec2(240.0, 300.0),
   )
   setup_picture_entity(
     game_state.hud_defense_bar_bg_ui,
-    color_rect_sprite(@math.Vec2D(120.0, 8.0), "rgba(18, 24, 78, 0.55)", 93),
-    @math.Vec2D(180.0, 295.0),
+    color_rect_sprite(@math.Vec2(120.0, 8.0), "rgba(18, 24, 78, 0.55)", 93),
+    @math.Vec2(180.0, 295.0),
   )
   setup_picture_entity(
     game_state.hud_defense_bar_fill_ui,
-    color_rect_sprite(@math.Vec2D(120.0, 8.0), "rgba(40, 110, 255, 0.9)", 94),
-    @math.Vec2D(180.0, 295.0),
+    color_rect_sprite(@math.Vec2(120.0, 8.0), "rgba(40, 110, 255, 0.9)", 94),
+    @math.Vec2(180.0, 295.0),
   )
   setup_picture_entity(
     game_state.hud_slot1_bg_ui,
     hud_ability_slot_sprite(),
-    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT1_CENTER_Y),
+    @math.Vec2(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT1_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot1_icon_ui,
     hud_ability_icon_sprite(Captain, 1),
-    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT1_CENTER_Y),
+    @math.Vec2(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT1_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot1_fill_ui,
     color_rect_sprite(
-      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
+      @math.Vec2(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
       "rgba(0, 0, 0, 0.55)",
       95,
     ),
-    @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT1_FILL_BOTTOM_Y),
+    @math.Vec2(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT1_FILL_BOTTOM_Y),
   )
   setup_picture_entity(
     game_state.hud_slot2_bg_ui,
     hud_ability_slot_sprite(),
-    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT2_CENTER_Y),
+    @math.Vec2(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT2_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot2_icon_ui,
     hud_ability_icon_sprite(Captain, 2),
-    @math.Vec2D(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT2_CENTER_Y),
+    @math.Vec2(HUD_ABILITY_SLOT_CENTER_X, HUD_ABILITY_SLOT2_CENTER_Y),
   )
   setup_picture_entity(
     game_state.hud_slot2_fill_ui,
     color_rect_sprite(
-      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
+      @math.Vec2(HUD_ABILITY_SLOT_FILL_WIDTH, 0.0),
       "rgba(0, 0, 0, 0.55)",
       95,
     ),
-    @math.Vec2D(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT2_FILL_BOTTOM_Y),
+    @math.Vec2(HUD_ABILITY_SLOT_LEFT_X, HUD_ABILITY_SLOT2_FILL_BOTTOM_Y),
   )
   set_entity_visibility(game_state.character_portrait_ui, false)
   set_entity_visibility(game_state.character_description_ui, false)
@@ -1194,7 +1194,7 @@ fn initialize_ui() -> Unit {
 fn setup_text_entity(
   entity : @entity.Entity,
   text : TextState,
-  position : @math.Vec2D,
+  position : @math.Vec2,
 ) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -1216,7 +1216,7 @@ fn setup_text_entity(
 fn setup_picture_entity(
   entity : @entity.Entity,
   sprite : @sprite.Sprite,
-  position : @math.Vec2D,
+  position : @math.Vec2,
 ) -> Unit {
   if !entity.is_alive() {
     entity.respawn()
@@ -1226,8 +1226,8 @@ fn setup_picture_entity(
 }
 
 ///|
-fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2D) -> Unit {
-  let position = entity_position(entity).unwrap_or(@math.Vec2D::zero())
+fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2) -> Unit {
+  let position = entity_position(entity).unwrap_or(@math.Vec2::zero())
   @ui.nodes().set(entity, @ui.Node::absolute(position, size=hit_size))
   @ui.buttons().set(entity, @ui.Button::new())
   @ui.interactions().set(entity, @ui.None)
@@ -1358,7 +1358,7 @@ fn reset_game_state_data() -> Unit {
   game_state.special_cooldown = 0.0
   game_state.player_invulnerable = 0.0
   game_state.charge_time_left = 0.0
-  game_state.charge_velocity = @math.Vec2D(0.0, 0.0)
+  game_state.charge_velocity = @math.Vec2(0.0, 0.0)
 }
 
 ///|
@@ -1400,7 +1400,7 @@ fn spawn_player() -> Unit {
 ///|
 priv struct EnemyPartTemplate {
   sprite : @sprite.Sprite
-  offset : @math.Vec2D
+  offset : @math.Vec2
   bob_amp : Double
   bob_speed : Double
   bob_phase : Double
@@ -1409,14 +1409,14 @@ priv struct EnemyPartTemplate {
 ///|
 fn enemy_part_picture(
   texture : String,
-  size : @math.Vec2D,
+  size : @math.Vec2,
   zindex : Int,
 ) -> @sprite.Sprite {
   image_sprite(
     texture,
     size,
     zindex,
-    offset=@math.Vec2D(-size[X] / 2.0, -size[Y] / 2.0),
+    offset=@math.Vec2(-size[X] / 2.0, -size[Y] / 2.0),
   )
 }
 
@@ -1428,10 +1428,10 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
         {
           sprite: enemy_part_picture(
             HAULER_MIDDLE_TEXTURE,
-            @math.Vec2D(18.0, 26.0),
+            @math.Vec2(18.0, 26.0),
             10,
           ),
-          offset: @math.Vec2D(0.0, 18.0),
+          offset: @math.Vec2(0.0, 18.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1439,10 +1439,10 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
         {
           sprite: enemy_part_picture(
             HAULER_BACK_TEXTURE,
-            @math.Vec2D(18.0, 24.0),
+            @math.Vec2(18.0, 24.0),
             9,
           ),
-          offset: @math.Vec2D(0.0, 35.0),
+          offset: @math.Vec2(0.0, 35.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1456,7 +1456,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             8.0,
             8,
           ),
-          offset: @math.Vec2D(0.0, 51.0),
+          offset: @math.Vec2(0.0, 51.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1473,7 +1473,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(0.0, 34.0),
+          offset: @math.Vec2(0.0, 34.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1487,7 +1487,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(-34.0, 8.0),
+          offset: @math.Vec2(-34.0, 8.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1501,7 +1501,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(34.0, 8.0),
+          offset: @math.Vec2(34.0, 8.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1515,7 +1515,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(-50.0, 14.0),
+          offset: @math.Vec2(-50.0, 14.0),
           bob_amp: 2.0,
           bob_speed: 2.1,
           bob_phase: 0.0,
@@ -1529,7 +1529,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(50.0, 14.0),
+          offset: @math.Vec2(50.0, 14.0),
           bob_amp: 2.0,
           bob_speed: 2.1,
           bob_phase: 3.141592653589793,
@@ -1543,7 +1543,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(-62.0, 24.0),
+          offset: @math.Vec2(-62.0, 24.0),
           bob_amp: 2.5,
           bob_speed: 2.7,
           bob_phase: 1.2,
@@ -1557,7 +1557,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(62.0, 24.0),
+          offset: @math.Vec2(62.0, 24.0),
           bob_amp: 2.5,
           bob_speed: 2.7,
           bob_phase: 4.3,
@@ -1574,7 +1574,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(0.0, 34.0),
+          offset: @math.Vec2(0.0, 34.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1588,7 +1588,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(-36.0, 9.0),
+          offset: @math.Vec2(-36.0, 9.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1602,7 +1602,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(36.0, 9.0),
+          offset: @math.Vec2(36.0, 9.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1616,7 +1616,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(-52.0, 16.0),
+          offset: @math.Vec2(-52.0, 16.0),
           bob_amp: 1.8,
           bob_speed: 2.0,
           bob_phase: 0.0,
@@ -1630,7 +1630,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(52.0, 16.0),
+          offset: @math.Vec2(52.0, 16.0),
           bob_amp: 1.8,
           bob_speed: 2.0,
           bob_phase: 3.141592653589793,
@@ -1644,7 +1644,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(-66.0, 25.0),
+          offset: @math.Vec2(-66.0, 25.0),
           bob_amp: 2.3,
           bob_speed: 2.8,
           bob_phase: 0.8,
@@ -1658,7 +1658,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(66.0, 25.0),
+          offset: @math.Vec2(66.0, 25.0),
           bob_amp: 2.3,
           bob_speed: 2.8,
           bob_phase: 3.9,
@@ -1675,7 +1675,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(0.0, 34.0),
+          offset: @math.Vec2(0.0, 34.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1689,7 +1689,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(-36.0, 10.0),
+          offset: @math.Vec2(-36.0, 10.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1703,7 +1703,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             11,
           ),
-          offset: @math.Vec2D(36.0, 10.0),
+          offset: @math.Vec2(36.0, 10.0),
           bob_amp: 0.0,
           bob_speed: 0.0,
           bob_phase: 0.0,
@@ -1717,7 +1717,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(-52.0, 18.0),
+          offset: @math.Vec2(-52.0, 18.0),
           bob_amp: 1.8,
           bob_speed: 2.2,
           bob_phase: 0.0,
@@ -1731,7 +1731,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(52.0, 18.0),
+          offset: @math.Vec2(52.0, 18.0),
           bob_amp: 1.8,
           bob_speed: 2.2,
           bob_phase: 3.141592653589793,
@@ -1745,7 +1745,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(-66.0, 27.0),
+          offset: @math.Vec2(-66.0, 27.0),
           bob_amp: 2.3,
           bob_speed: 2.9,
           bob_phase: 1.0,
@@ -1759,7 +1759,7 @@ fn enemy_part_templates(kind : EnemyKind) -> Array[EnemyPartTemplate] {
             4.0,
             10,
           ),
-          offset: @math.Vec2D(66.0, 27.0),
+          offset: @math.Vec2(66.0, 27.0),
           bob_amp: 2.3,
           bob_speed: 2.9,
           bob_phase: 4.1,
@@ -1807,7 +1807,7 @@ fn enemy_part_role(kind : EnemyKind, index : Int) -> EnemyPartRole {
 }
 
 ///|
-fn ferritharax_protect_pose_offset(role : EnemyPartRole) -> @math.Vec2D {
+fn ferritharax_protect_pose_offset(role : EnemyPartRole) -> @math.Vec2 {
   let angle = match role {
     PartShoulderLeft => 0.15
     PartShoulderRight => 0.15
@@ -1826,14 +1826,14 @@ fn ferritharax_protect_pose_offset(role : EnemyPartRole) -> @math.Vec2D {
     PartClawRight => -1.0
     PartGeneric => 0.0
   }
-  @math.Vec2D(dir_x * angle * 18.0, -angle * 24.0)
+  @math.Vec2(dir_x * angle * 18.0, -angle * 24.0)
 }
 
 ///|
 fn spawn_enemy_visual_parts(
   enemy_entity : @entity.Entity,
   kind : EnemyKind,
-  origin : @math.Vec2D,
+  origin : @math.Vec2,
 ) -> Unit {
   let templates = enemy_part_templates(kind)
   if templates.length() <= 0 {
@@ -1861,7 +1861,7 @@ fn spawn_enemy_visual_parts(
 ///|
 fn sync_enemy_visual_parts(
   enemy_entity : @entity.Entity,
-  origin : @math.Vec2D,
+  origin : @math.Vec2,
 ) -> Unit {
   if enemy_visual_parts.get(enemy_entity) is Some(parts) {
     let protect_mode = if enemies.get(enemy_entity) is Some(enemy) {
@@ -1880,11 +1880,11 @@ fn sync_enemy_visual_parts(
       let pose_offset = if protect_mode {
         ferritharax_protect_pose_offset(part.role)
       } else {
-        @math.Vec2D(0.0, 0.0)
+        @math.Vec2(0.0, 0.0)
       }
       set_entity_position(
         part.entity,
-        origin + part.offset + pose_offset + @math.Vec2D(0.0, bob_y),
+        origin + part.offset + pose_offset + @math.Vec2(0.0, bob_y),
       )
     }
   }
@@ -1905,7 +1905,7 @@ fn despawn_enemy_visual_parts(enemy_entity : @entity.Entity) -> Unit {
 }
 
 ///|
-fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
+fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2) -> Unit {
   let enemy_entity = @entity.Entity::new()
   let archetype = enemy_archetype(kind)
   let hp_bonus = if kind is Missile ||
@@ -1974,7 +1974,7 @@ fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2D) -> Unit {
 fn spawn_player_burst() -> Unit {
   guard entity_position(game_state.player) is Some(player_position)
   let projectile_count = @cmp.maximum(1, game_state.projectile_count)
-  let base = @math.Vec2D(
+  let base = @math.Vec2(
     player_position[X],
     player_position[Y] - PLAYER_HALF_SIZE - 2.0,
   )
@@ -1988,12 +1988,12 @@ fn spawn_player_burst() -> Unit {
           i.to_double() / (projectile_count - 1).to_double()
         }
         let angle = -1.5708 + (t - 0.5) * spread
-        let velocity = @math.Vec2D(
+        let velocity = @math.Vec2(
           @cmath.cos(angle) * game_state.projectile_speed,
           @cmath.sin(angle) * game_state.projectile_speed,
         )
         spawn_player_projectile(
-          base + @math.Vec2D((t - 0.5) * 8.0, 0.0),
+          base + @math.Vec2((t - 0.5) * 8.0, 0.0),
           velocity,
           game_state.projectile_damage,
           Blast,
@@ -2008,12 +2008,12 @@ fn spawn_player_burst() -> Unit {
         let angle = -1.5708 + (game_state.rand.double() - 0.5) * 0.1884
         let speed = game_state.projectile_speed *
           (0.75 + game_state.rand.double() * 0.5)
-        let velocity = @math.Vec2D(
+        let velocity = @math.Vec2(
           @cmath.cos(angle) * speed,
           @cmath.sin(angle) * speed,
         )
         spawn_player_projectile(
-          base + @math.Vec2D(offset, 0.0),
+          base + @math.Vec2(offset, 0.0),
           velocity,
           game_state.projectile_damage,
           Bullet,
@@ -2026,8 +2026,8 @@ fn spawn_player_burst() -> Unit {
 
 ///|
 fn spawn_player_projectile(
-  start_pos : @math.Vec2D,
-  velocity : @math.Vec2D,
+  start_pos : @math.Vec2,
+  velocity : @math.Vec2,
   damage : Int,
   kind : ProjectileKind,
   ttl : Double,
@@ -2038,8 +2038,8 @@ fn spawn_player_projectile(
 
 ///|
 fn spawn_enemy_projectile(
-  start_pos : @math.Vec2D,
-  velocity : @math.Vec2D,
+  start_pos : @math.Vec2,
+  velocity : @math.Vec2,
   damage : Int,
   kind : ProjectileKind,
   ttl : Double,
@@ -2049,8 +2049,8 @@ fn spawn_enemy_projectile(
 
 ///|
 fn spawn_projectile(
-  start_pos : @math.Vec2D,
-  velocity : @math.Vec2D,
+  start_pos : @math.Vec2,
+  velocity : @math.Vec2,
   damage : Int,
   kind : ProjectileKind,
   faction : BulletFaction,
@@ -2064,7 +2064,7 @@ fn spawn_projectile(
 }
 
 ///|
-fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2D) -> Unit {
+fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2) -> Unit {
   let entity = @entity.Entity::new()
   @sprite.sprites().set(entity, consumable_sprite(kind))
   set_entity_position(entity, position)
@@ -2072,7 +2072,7 @@ fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2D) -> Unit {
 }
 
 ///|
-fn spawn_item(kind : ItemKind, position : @math.Vec2D) -> Unit {
+fn spawn_item(kind : ItemKind, position : @math.Vec2) -> Unit {
   let entity = @entity.Entity::new()
   @sprite.sprites().set(entity, item_sprite(kind))
   set_entity_position(entity, position)

@@ -497,7 +497,7 @@ fn set_hud_text(
   entity : @entity.Entity,
   cache : Ref[String],
   content : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   font : String,
   color : String,
 ) -> Unit {
@@ -514,7 +514,7 @@ fn set_hud_text(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, 200))
   set_entity_visibility(entity, true)
 }
@@ -548,7 +548,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
     hud_title_ui,
     hud_title_text_cache,
     hud_level_text(),
-    @math.Vec2D(VIEWPORT_WIDTH - 140.0, 40.0),
+    @math.Vec2(VIEWPORT_WIDTH - 140.0, 40.0),
     "36px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "white",
   )
@@ -556,7 +556,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
     hud_line1_ui,
     hud_line1_text_cache,
     hud_completion_title(),
-    @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 170.0, 30.0),
+    @math.Vec2(VIEWPORT_WIDTH / 2.0 - 170.0, 30.0),
     "32px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "rgb(0,255,0)",
   )
@@ -564,7 +564,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
     hud_line2_ui,
     hud_line2_text_cache,
     hud_completion_body(),
-    @math.Vec2D(VIEWPORT_WIDTH / 2.0 - 120.0, 70.0),
+    @math.Vec2(VIEWPORT_WIDTH / 2.0 - 120.0, 70.0),
     "20px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "rgb(0,255,0)",
   )
@@ -572,7 +572,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
     hud_line3_ui,
     hud_line3_text_cache,
     "",
-    @math.Vec2D(0.0, 0.0),
+    @math.Vec2(0.0, 0.0),
     "18px \{PACMAN_UPSTREAM_FONT_FAMILY}",
     "white",
   )
@@ -581,7 +581,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
       hud_debug_ui,
       hud_debug_text_cache,
       debug_status_text() + "\n" + debug_help_text(),
-      @math.Vec2D(8.0, 8.0),
+      @math.Vec2(8.0, 8.0),
       "14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
       "rgb(180,255,180)",
     )
@@ -590,7 +590,7 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
       hud_debug_ui,
       hud_debug_text_cache,
       "",
-      @math.Vec2D(0.0, 0.0),
+      @math.Vec2(0.0, 0.0),
       "14px \{PACMAN_UPSTREAM_FONT_FAMILY}",
       "white",
     )

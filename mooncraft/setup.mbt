@@ -139,7 +139,7 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
   inventory_state.val = {
     ..inventory_state.val,
     open: false,
-    cursor: @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
+    cursor: @math.Vec2(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
     scroll_row: 0,
     hotbar: if preserved_hotbar.length() == HOTBAR_SIZE {
       preserved_hotbar

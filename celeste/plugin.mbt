@@ -5,12 +5,12 @@ const TILE_SIZE : Double = 48.0
 const GROUND_Y_TILE : Int = 10
 
 ///|
-fn vec2(x : Double, y : Double) -> @math.Vec2D {
-  @math.Vec2D(x, y)
+fn vec2(x : Double, y : Double) -> @math.Vec2 {
+  @math.Vec2(x, y)
 }
 
 ///|
-fn tile_center(tile_x : Int, tile_y : Int) -> @math.Vec2D {
+fn tile_center(tile_x : Int, tile_y : Int) -> @math.Vec2 {
   vec2(
     (tile_x.to_double() + 0.5) * TILE_SIZE,
     (tile_y.to_double() + 0.5) * TILE_SIZE,

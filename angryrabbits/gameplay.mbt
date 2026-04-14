@@ -1,5 +1,5 @@
 ///|
-fn vec_length(vector : @math.Vec2D) -> Double {
+fn vec_length(vector : @math.Vec2) -> Double {
   vector.distance()
 }
 
@@ -16,15 +16,15 @@ fn clamp_double(value : Double, lower : Double, upper : Double) -> Double {
 
 ///|
 fn lerp_vec2(
-  start : @math.Vec2D,
-  end_ : @math.Vec2D,
+  start : @math.Vec2,
+  end_ : @math.Vec2,
   alpha : Double,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   start.scalar_mul(1.0 - alpha) + end_.scalar_mul(alpha)
 }
 
 ///|
-fn clamp_drag_target(mouse_center : @math.Vec2D) -> @math.Vec2D {
+fn clamp_drag_target(mouse_center : @math.Vec2) -> @math.Vec2 {
   let offset = mouse_center - slingshot_anchor()
   let length = vec_length(offset)
   let clamped = if length <= MAX_DRAG_RADIUS {
@@ -33,7 +33,7 @@ fn clamp_drag_target(mouse_center : @math.Vec2D) -> @math.Vec2D {
     slingshot_anchor() + offset.scalar_div(length).scalar_mul(MAX_DRAG_RADIUS)
   }
   let max_drag_y = GROUND_Y - RABBIT_RADIUS - DRAG_GROUND_CLEARANCE
-  @math.Vec2D(
+  @math.Vec2(
     clamped[X],
     if clamped[Y] > max_drag_y {
       max_drag_y
@@ -44,7 +44,7 @@ fn clamp_drag_target(mouse_center : @math.Vec2D) -> @math.Vec2D {
 }
 
 ///|
-fn drag_distance(center : @math.Vec2D) -> Double {
+fn drag_distance(center : @math.Vec2) -> Double {
   vec_length(center - slingshot_anchor())
 }
 
@@ -53,9 +53,9 @@ let contact_event_reader : @event.EventReader[@physics2d.ContactEvent] = @event.
 
 ///|
 fn circle_intersects_circle(
-  center_a : @math.Vec2D,
+  center_a : @math.Vec2,
   radius_a : Double,
-  center_b : @math.Vec2D,
+  center_b : @math.Vec2,
   radius_b : Double,
 ) -> Bool {
   let delta = center_a - center_b
@@ -84,7 +84,7 @@ fn rabbit_ready_for_pickup() -> Bool {
 }
 
 ///|
-fn rabbit_contains(point : @math.Vec2D) -> Bool {
+fn rabbit_contains(point : @math.Vec2) -> Bool {
   circle_intersects_circle(rabbit_center.val, RABBIT_PICKUP_RADIUS, point, 0.0)
 }
 
@@ -124,7 +124,7 @@ fn find_target_index(entity : @entity.Entity) -> Int? {
 }
 
 ///|
-fn velocity_for_entity(entity : @entity.Entity) -> @math.Vec2D {
+fn velocity_for_entity(entity : @entity.Entity) -> @math.Vec2 {
   if find_rabbit_index(entity) is Some(index) {
     rabbits[index].velocity
   } else if find_block_index(entity) is Some(index) {
@@ -132,12 +132,12 @@ fn velocity_for_entity(entity : @entity.Entity) -> @math.Vec2D {
   } else if find_target_index(entity) is Some(index) {
     targets[index].velocity
   } else {
-    @physics2d.rigid_body_linear_velocity(entity).unwrap_or(@math.Vec2D::zero())
+    @physics2d.rigid_body_linear_velocity(entity).unwrap_or(@math.Vec2::zero())
   }
 }
 
 ///|
-fn collision_damage_from_velocity(velocity : @math.Vec2D) -> Double {
+fn collision_damage_from_velocity(velocity : @math.Vec2) -> Double {
   vec_length(velocity) / PHYSICS_PIXELS_PER_METER * COLLISION_DAMAGE_FACTOR
 }
 
@@ -170,7 +170,7 @@ fn destroy_block(index : Int) -> Unit {
   }
   blocks[index] = {
     ..block,
-    velocity: @math.Vec2D::zero(),
+    velocity: @math.Vec2::zero(),
     health: 0.0,
     alive: false,
   }
@@ -219,7 +219,7 @@ fn current_rabbit_out_of_bounds() -> Bool {
 }
 
 ///|
-fn rect_body_out_of_bounds(center : @math.Vec2D, size : @math.Vec2D) -> Bool {
+fn rect_body_out_of_bounds(center : @math.Vec2, size : @math.Vec2) -> Bool {
   let half = size.scalar_mul(0.5)
   center[X] + half[X] < -OUT_OF_BOUNDS_MARGIN ||
   center[X] - half[X] > VIEWPORT_WIDTH + OUT_OF_BOUNDS_MARGIN ||
@@ -227,7 +227,7 @@ fn rect_body_out_of_bounds(center : @math.Vec2D, size : @math.Vec2D) -> Bool {
 }
 
 ///|
-fn circle_body_out_of_bounds(center : @math.Vec2D, radius : Double) -> Bool {
+fn circle_body_out_of_bounds(center : @math.Vec2, radius : Double) -> Bool {
   center[X] + radius < -OUT_OF_BOUNDS_MARGIN ||
   center[X] - radius > VIEWPORT_WIDTH + OUT_OF_BOUNDS_MARGIN ||
   center[Y] - radius > VIEWPORT_HEIGHT + OUT_OF_BOUNDS_MARGIN
@@ -374,8 +374,8 @@ fn apply_contact_damage_events() -> Unit {
 ///|
 fn start_rabbit_motion(
   kind : RabbitMotionKind,
-  start : @math.Vec2D,
-  end_ : @math.Vec2D,
+  start : @math.Vec2,
+  end_ : @math.Vec2,
 ) -> Unit {
   rabbit_motion_kind.val = kind
   rabbit_motion_start.val = start
@@ -490,7 +490,7 @@ fn update_camera(delta : Double) -> Unit {
               camera_follow_max_x(),
             )
             set_camera_anchor_position(
-              @math.Vec2D(clamped_x, camera_start_position.val[Y]),
+              @math.Vec2(clamped_x, camera_start_position.val[Y]),
             )
           } else {
             camera_mode.val = CameraIdle
@@ -622,11 +622,11 @@ fn simulation_system(_world : @ecs.World) -> Unit {
     match debug_tracked_rabbit_entity.val {
       Some(entity) => {
         let before_center = @physics2d.rigid_body_translation(entity).map_or(
-          @math.Vec2D::zero(),
-          fn(top_left) { top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS) },
+          @math.Vec2::zero(),
+          fn(top_left) { top_left + @math.Vec2(RABBIT_RADIUS, RABBIT_RADIUS) },
         )
         let before_velocity = @physics2d.rigid_body_linear_velocity(entity).unwrap_or(
-          @math.Vec2D::zero(),
+          @math.Vec2::zero(),
         )
         let state_summary = match find_rabbit_index(entity) {
           Some(index) =>
@@ -649,11 +649,11 @@ fn simulation_system(_world : @ecs.World) -> Unit {
     match debug_tracked_rabbit_entity.val {
       Some(entity) => {
         let after_center = @physics2d.rigid_body_translation(entity).map_or(
-          @math.Vec2D::zero(),
-          fn(top_left) { top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS) },
+          @math.Vec2::zero(),
+          fn(top_left) { top_left + @math.Vec2(RABBIT_RADIUS, RABBIT_RADIUS) },
         )
         let after_velocity = @physics2d.rigid_body_linear_velocity(entity).unwrap_or(
-          @math.Vec2D::zero(),
+          @math.Vec2::zero(),
         )
         let state_summary = match find_rabbit_index(entity) {
           Some(index) =>
@@ -696,9 +696,9 @@ fn physics_debug_trace_system(_world : @ecs.World) -> Unit {
   guard @physics2d.rigid_body_translation(entity) is Some(top_left) else {
     return
   }
-  let center = top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS)
+  let center = top_left + @math.Vec2(RABBIT_RADIUS, RABBIT_RADIUS)
   let velocity = @physics2d.rigid_body_linear_velocity(entity).unwrap_or(
-    @math.Vec2D::zero(),
+    @math.Vec2::zero(),
   )
   debug_physics_center.val = center
   debug_physics_velocity.val = velocity

@@ -387,7 +387,7 @@ priv struct PlayerState {
   id : PlayerId
   entity : @entity.Entity
   active : Bool
-  mut center : @math.Vec2D
+  mut center : @math.Vec2
   mut direction : Direction?
   mut desired_direction : Direction?
   mut facing : Direction
@@ -407,7 +407,7 @@ priv struct EnemyState {
   entity : @entity.Entity
   mut cell_x : Int
   mut cell_y : Int
-  mut center : @math.Vec2D
+  mut center : @math.Vec2
   mut direction : Direction
   mut desired_direction : Direction
   mut facing : Direction
@@ -806,10 +806,10 @@ let capture_perf_frame_count : Ref[Int] = { val: 0 }
 let capture_perf_frame_dt_total : Ref[Double] = { val: 0.0 }
 
 ///|
-let movement_player_bomb_centers : Array[Array[@math.Vec2D]] = [[], []]
+let movement_player_bomb_centers : Array[Array[@math.Vec2]] = [[], []]
 
 ///|
-let movement_enemy_bomb_centers : Array[@math.Vec2D] = []
+let movement_enemy_bomb_centers : Array[@math.Vec2] = []
 
 ///|
 let movement_tile_rects_cache : Array[Rect] = []
@@ -839,8 +839,8 @@ fn cell_in_bounds(x : Int, y : Int) -> Bool {
 }
 
 ///|
-fn cell_center(x : Int, y : Int) -> @math.Vec2D {
-  @math.Vec2D(
+fn cell_center(x : Int, y : Int) -> @math.Vec2 {
+  @math.Vec2(
     GRID_OFFSET_X + x.to_double() * CELL_SIZE + CELL_SIZE / 2.0,
     GRID_OFFSET_Y + y.to_double() * CELL_SIZE + CELL_SIZE / 2.0,
   )
@@ -1039,8 +1039,8 @@ fn player_color(id : PlayerId, alive : Bool) -> String {
 }
 
 ///|
-fn cell_top_left(x : Int, y : Int) -> @math.Vec2D {
-  @math.Vec2D(
+fn cell_top_left(x : Int, y : Int) -> @math.Vec2 {
+  @math.Vec2(
     GRID_OFFSET_X + x.to_double() * CELL_SIZE,
     GRID_OFFSET_Y + y.to_double() * CELL_SIZE,
   )
@@ -1058,7 +1058,7 @@ fn cell_bounds(x : Int, y : Int) -> Rect {
 }
 
 ///|
-fn world_to_cell(center : @math.Vec2D) -> (Int, Int) {
+fn world_to_cell(center : @math.Vec2) -> (Int, Int) {
   let raw_x = @cmath.floor((center[X] - GRID_OFFSET_X) / CELL_SIZE).to_int()
   let raw_y = @cmath.floor((center[Y] - GRID_OFFSET_Y) / CELL_SIZE).to_int()
   (clamp_int(raw_x, 0, GRID_WIDTH - 1), clamp_int(raw_y, 0, GRID_HEIGHT - 1))
@@ -1079,13 +1079,13 @@ fn nearest_lane_center_y(y : Double) -> Double {
 }
 
 ///|
-fn floor_tile_size() -> @math.Vec2D {
-  @math.Vec2D(CELL_SIZE - FLOOR_INSET * 2.0, CELL_SIZE - FLOOR_INSET * 2.0)
+fn floor_tile_size() -> @math.Vec2 {
+  @math.Vec2(CELL_SIZE - FLOOR_INSET * 2.0, CELL_SIZE - FLOOR_INSET * 2.0)
 }
 
 ///|
-fn floor_tile_position(x : Int, y : Int) -> @math.Vec2D {
-  cell_top_left(x, y) + @math.Vec2D(FLOOR_INSET, FLOOR_INSET)
+fn floor_tile_position(x : Int, y : Int) -> @math.Vec2 {
+  cell_top_left(x, y) + @math.Vec2(FLOOR_INSET, FLOOR_INSET)
 }
 
 ///|
@@ -1099,12 +1099,12 @@ fn direction_delta(direction : Direction) -> (Int, Int) {
 }
 
 ///|
-fn direction_vector(direction : Direction) -> @math.Vec2D {
+fn direction_vector(direction : Direction) -> @math.Vec2 {
   match direction {
-    Up => @math.Vec2D(0.0, -1.0)
-    Down => @math.Vec2D(0.0, 1.0)
-    Left => @math.Vec2D(-1.0, 0.0)
-    Right => @math.Vec2D(1.0, 0.0)
+    Up => @math.Vec2(0.0, -1.0)
+    Down => @math.Vec2(0.0, 1.0)
+    Left => @math.Vec2(-1.0, 0.0)
+    Right => @math.Vec2(1.0, 0.0)
   }
 }
 

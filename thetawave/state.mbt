@@ -154,12 +154,12 @@ fn text_anchor(text : TextState) -> @sprite.Anchor {
     Center => 0.0
     Bottom => -0.5
   }
-  @sprite.Anchor(@math.Vec2D(x, y))
+  @sprite.Anchor(@math.Vec2(x, y))
 }
 
 ///|
 fn entity_transform_2d(
-  position : @math.Vec2D,
+  position : @math.Vec2,
   zindex? : Int = 0,
 ) -> @transform.Transform {
   {
@@ -170,7 +170,7 @@ fn entity_transform_2d(
 }
 
 ///|
-fn set_entity_position(entity : @entity.Entity, position : @math.Vec2D) -> Unit {
+fn set_entity_position(entity : @entity.Entity, position : @math.Vec2) -> Unit {
   let transform = @transform.transforms()
     .get(entity)
     .unwrap_or(entity_transform_2d(position))
@@ -185,11 +185,11 @@ fn set_entity_position(entity : @entity.Entity, position : @math.Vec2D) -> Unit 
 }
 
 ///|
-fn entity_position(entity : @entity.Entity) -> @math.Vec2D? {
+fn entity_position(entity : @entity.Entity) -> @math.Vec2? {
   @transform.transforms()
   .get(entity)
   .map(fn(transform) {
-    @math.Vec2D(transform.translation.x, transform.translation.y)
+    @math.Vec2(transform.translation.x, transform.translation.y)
   })
 }
 
@@ -352,7 +352,7 @@ priv struct Enemy {
 ///|
 priv struct Bullet {
   mut ttl : Double
-  velocity : @math.Vec2D
+  velocity : @math.Vec2
   damage : Int
   faction : BulletFaction
   radius : Double
@@ -374,7 +374,7 @@ priv struct ItemDrop {
 priv struct EnemyVisualPart {
   entity : @entity.Entity
   role : EnemyPartRole
-  offset : @math.Vec2D
+  offset : @math.Vec2
   bob_amp : Double
   bob_speed : Double
   bob_phase : Double
@@ -596,7 +596,7 @@ priv struct GameState {
   mut special_cooldown : Double
   mut player_invulnerable : Double
   mut charge_time_left : Double
-  mut charge_velocity : @math.Vec2D
+  mut charge_velocity : @math.Vec2
   mut attraction_distance : Double
   mut attraction_acceleration : Double
   mut base_cooldown_multiplier : Double
@@ -754,7 +754,7 @@ let game_state : GameState = {
   special_cooldown: 0.0,
   player_invulnerable: 0.0,
   charge_time_left: 0.0,
-  charge_velocity: @math.Vec2D(0.0, 0.0),
+  charge_velocity: @math.Vec2(0.0, 0.0),
   attraction_distance: 150.0,
   attraction_acceleration: 15.0,
   base_cooldown_multiplier: 2.0,
@@ -851,8 +851,8 @@ fn ensure_debug_runtime_state() -> Unit {
 }
 
 ///|
-fn initial_player_position() -> @math.Vec2D {
-  @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT - 34.0)
+fn initial_player_position() -> @math.Vec2 {
+  @math.Vec2(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT - 34.0)
 }
 
 ///|

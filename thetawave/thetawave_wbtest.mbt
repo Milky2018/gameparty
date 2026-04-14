@@ -13,12 +13,12 @@ fn assert_entity_visible(
 
 ///|
 fn setup_test_text_entity(entity : @entity.Entity, text : TextState) -> Unit {
-  setup_text_entity(entity, text, @math.Vec2D::zero())
+  setup_text_entity(entity, text, @math.Vec2::zero())
 }
 
 ///|
 fn assert_vec2_eq(
-  actual : @math.Vec2D,
+  actual : @math.Vec2,
   expected_x : Double,
   expected_y : Double,
 ) -> Unit raise {
@@ -35,8 +35,8 @@ test "clamp keeps value inside bounds" {
 
 ///|
 test "overlaps checks circle intersection" {
-  assert_true(overlaps(@math.Vec2D(0.0, 0.0), 3.0, @math.Vec2D(5.0, 0.0), 2.0))
-  assert_true(!overlaps(@math.Vec2D(0.0, 0.0), 2.0, @math.Vec2D(5.1, 0.0), 2.0))
+  assert_true(overlaps(@math.Vec2(0.0, 0.0), 3.0, @math.Vec2(5.0, 0.0), 2.0))
+  assert_true(!overlaps(@math.Vec2(0.0, 0.0), 2.0, @math.Vec2(5.1, 0.0), 2.0))
 }
 
 ///|
@@ -276,8 +276,8 @@ test "move_towards helpers cap travel distance per tick" {
   assert_eq(move_towards_axis(0.0, 2.0, 3.0), 2.0)
 
   let next = move_towards(
-    @math.Vec2D(0.0, 0.0),
-    @math.Vec2D(10.0, -10.0),
+    @math.Vec2(0.0, 0.0),
+    @math.Vec2(10.0, -10.0),
     3.0,
     4.0,
   )
@@ -428,15 +428,15 @@ test "ferritharax arm offsets differ by side and variant" {
 
 ///|
 test "spawn_from_world clamps x into viewport bounds" {
-  let left = spawn_from_world(@math.Vec2D(-9999.0, 500.0), 20.0)
+  let left = spawn_from_world(@math.Vec2(-9999.0, 500.0), 20.0)
   assert_eq(left[X], 20.0)
   assert_eq(left[Y], -40.0)
 
-  let right = spawn_from_world(@math.Vec2D(9999.0, 500.0), 20.0)
+  let right = spawn_from_world(@math.Vec2(9999.0, 500.0), 20.0)
   assert_eq(right[X], VIEWPORT_WIDTH - 20.0)
   assert_eq(right[Y], -40.0)
 
-  let center = spawn_from_world(@math.Vec2D(0.0, 350.0), 12.0)
+  let center = spawn_from_world(@math.Vec2(0.0, 350.0), 12.0)
   assert_eq(center[X], VIEWPORT_WIDTH / 2.0)
   assert_eq(center[Y], 5.0)
 }
@@ -1113,7 +1113,7 @@ test "character selection text clipping respects lane width constraints" {
 ///|
 test "menu button text center uses button rect and fallback anchor" {
   let button = @entity.Entity::new()
-  set_entity_position(button, @math.Vec2D(100.0, 200.0))
+  set_entity_position(button, @math.Vec2(100.0, 200.0))
   let center = text_center_for_menu_button(button)
   assert_eq(center[X], 100.0 + MENU_BUTTON_WIDTH / 2.0)
   assert_eq(
@@ -1140,22 +1140,22 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
   let old_start_button = @ui.buttons().get(start_entity)
   let old_exit_button = @ui.buttons().get(exit_entity)
 
-  set_entity_position(start_entity, @math.Vec2D(160.0, 176.0))
-  set_entity_position(exit_entity, @math.Vec2D(160.0, 242.0))
+  set_entity_position(start_entity, @math.Vec2(160.0, 176.0))
+  set_entity_position(exit_entity, @math.Vec2(160.0, 242.0))
   @ui.buttons().set(start_entity, @ui.Button::new())
   @ui.buttons().set(exit_entity, @ui.Button::new())
   @ui.nodes().set(
     start_entity,
-    @ui.Node::absolute(@math.Vec2D::zero(), size=@math.Vec2D(160.0, 22.0)),
+    @ui.Node::absolute(@math.Vec2::zero(), size=@math.Vec2(160.0, 22.0)),
   )
   @ui.nodes().set(
     exit_entity,
-    @ui.Node::absolute(@math.Vec2D::zero(), size=@math.Vec2D(160.0, 22.0)),
+    @ui.Node::absolute(@math.Vec2::zero(), size=@math.Vec2(160.0, 22.0)),
   )
 
   let exit_position = menu_entity_virtual_position(exit_entity)
   let exit_size = menu_button_hit_size(exit_entity)
-  let exit_center_virtual = @math.Vec2D(
+  let exit_center_virtual = @math.Vec2(
     exit_position[X] + exit_size[X] / 2.0,
     exit_position[Y] + exit_size[Y] / 2.0,
   )
@@ -1421,25 +1421,25 @@ test "character slot visibility follows joined state for carousel portraits" {
   for entity in all_entities {
     @sprite.sprites().set(
       entity,
-      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
+      color_rect_sprite(@math.Vec2(1.0, 1.0), "white", 1),
     )
   }
   for entity in stat_icon_uis {
     @sprite.sprites().set(
       entity,
-      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
+      color_rect_sprite(@math.Vec2(1.0, 1.0), "white", 1),
     )
   }
   for entity in stat_bg_uis {
     @sprite.sprites().set(
       entity,
-      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
+      color_rect_sprite(@math.Vec2(1.0, 1.0), "white", 1),
     )
   }
   for entity in stat_fill_uis {
     @sprite.sprites().set(
       entity,
-      color_rect_sprite(@math.Vec2D(1.0, 1.0), "white", 1),
+      color_rect_sprite(@math.Vec2(1.0, 1.0), "white", 1),
     )
   }
 

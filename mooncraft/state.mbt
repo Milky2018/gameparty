@@ -196,7 +196,7 @@ const DEBUG_SHOW_MARKER : Bool = false
 const DEBUG_VERBOSE_STARTUP : Bool = false
 
 ///|
-fn debug_vec2_string(value : @math.Vec2D) -> String {
+fn debug_vec2_string(value : @math.Vec2) -> String {
   "(\{value[X]}, \{value[Y]})"
 }
 
@@ -274,7 +274,7 @@ pub(all) struct HotbarSlot {
 ///|
 pub(all) struct InventoryState {
   mut open : Bool
-  mut cursor : @math.Vec2D
+  mut cursor : @math.Vec2
   mut scroll_row : Int
   catalog : Array[CatalogEntry]
   mut hotbar : Array[HotbarSlot]
@@ -334,7 +334,7 @@ let player_controller : Ref[PlayerController] = {
 let inventory_state : Ref[InventoryState] = {
   val: {
     open: false,
-    cursor: @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
+    cursor: @math.Vec2(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
     scroll_row: 0,
     catalog: [],
     hotbar: [],

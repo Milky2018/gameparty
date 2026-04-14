@@ -263,7 +263,7 @@ fn main_menu_pressed_index() -> Int? {
 ///|
 fn menu_button_contains_virtual_point(
   entity : @entity.Entity,
-  point : @math.Vec2D,
+  point : @math.Vec2,
 ) -> Bool {
   let size = menu_button_hit_size(entity)
   if size[X] <= 0.0 || size[Y] <= 0.0 {
@@ -277,16 +277,16 @@ fn menu_button_contains_virtual_point(
 }
 
 ///|
-fn menu_button_hit_size(entity : @entity.Entity) -> @math.Vec2D {
+fn menu_button_hit_size(entity : @entity.Entity) -> @math.Vec2 {
   @ui.computed_ui_nodes()
   .get(entity)
   .map_or(
     @ui.nodes()
     .get(entity)
-    .map_or(@math.Vec2D(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT), node => {
+    .map_or(@math.Vec2(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT), node => {
       match (node.width, node.height) {
-        (@ui.Px(width), @ui.Px(height)) => @math.Vec2D(width, height)
-        _ => @math.Vec2D(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT)
+        (@ui.Px(width), @ui.Px(height)) => @math.Vec2(width, height)
+        _ => @math.Vec2(MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT)
       }
     }),
     node => node.size,
@@ -294,8 +294,8 @@ fn menu_button_hit_size(entity : @entity.Entity) -> @math.Vec2D {
 }
 
 ///|
-fn menu_entity_virtual_position(entity : @entity.Entity) -> @math.Vec2D {
-  entity_position(entity).unwrap_or(@math.Vec2D::zero())
+fn menu_entity_virtual_position(entity : @entity.Entity) -> @math.Vec2 {
+  entity_position(entity).unwrap_or(@math.Vec2::zero())
 }
 
 ///|
@@ -370,16 +370,16 @@ fn gamepad_right_just_pressed() -> Bool {
 const GAMEPAD_STICK_DEADZONE : Double = 0.25
 
 ///|
-fn gamepad_left_stick_dir() -> @math.Vec2D {
+fn gamepad_left_stick_dir() -> @math.Vec2 {
   if active_gamepad() is Some(gamepad) {
     let stick = @inputs.gamepad_left_stick(gamepad)
     if stick.distance() >= GAMEPAD_STICK_DEADZONE {
       stick
     } else {
-      @math.Vec2D(0.0, 0.0)
+      @math.Vec2(0.0, 0.0)
     }
   } else {
-    @math.Vec2D(0.0, 0.0)
+    @math.Vec2(0.0, 0.0)
   }
 }
 
@@ -418,7 +418,7 @@ pub fn player_input_system(_world : @ecs.World) -> Unit {
     direction.scalar_mul(game_state.player_speed * delta)
   set_entity_position(
     game_state.player,
-    @math.Vec2D(
+    @math.Vec2(
       clamp(next[X], PLAYER_HALF_SIZE, VIEWPORT_WIDTH - PLAYER_HALF_SIZE),
       clamp(next[Y], PLAYER_HALF_SIZE, VIEWPORT_HEIGHT - PLAYER_HALF_SIZE),
     ),
@@ -472,7 +472,7 @@ fn trigger_special_ability() -> Unit {
 ///|
 fn trigger_mega_blast() -> Unit {
   guard entity_position(game_state.player) is Some(player_position)
-  let base = @math.Vec2D(
+  let base = @math.Vec2(
     player_position[X],
     player_position[Y] - PLAYER_HALF_SIZE - 2.0,
   )
@@ -488,12 +488,12 @@ fn trigger_mega_blast() -> Unit {
       i.to_double() / (count - 1).to_double()
     }
     let angle = -1.5708 + (t - 0.5) * spread
-    let velocity = @math.Vec2D(
+    let velocity = @math.Vec2(
       @cmath.cos(angle) * game_state.projectile_speed * 2.0,
       @cmath.sin(angle) * game_state.projectile_speed * 2.0,
     )
     spawn_player_projectile(
-      base + @math.Vec2D((t - 0.5) * 18.0, 0.0),
+      base + @math.Vec2((t - 0.5) * 18.0, 0.0),
       velocity,
       @cmath.round(game_state.projectile_damage.to_double() * 3.0).to_int(),
       Blast,
@@ -510,7 +510,7 @@ fn trigger_charge() -> Unit {
   let arrows = @inputs.key_vector(ArrowUp, ArrowDown, ArrowLeft, ArrowRight)
   let input_dir = (wasd + arrows + gamepad_left_stick_dir()).normalize()
   let direction = if input_dir.distance() <= 0.0001 {
-    @math.Vec2D(0.0, -1.0)
+    @math.Vec2(0.0, -1.0)
   } else {
     input_dir
   }
@@ -710,7 +710,7 @@ fn spawn_tutorial_enemy(kind : EnemyKind) -> Unit {
   let world_x = TUTORIAL_SPAWN_WORLD_X_MIN +
     game_state.rand.double() *
     (TUTORIAL_SPAWN_WORLD_X_MAX - TUTORIAL_SPAWN_WORLD_X_MIN)
-  let world_pos = @math.Vec2D(world_x, TUTORIAL_SPAWN_WORLD_Y)
+  let world_pos = @math.Vec2(world_x, TUTORIAL_SPAWN_WORLD_Y)
   spawn_enemy(kind, spawn_from_world_for(kind, world_pos))
 }
 
@@ -976,7 +976,7 @@ fn tick_charge(delta : Double) -> Unit {
   let next = player_position + game_state.charge_velocity.scalar_mul(delta)
   set_entity_position(
     game_state.player,
-    @math.Vec2D(
+    @math.Vec2(
       clamp(next[X], PLAYER_HALF_SIZE, VIEWPORT_WIDTH - PLAYER_HALF_SIZE),
       clamp(next[Y], PLAYER_HALF_SIZE, VIEWPORT_HEIGHT - PLAYER_HALF_SIZE),
     ),
@@ -1028,12 +1028,12 @@ fn ferritharax_phase_duration(kind : EnemyKind, phase : Int) -> Double {
 }
 
 ///|
-fn ferritharax_phase_target(kind : EnemyKind, phase : Int) -> @math.Vec2D {
+fn ferritharax_phase_target(kind : EnemyKind, phase : Int) -> @math.Vec2 {
   let world_pos = match phase {
-    0 => @math.Vec2D(0.0, 175.0)
-    1 => @math.Vec2D(175.0, 150.0)
-    2 => @math.Vec2D(0.0, 175.0)
-    _ => @math.Vec2D(-175.0, 150.0)
+    0 => @math.Vec2(0.0, 175.0)
+    1 => @math.Vec2(175.0, 150.0)
+    2 => @math.Vec2(0.0, 175.0)
+    _ => @math.Vec2(-175.0, 150.0)
   }
   spawn_from_world_for(kind, world_pos)
 }
@@ -1056,12 +1056,12 @@ fn move_towards_axis(
 
 ///|
 fn move_towards(
-  current : @math.Vec2D,
-  target : @math.Vec2D,
+  current : @math.Vec2,
+  target : @math.Vec2,
   max_step_x : Double,
   max_step_y : Double,
-) -> @math.Vec2D {
-  @math.Vec2D(
+) -> @math.Vec2 {
+  @math.Vec2(
     move_towards_axis(current[X], target[X], max_step_x),
     move_towards_axis(current[Y], target[Y], max_step_y),
   )
@@ -1086,7 +1086,7 @@ fn advance_periodic_timer(
 fn ferritharax_arm_missile_offset(
   kind : EnemyKind,
   left_arm : Bool,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   let x = if kind is Ferritharax { 80.0 } else { 82.0 }
   let y = match kind {
     Ferritharax => -76.0
@@ -1094,29 +1094,29 @@ fn ferritharax_arm_missile_offset(
     MechaSaucetron => -72.0
     _ => -76.0
   }
-  @math.Vec2D(if left_arm { -x } else { x }, y)
+  @math.Vec2(if left_arm { -x } else { x }, y)
 }
 
 ///|
 fn ferritharax_arm_weapon_offset(
   kind : EnemyKind,
   left_arm : Bool,
-) -> @math.Vec2D {
+) -> @math.Vec2 {
   let x = if left_arm { -77.0 } else { 77.0 }
   let y = match kind {
     MechaFerritharax => -54.0
     MechaSaucetron => -52.0
     _ => -54.0
   }
-  @math.Vec2D(x, y)
+  @math.Vec2(x, y)
 }
 
 ///|
-fn side_spawn_world_positions(phase : Int) -> (@math.Vec2D, @math.Vec2D) {
+fn side_spawn_world_positions(phase : Int) -> (@math.Vec2, @math.Vec2) {
   if phase == 1 {
-    (@math.Vec2D(-400.0, 500.0), @math.Vec2D(-200.0, 500.0))
+    (@math.Vec2(-400.0, 500.0), @math.Vec2(-200.0, 500.0))
   } else {
-    (@math.Vec2D(400.0, 500.0), @math.Vec2D(200.0, 500.0))
+    (@math.Vec2(400.0, 500.0), @math.Vec2(200.0, 500.0))
   }
 }
 
@@ -1152,9 +1152,8 @@ fn move_enemies(delta : Double) -> Unit {
       )
     } else {
       match enemy.movement {
-        DownBrake =>
-          next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
-        DownOnly => next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
+        DownBrake => next = @math.Vec2(next[X], next[Y] + enemy.speed_y * delta)
+        DownOnly => next = @math.Vec2(next[X], next[Y] + enemy.speed_y * delta)
         DownHorizontal => {
           let mut next_x = next[X] +
             enemy.speed_x * enemy.horizontal_dir * delta
@@ -1165,18 +1164,18 @@ fn move_enemies(delta : Double) -> Unit {
             next_x = VIEWPORT_WIDTH - radius
             enemy.horizontal_dir = -1.0
           }
-          next = @math.Vec2D(next_x, next[Y] + enemy.speed_y * delta)
+          next = @math.Vec2(next_x, next[Y] + enemy.speed_y * delta)
         }
         Homing =>
           if player_pos is Some(pp) {
             let dir = (pp - next).normalize()
-            let speed = @math.Vec2D(
+            let speed = @math.Vec2(
               enemy.speed_x * dir[X],
               enemy.speed_y * dir[Y],
             )
             next = next + speed.scalar_mul(delta)
           } else {
-            next = @math.Vec2D(next[X], next[Y] + enemy.speed_y * delta)
+            next = @math.Vec2(next[X], next[Y] + enemy.speed_y * delta)
           }
         BossHover => {
           let hover_y = 72.0
@@ -1197,7 +1196,7 @@ fn move_enemies(delta : Double) -> Unit {
             next_x = right
             enemy.horizontal_dir = -1.0
           }
-          next = @math.Vec2D(next_x, next_y)
+          next = @math.Vec2(next_x, next_y)
         }
       }
     }
@@ -1339,7 +1338,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
           match enemy.kind {
             MechaFerritharax =>
               for spread in [-0.30, 0.0, 0.30] {
-                let dir = @math.Vec2D(0.26 + spread, 1.0).normalize()
+                let dir = @math.Vec2(0.26 + spread, 1.0).normalize()
                 projectile_spawns.push(
                   (origin, dir.scalar_mul(300.0), 5, Bullet, 0.8),
                 )
@@ -1349,7 +1348,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
                 let speed_scale = 0.75 + game_state.rand.double() * 0.5
                 let angle_scale = 0.9 + game_state.rand.double() * 0.2
                 let jitter = (game_state.rand.double() - 0.5) * 0.35
-                let dir = @math.Vec2D(0.26 * angle_scale + jitter, 1.0).normalize()
+                let dir = @math.Vec2(0.26 * angle_scale + jitter, 1.0).normalize()
                 projectile_spawns.push(
                   (origin, dir.scalar_mul(300.0 * speed_scale), 5, Blast, 0.8),
                 )
@@ -1364,7 +1363,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
           match enemy.kind {
             MechaFerritharax =>
               for spread in [-0.30, 0.0, 0.30] {
-                let dir = @math.Vec2D(-0.26 + spread, 1.0).normalize()
+                let dir = @math.Vec2(-0.26 + spread, 1.0).normalize()
                 projectile_spawns.push(
                   (origin, dir.scalar_mul(300.0), 5, Bullet, 0.8),
                 )
@@ -1374,7 +1373,7 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
                 let speed_scale = 0.75 + game_state.rand.double() * 0.5
                 let angle_scale = 0.9 + game_state.rand.double() * 0.2
                 let jitter = (game_state.rand.double() - 0.5) * 0.35
-                let dir = @math.Vec2D(-0.26 * angle_scale + jitter, 1.0).normalize()
+                let dir = @math.Vec2(-0.26 * angle_scale + jitter, 1.0).normalize()
                 projectile_spawns.push(
                   (origin, dir.scalar_mul(300.0 * speed_scale), 5, Blast, 0.8),
                 )
@@ -1397,20 +1396,20 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
     match enemy.shooter {
       NoShooter => ()
       PawnBlaster => {
-        let dir1 = @math.Vec2D(-0.35, 0.94).normalize().scalar_mul(400.0)
-        let dir2 = @math.Vec2D(0.35, 0.94).normalize().scalar_mul(400.0)
+        let dir1 = @math.Vec2(-0.35, 0.94).normalize().scalar_mul(400.0)
+        let dir2 = @math.Vec2(0.35, 0.94).normalize().scalar_mul(400.0)
         projectile_spawns.push(
-          (position + @math.Vec2D(-4.0, 12.0), dir1, 10, Blast, 1.0),
+          (position + @math.Vec2(-4.0, 12.0), dir1, 10, Blast, 1.0),
         )
         projectile_spawns.push(
-          (position + @math.Vec2D(4.0, 12.0), dir2, 10, Blast, 1.0),
+          (position + @math.Vec2(4.0, 12.0), dir2, 10, Blast, 1.0),
         )
       }
       StraferBlaster =>
         projectile_spawns.push(
           (
-            position + @math.Vec2D(0.0, 10.0),
-            @math.Vec2D(0.0, 400.0),
+            position + @math.Vec2(0.0, 10.0),
+            @math.Vec2(0.0, 400.0),
             8,
             Blast,
             1.0,
@@ -1418,19 +1417,19 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
         )
       ShellyRing => {
         let base_dirs = [
-          @math.Vec2D(1.0, 0.0),
-          @math.Vec2D(0.7071, 0.7071),
-          @math.Vec2D(0.0, 1.0),
-          @math.Vec2D(-0.7071, 0.7071),
-          @math.Vec2D(-1.0, 0.0),
-          @math.Vec2D(-0.7071, -0.7071),
-          @math.Vec2D(0.0, -1.0),
-          @math.Vec2D(0.7071, -0.7071),
+          @math.Vec2(1.0, 0.0),
+          @math.Vec2(0.7071, 0.7071),
+          @math.Vec2(0.0, 1.0),
+          @math.Vec2(-0.7071, 0.7071),
+          @math.Vec2(-1.0, 0.0),
+          @math.Vec2(-0.7071, -0.7071),
+          @math.Vec2(0.0, -1.0),
+          @math.Vec2(0.7071, -0.7071),
         ]
         for base_dir in base_dirs {
           let jitter_x = (game_state.rand.double() - 0.5) * 0.18
           let jitter_y = (game_state.rand.double() - 0.5) * 0.18
-          let dir = (base_dir + @math.Vec2D(jitter_x, jitter_y)).normalize()
+          let dir = (base_dir + @math.Vec2(jitter_x, jitter_y)).normalize()
           let speed = 300.0 * (0.75 + game_state.rand.double() * 0.5)
           projectile_spawns.push(
             (position, dir.scalar_mul(speed), 10, Bullet, 0.3),
@@ -1438,19 +1437,19 @@ fn enemy_attack_system(_world : @ecs.World) -> Unit {
         }
       }
       MissileLauncherSpawner =>
-        enemy_spawns.push((Missile, position + @math.Vec2D(0.0, -35.0)))
+        enemy_spawns.push((Missile, position + @math.Vec2(0.0, -35.0)))
       BossSpawner => {
         let escort_y = position[Y] + 22.0
-        enemy_spawns.push((Pawn, @math.Vec2D(120.0, escort_y)))
-        enemy_spawns.push((Pawn, @math.Vec2D(VIEWPORT_WIDTH - 120.0, escort_y)))
+        enemy_spawns.push((Pawn, @math.Vec2(120.0, escort_y)))
+        enemy_spawns.push((Pawn, @math.Vec2(VIEWPORT_WIDTH - 120.0, escort_y)))
         if game_state.rand.double() < 0.7 {
-          enemy_spawns.push((Drone, @math.Vec2D(200.0, escort_y + 25.0)))
+          enemy_spawns.push((Drone, @math.Vec2(200.0, escort_y + 25.0)))
           enemy_spawns.push(
-            (Drone, @math.Vec2D(VIEWPORT_WIDTH - 200.0, escort_y + 25.0)),
+            (Drone, @math.Vec2(VIEWPORT_WIDTH - 200.0, escort_y + 25.0)),
           )
         }
         for offset in [-0.9, -0.45, 0.0, 0.45, 0.9] {
-          let dir = @math.Vec2D(offset, 1.0).normalize()
+          let dir = @math.Vec2(offset, 1.0).normalize()
           projectile_spawns.push(
             (position, dir.scalar_mul(360.0), 12, Blast, 1.1),
           )
@@ -1486,7 +1485,7 @@ fn move_consumables(delta : Double) -> Unit {
       to_remove.push(consumable_entity)
       continue
     }
-    let mut next = @math.Vec2D(
+    let mut next = @math.Vec2(
       position[X],
       position[Y] + consumable.speed * delta,
     )
@@ -1521,7 +1520,7 @@ fn move_items(delta : Double) -> Unit {
       to_remove.push(item_entity)
       continue
     }
-    let mut next = @math.Vec2D(position[X], position[Y] + item.speed * delta)
+    let mut next = @math.Vec2(position[X], position[Y] + item.speed * delta)
     if player_pos is Some(pp) {
       let to_player = pp - position
       let distance = to_player.distance()
@@ -1702,7 +1701,7 @@ fn drop_rules(drop_list : DropListType) -> Array[DropRule] {
 }
 
 ///|
-fn maybe_spawn_drop(kind : EnemyKind, position : @math.Vec2D) -> Unit {
+fn maybe_spawn_drop(kind : EnemyKind, position : @math.Vec2) -> Unit {
   if is_tutorial_stage() {
     return
   }
@@ -1711,7 +1710,7 @@ fn maybe_spawn_drop(kind : EnemyKind, position : @math.Vec2D) -> Unit {
   for rule in rules {
     for _ in 0..<rule.rolls {
       if game_state.rand.double() <= rule.probability {
-        let offset = @math.Vec2D(
+        let offset = @math.Vec2(
           (game_state.rand.double() - 0.5) * 26.0,
           (game_state.rand.double() - 0.5) * 18.0,
         )
@@ -1721,7 +1720,7 @@ fn maybe_spawn_drop(kind : EnemyKind, position : @math.Vec2D) -> Unit {
   }
   if drop_list is Boss {
     for item in boss_item_drops {
-      let offset = @math.Vec2D(
+      let offset = @math.Vec2(
         (game_state.rand.double() - 0.5) * 24.0,
         (game_state.rand.double() - 0.5) * 12.0,
       )
@@ -2122,14 +2121,14 @@ fn update_in_game_hud_widgets() -> Unit {
   @sprite.sprites().set(
     game_state.hud_health_bar_fill_ui,
     color_rect_sprite(
-      @math.Vec2D(10.0, health_fill_h),
+      @math.Vec2(10.0, health_fill_h),
       "rgba(220, 20, 60, 0.85)",
       92,
     ),
   )
   set_entity_position(
     game_state.hud_health_bar_fill_ui,
-    @math.Vec2D(HUD_HEALTH_BAR_FILL_X, 216.0 - health_fill_h),
+    @math.Vec2(HUD_HEALTH_BAR_FILL_X, 216.0 - health_fill_h),
   )
 
   let shield_ratio = if game_state.max_shield <= 0 {
@@ -2145,29 +2144,25 @@ fn update_in_game_hud_widgets() -> Unit {
   @sprite.sprites().set(
     game_state.hud_shield_bar_fill_ui,
     color_rect_sprite(
-      @math.Vec2D(10.0, shield_fill_h),
+      @math.Vec2(10.0, shield_fill_h),
       "rgba(0, 255, 255, 0.75)",
       92,
     ),
   )
   set_entity_position(
     game_state.hud_shield_bar_fill_ui,
-    @math.Vec2D(HUD_SHIELD_BAR_FILL_X, 216.0 - shield_fill_h),
+    @math.Vec2(HUD_SHIELD_BAR_FILL_X, 216.0 - shield_fill_h),
   )
 
   let defense_ratio = clamp(game_state.defense.to_double() / 100.0, 0.0, 1.0)
   let defense_w = 120.0 * defense_ratio
   @sprite.sprites().set(
     game_state.hud_defense_bar_fill_ui,
-    color_rect_sprite(
-      @math.Vec2D(defense_w, 8.0),
-      "rgba(40, 110, 255, 0.9)",
-      94,
-    ),
+    color_rect_sprite(@math.Vec2(defense_w, 8.0), "rgba(40, 110, 255, 0.9)", 94),
   )
   set_entity_position(
     game_state.hud_defense_bar_fill_ui,
-    @math.Vec2D(180.0, 295.0),
+    @math.Vec2(180.0, 295.0),
   )
 
   let slot1_ratio = if current_shoot_interval() <= 0.0001 {
@@ -2179,14 +2174,14 @@ fn update_in_game_hud_widgets() -> Unit {
   @sprite.sprites().set(
     game_state.hud_slot1_fill_ui,
     color_rect_sprite(
-      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot1_h),
+      @math.Vec2(HUD_ABILITY_SLOT_FILL_WIDTH, slot1_h),
       "rgba(0, 0, 0, 0.55)",
       95,
     ),
   )
   set_entity_position(
     game_state.hud_slot1_fill_ui,
-    @math.Vec2D(
+    @math.Vec2(
       HUD_ABILITY_SLOT_LEFT_X,
       HUD_ABILITY_SLOT1_FILL_BOTTOM_Y - slot1_h,
     ),
@@ -2202,14 +2197,14 @@ fn update_in_game_hud_widgets() -> Unit {
   @sprite.sprites().set(
     game_state.hud_slot2_fill_ui,
     color_rect_sprite(
-      @math.Vec2D(HUD_ABILITY_SLOT_FILL_WIDTH, slot2_h),
+      @math.Vec2(HUD_ABILITY_SLOT_FILL_WIDTH, slot2_h),
       "rgba(0, 0, 0, 0.55)",
       95,
     ),
   )
   set_entity_position(
     game_state.hud_slot2_fill_ui,
-    @math.Vec2D(
+    @math.Vec2(
       HUD_ABILITY_SLOT_LEFT_X,
       HUD_ABILITY_SLOT2_FILL_BOTTOM_Y - slot2_h,
     ),
@@ -2481,7 +2476,7 @@ fn update_tutorial_phase_data_lines() -> Bool {
       sync_text_ui_sprite(entity, text)
       set_entity_position(
         entity,
-        @math.Vec2D(
+        @math.Vec2(
           HUD_TOP_RIGHT_PANEL_X,
           TUTORIAL_PHASE_LINE_BASE_Y +
           i.to_double() * TUTORIAL_PHASE_LINE_STEP_Y,
@@ -2541,7 +2536,7 @@ fn update_border_gradient_widgets() -> Unit {
     )
     set_entity_position(
       game_state.warning_gradient_ui,
-      @math.Vec2D(0.0, VIEWPORT_HEIGHT - warning_h),
+      @math.Vec2(0.0, VIEWPORT_HEIGHT - warning_h),
     )
   } else {
     set_ui_visible(game_state.warning_gradient_ui, false)
@@ -2556,7 +2551,7 @@ fn update_border_gradient_widgets() -> Unit {
     )
     set_entity_position(
       game_state.defense_gradient_ui,
-      @math.Vec2D(0.0, VIEWPORT_HEIGHT - defense_h),
+      @math.Vec2(0.0, VIEWPORT_HEIGHT - defense_h),
     )
   } else {
     set_ui_visible(game_state.defense_gradient_ui, false)
@@ -2770,7 +2765,7 @@ fn update_character_selection_widgets_for_slot(
     @sprite.sprites().set(
       stat_bg_uis[i],
       color_rect_sprite(
-        @math.Vec2D(stat_fill_max_width + 8.0, 7.0),
+        @math.Vec2(stat_fill_max_width + 8.0, 7.0),
         "rgba(255,255,255,0.15)",
         89,
       ),
@@ -2780,7 +2775,7 @@ fn update_character_selection_widgets_for_slot(
     @sprite.sprites().set(
       stat_fill_uis[i],
       color_rect_sprite(
-        @math.Vec2D(fill_width, 5.0),
+        @math.Vec2(fill_width, 5.0),
         "rgba(255,255,255,0.95)",
         90,
       ),
@@ -2938,15 +2933,15 @@ const CS_RIGHT_ABILITY_TEXT_MAX_WIDTH : Double = CS_RIGHT_STAT_ICON_X -
   CS_ABILITY_TEXT_GAP_TO_STAT_ICON
 
 ///|
-fn text_center_for_menu_button(button : @entity.Entity) -> @math.Vec2D {
+fn text_center_for_menu_button(button : @entity.Entity) -> @math.Vec2 {
   if entity_position(button) is Some(pos) {
     let base = pos
-    @math.Vec2D(
+    @math.Vec2(
       base[X] + MENU_BUTTON_WIDTH / 2.0,
       base[Y] + MENU_BUTTON_HEIGHT / 2.0 + MENU_BUTTON_TEXT_Y_TWEAK,
     )
   } else {
-    @math.Vec2D(240.0, 193.0)
+    @math.Vec2(240.0, 193.0)
   }
 }
 
@@ -2970,148 +2965,148 @@ fn apply_main_menu_layout() -> Unit {
   )
   set_entity_position(
     game_state.stage_ui,
-    @math.Vec2D(VIEWPORT_WIDTH - 150.0, 8.0),
+    @math.Vec2(VIEWPORT_WIDTH - 150.0, 8.0),
   )
-  set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
-  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 304.0))
+  set_entity_position(game_state.timer_ui, @math.Vec2(240.0, 286.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2(240.0, 304.0))
 }
 
 ///|
 fn apply_character_selection_layout() -> Unit {
-  set_entity_position(game_state.score_ui, @math.Vec2D(8.0, 8.0))
-  set_entity_position(game_state.hull_ui, @math.Vec2D(8.0, 36.0))
-  set_entity_position(game_state.shield_ui, @math.Vec2D(8.0, 56.0))
-  set_entity_position(game_state.defense_ui, @math.Vec2D(8.0, 76.0))
-  set_entity_position(game_state.stage_ui, @math.Vec2D(240.0, 8.0))
-  set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 20.0))
-  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 302.0))
+  set_entity_position(game_state.score_ui, @math.Vec2(8.0, 8.0))
+  set_entity_position(game_state.hull_ui, @math.Vec2(8.0, 36.0))
+  set_entity_position(game_state.shield_ui, @math.Vec2(8.0, 56.0))
+  set_entity_position(game_state.defense_ui, @math.Vec2(8.0, 76.0))
+  set_entity_position(game_state.stage_ui, @math.Vec2(240.0, 8.0))
+  set_entity_position(game_state.timer_ui, @math.Vec2(240.0, 20.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2(240.0, 302.0))
   set_entity_position(
     game_state.character_portrait_ui,
-    @math.Vec2D(CS_P1_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
+    @math.Vec2(CS_P1_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
   )
   set_entity_position(
     character_left_portrait_ui,
-    @math.Vec2D(
+    @math.Vec2(
       CS_P1_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
   set_entity_position(
     character_right_portrait_ui,
-    @math.Vec2D(
+    @math.Vec2(
       CS_P1_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
   set_entity_position(
     character_name_ui,
-    @math.Vec2D(CS_P1_CAROUSEL_CENTER_X, CS_NAME_Y),
+    @math.Vec2(CS_P1_CAROUSEL_CENTER_X, CS_NAME_Y),
   )
   set_entity_position(
     character_ability_slot1_ui,
-    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
+    @math.Vec2(CS_LEFT_ABILITY_SLOT_X, 212.0),
   )
   set_entity_position(
     character_ability_slot1_icon_ui,
-    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 212.0),
+    @math.Vec2(CS_LEFT_ABILITY_SLOT_X, 212.0),
   )
   set_entity_position(
     character_ability_slot1_text_ui,
-    @math.Vec2D(CS_LEFT_ABILITY_TEXT_X, 206.0),
+    @math.Vec2(CS_LEFT_ABILITY_TEXT_X, 206.0),
   )
   set_entity_position(
     character_ability_slot2_ui,
-    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 246.0),
+    @math.Vec2(CS_LEFT_ABILITY_SLOT_X, 246.0),
   )
   set_entity_position(
     character_ability_slot2_icon_ui,
-    @math.Vec2D(CS_LEFT_ABILITY_SLOT_X, 246.0),
+    @math.Vec2(CS_LEFT_ABILITY_SLOT_X, 246.0),
   )
   set_entity_position(
     character_ability_slot2_text_ui,
-    @math.Vec2D(CS_LEFT_ABILITY_TEXT_X, 240.0),
+    @math.Vec2(CS_LEFT_ABILITY_TEXT_X, 240.0),
   )
   for i in 0..<character_stats_order.length() {
     let y = 206.0 + i.to_double() * 14.0
     set_entity_position(
       character_stat_icon_uis[i],
-      @math.Vec2D(CS_LEFT_STAT_ICON_X, y),
+      @math.Vec2(CS_LEFT_STAT_ICON_X, y),
     )
-    set_entity_position(character_stat_bg_uis[i], @math.Vec2D(216.0, y))
-    set_entity_position(character_stat_fill_uis[i], @math.Vec2D(218.0, y + 1.0))
+    set_entity_position(character_stat_bg_uis[i], @math.Vec2(216.0, y))
+    set_entity_position(character_stat_fill_uis[i], @math.Vec2(218.0, y + 1.0))
   }
-  set_entity_position(character_join_prompt_ui, @math.Vec2D(120.0, 130.0))
-  set_entity_position(character_ready_text_ui, @math.Vec2D(120.0, 282.0))
+  set_entity_position(character_join_prompt_ui, @math.Vec2(120.0, 130.0))
+  set_entity_position(character_ready_text_ui, @math.Vec2(120.0, 282.0))
 
   set_entity_position(
     character_p2_center_portrait_ui,
-    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
+    @math.Vec2(CS_P2_CAROUSEL_CENTER_X, CS_PORTRAIT_CENTER_Y),
   )
   set_entity_position(
     character_p2_left_portrait_ui,
-    @math.Vec2D(
+    @math.Vec2(
       CS_P2_CAROUSEL_CENTER_X - CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
   set_entity_position(
     character_p2_right_portrait_ui,
-    @math.Vec2D(
+    @math.Vec2(
       CS_P2_CAROUSEL_CENTER_X + CS_CAROUSEL_SIDE_OFFSET_X,
       CS_PORTRAIT_CENTER_Y,
     ),
   )
   set_entity_position(
     character_p2_name_ui,
-    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, CS_NAME_Y),
+    @math.Vec2(CS_P2_CAROUSEL_CENTER_X, CS_NAME_Y),
   )
   set_entity_position(
     character_p2_ability_slot1_ui,
-    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
+    @math.Vec2(CS_RIGHT_ABILITY_SLOT_X, 212.0),
   )
   set_entity_position(
     character_p2_ability_slot1_icon_ui,
-    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 212.0),
+    @math.Vec2(CS_RIGHT_ABILITY_SLOT_X, 212.0),
   )
   set_entity_position(
     character_p2_ability_slot1_text_ui,
-    @math.Vec2D(CS_RIGHT_ABILITY_TEXT_X, 206.0),
+    @math.Vec2(CS_RIGHT_ABILITY_TEXT_X, 206.0),
   )
   set_entity_position(
     character_p2_ability_slot2_ui,
-    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 246.0),
+    @math.Vec2(CS_RIGHT_ABILITY_SLOT_X, 246.0),
   )
   set_entity_position(
     character_p2_ability_slot2_icon_ui,
-    @math.Vec2D(CS_RIGHT_ABILITY_SLOT_X, 246.0),
+    @math.Vec2(CS_RIGHT_ABILITY_SLOT_X, 246.0),
   )
   set_entity_position(
     character_p2_ability_slot2_text_ui,
-    @math.Vec2D(CS_RIGHT_ABILITY_TEXT_X, 240.0),
+    @math.Vec2(CS_RIGHT_ABILITY_TEXT_X, 240.0),
   )
   for i in 0..<character_stats_order.length() {
     let y = 206.0 + i.to_double() * 14.0
     set_entity_position(
       character_p2_stat_icon_uis[i],
-      @math.Vec2D(CS_RIGHT_STAT_ICON_X, y),
+      @math.Vec2(CS_RIGHT_STAT_ICON_X, y),
     )
-    set_entity_position(character_p2_stat_bg_uis[i], @math.Vec2D(456.0, y))
+    set_entity_position(character_p2_stat_bg_uis[i], @math.Vec2(456.0, y))
     set_entity_position(
       character_p2_stat_fill_uis[i],
-      @math.Vec2D(458.0, y + 1.0),
+      @math.Vec2(458.0, y + 1.0),
     )
   }
   set_entity_position(
     character_p2_join_prompt_ui,
-    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, 130.0),
+    @math.Vec2(CS_P2_CAROUSEL_CENTER_X, 130.0),
   )
   set_entity_position(
     character_p2_ready_text_ui,
-    @math.Vec2D(CS_P2_CAROUSEL_CENTER_X, 282.0),
+    @math.Vec2(CS_P2_CAROUSEL_CENTER_X, 282.0),
   )
   set_entity_position(
     game_state.character_description_ui,
-    @math.Vec2D(240.0, 245.0),
+    @math.Vec2(240.0, 245.0),
   )
 }
 
@@ -3120,33 +3115,33 @@ fn apply_in_game_layout() -> Unit {
   let bottom_row_center_y = VIEWPORT_HEIGHT - VIEWPORT_HEIGHT * 0.13 / 2.0
   set_entity_position(
     game_state.score_ui,
-    @math.Vec2D(HUD_CENTER_LEFT_X, bottom_row_center_y),
+    @math.Vec2(HUD_CENTER_LEFT_X, bottom_row_center_y),
   )
-  set_entity_position(game_state.hull_ui, @math.Vec2D(8.0, 8.0))
-  set_entity_position(game_state.shield_ui, @math.Vec2D(8.0, 28.0))
-  set_entity_position(game_state.defense_ui, @math.Vec2D(8.0, 48.0))
+  set_entity_position(game_state.hull_ui, @math.Vec2(8.0, 8.0))
+  set_entity_position(game_state.shield_ui, @math.Vec2(8.0, 28.0))
+  set_entity_position(game_state.defense_ui, @math.Vec2(8.0, 48.0))
   set_entity_position(
     game_state.stage_ui,
-    @math.Vec2D(HUD_TOP_LEFT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
+    @math.Vec2(HUD_TOP_LEFT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
   )
   set_entity_position(
     game_state.timer_ui,
-    @math.Vec2D(HUD_TOP_RIGHT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
+    @math.Vec2(HUD_TOP_RIGHT_PANEL_X + HUD_TOP_PANEL_WIDTH / 2.0, 8.0),
   )
-  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 145.0))
-  set_entity_position(game_state.phase_prompt_ui, @math.Vec2D(240.0, 244.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2(240.0, 145.0))
+  set_entity_position(game_state.phase_prompt_ui, @math.Vec2(240.0, 244.0))
 }
 
 ///|
 fn apply_end_screen_layout() -> Unit {
-  set_entity_position(game_state.stage_ui, @math.Vec2D(240.0, 36.0))
-  set_entity_position(game_state.score_ui, @math.Vec2D(120.0, 112.0))
-  set_entity_position(game_state.hull_ui, @math.Vec2D(120.0, 138.0))
-  set_entity_position(game_state.shield_ui, @math.Vec2D(120.0, 164.0))
-  set_entity_position(game_state.defense_ui, @math.Vec2D(120.0, 190.0))
-  set_entity_position(game_state.timer_ui, @math.Vec2D(240.0, 286.0))
-  set_entity_position(game_state.banner_ui, @math.Vec2D(240.0, 306.0))
-  set_entity_position(game_state.phase_prompt_ui, @math.Vec2D(240.0, 244.0))
+  set_entity_position(game_state.stage_ui, @math.Vec2(240.0, 36.0))
+  set_entity_position(game_state.score_ui, @math.Vec2(120.0, 112.0))
+  set_entity_position(game_state.hull_ui, @math.Vec2(120.0, 138.0))
+  set_entity_position(game_state.shield_ui, @math.Vec2(120.0, 164.0))
+  set_entity_position(game_state.defense_ui, @math.Vec2(120.0, 190.0))
+  set_entity_position(game_state.timer_ui, @math.Vec2(240.0, 286.0))
+  set_entity_position(game_state.banner_ui, @math.Vec2(240.0, 306.0))
+  set_entity_position(game_state.phase_prompt_ui, @math.Vec2(240.0, 244.0))
 }
 
 ///|
@@ -3517,9 +3512,9 @@ fn enemy_radius(kind : EnemyKind) -> Double {
 
 ///|
 fn overlaps(
-  a : @math.Vec2D,
+  a : @math.Vec2,
   a_radius : Double,
-  b : @math.Vec2D,
+  b : @math.Vec2,
   b_radius : Double,
 ) -> Bool {
   a.distance_to(b) <= a_radius + b_radius

@@ -11,7 +11,7 @@ fn set_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 }
 
 ///|
-fn transform_2d(center : @math.Vec2D, z : Double) -> @transform.Transform {
+fn transform_2d(center : @math.Vec2, z : Double) -> @transform.Transform {
   {
     translation: @math.Vec3::new(center[X], center[Y], z),
     rotation: @math.Quat::identity(),
@@ -23,13 +23,13 @@ fn transform_2d(center : @math.Vec2D, z : Double) -> @transform.Transform {
 fn set_sprite_entity(
   entity : @entity.Entity,
   color : @render.Color,
-  size : @math.Vec2D,
-  center : @math.Vec2D,
+  size : @math.Vec2,
+  center : @math.Vec2,
   z : Double,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(color, size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(center, z))
   set_visibility(entity, true)
@@ -39,7 +39,7 @@ fn set_sprite_entity(
 fn set_text_entity(
   entity : @entity.Entity,
   content : String,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   font_size : String,
   color : @render.Color,
 ) -> Unit {
@@ -52,7 +52,7 @@ fn set_text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(center, 1000.0))
   set_visibility(entity, true)
 }
@@ -160,7 +160,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
 fn spawn_player(level : LevelSpec) -> Unit {
   player_state.val = {
     center: level.player_spawn,
-    velocity: @math.Vec2D::zero(),
+    velocity: @math.Vec2::zero(),
     facing_right: true,
     on_ground: false,
     coyote_timer: 0.0,

@@ -1,15 +1,15 @@
 ///|
 fn set_rotated_rect_entity(
   entity : @entity.Entity,
-  position : @math.Vec2D,
-  size : @math.Vec2D,
+  position : @math.Vec2,
+  size : @math.Vec2,
   color : String,
   zindex : Int,
   _angle : Double,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   let top_left = vec2(position[X] - size[X] * 0.5, position[Y] - size[Y] * 0.5)
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, entity_transform_2d(top_left, zindex))
@@ -160,7 +160,7 @@ fn setup_runtime_entities() -> Unit {
 }
 
 ///|
-fn reset_player_state(center : @math.Vec2D) -> Unit {
+fn reset_player_state(center : @math.Vec2) -> Unit {
   player.alive = true
   player.center = center
   player.direction = Up
@@ -171,7 +171,7 @@ fn reset_player_state(center : @math.Vec2D) -> Unit {
 ///|
 fn reset_enemy_slot(
   index : Int,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   direction : Direction,
 ) -> Unit {
   enemies[index].alive = true

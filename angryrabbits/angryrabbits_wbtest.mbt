@@ -718,7 +718,7 @@ fn with_test_world(body : () -> Unit raise) -> Unit raise {
 
 ///|
 fn reset_mouse_state() -> Unit {
-  @inputs.mouse.pos = @math.Vec2D::zero()
+  @inputs.mouse.pos = @math.Vec2::zero()
   @inputs.mouse.left_button = false
   @inputs.mouse.right_button = false
   @inputs.mouse.middle_button = false
@@ -731,7 +731,7 @@ fn reset_mouse_state() -> Unit {
 }
 
 ///|
-fn world_to_screen_for_test(world : @math.Vec2D) -> @math.Vec2D {
+fn world_to_screen_for_test(world : @math.Vec2) -> @math.Vec2 {
   (world - camera_anchor_position()).scalar_mul(ZOOM)
 }
 
@@ -1017,8 +1017,8 @@ test "launch_rabbit preserves horizontal velocity through physics step" {
       }
       current_level_path.val = "levels/launch.ldtk"
       reset_level()
-      let short_pull = slingshot_anchor() - @math.Vec2D(30.0, 0.0)
-      let long_pull = slingshot_anchor() - @math.Vec2D(60.0, 0.0)
+      let short_pull = slingshot_anchor() - @math.Vec2(30.0, 0.0)
+      let long_pull = slingshot_anchor() - @math.Vec2(60.0, 0.0)
       let short_velocity = launch_velocity_from_rabbit(short_pull)
       let long_velocity = launch_velocity_from_rabbit(long_pull)
       launch_rabbit(long_pull, long_velocity)
@@ -1029,7 +1029,7 @@ test "launch_rabbit preserves horizontal velocity through physics step" {
       assert_true(rabbit_center.val[X] > long_pull[X] + 1.0)
 
       reset_level()
-      let diagonal_pull = slingshot_anchor() + @math.Vec2D(-60.0, 60.0)
+      let diagonal_pull = slingshot_anchor() + @math.Vec2(-60.0, 60.0)
       let diagonal_velocity = launch_velocity_from_rabbit(diagonal_pull)
       launch_rabbit(diagonal_pull, diagonal_velocity)
       @time.set_delta(1.0 / 60.0)
@@ -1058,7 +1058,7 @@ test "dynamic bodies allow rotation like upstream prefabs" {
 test "launch transition preserves velocity after synced ready body exists" {
   with_test_world(() => {
     @physics2d.configure_physics(
-      gravity=@math.Vec2D(0.0, GRAVITY),
+      gravity=@math.Vec2(0.0, GRAVITY),
       pixels_per_meter=PHYSICS_PIXELS_PER_METER,
       max_ccd_substeps=PHYSICS_MAX_CCD_SUBSTEPS,
     )
@@ -1067,8 +1067,8 @@ test "launch transition preserves velocity after synced ready body exists" {
     ensure_entity_alive(entity)
     rabbits.push({
       entity,
-      center: @math.Vec2D(120.0, 280.0),
-      velocity: @math.Vec2D::zero(),
+      center: @math.Vec2(120.0, 280.0),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       visible: true,
       state: BeforeThrown,
@@ -1076,14 +1076,14 @@ test "launch transition preserves velocity after synced ready body exists" {
       sleep_time: 0.0,
     })
     current_rabbit_index.val = 0
-    set_current_rabbit_ready_state(@math.Vec2D(120.0, 280.0))
+    set_current_rabbit_ready_state(@math.Vec2(120.0, 280.0))
     assert_true(@physics2d.velocities().contains(entity))
     @physics2d.physics_step_system(1.0 / 60.0)
-    let launch_velocity = @math.Vec2D(640.0, -480.0)
-    launch_rabbit_at(0, @math.Vec2D(90.0, 330.0), launch_velocity)
+    let launch_velocity = @math.Vec2(640.0, -480.0)
+    launch_rabbit_at(0, @math.Vec2(90.0, 330.0), launch_velocity)
     assert_true(!@physics2d.velocities().contains(entity))
     let immediate_velocity = @physics2d.rigid_body_linear_velocity(entity).unwrap_or(
-      @math.Vec2D::zero(),
+      @math.Vec2::zero(),
     )
     assert_true(immediate_velocity[X] > 600.0)
     assert_true(immediate_velocity[Y] < -400.0)
@@ -1298,7 +1298,7 @@ test "input release uses current mouse position for launch" {
         simulation_system(@ecs.require_current_world())
       }
       let anchor_screen = world_to_screen_for_test(slingshot_anchor())
-      let release_world = slingshot_anchor() + @math.Vec2D(-60.0, 60.0)
+      let release_world = slingshot_anchor() + @math.Vec2(-60.0, 60.0)
       let release_screen = world_to_screen_for_test(release_world)
 
       @inputs.mouse.pos = anchor_screen
@@ -1670,8 +1670,8 @@ test "rabbit high-speed hit destroys block" {
       }
       current_level_path.val = "levels/block.ldtk"
       reset_level()
-      rabbit_velocity.val = @math.Vec2D(1200.0, 0.0)
-      rabbits[0] = { ..rabbits[0], velocity: @math.Vec2D(1200.0, 0.0) }
+      rabbit_velocity.val = @math.Vec2(1200.0, 0.0)
+      rabbits[0] = { ..rabbits[0], velocity: @math.Vec2(1200.0, 0.0) }
       apply_contact_damage(blocks[0].entity, rabbits[0].entity)
       assert_true(!blocks[0].alive)
     })
@@ -1995,7 +1995,7 @@ test "settled rabbit advances to next shot when targets remain" {
       game_state.val = Playing
       slingshot_state.val = BirdFlying
       shots_remaining.val = 3
-      launch_rabbit(slingshot_anchor(), @math.Vec2D::zero())
+      launch_rabbit(slingshot_anchor(), @math.Vec2::zero())
       @time.set_delta(1.0 / 60.0)
       simulation_system(@ecs.require_current_world())
       assert_true(game_state.val is BirdMovingToSlingshot)
@@ -2013,21 +2013,21 @@ test "moving block keeps shot active until world settles" {
     slingshot_state.val = BirdFlying
     shots_remaining.val = 2
     rabbit_visible.val = true
-    rabbit_velocity.val = @math.Vec2D::zero()
+    rabbit_velocity.val = @math.Vec2::zero()
     blocks.push({
       entity: @entity.Entity::new(),
-      center: @math.Vec2D(280.0, 300.0),
-      size: @math.Vec2D(40.0, 40.0),
-      velocity: @math.Vec2D(STOP_SPEED + 20.0, 0.0),
+      center: @math.Vec2(280.0, 300.0),
+      size: @math.Vec2(40.0, 40.0),
+      velocity: @math.Vec2(STOP_SPEED + 20.0, 0.0),
       rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
     targets.push({
       entity: @entity.Entity::new(),
-      center: @math.Vec2D(420.0, 300.0),
+      center: @math.Vec2(420.0, 300.0),
       radius: 18.0,
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
@@ -2046,18 +2046,18 @@ test "out-of-bounds targets and blocks are cleaned up" {
     targets.clear()
     blocks.push({
       entity: @entity.Entity::new(),
-      center: @math.Vec2D(-OUT_OF_BOUNDS_MARGIN - 40.0, 200.0),
-      size: @math.Vec2D(40.0, 40.0),
-      velocity: @math.Vec2D::zero(),
+      center: @math.Vec2(-OUT_OF_BOUNDS_MARGIN - 40.0, 200.0),
+      size: @math.Vec2(40.0, 40.0),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
     targets.push({
       entity: @entity.Entity::new(),
-      center: @math.Vec2D(200.0, VIEWPORT_HEIGHT + OUT_OF_BOUNDS_MARGIN + 30.0),
+      center: @math.Vec2(200.0, VIEWPORT_HEIGHT + OUT_OF_BOUNDS_MARGIN + 30.0),
       radius: 18.0,
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
@@ -2078,8 +2078,8 @@ test "rabbit contact event always destroys target" {
     let target_entity = @entity.Entity::new()
     rabbits.push({
       entity: rabbit_entity,
-      center: @math.Vec2D(200.0, 200.0),
-      velocity: @math.Vec2D(8.0, 0.0),
+      center: @math.Vec2(200.0, 200.0),
+      velocity: @math.Vec2(8.0, 0.0),
       rotation: 0.0,
       visible: true,
       state: Thrown,
@@ -2089,16 +2089,16 @@ test "rabbit contact event always destroys target" {
     current_rabbit_index.val = 0
     targets.push({
       entity: target_entity,
-      center: @math.Vec2D(200.0, 200.0),
+      center: @math.Vec2(200.0, 200.0),
       radius: 18.0,
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
     })
     game_state.val = Playing
     slingshot_state.val = BirdFlying
-    rabbit_velocity.val = @math.Vec2D(8.0, 0.0)
+    rabbit_velocity.val = @math.Vec2(8.0, 0.0)
     apply_contact_damage(target_entity, rabbit_entity)
     assert_true(!targets[0].alive)
   })
@@ -2113,18 +2113,18 @@ test "target takes upstream-style damage from moving block" {
     let target_entity = @entity.Entity::new()
     blocks.push({
       entity: block_entity,
-      center: @math.Vec2D(320.0, 300.0),
-      size: @math.Vec2D(40.0, 40.0),
-      velocity: @math.Vec2D(1600.0, 0.0),
+      center: @math.Vec2(320.0, 300.0),
+      size: @math.Vec2(40.0, 40.0),
+      velocity: @math.Vec2(1600.0, 0.0),
       rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
     })
     targets.push({
       entity: target_entity,
-      center: @math.Vec2D(320.0, 300.0),
+      center: @math.Vec2(320.0, 300.0),
       radius: 18.0,
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,

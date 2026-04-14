@@ -4,7 +4,7 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 }
 
 ///|
-fn atlas_uv(u : Float, v : Float, atlas_index : Int) -> @math.Vec2D {
+fn atlas_uv(u : Float, v : Float, atlas_index : Int) -> @math.Vec2 {
   let col = atlas_index % ATLAS_COLUMNS
   let row = atlas_index / ATLAS_COLUMNS
   let cols_f = ATLAS_COLUMNS.to_double()
@@ -21,7 +21,7 @@ fn atlas_uv(u : Float, v : Float, atlas_index : Int) -> @math.Vec2D {
     cols_f
   let mapped_v = (row.to_double() + v.to_double().clamp(min=0.0, max=1.0)) /
     rows_f
-  @math.Vec2D(
+  @math.Vec2(
     mapped_u.clamp(min=tile_min_u + inset_u, max=tile_max_u - inset_u),
     mapped_v.clamp(min=tile_min_v + inset_v, max=tile_max_v - inset_v),
   )
@@ -34,7 +34,7 @@ let debug_first_mesh_logged : Ref[Bool] = { val: false }
 fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
   let vertex_count = mesh.positions.length() / 3
   let positions : Array[@math.Vec3] = []
-  let uvs : Array[@math.Vec2D] = []
+  let uvs : Array[@math.Vec2] = []
   let normals : Array[@math.Vec3] = []
   let colors : Array[@render.Color] = []
   let mut atlas_min = 1 << 30

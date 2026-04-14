@@ -546,8 +546,8 @@ fn tile_y_for_world(z : Double) -> Int {
 }
 
 ///|
-fn minimap_pos_for_tile(tile_x : Int, tile_y : Int) -> @math.Vec2D {
-  @math.Vec2D(
+fn minimap_pos_for_tile(tile_x : Int, tile_y : Int) -> @math.Vec2 {
+  @math.Vec2(
     MINIMAP_OFFSET_X + tile_x.to_double() * MINIMAP_CELL_SIZE,
     MINIMAP_OFFSET_Y + tile_y.to_double() * MINIMAP_CELL_SIZE,
   )
@@ -558,8 +558,8 @@ fn minimap_pos_for_world(
   x : Double,
   z : Double,
   marker_size : Double,
-) -> @math.Vec2D {
-  @math.Vec2D(
+) -> @math.Vec2 {
+  @math.Vec2(
     MINIMAP_OFFSET_X +
     x / TILE_WORLD_SIZE * MINIMAP_CELL_SIZE -
     marker_size / 2.0,

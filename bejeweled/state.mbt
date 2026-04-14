@@ -386,13 +386,13 @@ let gem_image_paths : Array[String] = [
 ]
 
 ///|
-let gem_image_sizes : Array[@math.Vec2D] = [
-  @math.Vec2D(512.0, 512.0),
-  @math.Vec2D(512.0, 512.0),
-  @math.Vec2D(508.0, 652.0),
-  @math.Vec2D(512.0, 512.0),
-  @math.Vec2D(512.0, 512.0),
-  @math.Vec2D(900.0, 673.0),
+let gem_image_sizes : Array[@math.Vec2] = [
+  @math.Vec2(512.0, 512.0),
+  @math.Vec2(512.0, 512.0),
+  @math.Vec2(508.0, 652.0),
+  @math.Vec2(512.0, 512.0),
+  @math.Vec2(512.0, 512.0),
+  @math.Vec2(900.0, 673.0),
 ]
 
 ///|
@@ -431,9 +431,9 @@ fn in_bounds(row : Int, col : Int) -> Bool {
 }
 
 ///|
-fn cell_center(cell : Cell) -> (@math.Vec2D, Double) {
+fn cell_center(cell : Cell) -> (@math.Vec2, Double) {
   (
-    @math.Vec2D(
+    @math.Vec2(
       BOARD_ORIGIN_X + cell.col.to_double() * CELL_SIZE + CELL_SIZE * 0.5,
       BOARD_ORIGIN_Y + cell.row.to_double() * CELL_SIZE + CELL_SIZE * 0.5,
     ),
@@ -457,7 +457,7 @@ fn gem_image(kind : GemKind) -> @asset.ImageHandle {
 }
 
 ///|
-fn gem_image_size(kind : GemKind) -> @math.Vec2D {
+fn gem_image_size(kind : GemKind) -> @math.Vec2 {
   gem_image_sizes[gem_index(kind)]
 }
 

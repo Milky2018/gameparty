@@ -20,7 +20,7 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 }
 
 ///|
-fn transform_2d(position : @math.Vec2D, zindex : Int) -> @transform.Transform {
+fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
     translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
@@ -37,7 +37,7 @@ fn set_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 fn setup_text_entity(
   entity : @entity.Entity,
   content : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   color : String,
   font_size : Int,
 ) -> Unit {
@@ -53,7 +53,7 @@ fn setup_text_entity(
     @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
   )
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, 200))
   set_visibility(entity, true)
 }
@@ -61,14 +61,14 @@ fn setup_text_entity(
 ///|
 fn setup_color_rect_entity(
   entity : @entity.Entity,
-  size : @math.Vec2D,
-  position : @math.Vec2D,
+  size : @math.Vec2,
+  position : @math.Vec2,
   color : String,
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_color(@sprite.color_from_css(color), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(position, zindex))
   set_visibility(entity, true)
@@ -78,14 +78,14 @@ fn setup_color_rect_entity(
 fn setup_image_entity(
   entity : @entity.Entity,
   image : @asset.ImageHandle,
-  size : @math.Vec2D,
-  position : @math.Vec2D,
+  size : @math.Vec2,
+  position : @math.Vec2,
   zindex : Int,
   color? : @render.Color = @sprite.color_from_css("white"),
 ) -> Unit {
   ensure_entity_alive(entity)
   let sprite = @sprite.Sprite::from_image(image, custom_size=Some(size))
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   sprite.color = color
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, transform_2d(position, zindex))
@@ -165,7 +165,7 @@ fn inventory_hint_text() -> String {
 }
 
 ///|
-fn screen_cursor_position() -> @math.Vec2D {
+fn screen_cursor_position() -> @math.Vec2 {
   if @system.is_mouse_locked() {
     inventory_state.val.cursor
   } else {
@@ -174,17 +174,17 @@ fn screen_cursor_position() -> @math.Vec2D {
 }
 
 ///|
-fn hotbar_base_position() -> @math.Vec2D {
+fn hotbar_base_position() -> @math.Vec2 {
   let width = HOTBAR_SIZE.to_double() * HOTBAR_SLOT_SIZE
-  @math.Vec2D(
+  @math.Vec2(
     VIEWPORT_WIDTH / 2.0 - width / 2.0,
     VIEWPORT_HEIGHT - HOTBAR_SLOT_SIZE - 18.0,
   )
 }
 
 ///|
-fn inventory_grid_origin() -> @math.Vec2D {
-  @math.Vec2D(
+fn inventory_grid_origin() -> @math.Vec2 {
+  @math.Vec2(
     VIEWPORT_WIDTH / 2.0 - INVENTORY_PANEL_WIDTH / 2.0 + 52.0,
     VIEWPORT_HEIGHT / 2.0 - INVENTORY_PANEL_HEIGHT / 2.0 + 82.0,
   )
@@ -198,13 +198,13 @@ fn inventory_slot_screen_rect(slot_index : Int) -> @math.Rect {
   let x = origin[X] + column.to_double() * INVENTORY_SLOT_SIZE
   let y = origin[Y] + row.to_double() * INVENTORY_SLOT_SIZE
   {
-    position: @math.Vec2D(x, y),
-    size: @math.Vec2D(INVENTORY_SLOT_SIZE - 8.0, INVENTORY_SLOT_SIZE - 8.0),
+    position: @math.Vec2(x, y),
+    size: @math.Vec2(INVENTORY_SLOT_SIZE - 8.0, INVENTORY_SLOT_SIZE - 8.0),
   }
 }
 
 ///|
-fn point_in_rect(point : @math.Vec2D, rect : @math.Rect) -> Bool {
+fn point_in_rect(point : @math.Vec2, rect : @math.Rect) -> Bool {
   point[X] >= rect.position[X] &&
   point[X] <= rect.position[X] + rect.size[X] &&
   point[Y] >= rect.position[Y] &&
@@ -230,7 +230,7 @@ fn clamp_inventory_cursor() -> Unit {
   let cursor = inventory_state.val.cursor
   inventory_state.val = {
     ..inventory_state.val,
-    cursor: @math.Vec2D(
+    cursor: @math.Vec2(
       cursor[X].clamp(min=0.0, max=VIEWPORT_WIDTH),
       cursor[Y].clamp(min=0.0, max=VIEWPORT_HEIGHT),
     ),
@@ -247,7 +247,7 @@ fn sync_hud_text(
   entity : @entity.Entity,
   cache : Ref[String],
   text : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   color : String,
   font_size : Int,
 ) -> Unit {
@@ -267,7 +267,7 @@ fn sync_hud() -> Unit {
     hud_title_entity,
     last_hud_title_text,
     hud_title_text(),
-    @math.Vec2D(20.0, 20.0),
+    @math.Vec2(20.0, 20.0),
     "white",
     30,
   )
@@ -275,7 +275,7 @@ fn sync_hud() -> Unit {
     hud_info_entity,
     last_hud_info_text,
     hud_info_text(),
-    @math.Vec2D(20.0, 62.0),
+    @math.Vec2(20.0, 62.0),
     "rgb(220,230,240)",
     15,
   )
@@ -283,7 +283,7 @@ fn sync_hud() -> Unit {
     hud_hint_entity,
     last_hud_hint_text,
     hud_hint_text(),
-    @math.Vec2D(20.0, VIEWPORT_HEIGHT - 44.0),
+    @math.Vec2(20.0, VIEWPORT_HEIGHT - 44.0),
     "rgb(180,200,220)",
     14,
   )
@@ -295,7 +295,7 @@ fn sync_hotbar() -> Unit {
   let selected = wrap_hotbar_index(player_controller.val.selected_hotbar_index)
   for index in 0..<HOTBAR_SIZE {
     let x = base[X] + index.to_double() * HOTBAR_SLOT_SIZE
-    let position = @math.Vec2D(x, base[Y])
+    let position = @math.Vec2(x, base[Y])
     let slot_color = if index == selected {
       "rgba(244, 211, 94, 0.92)"
     } else {
@@ -303,7 +303,7 @@ fn sync_hotbar() -> Unit {
     }
     setup_color_rect_entity(
       hotbar_slot_entities[index],
-      @math.Vec2D(HOTBAR_SLOT_SIZE - 6.0, HOTBAR_SLOT_SIZE - 6.0),
+      @math.Vec2(HOTBAR_SLOT_SIZE - 6.0, HOTBAR_SLOT_SIZE - 6.0),
       position,
       slot_color,
       UI_DEPTH.to_int(),
@@ -315,8 +315,8 @@ fn sync_hotbar() -> Unit {
             setup_image_entity(
               hotbar_icon_entities[index],
               entry.icon_handle,
-              @math.Vec2D(HOTBAR_ICON_SIZE, HOTBAR_ICON_SIZE),
-              @math.Vec2D(position[X] + 6.0, position[Y] + 6.0),
+              @math.Vec2(HOTBAR_ICON_SIZE, HOTBAR_ICON_SIZE),
+              @math.Vec2(position[X] + 6.0, position[Y] + 6.0),
               UI_DEPTH.to_int() + 1,
             )
           None => hide_entity(hotbar_icon_entities[index])
@@ -346,8 +346,8 @@ fn sync_inventory() -> Unit {
       setup_image_entity(
         inventory_panel_entity,
         window_image,
-        @math.Vec2D(INVENTORY_PANEL_WIDTH, INVENTORY_PANEL_HEIGHT),
-        @math.Vec2D(
+        @math.Vec2(INVENTORY_PANEL_WIDTH, INVENTORY_PANEL_HEIGHT),
+        @math.Vec2(
           VIEWPORT_WIDTH / 2.0 - INVENTORY_PANEL_WIDTH / 2.0,
           VIEWPORT_HEIGHT / 2.0 - INVENTORY_PANEL_HEIGHT / 2.0,
         ),
@@ -356,8 +356,8 @@ fn sync_inventory() -> Unit {
     None =>
       setup_color_rect_entity(
         inventory_panel_entity,
-        @math.Vec2D(INVENTORY_PANEL_WIDTH, INVENTORY_PANEL_HEIGHT),
-        @math.Vec2D(
+        @math.Vec2(INVENTORY_PANEL_WIDTH, INVENTORY_PANEL_HEIGHT),
+        @math.Vec2(
           VIEWPORT_WIDTH / 2.0 - INVENTORY_PANEL_WIDTH / 2.0,
           VIEWPORT_HEIGHT / 2.0 - INVENTORY_PANEL_HEIGHT / 2.0,
         ),
@@ -369,7 +369,7 @@ fn sync_inventory() -> Unit {
     inventory_title_entity,
     last_inventory_title_text,
     inventory_title_text(),
-    @math.Vec2D(
+    @math.Vec2(
       VIEWPORT_WIDTH / 2.0 - INVENTORY_PANEL_WIDTH / 2.0 + 24.0,
       VIEWPORT_HEIGHT / 2.0 - INVENTORY_PANEL_HEIGHT / 2.0 + 18.0,
     ),
@@ -380,7 +380,7 @@ fn sync_inventory() -> Unit {
     inventory_hint_entity,
     last_inventory_hint_text,
     inventory_hint_text(),
-    @math.Vec2D(
+    @math.Vec2(
       VIEWPORT_WIDTH / 2.0 - INVENTORY_PANEL_WIDTH / 2.0 + 24.0,
       VIEWPORT_HEIGHT / 2.0 + INVENTORY_PANEL_HEIGHT / 2.0 - 44.0,
     ),
@@ -407,8 +407,8 @@ fn sync_inventory() -> Unit {
         setup_image_entity(
           inventory_icon_entities[slot_index],
           entry.icon_handle,
-          @math.Vec2D(INVENTORY_ICON_SIZE, INVENTORY_ICON_SIZE),
-          @math.Vec2D(rect.position[X] + 2.0, rect.position[Y] + 2.0),
+          @math.Vec2(INVENTORY_ICON_SIZE, INVENTORY_ICON_SIZE),
+          @math.Vec2(rect.position[X] + 2.0, rect.position[Y] + 2.0),
           UI_DEPTH.to_int() + 1,
         )
       None => hide_entity(inventory_icon_entities[slot_index])
@@ -416,7 +416,7 @@ fn sync_inventory() -> Unit {
   }
   setup_color_rect_entity(
     inventory_cursor_entity,
-    @math.Vec2D(INVENTORY_CURSOR_SIZE, INVENTORY_CURSOR_SIZE),
+    @math.Vec2(INVENTORY_CURSOR_SIZE, INVENTORY_CURSOR_SIZE),
     inventory_state.val.cursor,
     "rgba(255, 236, 120, 0.95)",
     UI_DEPTH.to_int() + 5,

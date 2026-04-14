@@ -148,7 +148,7 @@ fn angryrabbits_spritesheet() -> @asset.ImageHandle {
 
 ///|
 fn entity_transform_2d(
-  position : @math.Vec2D,
+  position : @math.Vec2,
   zindex : Int,
   rotation? : Double = 0.0,
 ) -> @transform.Transform {
@@ -188,25 +188,25 @@ fn circle_material_handle(color : String) -> @material2d.ColorMaterialHandle {
 
 ///|
 fn center_to_rect_position(
-  center : @math.Vec2D,
-  size : @math.Vec2D,
-) -> @math.Vec2D {
-  @math.Vec2D(center[X] - size[X] / 2.0, center[Y] - size[Y] / 2.0)
+  center : @math.Vec2,
+  size : @math.Vec2,
+) -> @math.Vec2 {
+  @math.Vec2(center[X] - size[X] / 2.0, center[Y] - size[Y] / 2.0)
 }
 
 ///|
 fn center_to_circle_position(
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
-) -> @math.Vec2D {
-  @math.Vec2D(center[X] - radius, center[Y] - radius)
+) -> @math.Vec2 {
+  @math.Vec2(center[X] - radius, center[Y] - radius)
 }
 
 ///|
-fn rabbit_queue_center(index : Int) -> @math.Vec2D {
-  guard current_level.val is Some(level) else { return @math.Vec2D::zero() }
+fn rabbit_queue_center(index : Int) -> @math.Vec2 {
+  guard current_level.val is Some(level) else { return @math.Vec2::zero() }
   level.rabbit_spawn +
-  @math.Vec2D(
+  @math.Vec2(
     RABBIT_QUEUE_OFFSET_X + index.to_double() * RABBIT_QUEUE_SPACING_X,
     0.0,
   )
@@ -225,8 +225,8 @@ fn current_rabbit() -> RabbitState? {
 ///|
 fn sync_current_rabbit_refs() -> Unit {
   guard current_rabbit() is Some(rabbit) else {
-    rabbit_center.val = @math.Vec2D::zero()
-    rabbit_velocity.val = @math.Vec2D::zero()
+    rabbit_center.val = @math.Vec2::zero()
+    rabbit_velocity.val = @math.Vec2::zero()
     rabbit_visible.val = false
     return
   }
@@ -236,23 +236,23 @@ fn sync_current_rabbit_refs() -> Unit {
 }
 
 ///|
-fn set_camera_anchor_position(position : @math.Vec2D) -> Unit {
+fn set_camera_anchor_position(position : @math.Vec2) -> Unit {
   @transform.transforms().set(
     camera_anchor_entity,
     entity_transform_2d(
-      position + @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
+      position + @math.Vec2(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0),
       0,
     ),
   )
 }
 
 ///|
-fn camera_anchor_position() -> @math.Vec2D {
+fn camera_anchor_position() -> @math.Vec2 {
   match @transform.transforms().get(camera_anchor_entity) {
     Some(transform) =>
-      @math.Vec2D(transform.translation.x, transform.translation.y) -
-      @math.Vec2D(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0)
-    None => @math.Vec2D::zero()
+      @math.Vec2(transform.translation.x, transform.translation.y) -
+      @math.Vec2(VIEWPORT_WIDTH / 2.0, VIEWPORT_HEIGHT / 2.0)
+    None => @math.Vec2::zero()
   }
 }
 
@@ -277,7 +277,7 @@ fn current_camera_view() -> (
 }
 
 ///|
-fn screen_to_world_position(screen : @math.Vec2D) -> @math.Vec2D {
+fn screen_to_world_position(screen : @math.Vec2) -> @math.Vec2 {
   match current_camera_view() {
     Some((camera, global, projection)) =>
       camera.viewport_to_world_2d(global, projection, screen)
@@ -305,9 +305,9 @@ fn camera_start_x() -> Double {
 
 ///|
 fn sprite_from_atlas(
-  source_offset : @math.Vec2D,
-  source_size : @math.Vec2D,
-  world_size : @math.Vec2D,
+  source_offset : @math.Vec2,
+  source_size : @math.Vec2,
+  world_size : @math.Vec2,
 ) -> @sprite.Sprite {
   let sprite = @sprite.Sprite::from_image(
     angryrabbits_spritesheet(),
@@ -324,7 +324,7 @@ fn physics_filter() -> @physics2d.CollisionFilter {
 
 ///|
 fn rabbit_shape() -> @physics2d.CollisionShape {
-  Ball(radius=RABBIT_RADIUS, offset=@math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS))
+  Ball(radius=RABBIT_RADIUS, offset=@math.Vec2(RABBIT_RADIUS, RABBIT_RADIUS))
 }
 
 ///|
@@ -399,7 +399,7 @@ fn clear_level_physics_entities() -> Unit {
 }
 
 ///|
-fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
+fn set_rabbit_waiting_state(index : Int, center : @math.Vec2) -> Unit {
   let rabbit = rabbits[index]
   let entity = rabbit.entity
   let top_left = center_to_circle_position(center, RABBIT_RADIUS)
@@ -416,11 +416,11 @@ fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
   )
   @physics2d.rigid_bodies().set(entity, rabbit_ready_body())
   @physics2d.set_rigid_body_translation(entity, top_left)
-  @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
+  @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2::zero())
   rabbits[index] = {
     ..rabbit,
     center,
-    velocity: @math.Vec2D::zero(),
+    velocity: @math.Vec2::zero(),
     rotation: 0.0,
     visible: true,
     state: BeforeThrown,
@@ -433,7 +433,7 @@ fn set_rabbit_waiting_state(index : Int, center : @math.Vec2D) -> Unit {
 }
 
 ///|
-fn set_current_rabbit_ready_state(center : @math.Vec2D) -> Unit {
+fn set_current_rabbit_ready_state(center : @math.Vec2) -> Unit {
   guard current_rabbit_index.val >= 0 &&
     current_rabbit_index.val < rabbits.length() else {
     return
@@ -444,8 +444,8 @@ fn set_current_rabbit_ready_state(center : @math.Vec2D) -> Unit {
 ///|
 fn launch_rabbit_at(
   index : Int,
-  center : @math.Vec2D,
-  velocity : @math.Vec2D,
+  center : @math.Vec2,
+  velocity : @math.Vec2,
 ) -> Unit {
   let rabbit = rabbits[index]
   let entity = rabbit.entity
@@ -479,9 +479,9 @@ fn launch_rabbit_at(
   let immediate_center = @physics2d.rigid_body_translation(entity).unwrap_or(
       top_left,
     ) +
-    @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS)
+    @math.Vec2(RABBIT_RADIUS, RABBIT_RADIUS)
   let immediate_velocity = @physics2d.rigid_body_linear_velocity(entity).unwrap_or(
-    @math.Vec2D::zero(),
+    @math.Vec2::zero(),
   )
   println(
     "[angryrabbits][debug][launch_rabbit_at] index=\{index} center=\{debug_vec2_string(immediate_center)} getter_vel=\{debug_vec2_string(immediate_velocity)} arg_vel=\{debug_vec2_string(velocity)}",
@@ -492,7 +492,7 @@ fn launch_rabbit_at(
 }
 
 ///|
-fn launch_rabbit(center : @math.Vec2D, velocity : @math.Vec2D) -> Unit {
+fn launch_rabbit(center : @math.Vec2, velocity : @math.Vec2) -> Unit {
   guard current_rabbit_index.val >= 0 &&
     current_rabbit_index.val < rabbits.length() else {
     return
@@ -509,7 +509,7 @@ fn remove_rabbit(index : Int) -> Unit {
   clear_physics_entity(rabbit.entity)
   rabbits[index] = {
     ..rabbit,
-    velocity: @math.Vec2D::zero(),
+    velocity: @math.Vec2::zero(),
     rotation: rabbit.rotation,
     visible: false,
     state: Removed,
@@ -524,7 +524,7 @@ fn remove_rabbit(index : Int) -> Unit {
 ///|
 fn configure_level_physics(level : LevelDef) -> Unit {
   @physics2d.configure_physics(
-    gravity=@math.Vec2D(0.0, GRAVITY),
+    gravity=@math.Vec2(0.0, GRAVITY),
     pixels_per_meter=PHYSICS_PIXELS_PER_METER,
     max_ccd_substeps=PHYSICS_MAX_CCD_SUBSTEPS,
   )
@@ -536,7 +536,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
   )
   @physics2d.shapes().set(
     ground_entity,
-    Rect(size=level.ground_rect.size, offset=@math.Vec2D::zero()),
+    Rect(size=level.ground_rect.size, offset=@math.Vec2::zero()),
   )
   @physics2d.colliders().set(
     ground_entity,
@@ -558,7 +558,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
     @transform.transforms().set(entity, entity_transform_2d(top_left, 60))
     @physics2d.shapes().set(
       entity,
-      Rect(size=block.size, offset=@math.Vec2D::zero()),
+      Rect(size=block.size, offset=@math.Vec2::zero()),
     )
     @physics2d.colliders().set(
       entity,
@@ -570,7 +570,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
     )
     @physics2d.rigid_bodies().set(entity, block_body())
     @physics2d.set_rigid_body_translation(entity, top_left)
-    @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
+    @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2::zero())
   }
 
   for index, target in level.targets {
@@ -581,7 +581,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
       entity,
       Ball(
         radius=target.radius,
-        offset=@math.Vec2D(target.radius, target.radius),
+        offset=@math.Vec2(target.radius, target.radius),
       ),
     )
     @physics2d.colliders().set(
@@ -594,7 +594,7 @@ fn configure_level_physics(level : LevelDef) -> Unit {
     )
     @physics2d.rigid_bodies().set(entity, target_body())
     @physics2d.set_rigid_body_translation(entity, top_left)
-    @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2D::zero())
+    @physics2d.set_rigid_body_linear_velocity(entity, @math.Vec2::zero())
   }
 
   for index in 0..<rabbits.length() {
@@ -621,9 +621,9 @@ fn sync_rabbits_from_physics() -> Unit {
     }
     rabbits[index] = {
       ..rabbit,
-      center: top_left + @math.Vec2D(RABBIT_RADIUS, RABBIT_RADIUS),
+      center: top_left + @math.Vec2(RABBIT_RADIUS, RABBIT_RADIUS),
       velocity: @physics2d.rigid_body_linear_velocity(rabbit.entity).unwrap_or(
-        @math.Vec2D::zero(),
+        @math.Vec2::zero(),
       ),
       rotation: @physics2d.rigid_body_rotation(rabbit.entity).unwrap_or(
         rabbit.rotation,
@@ -649,7 +649,7 @@ fn sync_blocks_from_physics() -> Unit {
       ..block,
       center: top_left + block.size.scalar_mul(0.5),
       velocity: @physics2d.rigid_body_linear_velocity(block.entity).unwrap_or(
-        @math.Vec2D::zero(),
+        @math.Vec2::zero(),
       ),
       rotation: @physics2d.rigid_body_rotation(block.entity).unwrap_or(
         block.rotation,
@@ -670,9 +670,9 @@ fn sync_targets_from_physics() -> Unit {
     }
     targets[index] = {
       ..target,
-      center: top_left + @math.Vec2D(target.radius, target.radius),
+      center: top_left + @math.Vec2(target.radius, target.radius),
       velocity: @physics2d.rigid_body_linear_velocity(target.entity).unwrap_or(
-        @math.Vec2D::zero(),
+        @math.Vec2::zero(),
       ),
       rotation: @physics2d.rigid_body_rotation(target.entity).unwrap_or(
         target.rotation,
@@ -738,7 +738,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
     rabbits.push({
       entity: rabbit_entities[index],
       center: rabbit_queue_center(index),
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       visible: true,
       state: BeforeThrown,
@@ -751,7 +751,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
       entity: block_entities[index],
       center: block.center,
       size: block.size,
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: BLOCK_HEALTH,
       alive: true,
@@ -762,7 +762,7 @@ fn instantiate_level(level : LevelDef) -> Unit {
       entity: target_entities[index],
       center: target.center,
       radius: target.radius,
-      velocity: @math.Vec2D::zero(),
+      velocity: @math.Vec2::zero(),
       rotation: 0.0,
       health: TARGET_HEALTH,
       alive: true,
@@ -779,7 +779,7 @@ fn hide_aim_dots() -> Unit {
 }
 
 ///|
-fn launch_velocity_from_rabbit(center : @math.Vec2D) -> @math.Vec2D {
+fn launch_velocity_from_rabbit(center : @math.Vec2) -> @math.Vec2 {
   let stretch = slingshot_anchor() - center
   let distance = vec_length(stretch)
   let distance_units = if MAX_DRAG_RADIUS <= 0.0 {
@@ -800,7 +800,7 @@ fn refresh_aim_dots() -> Unit {
   for index, entity in aim_dot_entities {
     let time = (index.to_double() + 1.0) * AIM_DOT_TIME_STEP
     let offset = velocity.scalar_mul(time) +
-      @math.Vec2D(0.0, GRAVITY * 0.5 * time * time)
+      @math.Vec2(0.0, GRAVITY * 0.5 * time * time)
     @mesh2d.mesh2ds().set(
       entity,
       @mesh2d.Mesh2d::new(circle_mesh_handle(AIM_DOT_RADIUS)),
@@ -823,7 +823,7 @@ fn refresh_aim_dots() -> Unit {
 fn set_text_entity(
   entity : @entity.Entity,
   text : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   font : String,
   color : String,
   zindex : Int,
@@ -835,7 +835,7 @@ fn set_text_entity(
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(entity, @ui.TextLayout::new(align=Left, baseline=Top))
   @text2d.text2ds().set(entity, @text2d.Text2d::new())
-  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
 
@@ -894,7 +894,7 @@ fn debug_scalar_string(value : Double) -> String {
 }
 
 ///|
-fn debug_vec2_string(value : @math.Vec2D) -> String {
+fn debug_vec2_string(value : @math.Vec2) -> String {
   "(\{debug_scalar_string(value[X])}, \{debug_scalar_string(value[Y])})"
 }
 
@@ -940,7 +940,7 @@ fn sync_debug_ui() -> Unit {
   set_text_entity(
     debug_text_entity,
     debug_text(),
-    @math.Vec2D(20.0, 112.0),
+    @math.Vec2(20.0, 112.0),
     "10px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(24, 68, 32)",
     240,
@@ -1016,13 +1016,13 @@ fn hide_all_level_visuals() -> Unit {
 fn sync_error_visuals(message : String) -> Unit {
   let background_sprite = @sprite.Sprite::from_color(
     sprite_color("rgb(29, 20, 24)"),
-    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+    @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
   )
-  background_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  background_sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(background_entity, background_sprite)
   @transform.transforms().set(
     background_entity,
-    entity_transform_2d(@math.Vec2D::zero(), 0),
+    entity_transform_2d(@math.Vec2::zero(), 0),
   )
   show_entity(background_entity)
   hide_all_level_visuals()
@@ -1030,7 +1030,7 @@ fn sync_error_visuals(message : String) -> Unit {
   set_text_entity(
     title_entity,
     "ANGRY RABBITS",
-    @math.Vec2D(20.0, 20.0),
+    @math.Vec2(20.0, 20.0),
     "32px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(255, 239, 222)",
     220,
@@ -1038,7 +1038,7 @@ fn sync_error_visuals(message : String) -> Unit {
   set_text_entity(
     score_entity,
     "LEVEL LOAD ERROR",
-    @math.Vec2D(20.0, 60.0),
+    @math.Vec2(20.0, 60.0),
     "20px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(255, 132, 112)",
     220,
@@ -1046,7 +1046,7 @@ fn sync_error_visuals(message : String) -> Unit {
   set_text_entity(
     status_entity,
     wrap_text_for_ui(message, 56, 8),
-    @math.Vec2D(20.0, 98.0),
+    @math.Vec2(20.0, 98.0),
     "16px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(246, 230, 220)",
     220,
@@ -1054,7 +1054,7 @@ fn sync_error_visuals(message : String) -> Unit {
   set_text_entity(
     hint_entity,
     "Press Enter or R to retry   ESC back",
-    @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
+    @math.Vec2(20.0, VIEWPORT_HEIGHT - 28.0),
     "16px \{ANGRYRABBITS_FONT_FAMILY}",
     "rgb(205, 189, 176)",
     220,
@@ -1071,7 +1071,7 @@ fn sync_static_visuals() -> Unit {
     sprite_color(background.color),
     background.size,
   )
-  background_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  background_sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(background_entity, background_sprite)
   @transform.transforms().set(
     background_entity,
@@ -1099,7 +1099,7 @@ fn sync_static_visuals() -> Unit {
     sprite_color(ground.color),
     ground.size,
   )
-  ground_sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  ground_sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(ground_entity, ground_sprite)
   @transform.transforms().set(
     ground_entity,
@@ -1116,22 +1116,22 @@ fn sync_static_visuals() -> Unit {
   @sprite.sprites().set(
     slingshot_left_entity,
     sprite_from_atlas(
-      @math.Vec2D(
+      @math.Vec2(
         SLINGSHOT_SPRITE_SRC_X,
         SLINGSHOT_SPRITE_SRC_Y + SLINGSHOT_BACK_SRC_OFFSET_Y,
       ),
-      @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_BACK_SRC_HEIGHT),
-      @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_back_world_height),
+      @math.Vec2(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_BACK_SRC_HEIGHT),
+      @math.Vec2(SLINGSHOT_WORLD_WIDTH, slingshot_back_world_height),
     ),
   )
   if @sprite.sprites().get(slingshot_left_entity) is Some(sprite) {
-    sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+    sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   }
   @transform.transforms().set(
     slingshot_left_entity,
     entity_transform_2d(
       level.slingshot_back_stick +
-      @math.Vec2D(SLINGSHOT_BACK_OFFSET_X, SLINGSHOT_BACK_OFFSET_Y),
+      @math.Vec2(SLINGSHOT_BACK_OFFSET_X, SLINGSHOT_BACK_OFFSET_Y),
       30,
     ),
   )
@@ -1139,22 +1139,22 @@ fn sync_static_visuals() -> Unit {
   @sprite.sprites().set(
     slingshot_right_entity,
     sprite_from_atlas(
-      @math.Vec2D(
+      @math.Vec2(
         SLINGSHOT_SPRITE_SRC_X,
         SLINGSHOT_SPRITE_SRC_Y + SLINGSHOT_FRONT_SRC_OFFSET_Y,
       ),
-      @math.Vec2D(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_FRONT_SRC_HEIGHT),
-      @math.Vec2D(SLINGSHOT_WORLD_WIDTH, slingshot_front_world_height),
+      @math.Vec2(SLINGSHOT_SPRITE_SRC_WIDTH, SLINGSHOT_FRONT_SRC_HEIGHT),
+      @math.Vec2(SLINGSHOT_WORLD_WIDTH, slingshot_front_world_height),
     ),
   )
   if @sprite.sprites().get(slingshot_right_entity) is Some(sprite) {
-    sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+    sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   }
   @transform.transforms().set(
     slingshot_right_entity,
     entity_transform_2d(
       level.slingshot_front_stick +
-      @math.Vec2D(SLINGSHOT_FRONT_OFFSET_X, SLINGSHOT_FRONT_OFFSET_Y),
+      @math.Vec2(SLINGSHOT_FRONT_OFFSET_X, SLINGSHOT_FRONT_OFFSET_Y),
       72,
     ),
   )
@@ -1165,13 +1165,13 @@ fn sync_static_visuals() -> Unit {
 
 ///|
 fn sync_dynamic_visuals() -> Unit {
-  let rabbit_size = @math.Vec2D(RABBIT_RADIUS * 2.0, RABBIT_RADIUS * 2.0)
+  let rabbit_size = @math.Vec2(RABBIT_RADIUS * 2.0, RABBIT_RADIUS * 2.0)
   for rabbit in rabbits {
     @sprite.sprites().set(
       rabbit.entity,
       sprite_from_atlas(
-        @math.Vec2D(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
-        @math.Vec2D(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
+        @math.Vec2(RABBIT_SPRITE_SRC_X, RABBIT_SPRITE_SRC_Y),
+        @math.Vec2(RABBIT_SPRITE_SRC_WIDTH, RABBIT_SPRITE_SRC_HEIGHT),
         rabbit_size,
       ),
     )
@@ -1180,7 +1180,7 @@ fn sync_dynamic_visuals() -> Unit {
       entity_transform_2d(rabbit.center, 70, rotation=rabbit.rotation),
     )
     if @sprite.sprites().get(rabbit.entity) is Some(sprite) {
-      sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
+      sprite.anchor = @sprite.Anchor(@math.Vec2(0.0, 0.0))
     }
     set_entity_visibility(rabbit.entity, rabbit.visible)
   }
@@ -1191,8 +1191,8 @@ fn sync_dynamic_visuals() -> Unit {
     @sprite.sprites().set(
       block.entity,
       sprite_from_atlas(
-        @math.Vec2D(BLOCK_SPRITE_SRC_X, BLOCK_SPRITE_SRC_Y),
-        @math.Vec2D(BLOCK_SPRITE_SRC_WIDTH, BLOCK_SPRITE_SRC_HEIGHT),
+        @math.Vec2(BLOCK_SPRITE_SRC_X, BLOCK_SPRITE_SRC_Y),
+        @math.Vec2(BLOCK_SPRITE_SRC_WIDTH, BLOCK_SPRITE_SRC_HEIGHT),
         block.size,
       ),
     )
@@ -1201,18 +1201,18 @@ fn sync_dynamic_visuals() -> Unit {
       entity_transform_2d(block.center, 60, rotation=block.rotation),
     )
     if @sprite.sprites().get(block.entity) is Some(sprite) {
-      sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
+      sprite.anchor = @sprite.Anchor(@math.Vec2(0.0, 0.0))
     }
     set_entity_visibility(block.entity, block.alive)
   }
 
   for target in targets {
-    let target_size = @math.Vec2D(target.radius * 2.0, target.radius * 2.0)
+    let target_size = @math.Vec2(target.radius * 2.0, target.radius * 2.0)
     @sprite.sprites().set(
       target.entity,
       sprite_from_atlas(
-        @math.Vec2D(TARGET_SPRITE_SRC_X, TARGET_SPRITE_SRC_Y),
-        @math.Vec2D(TARGET_SPRITE_SRC_WIDTH, TARGET_SPRITE_SRC_HEIGHT),
+        @math.Vec2(TARGET_SPRITE_SRC_X, TARGET_SPRITE_SRC_Y),
+        @math.Vec2(TARGET_SPRITE_SRC_WIDTH, TARGET_SPRITE_SRC_HEIGHT),
         target_size,
       ),
     )
@@ -1221,7 +1221,7 @@ fn sync_dynamic_visuals() -> Unit {
       entity_transform_2d(target.center, 65, rotation=target.rotation),
     )
     if @sprite.sprites().get(target.entity) is Some(sprite) {
-      sprite.anchor = @sprite.Anchor(@math.Vec2D(0.0, 0.0))
+      sprite.anchor = @sprite.Anchor(@math.Vec2(0.0, 0.0))
     }
     set_entity_visibility(target.entity, target.alive)
   }
@@ -1255,15 +1255,15 @@ fn score_text() -> String {
 
 ///|
 fn reset_debug_state(event : String) -> Unit {
-  debug_mouse_screen.val = @math.Vec2D::zero()
-  debug_mouse_world.val = @math.Vec2D::zero()
-  debug_drag_center.val = @math.Vec2D::zero()
-  debug_release_screen.val = @math.Vec2D::zero()
-  debug_release_mouse_world.val = @math.Vec2D::zero()
-  debug_release_center.val = @math.Vec2D::zero()
-  debug_launch_velocity.val = @math.Vec2D::zero()
-  debug_physics_center.val = @math.Vec2D::zero()
-  debug_physics_velocity.val = @math.Vec2D::zero()
+  debug_mouse_screen.val = @math.Vec2::zero()
+  debug_mouse_world.val = @math.Vec2::zero()
+  debug_drag_center.val = @math.Vec2::zero()
+  debug_release_screen.val = @math.Vec2::zero()
+  debug_release_mouse_world.val = @math.Vec2::zero()
+  debug_release_center.val = @math.Vec2::zero()
+  debug_launch_velocity.val = @math.Vec2::zero()
+  debug_physics_center.val = @math.Vec2::zero()
+  debug_physics_velocity.val = @math.Vec2::zero()
   debug_last_event.val = event
   debug_trace_fixed_frames_remaining.val = 0
   debug_trace_update_frames_remaining.val = 0
@@ -1282,7 +1282,7 @@ fn sync_ui() -> Unit {
     set_text_entity(
       title_entity,
       title_text,
-      @math.Vec2D(20.0, 16.0),
+      @math.Vec2(20.0, 16.0),
       "32px \{ANGRYRABBITS_FONT_FAMILY}",
       "rgb(84, 48, 22)",
       220,
@@ -1297,7 +1297,7 @@ fn sync_ui() -> Unit {
     set_text_entity(
       hint_entity,
       hint_text,
-      @math.Vec2D(20.0, VIEWPORT_HEIGHT - 28.0),
+      @math.Vec2(20.0, VIEWPORT_HEIGHT - 28.0),
       "16px \{ANGRYRABBITS_FONT_FAMILY}",
       "rgb(77, 74, 66)",
       220,
@@ -1312,7 +1312,7 @@ fn sync_ui() -> Unit {
     set_text_entity(
       score_entity,
       score,
-      @math.Vec2D(20.0, 54.0),
+      @math.Vec2(20.0, 54.0),
       "20px \{ANGRYRABBITS_FONT_FAMILY}",
       "rgb(66, 52, 32)",
       220,
@@ -1335,7 +1335,7 @@ fn sync_ui() -> Unit {
     set_text_entity(
       status_entity,
       status,
-      @math.Vec2D(20.0, 82.0),
+      @math.Vec2(20.0, 82.0),
       "18px \{ANGRYRABBITS_FONT_FAMILY}",
       status_color,
       220,
@@ -1367,8 +1367,8 @@ fn reset_level() -> Unit {
       shots_remaining.val = 0
       rabbits.clear()
       current_rabbit_index.val = 0
-      rabbit_center.val = @math.Vec2D::zero()
-      rabbit_velocity.val = @math.Vec2D::zero()
+      rabbit_center.val = @math.Vec2::zero()
+      rabbit_velocity.val = @math.Vec2::zero()
       rabbit_visible.val = false
       rabbit_flight_time.val = 0.0
       rabbit_idle_time.val = 0.0
@@ -1419,7 +1419,7 @@ fn setup_scene_if_needed() -> Unit {
       camera_anchor_entity,
       @camera.OrthographicProjection::new(),
     )
-    set_camera_anchor_position(@math.Vec2D::zero())
+    set_camera_anchor_position(@math.Vec2::zero())
     scene_initialized.val = true
   }
 }

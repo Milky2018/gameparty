@@ -4,7 +4,7 @@ fn rect_intersects(a : @math.Rect, b : @math.Rect) -> Bool {
 }
 
 ///|
-fn debug_vec2_string(value : @math.Vec2D) -> String {
+fn debug_vec2_string(value : @math.Vec2) -> String {
   "(\{value[X]}, \{value[Y]})"
 }
 
@@ -905,7 +905,7 @@ fn update_items() -> Unit {
             if item.kind == Mushroom {
               item.velocity = item.velocity.update(X, ITEM_MOVE_SPEED)
             } else {
-              item.velocity = @math.Vec2D::zero()
+              item.velocity = @math.Vec2::zero()
             }
           } else {
             item.center = item.center.update(Y, next_y)
@@ -1402,11 +1402,43 @@ fn capture_system(_world : @ecs.World) -> Unit {
   let player_visibility = @visibility.visibilities().get(player_entity)
   let player_transform_text = debug_transform_option_string(player_transform)
   let player_visibility_text = debug_visibility_option_string(player_visibility)
+  let sprite_entries = @runtime_debug.sprite_inspector_entries()
+  let seen_signatures : Map[String, Bool] = Map::new()
+  let mut printed = 0
+  for entry in sprite_entries {
+    if printed >= 32 {
+      break
+    }
+    match entry.image_path {
+      Some(path) =>
+        if path.contains("supermario/sfc/") {
+          let source_rect_signature = match entry.source_rect {
+            Some(rect) => rect.to_json().to_string()
+            None => "none"
+          }
+          let signature = path + "|" + source_rect_signature
+          if !seen_signatures.contains(signature) {
+            seen_signatures.set(signature, true)
+            println("[platformer][sprite] \{entry.to_json().to_string()}")
+            printed = printed + 1
+          }
+        }
+      None => ()
+    }
+  }
   println(
     "[platformer][capture] player_alive=\{player_state.val.alive} player_center=\{debug_vec2_string(player_state.val.center)} has_sprite=\{has_player_sprite} transform=\{player_transform_text} visibility=\{player_visibility_text}",
   )
-  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
-  println("[platformer][capture] path=\{DEBUG_CAPTURE_PATH}")
+  let debug_capture_path = "/tmp/platformer_capture.png"
+  let captured = @runtime_debug.capture_frame_png_to_file(debug_capture_path)
+  if !captured {
+    @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+    println(
+      "[platformer][capture] path=\{DEBUG_CAPTURE_PATH} (raylib fallback)",
+    )
+  } else {
+    println("[platformer][capture] path=\{debug_capture_path} (runtime_debug)")
+  }
   capture_taken.val = true
   profile_phase("capture", started_at)
   @system.exit()

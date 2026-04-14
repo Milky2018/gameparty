@@ -114,8 +114,8 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   let ghost_marker = @entity.Entity::new()
   setup_color_rect_entity(
     ghost_marker,
-    @math.Vec2D(2.0, 2.0),
-    @math.Vec2D::zero(),
+    @math.Vec2(2.0, 2.0),
+    @math.Vec2::zero(),
     "white",
     1,
   )

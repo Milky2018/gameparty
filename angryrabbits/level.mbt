@@ -9,15 +9,15 @@ const LDTK_DECOR_LAYER : String = "Decor"
 
 ///|
 priv struct DecorRectDef {
-  position : @math.Vec2D
-  size : @math.Vec2D
+  position : @math.Vec2
+  size : @math.Vec2
   color : String
   zindex : Int
 }
 
 ///|
 priv struct DecorCircleDef {
-  center : @math.Vec2D
+  center : @math.Vec2
   radius : Double
   color : String
   zindex : Int
@@ -25,22 +25,22 @@ priv struct DecorCircleDef {
 
 ///|
 priv struct BlockDef {
-  center : @math.Vec2D
-  size : @math.Vec2D
+  center : @math.Vec2
+  size : @math.Vec2
 }
 
 ///|
 priv struct TargetDef {
-  center : @math.Vec2D
+  center : @math.Vec2
   radius : Double
 }
 
 ///|
 priv struct LevelDef {
-  slingshot_anchor : @math.Vec2D
-  slingshot_front_stick : @math.Vec2D
-  slingshot_back_stick : @math.Vec2D
-  rabbit_spawn : @math.Vec2D
+  slingshot_anchor : @math.Vec2
+  slingshot_front_stick : @math.Vec2
+  slingshot_back_stick : @math.Vec2
+  rabbit_spawn : @math.Vec2
   max_shots : Int
   background_rect : DecorRectDef
   ground_rect : DecorRectDef
@@ -94,18 +94,18 @@ fn level_def_from_ldtk_project(
       "level '\{level.identifier}' has no visible 'Entities' layer.",
     )
   }
-  let slingshot_anchor : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let slingshot_anchor : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
   let has_slingshot_anchor : Ref[Bool] = { val: false }
-  let slingshot_front_stick : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let slingshot_front_stick : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
   let has_slingshot_front_stick : Ref[Bool] = { val: false }
-  let slingshot_back_stick : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let slingshot_back_stick : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
   let has_slingshot_back_stick : Ref[Bool] = { val: false }
-  let rabbit_spawn : Ref[@math.Vec2D] = { val: @math.Vec2D::zero() }
+  let rabbit_spawn : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
   let has_rabbit_spawn : Ref[Bool] = { val: false }
   let background_rect : Ref[DecorRectDef] = {
     val: {
-      position: @math.Vec2D::zero(),
-      size: @math.Vec2D::zero(),
+      position: @math.Vec2::zero(),
+      size: @math.Vec2::zero(),
       color: "",
       zindex: 0,
     },
@@ -113,15 +113,15 @@ fn level_def_from_ldtk_project(
   let has_background_rect : Ref[Bool] = { val: false }
   let ground_rect : Ref[DecorRectDef] = {
     val: {
-      position: @math.Vec2D::zero(),
-      size: @math.Vec2D::zero(),
+      position: @math.Vec2::zero(),
+      size: @math.Vec2::zero(),
       color: "",
       zindex: 0,
     },
   }
   let has_ground_rect : Ref[Bool] = { val: false }
   let hill_circle : Ref[DecorCircleDef] = {
-    val: { center: @math.Vec2D::zero(), radius: 0.0, color: "", zindex: 0 },
+    val: { center: @math.Vec2::zero(), radius: 0.0, color: "", zindex: 0 },
   }
   let has_hill_circle : Ref[Bool] = { val: false }
   let load_failure : Ref[String?] = { val: None }
@@ -363,19 +363,19 @@ fn with_scoped_ldtk_entity_registrations_for_level(
 }
 
 ///|
-fn ldtk_entity_anchor(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
+fn ldtk_entity_anchor(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2 {
   entity.px
 }
 
 ///|
-fn ldtk_entity_size(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
-  @math.Vec2D(entity.width.to_double(), entity.height.to_double())
+fn ldtk_entity_size(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2 {
+  @math.Vec2(entity.width.to_double(), entity.height.to_double())
 }
 
 ///|
-fn ldtk_entity_center(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2D {
+fn ldtk_entity_center(entity : @ldtk.LdtkEntityInstance) -> @math.Vec2 {
   let size = ldtk_entity_size(entity)
-  entity.px + @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
+  entity.px + @math.Vec2(size[X] / 2.0, size[Y] / 2.0)
 }
 
 ///|
@@ -394,7 +394,7 @@ fn[T] load_level_entity_error(
 fn required_ldtk_entity_size(
   entity : @ldtk.LdtkEntityInstance,
   path : String,
-) -> LoadResult[@math.Vec2D] {
+) -> LoadResult[@math.Vec2] {
   if entity.width <= 0 || entity.height <= 0 {
     load_level_entity_error(
       path, entity, "must have positive width and height.",

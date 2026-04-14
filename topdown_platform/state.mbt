@@ -60,13 +60,13 @@ priv struct ActorRuntime {
   entity : @entity.Entity
   archetype_id : String
   mut hp : Int
-  mut position : @math.Vec2D
+  mut position : @math.Vec2
   mut facing : Facing
   mut attack_cd : Double
   mut moving : Bool
   mut anim_elapsed : Double
   mut last_sprite_path : String
-  mut ai_wander_dir : @math.Vec2D
+  mut ai_wander_dir : @math.Vec2
   mut ai_wander_timer : Double
 }
 
@@ -74,8 +74,8 @@ priv struct ActorRuntime {
 priv struct ProjectileRuntime {
   entity : @entity.Entity
   owner_enemy : Bool
-  mut position : @math.Vec2D
-  velocity : @math.Vec2D
+  mut position : @math.Vec2
+  velocity : @math.Vec2
   radius : Double
   damage : Int
   mut ttl : Double
@@ -85,7 +85,7 @@ priv struct ProjectileRuntime {
 priv struct PickupRuntime {
   entity : @entity.Entity
   item_id : String
-  position : @math.Vec2D
+  position : @math.Vec2
   radius : Double
   heal : Int
   score_bonus : Int
@@ -103,7 +103,7 @@ pub struct SpawnCursor {
 
 ///|
 pub struct EnemySpawnPoint {
-  position : @math.Vec2D
+  position : @math.Vec2
   tag : String?
 }
 
@@ -125,14 +125,14 @@ pub struct WorldState {
   mut cols : Int
   mut world_width : Double
   mut world_height : Double
-  mut player_spawn : @math.Vec2D
+  mut player_spawn : @math.Vec2
   enemy_spawns : Array[EnemySpawnPoint]
   blocking_rects : Array[@math.Rect]
 }
 
 ///|
 pub struct CombatState {
-  mut move_intent : @math.Vec2D
+  mut move_intent : @math.Vec2
   mut primary_requested : Bool
   mut secondary_requested : Bool
   mut attack_flash_ttl : Double
@@ -178,14 +178,14 @@ let world_state : WorldState = {
   cols: 0,
   world_width: 0.0,
   world_height: 0.0,
-  player_spawn: @math.Vec2D(64.0, 64.0),
+  player_spawn: @math.Vec2(64.0, 64.0),
   enemy_spawns: [],
   blocking_rects: [],
 }
 
 ///|
 let combat_state : CombatState = {
-  move_intent: @math.Vec2D(0.0, 0.0),
+  move_intent: @math.Vec2(0.0, 0.0),
   primary_requested: false,
   secondary_requested: false,
   attack_flash_ttl: 0.0,
@@ -303,15 +303,15 @@ fn clamp_double(value : Double, min_ : Double, max_ : Double) -> Double {
 }
 
 ///|
-fn vec_length(value : @math.Vec2D) -> Double {
+fn vec_length(value : @math.Vec2) -> Double {
   (value[X] * value[X] + value[Y] * value[Y]).sqrt()
 }
 
 ///|
-fn vec_normalize(value : @math.Vec2D) -> @math.Vec2D {
+fn vec_normalize(value : @math.Vec2) -> @math.Vec2 {
   let len = vec_length(value)
   if len <= 0.000001 {
-    @math.Vec2D(0.0, 0.0)
+    @math.Vec2(0.0, 0.0)
   } else {
     value.scalar_div(len)
   }
@@ -319,9 +319,9 @@ fn vec_normalize(value : @math.Vec2D) -> @math.Vec2D {
 
 ///|
 fn circle_intersects_circle(
-  a_center : @math.Vec2D,
+  a_center : @math.Vec2,
   a_radius : Double,
-  b_center : @math.Vec2D,
+  b_center : @math.Vec2,
   b_radius : Double,
 ) -> Bool {
   let dx = a_center[X] - b_center[X]
@@ -333,7 +333,7 @@ fn circle_intersects_circle(
 ///|
 fn rect_intersects_circle(
   rect : @math.Rect,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
 ) -> Bool {
   let rect_x = rect.position[X]
@@ -348,7 +348,7 @@ fn rect_intersects_circle(
 }
 
 ///|
-fn facing_from_vector(vector : @math.Vec2D, current : Facing) -> Facing {
+fn facing_from_vector(vector : @math.Vec2, current : Facing) -> Facing {
   let ax = vector[X].abs()
   let ay = vector[Y].abs()
   if ax < 0.001 && ay < 0.001 {

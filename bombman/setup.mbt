@@ -54,7 +54,7 @@ fn ensure_tile_entities() -> Unit {
 
 ///|
 fn entity_transform_2d(
-  position : @math.Vec2D,
+  position : @math.Vec2,
   zindex : Int,
 ) -> @transform.Transform {
   @transform.Transform::from_xyz(position[X], position[Y], zindex.to_double())
@@ -68,11 +68,11 @@ fn show_entity(entity : @entity.Entity) -> Unit {
 ///|
 fn atlas_tile_rect(col : Int, row : Int) -> @math.Rect {
   {
-    position: @math.Vec2D(
+    position: @math.Vec2(
       col.to_double() * BOMBMAN_SPRITE_TILE_SIZE,
       row.to_double() * BOMBMAN_SPRITE_TILE_SIZE,
     ),
-    size: @math.Vec2D(BOMBMAN_SPRITE_TILE_SIZE, BOMBMAN_SPRITE_TILE_SIZE),
+    size: @math.Vec2(BOMBMAN_SPRITE_TILE_SIZE, BOMBMAN_SPRITE_TILE_SIZE),
   }
 }
 
@@ -131,7 +131,7 @@ fn anim_clip_name(clip_id : AnimClip) -> String {
 fn ensure_bombman_animation_assets_once() -> Unit {
   if bombman_atlas_layout.val is None {
     let layout = @sprite.TextureAtlasLayout::from_grid(
-      @math.Vec2D(BOMBMAN_SPRITE_TILE_SIZE, BOMBMAN_SPRITE_TILE_SIZE),
+      @math.Vec2(BOMBMAN_SPRITE_TILE_SIZE, BOMBMAN_SPRITE_TILE_SIZE),
       BOMBMAN_SPRITE_ATLAS_COLUMNS,
       BOMBMAN_SPRITE_ATLAS_ROWS,
     )
@@ -328,7 +328,7 @@ fn hide_entity(entity : @entity.Entity) -> Unit {
 fn set_text_entity(
   entity : @entity.Entity,
   text : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   font : String,
   color : String,
   zindex : Int,
@@ -354,7 +354,7 @@ fn set_text_entity(
       @ui.TextLayout::new(align=Left, baseline=Top),
     )
     @text2d.text2ds().set(entity, @text2d.Text2d::new())
-    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(-0.5, 0.5)))
+    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
     text_style_cache.set(entity, style_key)
   }
   let content_changed = match text_content_cache.get(entity) {
@@ -372,7 +372,7 @@ fn set_text_entity(
 fn set_text_entity_center(
   entity : @entity.Entity,
   text : String,
-  position : @math.Vec2D,
+  position : @math.Vec2,
   font : String,
   color : String,
   zindex : Int,
@@ -398,7 +398,7 @@ fn set_text_entity_center(
       @ui.TextLayout::new(align=Center, baseline=Top),
     )
     @text2d.text2ds().set(entity, @text2d.Text2d::new())
-    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2D(0.0, 0.5)))
+    @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.5)))
     text_style_cache.set(entity, style_key)
   }
   let content_changed = match text_content_cache.get(entity) {
@@ -415,15 +415,15 @@ fn set_text_entity_center(
 ///|
 fn set_rect_entity(
   entity : @entity.Entity,
-  position : @math.Vec2D,
-  size : @math.Vec2D,
+  position : @math.Vec2,
+  size : @math.Vec2,
   color : String,
   zindex : Int,
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
   let sprite = @sprite.Sprite::from_color(sprite_color(color), size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   @sprite.sprites().set(entity, sprite)
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
@@ -431,8 +431,8 @@ fn set_rect_entity(
 ///|
 fn set_atlas_entity_top_left(
   entity : @entity.Entity,
-  position : @math.Vec2D,
-  size : @math.Vec2D,
+  position : @math.Vec2,
+  size : @math.Vec2,
   col : Int,
   row : Int,
   zindex : Int,
@@ -445,7 +445,7 @@ fn set_atlas_entity_top_left(
     bombman_spritesheet(),
     custom_size=Some(size),
   )
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   sprite.rect = Some(atlas_tile_rect(col, row))
   sprite.flip_x = flip_x
   match tint {
@@ -459,15 +459,15 @@ fn set_atlas_entity_top_left(
 ///|
 fn set_atlas_entity_center(
   entity : @entity.Entity,
-  center : @math.Vec2D,
-  size : @math.Vec2D,
+  center : @math.Vec2,
+  size : @math.Vec2,
   col : Int,
   row : Int,
   zindex : Int,
   tint? : String? = None,
   flip_x? : Bool = false,
 ) -> Unit {
-  let top_left = center - @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
+  let top_left = center - @math.Vec2(size[X] / 2.0, size[Y] / 2.0)
   set_atlas_entity_top_left(
     entity,
     top_left,
@@ -483,8 +483,8 @@ fn set_atlas_entity_center(
 ///|
 fn set_animated_atlas_entity_top_left(
   entity : @entity.Entity,
-  position : @math.Vec2D,
-  size : @math.Vec2D,
+  position : @math.Vec2,
+  size : @math.Vec2,
   clip_id : AnimClip,
   zindex : Int,
   tint? : String? = None,
@@ -507,7 +507,7 @@ fn set_animated_atlas_entity_top_left(
       )
   }
   sprite.custom_size = Some(size)
-  sprite.anchor = @sprite.Anchor(@math.Vec2D(-0.5, 0.5))
+  sprite.anchor = @sprite.Anchor(@math.Vec2(-0.5, 0.5))
   sprite.flip_x = flip_x
   sprite.texture_atlas = match sprite.texture_atlas {
     Some(texture_atlas) => Some({ ..texture_atlas, layout, })
@@ -530,14 +530,14 @@ fn set_animated_atlas_entity_top_left(
 ///|
 fn set_animated_atlas_entity_center(
   entity : @entity.Entity,
-  center : @math.Vec2D,
-  size : @math.Vec2D,
+  center : @math.Vec2,
+  size : @math.Vec2,
   clip_id : AnimClip,
   zindex : Int,
   tint? : String? = None,
   flip_x? : Bool = false,
 ) -> Unit {
-  let top_left = center - @math.Vec2D(size[X] / 2.0, size[Y] / 2.0)
+  let top_left = center - @math.Vec2(size[X] / 2.0, size[Y] / 2.0)
   set_animated_atlas_entity_top_left(
     entity,
     top_left,
@@ -552,7 +552,7 @@ fn set_animated_atlas_entity_center(
 ///|
 fn set_circle_entity(
   entity : @entity.Entity,
-  center : @math.Vec2D,
+  center : @math.Vec2,
   radius : Double,
   color : String,
   zindex : Int,
@@ -905,7 +905,7 @@ fn clear_tile_grid() -> Unit {
 ///|
 fn reset_player_slot(
   index : Int,
-  start_center : @math.Vec2D,
+  start_center : @math.Vec2,
   active : Bool,
 ) -> Unit {
   let id = if index == 0 { P1 } else { P2 }
@@ -985,8 +985,8 @@ fn load_level(level_index : Int, mode : GameMode) -> Unit {
   }
   clear_tile_grid()
   enemies.clear()
-  let mut p1_spawn : @math.Vec2D? = None
-  let mut p2_spawn : @math.Vec2D? = None
+  let mut p1_spawn : @math.Vec2? = None
+  let mut p2_spawn : @math.Vec2? = None
   for y in 0..<GRID_HEIGHT {
     let row = level[y]
     if row.length() != GRID_WIDTH {
@@ -1640,7 +1640,7 @@ fn hide_tile_visuals() -> Unit {
 
 ///|
 fn sync_bomb_visuals() -> Unit {
-  let size = @math.Vec2D(BOMB_SPRITE_SIZE, BOMB_SPRITE_SIZE)
+  let size = @math.Vec2(BOMB_SPRITE_SIZE, BOMB_SPRITE_SIZE)
   for bomb in bombs {
     set_animated_atlas_entity_center(
       bomb.entity,
@@ -1654,7 +1654,7 @@ fn sync_bomb_visuals() -> Unit {
 
 ///|
 fn sync_flame_visuals() -> Unit {
-  let size = @math.Vec2D(FLAME_SPRITE_SIZE, FLAME_SPRITE_SIZE)
+  let size = @math.Vec2(FLAME_SPRITE_SIZE, FLAME_SPRITE_SIZE)
   for flame in flames {
     set_animated_atlas_entity_center(
       flame.entity,
@@ -1699,7 +1699,7 @@ fn sync_item_visuals() -> Unit {
     set_atlas_entity_center(
       item.label_entity,
       center,
-      @math.Vec2D(ITEM_ICON_SIZE, ITEM_ICON_SIZE),
+      @math.Vec2(ITEM_ICON_SIZE, ITEM_ICON_SIZE),
       icon_col,
       icon_row,
       63,
@@ -1710,7 +1710,7 @@ fn sync_item_visuals() -> Unit {
 
 ///|
 fn sync_enemy_visuals() -> Unit {
-  let size = @math.Vec2D(ENEMY_SPRITE_SIZE, ENEMY_SPRITE_SIZE)
+  let size = @math.Vec2(ENEMY_SPRITE_SIZE, ENEMY_SPRITE_SIZE)
   for enemy in enemies {
     if enemy.alive || !enemy.death_animation_done {
       set_animated_atlas_entity_center(
@@ -1729,7 +1729,7 @@ fn sync_enemy_visuals() -> Unit {
 
 ///|
 fn sync_player_visuals() -> Unit {
-  let size = @math.Vec2D(PLAYER_SPRITE_SIZE, PLAYER_SPRITE_SIZE)
+  let size = @math.Vec2(PLAYER_SPRITE_SIZE, PLAYER_SPRITE_SIZE)
   for player in players {
     if player.active {
       if player.alive || !player.death_animation_done {
@@ -1796,7 +1796,7 @@ fn set_menu_entry(
   set_text_entity_center(
     menu_entities[index],
     text,
-    @math.Vec2D(VIEWPORT_WIDTH / 2.0, y),
+    @math.Vec2(VIEWPORT_WIDTH / 2.0, y),
     "24px \{BOMBMAN_FONT_FAMILY}",
     color,
     200,
@@ -1809,7 +1809,7 @@ fn sync_menu_visuals() -> Unit {
   set_text_entity_center(
     title_entity,
     "MoonBit Bombman",
-    @math.Vec2D(center_x, 26.0),
+    @math.Vec2(center_x, 26.0),
     "42px \{BOMBMAN_FONT_FAMILY}",
     HUD_TEXT_COLOR,
     200,
@@ -1817,7 +1817,7 @@ fn sync_menu_visuals() -> Unit {
   set_text_entity_center(
     hud_entity,
     phase_status_text(),
-    @math.Vec2D(center_x, 104.0),
+    @math.Vec2(center_x, 104.0),
     "18px \{BOMBMAN_FONT_FAMILY}",
     MENU_SELECTED_COLOR,
     200,
@@ -1950,7 +1950,7 @@ fn sync_menu_visuals() -> Unit {
   set_text_entity_center(
     status_entity,
     status_text(),
-    @math.Vec2D(center_x, VIEWPORT_HEIGHT - 60.0),
+    @math.Vec2(center_x, VIEWPORT_HEIGHT - 60.0),
     "12px \{BOMBMAN_FONT_FAMILY}",
     HUD_MUTED_TEXT_COLOR,
     200,
@@ -1958,7 +1958,7 @@ fn sync_menu_visuals() -> Unit {
   set_text_entity_center(
     hint_entity,
     hint_text(),
-    @math.Vec2D(center_x, VIEWPORT_HEIGHT - 32.0),
+    @math.Vec2(center_x, VIEWPORT_HEIGHT - 32.0),
     "12px \{BOMBMAN_FONT_FAMILY}",
     HUD_MUTED_TEXT_COLOR,
     200,
@@ -1971,7 +1971,7 @@ fn sync_playing_hud_visuals() -> Unit {
   set_text_entity(
     title_entity,
     "BOMBMAN",
-    @math.Vec2D(20.0, 18.0),
+    @math.Vec2(20.0, 18.0),
     "26px \{BOMBMAN_FONT_FAMILY}",
     HUD_TEXT_COLOR,
     200,
@@ -1979,7 +1979,7 @@ fn sync_playing_hud_visuals() -> Unit {
   set_text_entity(
     hud_entity,
     phase_status_text(),
-    @math.Vec2D(20.0, 48.0),
+    @math.Vec2(20.0, 48.0),
     "16px \{BOMBMAN_FONT_FAMILY}",
     HUD_TEXT_COLOR,
     200,
@@ -1993,8 +1993,8 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
   let render_started_at = @time.elapsed_raw()
   set_rect_entity(
     background_entity,
-    @math.Vec2D::zero(),
-    @math.Vec2D(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
+    @math.Vec2::zero(),
+    @math.Vec2(VIEWPORT_WIDTH, VIEWPORT_HEIGHT),
     "rgb(18, 24, 30)",
     0,
   )
