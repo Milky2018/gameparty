@@ -1,0 +1,28 @@
+{
+  "version": "sprite-extractor-v1",
+  "sources": {
+    "mario": "../supermario/sfc/runtime_mario.png"
+  },
+  "jobs": [
+    {
+      "source": "mario",
+      "mode": "grid",
+      "origin_x": 8,
+      "origin_y": 76,
+      "step_x": 40,
+      "step_y": 40,
+      "frame_w": 16,
+      "frame_h": 28,
+      "outputs": [
+        { "name": "mario_idle_left", "col": 4, "row": 0 },
+        { "name": "mario_idle_right", "col": 5, "row": 0 },
+        { "name": "mario_run_left_0", "col": 0, "row": 0 },
+        { "name": "mario_run_left_1", "col": 1, "row": 0 },
+        { "name": "mario_run_left_2", "col": 4, "row": 0 },
+        { "name": "mario_run_right_0", "col": 9, "row": 0 },
+        { "name": "mario_run_right_1", "col": 8, "row": 0 },
+        { "name": "mario_run_right_2", "col": 5, "row": 0 }
+      ]
+    }
+  ]
+}

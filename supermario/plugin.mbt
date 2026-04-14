@@ -5,46 +5,7 @@ const TILE_SIZE : Double = 48.0
 const SUPERMARIO_JUMP_SPEED : Double = 720.0
 
 ///|
-const SFC_MARIO_SHEET_PATH : String = "assets/supermario/sfc/runtime_mario.png"
-
-///|
-const SFC_ENEMIES_SHEET_PATH : String = "assets/supermario/sfc/runtime_enemies.png"
-
-///|
-const SFC_TILES_SHEET_PATH : String = "assets/supermario/sfc/runtime_tiles.png"
-
-///|
-const SFC_PIPES_SHEET_PATH : String = "assets/supermario/sfc/runtime_pipes.png"
-
-///|
-const SFC_GROUND_SHEET_PATH : String = "assets/supermario/sfc/tiles-ground_keyed.png"
-
-///|
-const SFC_BACKGROUND_PATH : String = "assets/supermario/sfc/runtime_background_02.png"
-
-///|
-const MARIO_FRAME_ORIGIN_X : Double = 8.0
-
-///|
-const MARIO_FRAME_ORIGIN_Y : Double = 76.0
-
-///|
-const MARIO_FRAME_STEP_X : Double = 40.0
-
-///|
-const MARIO_FRAME_STEP_Y : Double = 40.0
-
-///|
-const ENEMY_FRAME_ORIGIN_X : Double = 12.0
-
-///|
-const ENEMY_FRAME_ORIGIN_Y : Double = 160.0
-
-///|
-const ENEMY_FRAME_STEP_X : Double = 40.0
-
-///|
-const ENEMY_FRAME_STEP_Y : Double = 40.0
+const EXTRACTED_SPRITES_DIR : String = "assets/supermario/extracted"
 
 ///|
 fn atlas(
@@ -58,149 +19,17 @@ fn atlas(
 }
 
 ///|
+fn extracted_frame(
+  name : String,
+  width : Double,
+  height : Double,
+) -> @platformer_platform.SpriteRegion {
+  atlas("\{EXTRACTED_SPRITES_DIR}/\{name}.png", 0.0, 0.0, width, height)
+}
+
+///|
 fn vec2(x : Double, y : Double) -> @math.Vec2 {
   @math.Vec2(x, y)
-}
-
-///|
-fn frame_from_grid(
-  path : String,
-  origin_x : Double,
-  origin_y : Double,
-  step_x : Double,
-  step_y : Double,
-  col : Int,
-  row : Int,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  atlas(
-    path,
-    origin_x + col.to_double() * step_x,
-    origin_y + row.to_double() * step_y,
-    width,
-    height,
-  )
-}
-
-///|
-fn mario_frame(
-  col : Int,
-  row : Int,
-  width? : Double = 16.0,
-  height? : Double = 28.0,
-) -> @platformer_platform.SpriteRegion {
-  frame_from_grid(
-    SFC_MARIO_SHEET_PATH,
-    MARIO_FRAME_ORIGIN_X,
-    MARIO_FRAME_ORIGIN_Y,
-    MARIO_FRAME_STEP_X,
-    MARIO_FRAME_STEP_Y,
-    col,
-    row,
-    width~,
-    height~,
-  )
-}
-
-///|
-fn enemy_frame(
-  col : Int,
-  row : Int,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  frame_from_grid(
-    SFC_ENEMIES_SHEET_PATH,
-    ENEMY_FRAME_ORIGIN_X,
-    ENEMY_FRAME_ORIGIN_Y,
-    ENEMY_FRAME_STEP_X,
-    ENEMY_FRAME_STEP_Y,
-    col,
-    row,
-    width~,
-    height~,
-  )
-}
-
-///|
-fn tile_frame(
-  col : Int,
-  row : Int,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  frame_from_grid(
-    SFC_TILES_SHEET_PATH,
-    0.0,
-    0.0,
-    16.0,
-    16.0,
-    col,
-    row,
-    width~,
-    height~,
-  )
-}
-
-///|
-fn tile_frame_with_offset(
-  x : Double,
-  y : Double,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  atlas(SFC_TILES_SHEET_PATH, x, y, width, height)
-}
-
-///|
-fn pipe_frame(
-  col : Int,
-  row : Int,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  frame_from_grid(
-    SFC_PIPES_SHEET_PATH,
-    0.0,
-    0.0,
-    16.0,
-    16.0,
-    col,
-    row,
-    width~,
-    height~,
-  )
-}
-
-///|
-fn pipe_frame_with_offset(
-  x : Double,
-  y : Double,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  atlas(SFC_PIPES_SHEET_PATH, x, y, width, height)
-}
-
-///|
-fn ground_frame(
-  col : Int,
-  row : Int,
-  width? : Double = 16.0,
-  height? : Double = 16.0,
-) -> @platformer_platform.SpriteRegion {
-  frame_from_grid(
-    SFC_GROUND_SHEET_PATH,
-    0.0,
-    0.0,
-    16.0,
-    16.0,
-    col,
-    row,
-    width~,
-    height~,
-  )
 }
 
 ///|
@@ -493,34 +322,36 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     ),
     sprites=Some(
       @platformer_platform.sprite_pack(
-        player_idle_left_region=Some(mario_frame(4, 0)),
-        player_idle_right_region=Some(mario_frame(5, 0)),
+        player_idle_left_region=Some(extracted_frame("player_idle_left", 16.0, 28.0)),
+        player_idle_right_region=Some(
+          extracted_frame("player_idle_right", 16.0, 28.0),
+        ),
         player_run_left_regions=Some([
-          mario_frame(0, 0),
-          mario_frame(1, 0),
-          mario_frame(4, 0),
+          extracted_frame("player_run_left_0", 16.0, 28.0),
+          extracted_frame("player_run_left_1", 16.0, 28.0),
+          extracted_frame("player_run_left_2", 16.0, 28.0),
         ]),
         player_run_right_regions=Some([
-          mario_frame(9, 0),
-          mario_frame(8, 0),
-          mario_frame(5, 0),
+          extracted_frame("player_run_right_0", 16.0, 28.0),
+          extracted_frame("player_run_right_1", 16.0, 28.0),
+          extracted_frame("player_run_right_2", 16.0, 28.0),
         ]),
         enemy_goomba_regions=Some([
-          enemy_frame(0, 4, height=16.0),
-          enemy_frame(1, 4, height=16.0),
+          extracted_frame("enemy_goomba_walk_0", 16.0, 16.0),
+          extracted_frame("enemy_goomba_walk_1", 16.0, 16.0),
         ]),
         enemy_koopa_regions=Some([
-          enemy_frame(1, 0, height=27.0),
-          enemy_frame(2, 0, height=27.0),
+          extracted_frame("enemy_koopa_walk_0", 16.0, 27.0),
+          extracted_frame("enemy_koopa_walk_1", 16.0, 27.0),
         ]),
-        tile_ground_region=Some(ground_frame(44, 3)),
-        tile_brick_region=Some(tile_frame(4, 0)),
-        tile_pipe_region=Some(pipe_frame_with_offset(16.0, 81.0)),
-        tile_pipe_body_region=Some(pipe_frame(1, 6)),
-        tile_spike_region=Some(tile_frame(7, 16)),
-        tile_question_region=Some(tile_frame_with_offset(207.0, 181.0)),
-        tile_used_region=Some(tile_frame_with_offset(176.0, 160.0)),
-        background_path=Some(SFC_BACKGROUND_PATH),
+        tile_ground_region=Some(extracted_frame("tile_ground", 16.0, 16.0)),
+        tile_brick_region=Some(extracted_frame("tile_brick", 16.0, 16.0)),
+        tile_pipe_region=Some(extracted_frame("tile_pipe_top", 16.0, 16.0)),
+        tile_pipe_body_region=Some(extracted_frame("tile_pipe_body", 16.0, 16.0)),
+        tile_spike_region=Some(extracted_frame("tile_spike", 16.0, 16.0)),
+        tile_question_region=Some(extracted_frame("tile_question", 16.0, 16.0)),
+        tile_used_region=Some(extracted_frame("tile_used", 16.0, 16.0)),
+        background_path=Some("\{EXTRACTED_SPRITES_DIR}/background_02.png"),
       ),
     ),
     movement=Some(

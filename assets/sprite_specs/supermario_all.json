@@ -1,0 +1,108 @@
+{
+  "version": "sprite-extractor-v1",
+  "sources": {
+    "mario": "../supermario/sfc/runtime_mario.png",
+    "enemies": "../supermario/sfc/runtime_enemies.png",
+    "goombas_keyed": "../supermario/sfc/goombas_keyed.png",
+    "tiles": "../supermario/sfc/runtime_tiles.png",
+    "pipes": "../supermario/sfc/runtime_pipes.png",
+    "ground": "../supermario/sfc/tiles-ground_keyed.png",
+    "bg01": "../supermario/sfc/runtime_background_01.png",
+    "bg02": "../supermario/sfc/runtime_background_02.png"
+  },
+  "jobs": [
+    {
+      "source": "mario",
+      "mode": "grid",
+      "origin_x": 8,
+      "origin_y": 76,
+      "step_x": 40,
+      "step_y": 40,
+      "frame_w": 16,
+      "frame_h": 28,
+      "outputs": [
+        { "name": "player_idle_left", "col": 4, "row": 0 },
+        { "name": "player_idle_right", "col": 5, "row": 0 },
+        { "name": "player_run_left_0", "col": 0, "row": 0 },
+        { "name": "player_run_left_1", "col": 1, "row": 0 },
+        { "name": "player_run_left_2", "col": 4, "row": 0 },
+        { "name": "player_run_right_0", "col": 9, "row": 0 },
+        { "name": "player_run_right_1", "col": 8, "row": 0 },
+        { "name": "player_run_right_2", "col": 5, "row": 0 }
+      ]
+    },
+    {
+      "source": "goombas_keyed",
+      "mode": "rects",
+      "postprocess": {
+        "remove_bg": {
+          "rgb": [117, 255, 255],
+          "tolerance": 8
+        }
+      },
+      "outputs": [
+        { "name": "enemy_goomba_walk_0", "x": 8, "y": 24, "w": 16, "h": 16 },
+        { "name": "enemy_goomba_walk_1", "x": 32, "y": 24, "w": 16, "h": 16 }
+      ]
+    },
+    {
+      "source": "enemies",
+      "mode": "grid",
+      "origin_x": 12,
+      "origin_y": 160,
+      "step_x": 40,
+      "step_y": 40,
+      "frame_w": 16,
+      "frame_h": 27,
+      "outputs": [
+        { "name": "enemy_koopa_walk_0", "col": 1, "row": 0 },
+        { "name": "enemy_koopa_walk_1", "col": 2, "row": 0 }
+      ]
+    },
+    {
+      "source": "ground",
+      "mode": "grid",
+      "origin_x": 0,
+      "origin_y": 0,
+      "step_x": 16,
+      "step_y": 16,
+      "frame_w": 16,
+      "frame_h": 16,
+      "outputs": [
+        { "name": "tile_ground", "col": 44, "row": 3 }
+      ]
+    },
+    {
+      "source": "tiles",
+      "mode": "rects",
+      "outputs": [
+        { "name": "tile_brick", "x": 64, "y": 0, "w": 16, "h": 16 },
+        { "name": "tile_spike", "x": 112, "y": 256, "w": 16, "h": 16 },
+        { "name": "tile_question", "x": 207, "y": 181, "w": 16, "h": 16 },
+        { "name": "tile_used", "x": 176, "y": 160, "w": 16, "h": 16 }
+      ]
+    },
+    {
+      "source": "pipes",
+      "mode": "rects",
+      "outputs": [
+        { "name": "tile_pipe_top", "x": 16, "y": 81, "w": 16, "h": 16 },
+        { "name": "tile_pipe_body", "x": 16, "y": 96, "w": 16, "h": 16 }
+      ]
+    },
+    {
+      "source": "bg01",
+      "mode": "rects",
+      "outputs": [
+        { "name": "background_01", "x": 0, "y": 0, "w": 258, "h": 307 }
+      ]
+    },
+    {
+      "source": "bg02",
+      "mode": "rects",
+      "outputs": [
+        { "name": "background_02", "x": 0, "y": 0, "w": 258, "h": 307 }
+      ]
+    }
+  ]
+}

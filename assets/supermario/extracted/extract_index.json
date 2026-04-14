@@ -1,0 +1,469 @@
+{
+  "schema": "sprite-extract-index-v1",
+  "spec_path": "/Users/zhengyu/Documents/projects/gameparty/assets/sprite_specs/supermario_all.json",
+  "strict": true,
+  "dry_run": false,
+  "overwrite": true,
+  "items": [
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_idle_left.png",
+      "output_name": "player_idle_left.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 168,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_idle_right.png",
+      "output_name": "player_idle_right.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 208,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_run_left_0.png",
+      "output_name": "player_run_left_0.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 8,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_run_left_1.png",
+      "output_name": "player_run_left_1.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 48,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_run_left_2.png",
+      "output_name": "player_run_left_2.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 168,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_run_right_0.png",
+      "output_name": "player_run_right_0.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 368,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_run_right_1.png",
+      "output_name": "player_run_right_1.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 328,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/player_run_right_2.png",
+      "output_name": "player_run_right_2.png",
+      "source_key": "mario",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_mario.png",
+      "rect": {
+        "x": 208,
+        "y": 76,
+        "w": 16,
+        "h": 28
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 28
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/enemy_goomba_walk_0.png",
+      "output_name": "enemy_goomba_walk_0.png",
+      "source_key": "goombas_keyed",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/goombas_keyed.png",
+      "rect": {
+        "x": 8,
+        "y": 24,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": {
+          "rgb": [
+            117,
+            255,
+            255
+          ],
+          "tolerance": 8
+        },
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/enemy_goomba_walk_1.png",
+      "output_name": "enemy_goomba_walk_1.png",
+      "source_key": "goombas_keyed",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/goombas_keyed.png",
+      "rect": {
+        "x": 32,
+        "y": 24,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": {
+          "rgb": [
+            117,
+            255,
+            255
+          ],
+          "tolerance": 8
+        },
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/enemy_koopa_walk_0.png",
+      "output_name": "enemy_koopa_walk_0.png",
+      "source_key": "enemies",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_enemies.png",
+      "rect": {
+        "x": 52,
+        "y": 160,
+        "w": 16,
+        "h": 27
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 27
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/enemy_koopa_walk_1.png",
+      "output_name": "enemy_koopa_walk_1.png",
+      "source_key": "enemies",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_enemies.png",
+      "rect": {
+        "x": 92,
+        "y": 160,
+        "w": 16,
+        "h": 27
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 27
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_ground.png",
+      "output_name": "tile_ground.png",
+      "source_key": "ground",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/tiles-ground_keyed.png",
+      "rect": {
+        "x": 704,
+        "y": 48,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_brick.png",
+      "output_name": "tile_brick.png",
+      "source_key": "tiles",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_tiles.png",
+      "rect": {
+        "x": 64,
+        "y": 0,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_spike.png",
+      "output_name": "tile_spike.png",
+      "source_key": "tiles",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_tiles.png",
+      "rect": {
+        "x": 112,
+        "y": 256,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_question.png",
+      "output_name": "tile_question.png",
+      "source_key": "tiles",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_tiles.png",
+      "rect": {
+        "x": 207,
+        "y": 181,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_used.png",
+      "output_name": "tile_used.png",
+      "source_key": "tiles",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_tiles.png",
+      "rect": {
+        "x": 176,
+        "y": 160,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_pipe_top.png",
+      "output_name": "tile_pipe_top.png",
+      "source_key": "pipes",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_pipes.png",
+      "rect": {
+        "x": 16,
+        "y": 81,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_pipe_body.png",
+      "output_name": "tile_pipe_body.png",
+      "source_key": "pipes",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_pipes.png",
+      "rect": {
+        "x": 16,
+        "y": 96,
+        "w": 16,
+        "h": 16
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/background_01.png",
+      "output_name": "background_01.png",
+      "source_key": "bg01",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_background_01.png",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 307
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 258,
+        "height": 307
+      }
+    },
+    {
+      "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/background_02.png",
+      "output_name": "background_02.png",
+      "source_key": "bg02",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_background_02.png",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 258,
+        "h": 307
+      },
+      "postprocess": {
+        "remove_bg": null,
+        "trim": false,
+        "pad": null
+      },
+      "final_size": {
+        "width": 258,
+        "height": 307
+      }
+    }
+  ],
+  "summary": {
+    "exported": 21,
+    "skipped": 0,
+    "failed": 0
+  }
+}
