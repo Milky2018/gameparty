@@ -34,7 +34,7 @@ fn build_legend() -> Map[Char, @topdown_platform.TileOrSpawnRule] {
 }
 
 ///|
-pub let plugin : @topdown_platform.TopDownPluginDef = {
+pub let plugin : @topdown_action.TopDownPluginDef = {
   meta: { id: "jackal", name: "Jackal Reloaded", version: "2.0.0" },
   map: @kit.map_def(
     [
@@ -48,7 +48,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "commando",
       "assets/assassin",
-      @topdown_platform.Chase,
+      @topdown_action.Chase,
       0.0,
       12,
       190.0,
@@ -62,7 +62,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "scout",
       "assets/robber",
-      @topdown_platform.HoldDistance,
+      @topdown_action.HoldDistance,
       210.0,
       4,
       135.0,
@@ -76,7 +76,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "grunt",
       "assets/thug",
-      @topdown_platform.Chase,
+      @topdown_action.Chase,
       0.0,
       7,
       105.0,
@@ -90,7 +90,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "rocketeer",
       "assets/assassin",
-      @topdown_platform.Wander,
+      @topdown_action.Wander,
       0.0,
       9,
       120.0,

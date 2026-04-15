@@ -32,17 +32,17 @@ fn build_legend() -> Map[Char, @topdown_platform.TileOrSpawnRule] {
 }
 
 ///|
-fn phase_name(phase : @topdown_platform.RunPhase) -> String {
+fn phase_name(phase : @topdown_action.RunPhase) -> String {
   match phase {
-    @topdown_platform.Boot => "Boot"
-    @topdown_platform.Playing => "Playing"
-    @topdown_platform.Won => "Won"
-    @topdown_platform.Lost => "Lost"
+    @topdown_action.Boot => "Boot"
+    @topdown_action.Playing => "Playing"
+    @topdown_action.Won => "Won"
+    @topdown_action.Lost => "Lost"
   }
 }
 
 ///|
-fn on_run_start(snapshot : @topdown_platform.PluginRuntimeState) -> Unit {
+fn on_run_start(snapshot : @topdown_action.PluginRuntimeState) -> Unit {
   println(
     "[topdown_rogue_proto] run started phase=\{phase_name(snapshot.phase)} wave=\{snapshot.wave}/\{snapshot.waves_total}",
   )
@@ -50,7 +50,7 @@ fn on_run_start(snapshot : @topdown_platform.PluginRuntimeState) -> Unit {
 
 ///|
 fn on_enemy_killed(
-  snapshot : @topdown_platform.PluginRuntimeState,
+  snapshot : @topdown_action.PluginRuntimeState,
   archetype_id : String,
 ) -> Unit {
   println(
@@ -60,7 +60,7 @@ fn on_enemy_killed(
 
 ///|
 fn on_pickup(
-  snapshot : @topdown_platform.PluginRuntimeState,
+  snapshot : @topdown_action.PluginRuntimeState,
   item_id : String,
 ) -> Unit {
   println(
@@ -69,7 +69,7 @@ fn on_pickup(
 }
 
 ///|
-pub let plugin : @topdown_platform.TopDownPluginDef = {
+pub let plugin : @topdown_action.TopDownPluginDef = {
   meta: {
     id: "topdown_rogue_proto",
     name: "TopDown Rogue Proto",
@@ -87,7 +87,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "player_assassin",
       "assets/assassin",
-      @topdown_platform.Chase,
+      @topdown_action.Chase,
       0.0,
       12,
       180.0,
@@ -101,7 +101,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "robber",
       "assets/robber",
-      @topdown_platform.HoldDistance,
+      @topdown_action.HoldDistance,
       190.0,
       4,
       120.0,
@@ -115,7 +115,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "thug",
       "assets/thug",
-      @topdown_platform.Chase,
+      @topdown_action.Chase,
       0.0,
       6,
       90.0,
@@ -129,7 +129,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "assassin_elite",
       "assets/assassin",
-      @topdown_platform.Wander,
+      @topdown_action.Wander,
       0.0,
       8,
       130.0,

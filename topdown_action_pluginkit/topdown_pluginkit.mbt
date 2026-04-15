@@ -80,7 +80,7 @@ pub fn player_spawn_tile(
 }
 
 ///|
-pub fn actor_spawn_tile(
+pub fn enemy_spawn_tile(
   floor_path : String,
   spawn_tag : String,
 ) -> @topdown_platform.TileOrSpawnRule {
@@ -91,6 +91,16 @@ pub fn actor_spawn_tile(
     blocks: false,
     actor_spawn_tag: Some(spawn_tag),
   }
+}
+
+///|
+pub fn wave_entry(
+  archetype_id : String,
+  count : Int,
+  spawn_interval : Double,
+  spawn_tag? : String? = None,
+) -> @topdown_action.WaveEntryDef {
+  { archetype_id, count, spawn_interval, spawn_tag }
 }
 
 ///|
@@ -118,28 +128,93 @@ pub fn map_def(
 pub fn humanoid_archetype(
   id : String,
   sprite_dir : String,
+  ai_mode : @topdown_action.EnemyAiMode,
+  preferred_range : Double,
+  max_hp : Int,
   move_speed : Double,
   radius : Double,
+  touch_damage : Int,
+  score_value : Int,
+  drop_table_id? : String? = None,
+  primary_skill_id? : String? = None,
+  secondary_skill_id? : String? = None,
   sprite_scale? : Double = 2.4,
   sprite_fps? : Double = 12.0,
-) -> @topdown_platform.ArchetypeDef {
+) -> @topdown_action.ArchetypeDef {
   {
     id,
+    ai_mode,
+    preferred_range,
+    max_hp,
     move_speed,
     radius,
+    touch_damage,
+    score_value,
     sprites: humanoid_running_sprites(
       sprite_dir,
       scale=sprite_scale,
       fps=sprite_fps,
     ),
+    drop_table_id,
+    primary_skill_id,
+    secondary_skill_id,
   }
 }
 
 ///|
-pub fn actor_spawn(
-  archetype_id : String,
-  spawn_tag : String,
-  facing? : @topdown_platform.Facing = @topdown_platform.Down,
-) -> @topdown_platform.ActorSpawnDef {
-  { archetype_id, spawn_tag: Some(spawn_tag), facing }
+pub fn melee_skill(
+  id : String,
+  cooldown : Double,
+  damage : Int,
+  range : Double,
+) -> @topdown_action.SkillDef {
+  {
+    id,
+    kind: @topdown_action.Melee,
+    cooldown,
+    damage,
+    range,
+    projectile_speed: 0.0,
+    projectile_radius: 0.0,
+  }
+}
+
+///|
+pub fn projectile_skill(
+  id : String,
+  cooldown : Double,
+  damage : Int,
+  range : Double,
+  projectile_speed : Double,
+  projectile_radius : Double,
+) -> @topdown_action.SkillDef {
+  {
+    id,
+    kind: @topdown_action.Projectile,
+    cooldown,
+    damage,
+    range,
+    projectile_speed,
+    projectile_radius,
+  }
+}
+
+///|
+pub fn drop_item(
+  id : String,
+  image : String,
+  weight : Int,
+  heal? : Int = 0,
+  score_bonus? : Int = 0,
+) -> @topdown_action.DropItemDef {
+  { id, image, weight, heal, score_bonus }
+}
+
+///|
+pub fn drop_table(
+  id : String,
+  chance : Double,
+  items : Array[@topdown_action.DropItemDef],
+) -> @topdown_action.DropTableDef {
+  { id, chance, items }
 }

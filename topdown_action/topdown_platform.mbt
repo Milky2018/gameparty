@@ -3,7 +3,7 @@ pub fn run(plugin : TopDownPluginDef) -> Unit {
   match validate_plugin(plugin) {
     Some(message) =>
       abort(
-        "topdown_platform plugin validation failed for '\{plugin.meta.id}': \{message}",
+        "topdown_action plugin validation failed for '\{plugin.meta.id}': \{message}",
       )
     None => ()
   }
@@ -20,6 +20,8 @@ pub fn run(plugin : TopDownPluginDef) -> Unit {
     .add_system(FixedPostUpdate, input_system)
     .add_system(FixedPostUpdate, intent_system)
     .add_system(FixedPostUpdate, movement_collision_system)
+    .add_system(FixedPostUpdate, combat_system)
+    .add_system(FixedPostUpdate, spawn_loot_system)
     .add_system(FixedPostUpdate, state_transition_system)
     .add_system(Update, render_sync_system)
     .add_system(RenderCleanup, capture_after_render_system)

@@ -2,11 +2,11 @@
 package "Milky2018/gameparty/topdown_rogue_proto"
 
 import {
-  "Milky2018/gameparty/topdown_platform",
+  "Milky2018/gameparty/topdown_action",
 }
 
 // Values
-pub let plugin : @topdown_platform.TopDownPluginDef
+pub let plugin : @topdown_action.TopDownPluginDef
 
 pub fn run() -> Unit
 

@@ -1,4 +1,4 @@
 ///|
 pub fn run() -> Unit {
-  @topdown_platform.run(plugin)
+  @topdown_action.run(plugin)
 }

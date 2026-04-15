@@ -1,6 +1,6 @@
 ///|
 test "plantvszombies plugin passes topdown platform validation" {
-  assert_eq(@topdown_platform.validate_plugin(plugin), None)
+  assert_eq(@topdown_action.validate_plugin(plugin), None)
 }
 
 ///|
@@ -11,7 +11,7 @@ test "plantvszombies map has five lane spawn tags" {
   let mut lane4 = false
   let mut lane5 = false
   for _, rule in plugin.map.legend {
-    match rule.enemy_spawn_tag {
+    match rule.actor_spawn_tag {
       Some(tag) =>
         if tag == "lane1" {
           lane1 = true

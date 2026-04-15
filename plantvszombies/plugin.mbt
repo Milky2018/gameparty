@@ -32,7 +32,7 @@ fn build_legend() -> Map[Char, @topdown_platform.TileOrSpawnRule] {
 }
 
 ///|
-pub let plugin : @topdown_platform.TopDownPluginDef = {
+pub let plugin : @topdown_action.TopDownPluginDef = {
   meta: { id: "plantvszombies", name: "Plants VS Zombies TD", version: "2.0.0" },
   map: @kit.map_def(
     [
@@ -46,7 +46,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "gardener",
       "assets/assassin",
-      @topdown_platform.Chase,
+      @topdown_action.Chase,
       0.0,
       14,
       165.0,
@@ -61,7 +61,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "zombie",
       "assets/thug",
-      @topdown_platform.Chase,
+      @topdown_action.Chase,
       0.0,
       6,
       78.0,
@@ -76,7 +76,7 @@ pub let plugin : @topdown_platform.TopDownPluginDef = {
     @kit.humanoid_archetype(
       "conehead",
       "assets/robber",
-      @topdown_platform.HoldDistance,
+      @topdown_action.HoldDistance,
       120.0,
       10,
       72.0,

@@ -1,13 +1,13 @@
 ///|
 test "jackal plugin passes topdown platform validation" {
-  assert_eq(@topdown_platform.validate_plugin(plugin), None)
+  assert_eq(@topdown_action.validate_plugin(plugin), None)
 }
 
 ///|
 test "jackal waves use only declared spawn tags" {
   let tagged_spawns = Map::new()
   for _, rule in plugin.map.legend {
-    match rule.enemy_spawn_tag {
+    match rule.actor_spawn_tag {
       Some(tag) => tagged_spawns.set(tag, true)
       None => ()
     }
