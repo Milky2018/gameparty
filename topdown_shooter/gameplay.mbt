@@ -77,6 +77,27 @@ fn set_rect_entity(
 }
 
 ///|
+fn set_circle_entity(
+  entity : @entity.Entity,
+  color : @render.Color,
+  radius : Double,
+  center : @math.Vec2,
+  z : Double,
+) -> Unit {
+  ensure_entity_alive(entity)
+  @sprite.sprites().remove(entity)
+  @mesh2d.mesh2ds().set(entity, @mesh2d.Mesh2d::new(circle_mesh_handle(radius)))
+  @material2d.mesh_material2ds().set(
+    entity,
+    @material2d.MeshMaterial2d::from_color_material(
+      circle_material_handle(color),
+    ),
+  )
+  @transform.transforms().set(entity, transform_xy(center[X], center[Y], z))
+  set_entity_visible(entity, true)
+}
+
+///|
 fn sync_actor_visual(actor : ActorRuntime) -> ActorRuntime {
   let actor = actor
   let archetype = archetype_for(actor)
@@ -102,11 +123,10 @@ fn sync_actor_visual(actor : ActorRuntime) -> ActorRuntime {
     archetype.accent_color.b,
     a=alpha,
   )
-  let body_size = @math.Vec2(archetype.radius * 2.0, archetype.radius * 2.0)
-  set_rect_entity(
+  set_circle_entity(
     actor.body_entity,
     body_color,
-    body_size,
+    archetype.radius,
     actor.center,
     ACTOR_Z,
   )

@@ -53,6 +53,12 @@ const CAPTURE_DELAY_SECONDS : Double = 2.0
 let asset_path_prefixes : Array[String] = ["", "../", "../../", "../../../"]
 
 ///|
+let circle_mesh_handles : Map[Int, @mesh2d.Mesh2dHandle] = Map::new()
+
+///|
+let circle_material_handles : Map[String, @material2d.ColorMaterialHandle] = Map::new()
+
+///|
 priv struct WorldTile {
   floor_entity : @entity.Entity
   overlay_entity : @entity.Entity?
@@ -268,6 +274,28 @@ fn active_plugin_def() -> TopDownShooterPluginDef {
 ///|
 fn rgba(r : UInt, g : UInt, b : UInt, a? : Double = 1.0) -> @render.Color {
   { r, g, b, a }
+}
+
+///|
+fn color_material_key(color : @render.Color) -> String {
+  let alpha = @cmath.round(color.a * 255.0).to_int()
+  "\{color.r},\{color.g},\{color.b},\{alpha}"
+}
+
+///|
+fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
+  let key = @cmath.round(radius * 1000.0).to_int()
+  circle_mesh_handles.get_or_init(key, fn() { @mesh2d.circle(radius) })
+}
+
+///|
+fn circle_material_handle(color : @render.Color) -> @material2d.ColorMaterialHandle {
+  let key = color_material_key(color)
+  circle_material_handles.get_or_init(key, fn() {
+    @material2d.register_color_material(
+      @material2d.ColorMaterial::from_color(color),
+    )
+  })
 }
 
 ///|
