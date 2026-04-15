@@ -163,10 +163,10 @@ pub let plugin : @topdown_dialogue.TopDownPluginDef = {
     "WASD move  E talk  ESC quit",
   ),
   dialogue_theme: {
-    prompt_color_css: "rgb(255,212,120)",
-    speaker_color_css: "rgb(255,244,166)",
-    text_color_css: "rgb(236,240,250)",
-    hint_color_css: "rgb(180,210,255)",
+    prompt_color_css: "rgb(226,238,252)",
+    speaker_color_css: "rgb(226,238,252)",
+    text_color_css: "rgb(226,238,252)",
+    hint_color_css: "rgb(226,238,252)",
     panel_color: { r: 21U, g: 26U, b: 38U, a: 0.92 },
   },
   hooks: Some({

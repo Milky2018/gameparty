@@ -371,7 +371,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
   sync_text(hud_entity, hud_cache, ui_state.hud_text)
 
   if run_state.phase == Dialogue {
-    ui_state.message_text = plugin().settings.advance_hint
+    ui_state.message_text = ""
     sync_text(message_entity, message_cache, ui_state.message_text)
     match active_line() {
       Some(line) => {
@@ -408,6 +408,12 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
     return
   }
   capture_timer.val += @time.delta()
+  if capture_timer.val >= 0.35 &&
+    run_state.phase == Playing &&
+    npc_runtimes.length() > 0 {
+    start_dialogue(npc_runtimes[0])
+    return
+  }
   if capture_timer.val < CAPTURE_DELAY_SECONDS {
     return
   }
