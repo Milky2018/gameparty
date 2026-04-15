@@ -50,14 +50,17 @@ if [[ "${SKIP_ASSET_SYNC:-0}" != "1" ]]; then
   find "$DIST_DIR/assets" -name '.DS_Store' -delete
 fi
 
-ARTIFACT_ERR="$(mktemp)"
-if ! ARTIFACT_JSON="$(moon "${MOON_ARGS[@]}" 2>"$ARTIFACT_ERR")"; then
-  cat "$ARTIFACT_ERR" >&2
-  rm -f "$ARTIFACT_ERR"
+BUILD_STDOUT="$(mktemp)"
+BUILD_STDERR="$(mktemp)"
+if ! moon "${MOON_ARGS[@]}" >"$BUILD_STDOUT" 2>"$BUILD_STDERR"; then
+  cat "$BUILD_STDOUT" >&2
+  cat "$BUILD_STDERR" >&2
+  rm -f "$BUILD_STDOUT" "$BUILD_STDERR"
   exit 1
 fi
-rm -f "$ARTIFACT_ERR"
-JS_ARTIFACT="$(python3 -c 'import json, sys; print(json.load(sys.stdin)["artifacts_path"][0])' <<<"$ARTIFACT_JSON")"
+rm -f "$BUILD_STDOUT" "$BUILD_STDERR"
+
+JS_ARTIFACT="$ROOT_DIR/_build/js/$MODE/build/Milky2018/gameparty_web/$GAME/$GAME.js"
 if [[ ! -f "$JS_ARTIFACT" ]]; then
   echo "Error: generated JS artifact not found: $JS_ARTIFACT"
   exit 1
