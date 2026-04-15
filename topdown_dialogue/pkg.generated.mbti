@@ -1,0 +1,152 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/topdown_dialogue"
+
+import {
+  "Milky2018/gameparty/topdown_platform",
+  "Milky2018/selene/ecs",
+  "Milky2018/selene/math",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn intent_system(@ecs.World) -> Unit
+
+pub fn movement_collision_system(@ecs.World) -> Unit
+
+pub fn render_sync_system(@ecs.World) -> Unit
+
+pub fn run(TopDownPluginDef) -> Unit
+
+pub fn setup_plugin(TopDownPluginDef) -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
+
+pub fn state_transition_system(@ecs.World) -> Unit
+
+pub fn validate_plugin(TopDownPluginDef) -> String?
+
+// Errors
+
+// Types and methods
+pub(all) struct ColorDef {
+  r : UInt
+  g : UInt
+  b : UInt
+  a : Double
+}
+
+pub(all) struct DialogueLineDef {
+  speaker : String
+  text : String
+}
+
+pub(all) struct DialogueScriptDef {
+  id : String
+  lines : Array[DialogueLineDef]
+}
+
+pub(all) struct DialogueSettingsDef {
+  interaction_radius : Double
+  interact_prompt : String
+  advance_hint : String
+}
+
+pub struct DialogueState {
+  mut active_npc_id : String?
+  mut active_dialogue_id : String?
+  mut line_index : Int
+}
+
+pub(all) struct DialogueThemeDef {
+  prompt_color_css : String
+  speaker_color_css : String
+  text_color_css : String
+  hint_color_css : String
+  panel_color : ColorDef
+}
+
+pub struct InputState {
+  mut move_intent : @math.Vec2
+}
+
+pub(all) struct NpcDef {
+  id : String
+  archetype_id : String
+  spawn_tag : String
+  facing : @topdown_platform.Facing
+  display_name : String
+  dialogue_id : String
+}
+
+pub(all) struct PluginRuntimeState {
+  phase : RunPhase
+  player_cell_x : Int
+  player_cell_y : Int
+  npc_count : Int
+  active_npc_id : String?
+  active_dialogue_id : String?
+  active_line_index : Int
+}
+
+pub struct PluginRuntimeStateResource {
+  mut snapshot : PluginRuntimeState
+}
+
+pub(all) enum RunPhase {
+  Boot
+  Playing
+  Dialogue
+} derive(Eq, @debug.Debug)
+
+pub struct RunState {
+  mut phase : RunPhase
+  mut elapsed : Double
+}
+
+pub(all) struct TopDownHooks {
+  on_run_start : ((PluginRuntimeState) -> Unit)?
+  on_dialogue_started : ((PluginRuntimeState, String, String) -> Unit)?
+  on_dialogue_finished : ((PluginRuntimeState, String, String) -> Unit)?
+}
+
+pub(all) struct TopDownPluginDef {
+  meta : @topdown_platform.PluginMeta
+  map : @topdown_platform.MapDef
+  player_archetype_id : String
+  archetypes : Array[@topdown_platform.ArchetypeDef]
+  npcs : Array[NpcDef]
+  dialogues : Array[DialogueScriptDef]
+  settings : DialogueSettingsDef
+  ui_theme : @topdown_platform.UiThemeDef
+  dialogue_theme : DialogueThemeDef
+  hooks : TopDownHooks?
+}
+
+pub struct UiState {
+  mut title_text : String
+  mut hud_text : String
+  mut message_text : String
+  mut speaker_text : String
+  mut dialogue_text : String
+  mut dialogue_hint_text : String
+}
+
+pub struct WorldState {
+  mut tile_size : Double
+  mut rows : Int
+  mut cols : Int
+  mut world_width : Double
+  mut world_height : Double
+  mut player_spawn : @math.Vec2
+  npc_spawns : Array[@topdown_platform.ActorSpawnPoint]
+  blocking_rects : Array[@math.Rect]
+}
+
+// Type aliases
+
+// Traits
+
