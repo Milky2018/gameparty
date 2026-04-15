@@ -2,13 +2,21 @@
 package "Milky2018/gameparty/plantvszombies"
 
 import {
-  "Milky2018/gameparty/topdown_action",
+  "Milky2018/selene/ecs",
 }
 
 // Values
-pub let plugin : @topdown_action.TopDownPluginDef
+pub fn capture_after_render_system(@ecs.World) -> Unit
+
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn render_sync_system(@ecs.World) -> Unit
 
 pub fn run() -> Unit
+
+pub fn simulation_system(@ecs.World) -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
 
 // Errors
 
