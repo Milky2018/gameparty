@@ -1,0 +1,5 @@
+import {
+  "Milky2018/gameparty/topdown_dialogue",
+  "Milky2018/gameparty/topdown_platform" @topdown_platform,
+  "Milky2018/gameparty/topdown_pluginkit" @kit,
+}
