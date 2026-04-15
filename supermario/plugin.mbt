@@ -322,7 +322,9 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
     ),
     sprites=Some(
       @platformer_platform.sprite_pack(
-        player_idle_left_region=Some(extracted_frame("player_idle_left", 16.0, 28.0)),
+        player_idle_left_region=Some(
+          extracted_frame("player_idle_left", 16.0, 28.0),
+        ),
         player_idle_right_region=Some(
           extracted_frame("player_idle_right", 16.0, 28.0),
         ),
@@ -347,7 +349,9 @@ pub fn plugin_def() -> @platformer_platform.PlatformerPluginDef {
         tile_ground_region=Some(extracted_frame("tile_ground", 16.0, 16.0)),
         tile_brick_region=Some(extracted_frame("tile_brick", 16.0, 16.0)),
         tile_pipe_region=Some(extracted_frame("tile_pipe_top", 16.0, 16.0)),
-        tile_pipe_body_region=Some(extracted_frame("tile_pipe_body", 16.0, 16.0)),
+        tile_pipe_body_region=Some(
+          extracted_frame("tile_pipe_body", 16.0, 16.0),
+        ),
         tile_spike_region=Some(extracted_frame("tile_spike", 16.0, 16.0)),
         tile_question_region=Some(extracted_frame("tile_question", 16.0, 16.0)),
         tile_used_region=Some(extracted_frame("tile_used", 16.0, 16.0)),

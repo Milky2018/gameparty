@@ -5,7 +5,8 @@
     "enemies": "../supermario/sfc/runtime_enemies.png",
     "goombas_keyed": "../supermario/sfc/goombas_keyed.png",
     "tiles": "../supermario/sfc/runtime_tiles.png",
-    "pipes": "../supermario/sfc/runtime_pipes.png",
+    "tiles_keyed": "../supermario/sfc/tiles_keyed.png",
+    "pipes": "../supermario/sfc/pipes_keyed.png",
     "ground": "../supermario/sfc/tiles-ground_keyed.png",
     "bg01": "../supermario/sfc/runtime_background_01.png",
     "bg02": "../supermario/sfc/runtime_background_02.png"
@@ -69,14 +70,20 @@
       "frame_w": 16,
       "frame_h": 16,
       "outputs": [
-        { "name": "tile_ground", "col": 44, "row": 3 }
+        { "name": "tile_ground", "col": 9, "row": 9 }
+      ]
+    },
+    {
+      "source": "tiles_keyed",
+      "mode": "rects",
+      "outputs": [
+        { "name": "tile_brick", "x": 32, "y": 160, "w": 16, "h": 16 }
       ]
     },
     {
       "source": "tiles",
       "mode": "rects",
       "outputs": [
-        { "name": "tile_brick", "x": 64, "y": 0, "w": 16, "h": 16 },
         { "name": "tile_spike", "x": 112, "y": 256, "w": 16, "h": 16 },
         { "name": "tile_question", "x": 207, "y": 181, "w": 16, "h": 16 },
         { "name": "tile_used", "x": 176, "y": 160, "w": 16, "h": 16 }
@@ -86,8 +93,8 @@
       "source": "pipes",
       "mode": "rects",
       "outputs": [
-        { "name": "tile_pipe_top", "x": 16, "y": 81, "w": 16, "h": 16 },
-        { "name": "tile_pipe_body", "x": 16, "y": 96, "w": 16, "h": 16 }
+        { "name": "tile_pipe_top", "x": 8, "y": 88, "w": 16, "h": 16 },
+        { "name": "tile_pipe_body", "x": 8, "y": 96, "w": 16, "h": 16 }
       ]
     },
     {

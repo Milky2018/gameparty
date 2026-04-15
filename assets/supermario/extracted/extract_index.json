@@ -277,8 +277,8 @@
       "source_key": "ground",
       "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/tiles-ground_keyed.png",
       "rect": {
-        "x": 704,
-        "y": 48,
+        "x": 144,
+        "y": 144,
         "w": 16,
         "h": 16
       },
@@ -295,11 +295,11 @@
     {
       "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_brick.png",
       "output_name": "tile_brick.png",
-      "source_key": "tiles",
-      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_tiles.png",
+      "source_key": "tiles_keyed",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/tiles_keyed.png",
       "rect": {
-        "x": 64,
-        "y": 0,
+        "x": 32,
+        "y": 160,
         "w": 16,
         "h": 16
       },
@@ -380,10 +380,10 @@
       "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_pipe_top.png",
       "output_name": "tile_pipe_top.png",
       "source_key": "pipes",
-      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_pipes.png",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/pipes_keyed.png",
       "rect": {
-        "x": 16,
-        "y": 81,
+        "x": 8,
+        "y": 88,
         "w": 16,
         "h": 16
       },
@@ -401,9 +401,9 @@
       "output_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/extracted/tile_pipe_body.png",
       "output_name": "tile_pipe_body.png",
       "source_key": "pipes",
-      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/runtime_pipes.png",
+      "source_path": "/Users/zhengyu/Documents/projects/gameparty/assets/supermario/sfc/pipes_keyed.png",
       "rect": {
-        "x": 16,
+        "x": 8,
         "y": 96,
         "w": 16,
         "h": 16
