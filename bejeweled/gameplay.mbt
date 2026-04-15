@@ -908,7 +908,7 @@ fn maybe_report_profile() -> Unit {
 pub fn input_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
   reset_if_needed()
-  if @raylib.is_key_pressed(@raylib.KeyF3) {
+  if @host.is_key_pressed("F3") {
     game_state.debug_fps = !game_state.debug_fps
   }
   if @inputs.is_just_pressed(Escape) {
@@ -967,7 +967,7 @@ pub fn update_system(_world : @ecs.World) -> Unit {
     !game_state.debug_capture_taken &&
     @time.elapsed() - game_state.debug_capture_started_at >=
     DEBUG_CAPTURE_DELAY_SECONDS {
-    @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+    @host.take_screenshot(DEBUG_CAPTURE_PATH)
     println("[bejeweled][capture] path=\{DEBUG_CAPTURE_PATH}")
     game_state.debug_capture_taken = true
     @system.exit()
@@ -990,7 +990,11 @@ fn timer_text() -> String {
 ///|
 fn score_text() -> String {
   let fps_text = if game_state.debug_fps {
-    let fps = @raylib.get_fps()
+    let fps = if @time.frame_delta() <= 0.0 {
+      0
+    } else {
+      (1.0 / @time.frame_delta()).to_int()
+    }
     "\nFPS \{fps}"
   } else {
     ""
@@ -1051,7 +1055,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
     DEBUG_CAPTURE_DELAY_SECONDS {
     return
   }
-  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  @host.take_screenshot(DEBUG_CAPTURE_PATH)
   println("[bejeweled][capture] path=\{DEBUG_CAPTURE_PATH}")
   game_state.debug_capture_taken = true
   @system.exit()

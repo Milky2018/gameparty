@@ -2,6 +2,8 @@ import {
   "moonbitlang/core/string" @string,
 }
 
+supported_targets = "native"
+
 options(
   "native-stub": [ "transport_native_stub.c" ],
 )

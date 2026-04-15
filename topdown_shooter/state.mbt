@@ -289,7 +289,9 @@ fn circle_mesh_handle(radius : Double) -> @mesh2d.Mesh2dHandle {
 }
 
 ///|
-fn circle_material_handle(color : @render.Color) -> @material2d.ColorMaterialHandle {
+fn circle_material_handle(
+  color : @render.Color,
+) -> @material2d.ColorMaterialHandle {
   let key = color_material_key(color)
   circle_material_handles.get_or_init(key, fn() {
     @material2d.register_color_material(

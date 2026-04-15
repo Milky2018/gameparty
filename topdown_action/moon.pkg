@@ -16,5 +16,5 @@ import {
   "Milky2018/selene/visibility",
   "moonbitlang/core/env",
   "moonbitlang/core/random",
-  "tonyfettes/raylib" @raylib,
+  "Milky2018/gameparty/host" @host,
 }

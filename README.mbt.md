@@ -1,6 +1,6 @@
 # Milky2018/gameparty
 
-A MoonBit game collection built on top of [Selene](https://github.com/moonbit-community/selene) and the raylib backend.
+A MoonBit game collection built on top of [Selene](https://github.com/moonbit-community/selene), split into a shared game module plus native (`apps-native`) and web (`apps-web`) entry modules.
 
 This repository currently contains these playable prototypes and ports:
 
@@ -25,20 +25,8 @@ This repository currently contains these playable prototypes and ports:
 
 ## Included Packages
 
-- `cmd/thetawave`: run Thetawave directly.
-- `cmd/pacman3d`: run Pacman 3D directly.
-- `cmd/angryrabbits`: run Angry Rabbits directly.
-- `cmd/bombman`: run Bombman directly.
-- `cmd/mooncraft`: run Mooncraft directly.
-- `cmd/coinpusher3d`: run CoinPusher3D directly.
-- `cmd/tankbattle`: run TankBattle directly.
-- `cmd/supermario`: run SuperMario directly.
-- `cmd/celeste`: run Celeste directly.
-- `cmd/plantvszombies`: run PlantVsZombies directly.
-- `cmd/bejeweled`: run Bejeweled directly.
-- `cmd/jackal`: run Jackal directly.
-- `cmd/kofarena`: run KOFArena directly.
-- `cmd/topdown_rogue_proto`: run the top-down roguelite prototype directly.
+- `apps-native/<game>`: native raylib entry packages for each playable game.
+- `apps-web/<game>`: webgpu entry packages for each playable game.
 - `assets/`: shared asset root (`assets/<game>/...`).
 - `thetawave/`: Thetawave package and tests.
 - `pacman3d/`: Pacman 3D package and tests.
@@ -70,31 +58,31 @@ This repository currently contains these playable prototypes and ports:
 Run an individual game directly:
 
 ```bash
-moon run cmd/thetawave
-moon run cmd/pacman3d
-moon run cmd/angryrabbits
-moon run cmd/bombman
-moon run cmd/mooncraft
-moon run cmd/coinpusher3d
-moon run cmd/tankbattle
-moon run cmd/supermario
-moon run cmd/celeste
-moon run cmd/plantvszombies
-moon run cmd/bejeweled
-moon run cmd/jackal
-moon run cmd/kofarena
-moon run cmd/topdown_rogue_proto
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/thetawave
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/pacman3d
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/angryrabbits
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/bombman
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/mooncraft
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/coinpusher3d
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/tankbattle
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/supermario
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/celeste
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/plantvszombies
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/jackal
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/kofarena
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/topdown_rogue_proto
 ```
 
-## Web (Emscripten)
+## Web (MoonBit JS)
 
-You can build web outputs from MoonBit native-generated C artifacts (without changing MoonBit target).
+Build the web entry packages directly with the JS backend:
 
 ```bash
-# Build one game to web/<game>/index.html
+# Build one game to dist/web/<game>.html
 scripts/build_web_game.sh bejeweled
 
-# Build all cmd/* games
+# Build all apps-web games
 scripts/build_web_all_games.sh
 
 # Optional release build
@@ -105,15 +93,15 @@ scripts/build_web_all_games.sh --release
 scripts/gen_web_gallery.sh
 
 # Serve and open gallery
-cd web && python3 -m http.server 4173
+cd dist/web && python3 -m http.server 4173
 # open http://127.0.0.1:4173/
 ```
 
 Notes:
 
-- Requires `emcc` (`brew install emscripten` on macOS).
-- Current build chain uses `native -> C -> emcc` and keeps MoonBit target as `native`.
-- Use `EMCC_OPT_LEVEL` to tune compile speed/size, e.g. `EMCC_OPT_LEVEL=-O0 scripts/build_web_all_games.sh`.
+- Gallery and deploy artifacts now live under `dist/web`.
+- The web pipeline uses `moon run --manifest-path apps-web/moon.mod.json --target js --build-only ...`.
+- `bombman` keeps the multiplayer menu entry visible on web, but selecting it shows a “not supported on web yet” stub instead of loading native networking.
 
 `bombman` netplay is now fully menu-driven (no `BOMBMAN_NET_*` env vars):
 
@@ -127,8 +115,9 @@ Lobby shows both detected LAN IPv4 and `127.0.0.1` for local testing.
 ## Check
 
 ```bash
-moon check --debug
-moon check --release
+moon check --target js bejeweled bombman mooncraft topdown_platform
+moon check --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
+moon check --manifest-path apps-web/moon.mod.json --target js apps-web/bejeweled
 moon test
 ```
 

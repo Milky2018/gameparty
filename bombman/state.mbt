@@ -288,6 +288,14 @@ priv enum NetTransportMode {
 } derive(Eq)
 
 ///|
+priv struct NetPlayerInput {
+  frame_id : Int
+  axis_x : Int
+  axis_y : Int
+  action_mask : Int
+}
+
+///|
 priv enum ItemKind {
   Shoes
   BombUp
@@ -713,6 +721,9 @@ const CAPTURE_PATH : String = "bombman_capture.png"
 const CAPTURE_DELAY_SECONDS : Double = 4.0
 
 ///|
+const NETPLAY_UNAVAILABLE_MESSAGE : String = "Network battle is not supported on web yet."
+
+///|
 let profile_enabled : Ref[Bool] = { val: false }
 
 ///|
@@ -764,16 +775,16 @@ let capture_taken : Ref[Bool] = { val: false }
 let netplay_mode : Ref[NetTransportMode] = { val: Off }
 
 ///|
-let netplay_host_session : Ref[@netplay.NetSession?] = { val: None }
+let netplay_host_session : Ref[@bombman_net.Session?] = { val: None }
 
 ///|
-let netplay_client_session : Ref[@netplay.NetSession?] = { val: None }
+let netplay_client_session : Ref[@bombman_net.Session?] = { val: None }
 
 ///|
-let netplay_session : Ref[@netplay.NetSession?] = { val: None }
+let netplay_session : Ref[@bombman_net.Session?] = { val: None }
 
 ///|
-let netplay_link : Ref[@netplay.TcpLink?] = { val: None }
+let netplay_link : Ref[@bombman_net.Link?] = { val: None }
 
 ///|
 let netplay_local_frame : Ref[Int] = { val: 0 }
@@ -788,7 +799,7 @@ let netplay_remote_port : Ref[Int] = { val: 39000 }
 let netplay_remote_host : Ref[String] = { val: "127.0.0.1" }
 
 ///|
-let netplay_last_remote_input : Ref[@netplay.PlayerInput?] = { val: None }
+let netplay_last_remote_input : Ref[NetPlayerInput?] = { val: None }
 
 ///|
 let netplay_last_remote_action_frame : Ref[Int] = { val: -1 }

@@ -376,12 +376,12 @@ priv struct FireballState {
 
 ///|
 priv struct AudioBank {
-  jump : @raylib.Sound
-  stomp : @raylib.Sound
-  hit : @raylib.Sound
-  goal : @raylib.Sound
-  collect : @raylib.Sound
-  shoot : @raylib.Sound
+  jump : @host.Sound
+  stomp : @host.Sound
+  hit : @host.Sound
+  goal : @host.Sound
+  collect : @host.Sound
+  shoot : @host.Sound
 }
 
 ///|

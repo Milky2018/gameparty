@@ -652,11 +652,11 @@ fn time_text() -> String {
 
 ///|
 pub fn input_system(_world : @ecs.World) -> Unit {
-  if @raylib.is_key_pressed(@raylib.KeyF3) {
+  if @host.is_key_pressed("F3") {
     game_state.debug_fps = !game_state.debug_fps
     fps_text_enabled.val = game_state.debug_fps
   }
-  if @raylib.is_key_pressed(@raylib.KeyF2) {
+  if @host.is_key_pressed("F2") {
     game_state.p2_human_enabled = !game_state.p2_human_enabled
     p2.input_mode = if game_state.p2_human_enabled { Human } else { AI }
   }
@@ -831,6 +831,11 @@ fn maybe_report_profile() -> Unit {
 pub fn render_sync_system(_world : @ecs.World) -> Unit {
   show_menu_entities(game_state.phase == MainMenu)
   show_play_entities(game_state.phase != MainMenu)
+  let fps_text = if @time.frame_delta() <= 0.0 {
+    "0"
+  } else {
+    (1.0 / @time.frame_delta()).to_int().to_string()
+  }
   let p2_state_text = if game_state.p2_human_enabled { "HUMAN" } else { "AI" }
   let debug_state_text = if game_state.debug_fps { "ON" } else { "OFF" }
 
@@ -885,10 +890,7 @@ pub fn render_sync_system(_world : @ecs.World) -> Unit {
   set_text_entity(
     debug_entity,
     if game_state.debug_fps {
-      "FPS \{@raylib.get_fps()}  P2 " +
-      p2_state_text +
-      "  DEBUG " +
-      debug_state_text
+      "FPS \{fps_text}  P2 " + p2_state_text + "  DEBUG " + debug_state_text
     } else {
       ""
     },
@@ -1008,7 +1010,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
   if @time.elapsed() - capture_started_at.val < CAPTURE_DELAY_SECONDS {
     return
   }
-  @raylib.take_screenshot(CAPTURE_PATH)
+  @host.take_screenshot(CAPTURE_PATH)
   println("[kofarena][capture] path=\{CAPTURE_PATH}")
   capture_taken.val = true
   @system.exit()

@@ -37,19 +37,21 @@ CAPTURE_POOL=(
   "coinpusher3d_capture.png"
 )
 
+RUN_NATIVE="moon run --manifest-path apps-native/moon.mod.json --target native"
+
 CASES=(
-  "angryrabbits|angryrabbits|angryrabbits_capture.png|ANGRYRABBITS_CAPTURE=1 ANGRYRABBITS_PROFILE=1 timeout __TIMEOUT__ moon run cmd/angryrabbits|\\[angryrabbits\\]\\[perf\\]"
-  "bombman|bombman|bombman_capture.png|BOMBMAN_CAPTURE=1 BOMBMAN_PROFILE=1 timeout __TIMEOUT__ moon run cmd/bombman|fps_avg="
-  "mooncraft|mooncraft|mooncraft_capture.png|MOONCRAFT_CAPTURE=1 MOONCRAFT_PROFILE=1 timeout __TIMEOUT__ moon run cmd/mooncraft|loaded_chunks="
-  "tankbattle|tankbattle|tankbattle_capture.png|TANKBATTLE_CAPTURE=1 TANKBATTLE_PROFILE=1 timeout __TIMEOUT__ moon run cmd/tankbattle|phase=Playing"
-  "supermario|supermario|supermario_capture.png|SUPERMARIO_CAPTURE=1 SUPERMARIO_PROFILE=1 timeout __TIMEOUT__ moon run cmd/supermario|phase=Playing"
-  "plantvszombies|plantvszombies|plantvszombies_capture.png|PVZ_CAPTURE=1 PVZ_PROFILE=1 timeout __TIMEOUT__ moon run cmd/plantvszombies|wave="
-  "bejeweled|bejeweled|bejeweled_capture.png|BEJEWELED_CAPTURE=1 BEJEWELED_PROFILE=1 timeout __TIMEOUT__ moon run cmd/bejeweled|moves="
-  "jackal|jackal|jackal_capture.png|JACKAL_CAPTURE=1 JACKAL_PROFILE=1 timeout __TIMEOUT__ moon run cmd/jackal|wave="
-  "kofarena|kofarena|kofarena_capture.png|KOF_CAPTURE=1 KOF_PROFILE=1 timeout __TIMEOUT__ moon run cmd/kofarena|phase=Playing"
-  "pacman3d|pacman3d|pacman3d_capture.png|PACMAN3D_CAPTURE=1 PACMAN3D_PROFILE=1 timeout __TIMEOUT__ moon run cmd/pacman3d|dots="
-  "thetawave|thetawave|thetawave_capture.png|THETAWAVE_CAPTURE=1 THETAWAVE_PROFILE=1 timeout __TIMEOUT__ moon run cmd/thetawave|phase=(Movement|Playing)"
-  "coinpusher3d|coinpusher3d|coinpusher3d_capture.png|COINPUSHER3D_CAPTURE=1 COINPUSHER3D_PROFILE=1 timeout __TIMEOUT__ moon run cmd/coinpusher3d|phase=Playing"
+  "angryrabbits|angryrabbits|angryrabbits_capture.png|ANGRYRABBITS_CAPTURE=1 ANGRYRABBITS_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/angryrabbits|\\[angryrabbits\\]\\[perf\\]"
+  "bombman|bombman|bombman_capture.png|BOMBMAN_CAPTURE=1 BOMBMAN_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/bombman|fps_avg="
+  "mooncraft|mooncraft|mooncraft_capture.png|MOONCRAFT_CAPTURE=1 MOONCRAFT_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/mooncraft|loaded_chunks="
+  "tankbattle|tankbattle|tankbattle_capture.png|TANKBATTLE_CAPTURE=1 TANKBATTLE_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/tankbattle|phase=Playing"
+  "supermario|supermario|supermario_capture.png|SUPERMARIO_CAPTURE=1 SUPERMARIO_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/supermario|phase=Playing"
+  "plantvszombies|plantvszombies|plantvszombies_capture.png|PVZ_CAPTURE=1 PVZ_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/plantvszombies|wave="
+  "bejeweled|bejeweled|bejeweled_capture.png|BEJEWELED_CAPTURE=1 BEJEWELED_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/bejeweled|moves="
+  "jackal|jackal|jackal_capture.png|JACKAL_CAPTURE=1 JACKAL_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/jackal|wave="
+  "kofarena|kofarena|kofarena_capture.png|KOF_CAPTURE=1 KOF_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/kofarena|phase=Playing"
+  "pacman3d|pacman3d|pacman3d_capture.png|PACMAN3D_CAPTURE=1 PACMAN3D_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/pacman3d|dots="
+  "thetawave|thetawave|thetawave_capture.png|THETAWAVE_CAPTURE=1 THETAWAVE_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/thetawave|phase=(Movement|Playing)"
+  "coinpusher3d|coinpusher3d|coinpusher3d_capture.png|COINPUSHER3D_CAPTURE=1 COINPUSHER3D_PROFILE=1 timeout __TIMEOUT__ $RUN_NATIVE apps-native/coinpusher3d|phase=Playing"
 )
 
 is_requested() {
@@ -166,7 +168,7 @@ REVIEW_LOCK_DIR=""
 trap release_lock EXIT
 acquire_lock
 
-pkill -f "moon run cmd/" >/dev/null 2>&1 || true
+pkill -f "moon run --manifest-path apps-native/moon.mod.json" >/dev/null 2>&1 || true
 pkill -f "timeout [0-9]+s moon run" >/dev/null 2>&1 || true
 
 if [[ "$PRECHECK" == "1" ]]; then
@@ -340,7 +342,7 @@ for local_case in "${CASES[@]}"; do
     all_passed=0
   fi
 
-  pkill -f "moon run cmd/" >/dev/null 2>&1 || true
+  pkill -f "moon run --manifest-path apps-native/moon.mod.json" >/dev/null 2>&1 || true
   pkill -f "timeout [0-9]+s moon run" >/dev/null 2>&1 || true
 done
 

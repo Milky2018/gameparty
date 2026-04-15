@@ -696,9 +696,7 @@ fn startup_system(_world : @ecs.World) -> Unit {
   profile_phase("startup/capture-flags", capture_stage_started_at)
 
   let window_started_at = @time.elapsed()
-  if @raylib.is_window_fullscreen() {
-    @raylib.clear_window_state(@raylib.FlagFullscreenMode)
-  }
+  @host.exit_fullscreen_if_needed()
   profile_phase("startup/window-state", window_started_at)
 
   let scene_started_at = @time.elapsed()

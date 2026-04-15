@@ -66,16 +66,9 @@ fn sound_from_tone(
   freq_hz : Double,
   seconds : Double,
   volume : Double,
-) -> @raylib.Sound {
+) -> @host.Sound {
   let wav_bytes = wav_from_tone(freq_hz, seconds, volume)
-  let wav = @raylib.Wave::load_from_memory(
-    ".wav",
-    wav_bytes,
-    wav_bytes.length(),
-  )
-  let sound = wav.load_sound()
-  wav.unload()
-  sound
+  @host.sound_from_wav_bytes(wav_bytes)
 }
 
 ///|
@@ -91,6 +84,6 @@ fn create_audio_bank() -> AudioBank {
 }
 
 ///|
-fn play_sound(sound : @raylib.Sound) -> Unit {
-  sound.play()
+fn play_sound(sound : @host.Sound) -> Unit {
+  @host.play_sound(sound)
 }

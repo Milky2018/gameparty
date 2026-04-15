@@ -104,7 +104,7 @@ cleanup_tmp_exports
 
 (
   cd "$ROOT_DIR"
-  PLATFORMER_CAPTURE=1 moon run cmd/supermario >"$RUN_LOG" 2>&1
+  PLATFORMER_CAPTURE=1 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/supermario >"$RUN_LOG" 2>&1
 )
 
 EXPECTED_COUNT="$(copy_if_exists "$PRIMARY_TMP_DIR/supermario_region_*.png" "$OUT_DIR/expected_regions")"

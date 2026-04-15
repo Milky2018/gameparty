@@ -389,13 +389,13 @@ fn mouse_pick_chest_option() -> Int? {
 
 ///|
 fn keyboard_pick_chest_option() -> Int? {
-  if @raylib.is_key_pressed(@raylib.KeyOne) {
+  if @host.is_key_pressed("Digit1") {
     return Some(0)
   }
-  if @raylib.is_key_pressed(@raylib.KeyTwo) {
+  if @host.is_key_pressed("Digit2") {
     return Some(1)
   }
-  if @raylib.is_key_pressed(@raylib.KeyThree) {
+  if @host.is_key_pressed("Digit3") {
     return Some(2)
   }
   None
@@ -887,7 +887,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
     DEBUG_CAPTURE_DELAY_SECONDS {
     return
   }
-  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  @host.take_screenshot(DEBUG_CAPTURE_PATH)
   println("[coinpusher3d][capture] path=\{DEBUG_CAPTURE_PATH}")
   debug_capture_taken.val = true
   @system.exit()

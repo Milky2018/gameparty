@@ -861,7 +861,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
   if capture_timer.val < CAPTURE_DELAY_SECONDS {
     return
   }
-  @raylib.take_screenshot(CAPTURE_PATH)
+  @host.take_screenshot(CAPTURE_PATH)
   capture_done.val = true
   @system.exit()
 }

@@ -228,7 +228,7 @@ fn profile_debug_line() -> String {
 
 ///|
 pub fn input_system(_world : @ecs.World) -> Unit {
-  if @raylib.is_key_pressed(@raylib.KeyF3) {
+  if @host.is_key_pressed("F3") {
     debug_overlay_enabled.val = !debug_overlay_enabled.val
   }
   if run_state.phase == Dialogue {
@@ -417,7 +417,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
   if capture_timer.val < CAPTURE_DELAY_SECONDS {
     return
   }
-  @raylib.take_screenshot(CAPTURE_PATH)
+  @host.take_screenshot(CAPTURE_PATH)
   capture_done.val = true
   @system.exit()
 }

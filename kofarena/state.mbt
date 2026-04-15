@@ -371,9 +371,9 @@ impl Show for StageObjectKind with output(self, logger) {
 
 ///|
 priv struct SoundSet {
-  mut punch : @raylib.Sound?
-  mut hit : @raylib.Sound?
-  mut ko : @raylib.Sound?
+  mut punch : @host.Sound?
+  mut hit : @host.Sound?
+  mut ko : @host.Sound?
 }
 
 ///|

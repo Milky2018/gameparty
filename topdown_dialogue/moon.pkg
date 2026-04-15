@@ -13,5 +13,5 @@ import {
   "Milky2018/selene/transform",
   "Milky2018/selene/ui",
   "moonbitlang/core/env",
-  "tonyfettes/raylib" @raylib,
+  "Milky2018/gameparty/host" @host,
 }

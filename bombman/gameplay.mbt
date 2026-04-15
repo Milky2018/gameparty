@@ -74,13 +74,7 @@ fn handle_global_input() -> Unit {
 
 ///|
 fn collect_typed_code_points() -> Array[Int] {
-  let codes : Array[Int] = []
-  let mut code = @raylib.get_char_pressed()
-  while code > 0 {
-    codes.push(code)
-    code = @raylib.get_char_pressed()
-  }
-  codes
+  @host.drain_text_input_codepoints()
 }
 
 ///|
@@ -168,18 +162,10 @@ fn submit_join_setup() -> Unit {
 
 ///|
 fn netplay_poll_and_ingest_with_events(
-  session : @netplay.NetSession,
-  link : @netplay.TcpLink,
-) -> (@netplay.NetSession, @netplay.TcpLink, Array[@netplay.TcpLinkEvent]) {
-  let mut next_session = session
-  let (next_link, lines, events) = link.poll()
-  for line in lines {
-    match @netplay.decode_message(line) {
-      Some(message) => next_session = next_session.ingest_remote(message)
-      None => ()
-    }
-  }
-  (next_session, next_link, events)
+  session : @bombman_net.Session,
+  link : @bombman_net.Link,
+) -> (@bombman_net.Session, @bombman_net.Link, Array[String]) {
+  @bombman_net.transport_poll(session, link)
 }
 
 ///|
@@ -206,14 +192,9 @@ fn tick_network_lobby() -> Unit {
           session = after_ingest
           link = link_after_ingest
 
-          for event in events {
-            match event {
-              Connected => ()
-              Error(message) => {
-                cancel_network_lobby_to_root(error="Network error: \{message}.")
-                return
-              }
-            }
+          for message in events {
+            cancel_network_lobby_to_root(error="Network error: \{message}.")
+            return
           }
 
           let (after_send2, link_after_send2) = netplay_send_outgoing(
@@ -223,10 +204,10 @@ fn tick_network_lobby() -> Unit {
           link = link_after_send2
 
           session = update_remote_input_cache_from_session(session)
-          let link_connected = link.is_connected()
+          let link_connected = @bombman_net.link_is_connected(link)
           lobby_status_label.val = match netplay_mode.val {
             Host =>
-              if session.is_running() {
+              if @bombman_net.session_is_running(session) {
                 "Player connected. Starting round..."
               } else if link_connected {
                 "Player connected. Syncing..."
@@ -234,7 +215,7 @@ fn tick_network_lobby() -> Unit {
                 "Waiting for another player..."
               }
             Client =>
-              if session.is_running() {
+              if @bombman_net.session_is_running(session) {
                 "Synced. Starting round..."
               } else if link_connected {
                 "Connected. Waiting for host start..."
@@ -247,7 +228,7 @@ fn tick_network_lobby() -> Unit {
           netplay_session.val = Some(session)
           netplay_link.val = Some(link)
 
-          if session.is_running() {
+          if @bombman_net.session_is_running(session) {
             let selected_mode = match netplay_mode.val {
               Host => host_setup_mode.val
               Client => current_mode.val
@@ -336,8 +317,7 @@ fn handle_network_host_setup_input() -> Unit {
       Port => ()
     }
   }
-  if @raylib.is_key_pressed(@raylib.KeyBackspace) &&
-    host_setup_focus.val == Port {
+  if @host.is_key_pressed("Backspace") && host_setup_focus.val == Port {
     erase_last_char(host_setup_port)
   }
   if host_setup_focus.val == Port {
@@ -363,7 +343,7 @@ fn handle_network_join_setup_input() -> Unit {
       Port => Host
     }
   }
-  if @raylib.is_key_pressed(@raylib.KeyBackspace) {
+  if @host.is_key_pressed("Backspace") {
     match join_setup_focus.val {
       Host => erase_last_char(join_setup_host)
       Port => erase_last_char(join_setup_port)
@@ -523,8 +503,7 @@ fn latest_held_direction(player_id : PlayerId) -> Direction? {
 
 ///|
 fn p2_bomb_just_pressed() -> Bool {
-  let pressed = @raylib.is_key_pressed(@raylib.KeyApostrophe) ||
-    p2_bomb_test_override.val
+  let pressed = @host.is_key_pressed("Apostrophe") || p2_bomb_test_override.val
   p2_bomb_test_override.val = false
   pressed
 }
@@ -605,7 +584,7 @@ fn handle_player_inputs_local() -> Unit {
 ///|
 fn apply_remote_input_to_player(
   player_index_ : Int,
-  input : @netplay.PlayerInput,
+  input : NetPlayerInput,
 ) -> Unit {
   let player = players[player_index_]
   if !player.active || !player.alive {
@@ -620,7 +599,23 @@ fn apply_remote_input_to_player(
 }
 
 ///|
-fn local_loopback_p2_input() -> @netplay.PlayerInput {
+fn netplay_input(
+  frame_id : Int,
+  axis_x : Int,
+  axis_y : Int,
+  action_mask : Int,
+) -> NetPlayerInput {
+  { frame_id, axis_x, axis_y, action_mask }
+}
+
+///|
+fn netplay_input_from_tuple(raw : (Int, Int, Int, Int)) -> NetPlayerInput {
+  let (frame_id, axis_x, axis_y, action_mask) = raw
+  netplay_input(frame_id, axis_x, axis_y, action_mask)
+}
+
+///|
+fn local_loopback_p2_input() -> NetPlayerInput {
   let (axis_x, axis_y) = direction_to_net_axes(latest_held_direction(P2))
   let action_mask = if players[1].active &&
     players[1].alive &&
@@ -629,12 +624,7 @@ fn local_loopback_p2_input() -> @netplay.PlayerInput {
   } else {
     0
   }
-  @netplay.PlayerInput::new(
-    frame_id=netplay_local_frame.val,
-    axis_x~,
-    axis_y~,
-    action_mask~,
-  )
+  netplay_input(netplay_local_frame.val, axis_x, axis_y, action_mask)
 }
 
 ///|
@@ -663,26 +653,43 @@ fn handle_player_inputs_with_netplay_bridge() -> Unit {
         Some(client0) => {
           let mut host = host0
           let mut client = client0
-          client = client.submit_local_input(local_loopback_p2_input())
+          let local_input = local_loopback_p2_input()
+          client = @bombman_net.session_submit_local_input(
+            client,
+            local_input.frame_id,
+            local_input.axis_x,
+            local_input.axis_y,
+            local_input.action_mask,
+          )
           let (next_host, next_client) = netplay_loopback_exchange(host, client)
           host = next_host
           client = next_client
-          let (host_after_events, _) = host.drain_events()
-          let (client_after_events, _) = client.drain_events()
-          let (host_after_inputs, remote_inputs) = host_after_events.drain_remote_inputs()
+          let (host_after_events, _) = @bombman_net.session_drain_round_started_seed(
+            host,
+          )
+          let (client_after_events, _) = @bombman_net.session_drain_round_started_seed(
+            client,
+          )
+          let (host_after_inputs, remote_inputs) = @bombman_net.session_drain_remote_inputs(
+            host_after_events,
+          )
           if remote_inputs.is_empty() {
             if players[1].active && players[1].alive {
               players[1].desired_direction = None
             }
           } else {
-            let mut latest = remote_inputs[0]
-            for input in remote_inputs {
-              latest = input
+            let mut latest = netplay_input_from_tuple(remote_inputs[0])
+            for raw_input in remote_inputs {
+              latest = netplay_input_from_tuple(raw_input)
             }
             apply_remote_input_to_player(1, latest)
           }
-          netplay_host_session.val = Some(host_after_inputs.tick())
-          netplay_client_session.val = Some(client_after_events.tick())
+          netplay_host_session.val = Some(
+            @bombman_net.session_tick(host_after_inputs),
+          )
+          netplay_client_session.val = Some(
+            @bombman_net.session_tick(client_after_events),
+          )
           netplay_local_frame.val += 1
         }
         None => handle_player_inputs_local()
@@ -714,77 +721,50 @@ fn make_network_input(
   frame_id : Int,
   player_id : PlayerId,
   bomb_pressed : Bool,
-) -> @netplay.PlayerInput {
+) -> NetPlayerInput {
   let desired = latest_held_direction(player_id)
   let (axis_x, axis_y) = direction_to_net_axes(desired)
   let action_mask = if bomb_pressed { NET_ACTION_PLACE_BOMB } else { 0 }
-  @netplay.PlayerInput::new(frame_id~, axis_x~, axis_y~, action_mask~)
+  netplay_input(frame_id, axis_x, axis_y, action_mask)
 }
 
 ///|
 fn netplay_send_outgoing(
-  session : @netplay.NetSession,
-  link : @netplay.TcpLink,
-) -> (@netplay.NetSession, @netplay.TcpLink) {
-  if !link.is_connected() {
-    return (session, link)
-  }
-  let (next_session, outgoing) = session.drain_outgoing()
-  let mut session_after_send = next_session
-  let mut next_link = link
-  let mut keep_index = -1
-  for index in 0..<outgoing.length() {
-    let message = outgoing[index]
-    let (updated, _) = next_link.send_line(@netplay.encode_message(message))
-    if !updated.is_connected() {
-      keep_index = index
-      next_link = updated
-      break
-    }
-    next_link = updated
-  }
-  if keep_index >= 0 {
-    for index in keep_index..<outgoing.length() {
-      session_after_send = session_after_send.enqueue_outgoing(outgoing[index])
-    }
-  }
-  (session_after_send, next_link)
+  session : @bombman_net.Session,
+  link : @bombman_net.Link,
+) -> (@bombman_net.Session, @bombman_net.Link) {
+  @bombman_net.transport_flush(session, link)
 }
 
 ///|
 fn netplay_poll_and_ingest(
-  session : @netplay.NetSession,
-  link : @netplay.TcpLink,
-) -> (@netplay.NetSession, @netplay.TcpLink) {
-  let mut next_session = session
-  let (next_link, lines, _) = link.poll()
-  for line in lines {
-    match @netplay.decode_message(line) {
-      Some(message) => next_session = next_session.ingest_remote(message)
-      None => ()
-    }
-  }
+  session : @bombman_net.Session,
+  link : @bombman_net.Link,
+) -> (@bombman_net.Session, @bombman_net.Link) {
+  let (next_session, next_link, _) = @bombman_net.transport_poll(session, link)
   (next_session, next_link)
 }
 
 ///|
 fn update_remote_input_cache_from_session(
-  session : @netplay.NetSession,
-) -> @netplay.NetSession {
-  let (after_events, events) = session.drain_events()
+  session : @bombman_net.Session,
+) -> @bombman_net.Session {
+  let (after_events, round_seed) = @bombman_net.session_drain_round_started_seed(
+    session,
+  )
   if netplay_mode.val == Client {
-    for event in events {
-      match event {
-        RoundStarted(seed, _, _) => apply_remote_round_seed(seed)
-        _ => ()
-      }
+    match round_seed {
+      Some(seed) => apply_remote_round_seed(seed)
+      None => ()
     }
   }
-  let (after_inputs, remote_inputs) = after_events.drain_remote_inputs()
+  let (after_inputs, remote_inputs) = @bombman_net.session_drain_remote_inputs(
+    after_events,
+  )
   if !remote_inputs.is_empty() {
-    let mut latest = remote_inputs[0]
-    for input in remote_inputs {
-      latest = input
+    let mut latest = netplay_input_from_tuple(remote_inputs[0])
+    for raw_input in remote_inputs {
+      latest = netplay_input_from_tuple(raw_input)
     }
     netplay_last_remote_input.val = Some(latest)
   }
@@ -832,16 +812,22 @@ fn handle_player_inputs_with_remote_netplay() -> Unit {
 
           session = update_remote_input_cache_from_session(session)
 
-          if session.is_running() {
+          if @bombman_net.session_is_running(session) {
             let local_bomb_pressed = local_bomb_pressed_for_network(
               local_player_id,
             )
             let local_input = make_network_input(
-              session.current_frame(),
+              @bombman_net.session_current_frame(session),
               local_player_id,
               local_bomb_pressed,
             )
-            session = session.submit_local_input(local_input)
+            session = @bombman_net.session_submit_local_input(
+              session,
+              local_input.frame_id,
+              local_input.axis_x,
+              local_input.axis_y,
+              local_input.action_mask,
+            )
             if players[local_player_index].active &&
               players[local_player_index].alive {
               players[local_player_index].desired_direction = latest_held_direction(
@@ -856,7 +842,7 @@ fn handle_player_inputs_with_remote_netplay() -> Unit {
                 apply_remote_input_to_player(remote_player_index, remote_input)
               None => ()
             }
-            session = session.tick()
+            session = @bombman_net.session_tick(session)
           }
           let (after_send3, link_after_send3) = netplay_send_outgoing(
             session, link,
@@ -1770,7 +1756,7 @@ pub fn simulation_system(_world : @ecs.World) -> Unit {
     match netplay_session.val {
       Some(session) =>
         if (netplay_mode.val == Host || netplay_mode.val == Client) &&
-          !session.is_running() {
+          !@bombman_net.session_is_running(session) {
           return
         }
       None => ()
@@ -1838,7 +1824,7 @@ fn emit_profile_report_if_needed(now : Double) -> Unit {
     frames_f / profile_frame_dt_total.val
   }
   println(
-    "[bombman][profile] t=\{now - profile_started_at.val} window=\{window_seconds} frames=\{profile_frame_count.val} fps_avg=\{fps_avg} fps_window=\{fps_window} fps=\{fps_avg} fps_frame_dt=\{fps_from_frame_dt} raylib_fps=\{@raylib.get_fps()} sim_avg_ms=\{sim_avg_ms} render_avg_ms=\{render_avg_ms}",
+    "[bombman][profile] t=\{now - profile_started_at.val} window=\{window_seconds} frames=\{profile_frame_count.val} fps_avg=\{fps_avg} fps_window=\{fps_window} fps=\{fps_avg} fps_frame_dt=\{fps_from_frame_dt} sim_avg_ms=\{sim_avg_ms} render_avg_ms=\{render_avg_ms}",
   )
   profile_last_report_at.val = now
   profile_frame_count.val = 0

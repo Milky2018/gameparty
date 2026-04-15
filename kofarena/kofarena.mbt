@@ -22,7 +22,7 @@ fn runtime_qa_enabled() -> Bool {
 
 ///|
 pub fn run() -> Unit {
-  @raylib.set_trace_log_level(@raylib.LogError)
+  @host.prepare_run(false)
   let target_fps = if runtime_qa_enabled() { 64U } else { FPS }
   let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)

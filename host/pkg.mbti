@@ -1,0 +1,17 @@
+package "Milky2018/gameparty/host"
+
+type Sound
+
+fn prepare_run(Bool) -> Unit
+
+fn take_screenshot(String) -> Unit
+
+fn exit_fullscreen_if_needed() -> Unit
+
+fn is_key_pressed(String) -> Bool
+
+fn drain_text_input_codepoints() -> Array[Int]
+
+fn sound_from_wav_bytes(Bytes) -> Sound
+
+fn play_sound(Sound) -> Unit

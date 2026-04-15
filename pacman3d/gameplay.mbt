@@ -613,7 +613,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
     DEBUG_CAPTURE_DELAY_SECONDS {
     return
   }
-  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  @host.take_screenshot(DEBUG_CAPTURE_PATH)
   println("[pacman3d][capture] path=\{DEBUG_CAPTURE_PATH}")
   debug_capture_taken.val = true
   request_exit()

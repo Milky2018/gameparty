@@ -409,16 +409,16 @@ let gem_aura_colors : Array[@render.Color] = [
 ]
 
 ///|
-let sound_swap : Ref[@raylib.Sound?] = { val: None }
+let sound_swap : Ref[@host.Sound?] = { val: None }
 
 ///|
-let sound_match : Ref[@raylib.Sound?] = { val: None }
+let sound_match : Ref[@host.Sound?] = { val: None }
 
 ///|
-let sound_cascade : Ref[@raylib.Sound?] = { val: None }
+let sound_cascade : Ref[@host.Sound?] = { val: None }
 
 ///|
-let sound_gameover : Ref[@raylib.Sound?] = { val: None }
+let sound_gameover : Ref[@host.Sound?] = { val: None }
 
 ///|
 fn board_index(row : Int, col : Int) -> Int {

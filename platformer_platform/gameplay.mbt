@@ -526,10 +526,10 @@ fn stomp_enemy(entity : @entity.Entity) -> Unit {
 fn handle_player_input() -> Unit {
   let movement = current_movement_profile()
   let mut horizontal = 0.0
-  if @raylib.is_key_down(@raylib.KeyA) || @raylib.is_key_down(@raylib.KeyLeft) {
+  if @inputs.is_pressed(KeyA) || @inputs.is_pressed(ArrowLeft) {
     horizontal -= 1.0
   }
-  if @raylib.is_key_down(@raylib.KeyD) || @raylib.is_key_down(@raylib.KeyRight) {
+  if @inputs.is_pressed(KeyD) || @inputs.is_pressed(ArrowRight) {
     horizontal += 1.0
   }
   if player_state.val.dash_timer <= 0.0 {
@@ -543,8 +543,7 @@ fn handle_player_input() -> Unit {
   } else if horizontal > 0.0 {
     player_state.val.facing_right = true
   }
-  if @raylib.is_key_pressed(@raylib.KeySpace) ||
-    @raylib.is_key_pressed(@raylib.KeyUp) {
+  if @inputs.is_just_pressed(Space) || @inputs.is_just_pressed(ArrowUp) {
     player_state.val.jump_buffer = movement.jump_buffer
   } else {
     player_state.val.jump_buffer = clamp_double(
@@ -553,22 +552,20 @@ fn handle_player_input() -> Unit {
       movement.jump_buffer,
     )
   }
-  if @raylib.is_key_pressed(@raylib.KeyF3) {
+  if @host.is_key_pressed("F3") {
     debug_overlay.val = !debug_overlay.val
   }
-  if @raylib.is_key_pressed(@raylib.KeyC) ||
-    @raylib.is_key_pressed(@raylib.KeyLeftShift) {
+  if @inputs.is_just_pressed(KeyC) || @inputs.is_just_pressed(ShiftLeft) {
     let can_dash = movement.max_air_dashes > 0 &&
       player_state.val.air_dashes_left > 0 &&
       player_state.val.dash_timer <= 0.0 &&
       player_state.val.dash_cooldown_timer <= 0.0
     if can_dash {
       let mut vertical = 0.0
-      if @raylib.is_key_down(@raylib.KeyW) || @raylib.is_key_down(@raylib.KeyUp) {
+      if @inputs.is_pressed(KeyW) || @inputs.is_pressed(ArrowUp) {
         vertical -= 1.0
       }
-      if @raylib.is_key_down(@raylib.KeyS) ||
-        @raylib.is_key_down(@raylib.KeyDown) {
+      if @inputs.is_pressed(KeyS) || @inputs.is_pressed(ArrowDown) {
         vertical += 1.0
       }
       let mut direction = vec2(horizontal, vertical)
@@ -600,11 +597,10 @@ fn handle_player_input() -> Unit {
       }
     }
   }
-  if @raylib.is_key_pressed(@raylib.KeyX) ||
-    @raylib.is_key_pressed(@raylib.KeyLeftControl) {
+  if @inputs.is_just_pressed(KeyX) || @host.is_key_pressed("ControlLeft") {
     try_shoot_fireball()
   }
-  if @raylib.is_key_pressed(@raylib.KeyEnter) &&
+  if @inputs.is_just_pressed(Enter) &&
     (game_phase.val == Won || game_phase.val == Lost) {
     restart_level(next_level=game_phase.val == Won)
   }
@@ -1121,16 +1117,16 @@ fn update_fireballs() -> Unit {
 ///|
 fn input_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
-  if @raylib.is_key_pressed(@raylib.KeyEscape) {
+  if @inputs.is_just_pressed(Escape) {
     @system.exit()
     return
   }
-  if @raylib.is_key_pressed(@raylib.KeyR) && game_phase.val == Playing {
+  if @inputs.is_just_pressed(KeyR) && game_phase.val == Playing {
     restart_level()
     return
   }
   handle_player_input()
-  if @raylib.is_key_pressed(@raylib.KeyEnter) &&
+  if @inputs.is_just_pressed(Enter) &&
     (game_phase.val == Won || game_phase.val == Lost) {
     restart_level(next_level=game_phase.val == Won)
   }
@@ -1589,10 +1585,8 @@ fn capture_system(_world : @ecs.World) -> Unit {
   let debug_capture_path = "/tmp/platformer_capture.png"
   let captured = @runtime_debug.capture_frame_png_to_file(debug_capture_path)
   if !captured {
-    @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
-    println(
-      "[platformer][capture] path=\{DEBUG_CAPTURE_PATH} (raylib fallback)",
-    )
+    @host.take_screenshot(DEBUG_CAPTURE_PATH)
+    println("[platformer][capture] path=\{DEBUG_CAPTURE_PATH} (host fallback)")
   } else {
     println("[platformer][capture] path=\{debug_capture_path} (runtime_debug)")
   }

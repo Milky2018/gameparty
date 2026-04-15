@@ -1,0 +1,39 @@
+package "Milky2018/gameparty/bombman_net"
+
+type Session
+
+type Link
+
+fn is_available() -> Bool
+
+fn local_ipv4() -> String?
+
+fn new_host_session(Int) -> Session
+
+fn new_client_session() -> Session
+
+fn new_host_link(Int) -> Link
+
+fn new_client_link(String, Int) -> Link
+
+fn close_link(Link) -> Link
+
+fn link_is_connected(Link) -> Bool
+
+fn loopback_exchange(Session, Session) -> (Session, Session)
+
+fn transport_flush(Session, Link) -> (Session, Link)
+
+fn transport_poll(Session, Link) -> (Session, Link, Array[String])
+
+fn session_is_running(Session) -> Bool
+
+fn session_current_frame(Session) -> Int
+
+fn session_tick(Session) -> Session
+
+fn session_submit_local_input(Session, Int, Int, Int, Int) -> Session
+
+fn session_drain_remote_inputs(Session) -> (Session, Array[(Int, Int, Int, Int)])
+
+fn session_drain_round_started_seed(Session) -> (Session, Int?)

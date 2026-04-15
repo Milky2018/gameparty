@@ -1,8 +1,6 @@
 ///|
 fn maybe_enable_hidden_window() -> Unit {
-  if env_flag_enabled(CAPTURE_ENV) {
-    @raylib.set_config_flags(@raylib.FlagWindowHidden)
-  }
+  @host.prepare_run(env_flag_enabled(CAPTURE_ENV))
 }
 
 ///|

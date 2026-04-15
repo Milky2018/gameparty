@@ -42,7 +42,7 @@ pub fn add_runtime_systems(app : @app.App, run_if : () -> Bool) -> @app.App {
 
 ///|
 pub fn run() -> Unit {
-  @raylib.set_trace_log_level(@raylib.LogError)
+  @host.prepare_run(false)
   reset_exit_handler()
   let runtime_qa = env_flag_enabled(DEBUG_CAPTURE_ENV) ||
     env_flag_enabled(DEBUG_PROFILE_ENV)

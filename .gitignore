@@ -2,6 +2,7 @@
 _build/
 .mooncakes/
 .moonagent/
+dist/
 web/
 thetawave/_embedded_assets.pack
 thetawave/embedded_assets_index.mbt

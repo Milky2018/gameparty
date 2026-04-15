@@ -756,11 +756,11 @@ fn capture_after_render_system(_world : @ecs.World) -> Unit {
     }
     if frames > 0 {
       println(
-        "[angryrabbits][perf] raylib_fps=\{@raylib.get_fps()} avg_fps=\{debug_scalar_string(average_fps)} fps_frame_dt=\{debug_scalar_string(fps_from_frame_dt)} frames=\{frames} elapsed=\{debug_scalar_string(elapsed)}",
+        "[angryrabbits][perf] avg_fps=\{debug_scalar_string(average_fps)} fps_frame_dt=\{debug_scalar_string(fps_from_frame_dt)} frames=\{frames} elapsed=\{debug_scalar_string(elapsed)}",
       )
     }
   }
-  @raylib.take_screenshot(CAPTURE_PATH)
+  @host.take_screenshot(CAPTURE_PATH)
   println("[angryrabbits][capture] path=\{CAPTURE_PATH}")
   capture_taken.val = true
   request_exit()

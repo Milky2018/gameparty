@@ -1,0 +1,5 @@
+supported_targets = "js"
+
+options(
+  implement: "Milky2018/gameparty/host",
+)

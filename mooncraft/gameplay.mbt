@@ -335,7 +335,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
     ready_frames.to_double() / ready_delta
   }
   println(
-    "[mooncraft][perf] raylib_fps=\{@raylib.get_fps()} avg_fps=\{average_fps} fps_frame_dt=\{fps_frame_dt} frames=\{ready_frames} elapsed=\{ready_elapsed} delta=\{ready_delta}",
+    "[mooncraft][perf] avg_fps=\{average_fps} fps_frame_dt=\{fps_frame_dt} frames=\{ready_frames} elapsed=\{ready_elapsed} delta=\{ready_delta}",
   )
   let frame = @render3d.get_extracted_frame3d()
   let (loaded_chunks, total_chunks) = chunk_runtime_stats()
@@ -381,7 +381,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
   println(
     "[mooncraft][capture] loaded_chunks=\{loaded_chunks}/\{total_chunks} \{mesh_counts_text}",
   )
-  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  @host.take_screenshot(DEBUG_CAPTURE_PATH)
   println("[mooncraft][capture] path=\{DEBUG_CAPTURE_PATH}")
   debug_capture_taken.val = true
   @system.exit()

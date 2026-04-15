@@ -1,6 +1,6 @@
 ///|
 pub fn run() -> Unit {
-  @raylib.set_trace_log_level(@raylib.LogError)
+  @host.prepare_run(false)
   let capture_mode = env_flag_enabled(DEBUG_CAPTURE_ENV)
   // Keep capture-mode rendering lightweight for stable QA perf sampling.
   let viewport_width = if capture_mode { 560.0 } else { VIEWPORT_WIDTH }

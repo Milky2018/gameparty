@@ -86,12 +86,9 @@ fn tone_bytes(tone : AudioTone) -> Bytes {
 }
 
 ///|
-fn load_tone_sound(tone : AudioTone) -> @raylib.Sound {
+fn load_tone_sound(tone : AudioTone) -> @host.Sound {
   let bytes = tone_bytes(tone)
-  let wave = @raylib.Wave::load_from_memory("wav", bytes, bytes.length())
-  let sound = wave.load_sound()
-  wave.unload()
-  sound
+  @host.sound_from_wav_bytes(bytes)
 }
 
 ///|
@@ -122,9 +119,9 @@ fn register_sounds_once() -> Unit {
 }
 
 ///|
-fn play_sound(sound : @raylib.Sound?) -> Unit {
+fn play_sound(sound : @host.Sound?) -> Unit {
   match sound {
-    Some(value) => value.play()
+    Some(value) => @host.play_sound(value)
     None => ()
   }
 }

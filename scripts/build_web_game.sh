@@ -5,128 +5,101 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: scripts/build_web_game.sh <game|cmd/game> [--release]"
+  echo "Usage: scripts/build_web_game.sh <game|apps-web/game> [--release]"
   exit 1
 fi
 
-if ! command -v emcc >/dev/null 2>&1; then
-  echo "Error: emcc not found. Install emscripten first."
-  exit 1
-fi
-
-GAME="${1#cmd/}"
+GAME="${1#apps-web/}"
 MODE="debug"
-MOON_BUILD_ARGS=()
+MOON_ARGS=(
+  run
+  --manifest-path
+  apps-web/moon.mod.json
+  --target
+  js
+  --build-only
+  "apps-web/${GAME}"
+)
 if [[ "${2:-}" == "--release" ]]; then
   MODE="release"
-  MOON_BUILD_ARGS+=(--release)
+  MOON_ARGS=(
+    run
+    --manifest-path
+    apps-web/moon.mod.json
+    --target
+    js
+    --build-only
+    --release
+    "apps-web/${GAME}"
+  )
 fi
 
-CMD_PKG="cmd/${GAME}"
-if [[ ! -d "$CMD_PKG" ]]; then
-  echo "Error: package '$CMD_PKG' not found."
+PKG_DIR="$ROOT_DIR/apps-web/$GAME"
+if [[ ! -f "$PKG_DIR/moon.pkg" ]]; then
+  echo "Error: package '$PKG_DIR' not found."
   exit 1
 fi
 
-if [[ ${#MOON_BUILD_ARGS[@]} -gt 0 ]]; then
-  moon build "${MOON_BUILD_ARGS[@]}" "$CMD_PKG"
-else
-  moon build "$CMD_PKG"
+DIST_DIR="$ROOT_DIR/dist/web"
+mkdir -p "$DIST_DIR"
+
+if [[ "${SKIP_ASSET_SYNC:-0}" != "1" ]]; then
+  rm -rf "$DIST_DIR/assets"
+  mkdir -p "$DIST_DIR/assets"
+  cp -R "$ROOT_DIR/assets/." "$DIST_DIR/assets/"
+  find "$DIST_DIR/assets" -name '.DS_Store' -delete
 fi
 
-C_FILE="$ROOT_DIR/_build/native/${MODE}/build/cmd/${GAME}/${GAME}.c"
-if [[ ! -f "$C_FILE" ]]; then
-  echo "Error: generated C file not found: $C_FILE"
+ARTIFACT_ERR="$(mktemp)"
+if ! ARTIFACT_JSON="$(moon "${MOON_ARGS[@]}" 2>"$ARTIFACT_ERR")"; then
+  cat "$ARTIFACT_ERR" >&2
+  rm -f "$ARTIFACT_ERR"
+  exit 1
+fi
+rm -f "$ARTIFACT_ERR"
+JS_ARTIFACT="$(python3 -c 'import json, sys; print(json.load(sys.stdin)["artifacts_path"][0])' <<<"$ARTIFACT_JSON")"
+if [[ ! -f "$JS_ARTIFACT" ]]; then
+  echo "Error: generated JS artifact not found: $JS_ARTIFACT"
   exit 1
 fi
 
-RUNTIME_C="$HOME/.moon/lib/runtime.c"
-if [[ ! -f "$RUNTIME_C" ]]; then
-  echo "Error: moon runtime C not found: $RUNTIME_C"
-  exit 1
+cp "$JS_ARTIFACT" "$DIST_DIR/$GAME.js"
+if [[ -f "$JS_ARTIFACT.map" ]]; then
+  cp "$JS_ARTIFACT.map" "$DIST_DIR/$GAME.js.map"
 fi
 
-RAY_DIR="$ROOT_DIR/.mooncakes/tonyfettes/raylib/internal/raylib"
-FS_NATIVE_C="$ROOT_DIR/.mooncakes/moonbitlang/x/fs/fs_native.c"
-NETPLAY_WEB_STUB_C="$ROOT_DIR/scripts/netplay_transport_web_stub.c"
-EMCC_OPT_LEVEL="${EMCC_OPT_LEVEL:--O1}"
-EMCC_ENABLE_ASYNCIFY="${EMCC_ENABLE_ASYNCIFY:-1}"
-EMCC_ASYNCIFY_IGNORE_INDIRECT="${EMCC_ASYNCIFY_IGNORE_INDIRECT:-1}"
+cat >"$DIST_DIR/$GAME.html" <<HTML
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gameparty - ${GAME}</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: #0f1520;
+      }
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+    <script src="./${GAME}.js" defer></script>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+  </body>
+</html>
+HTML
 
-SOURCES=(
-  "$C_FILE"
-  "$RUNTIME_C"
-  "$FS_NATIVE_C"
-  "$NETPLAY_WEB_STUB_C"
-  "$RAY_DIR/rcore.c"
-  "$RAY_DIR/rshapes.c"
-  "$RAY_DIR/rtextures.c"
-  "$RAY_DIR/rtext.c"
-  "$RAY_DIR/rmodels.c"
-  "$RAY_DIR/raudio.c"
-  "$RAY_DIR/utils.c"
-  "$RAY_DIR/stub_window.c"
-  "$RAY_DIR/stub_input.c"
-  "$RAY_DIR/stub_drawing.c"
-  "$RAY_DIR/stub_camera.c"
-  "$RAY_DIR/stub_color.c"
-  "$RAY_DIR/stub_shapes.c"
-  "$RAY_DIR/stub_textures.c"
-  "$RAY_DIR/stub_text.c"
-  "$RAY_DIR/stub_models.c"
-  "$RAY_DIR/stub_audio.c"
-  "$RAY_DIR/stub_image_processing.c"
-  "$RAY_DIR/stub_image_drawing.c"
-  "$RAY_DIR/stub_filesystem.c"
-  "$RAY_DIR/stub_utils.c"
-  "$RAY_DIR/stub_automation.c"
-)
+touch "$DIST_DIR/.nojekyll"
 
-for src in "${SOURCES[@]}"; do
-  if [[ ! -f "$src" ]]; then
-    echo "Error: missing source file: $src"
-    exit 1
-  fi
-done
-
-OUT_DIR="$ROOT_DIR/web/$GAME"
-mkdir -p "$OUT_DIR"
-
-echo "[web-build] compiling $GAME (${MODE})..."
-EMCC_FLAGS=(
-  -include string.h
-  -I"$HOME/.moon/include"
-  -I"$RAY_DIR"
-  -DPLATFORM_WEB
-  -DGRAPHICS_API_OPENGL_ES2
-  -DSUPPORT_BUSY_WAIT_LOOP
-  -DMA_NO_WEBAUDIO
-  -sUSE_GLFW=3
-  -sALLOW_MEMORY_GROWTH=1
-  -sFORCE_FILESYSTEM=1
-  --preload-file "$ROOT_DIR/assets@/assets"
-  "$EMCC_OPT_LEVEL"
-)
-
-if [[ "$EMCC_ENABLE_ASYNCIFY" == "1" ]]; then
-  EMCC_FLAGS+=(-sASYNCIFY)
-  if [[ "$EMCC_ASYNCIFY_IGNORE_INDIRECT" == "1" ]]; then
-    EMCC_FLAGS+=(-sASYNCIFY_IGNORE_INDIRECT=1)
-  fi
-fi
-
-if [[ -n "${EMCC_EXTRA_FLAGS:-}" ]]; then
-  # shellcheck disable=SC2206
-  EXTRA_FLAGS=( $EMCC_EXTRA_FLAGS )
-  EMCC_FLAGS+=("${EXTRA_FLAGS[@]}")
-fi
-
-emcc \
-  "${SOURCES[@]}" \
-  "${EMCC_FLAGS[@]}" \
-  -o "$OUT_DIR/index.html"
-
-echo "[web-build] output: $OUT_DIR/index.html"
+echo "[web-build] built $GAME ($MODE) -> $DIST_DIR/$GAME.html"
 
 if [[ "${SKIP_GALLERY:-0}" != "1" && -x "$ROOT_DIR/scripts/gen_web_gallery.sh" ]]; then
   "$ROOT_DIR/scripts/gen_web_gallery.sh"

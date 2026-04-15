@@ -1,0 +1,9 @@
+import {
+  "Milky2018/gameparty/netplay" @netplay,
+}
+
+supported_targets = "native"
+
+options(
+  implement: "Milky2018/gameparty/bombman_net",
+)

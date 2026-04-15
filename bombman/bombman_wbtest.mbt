@@ -89,6 +89,12 @@ test "network battle menu routes host/join setup and validates inputs" {
   menu_selection.val = NetworkBattle
   press_menu_key(@inputs.Enter)
   assert_true(phase.val == MainMenu)
+  if !@bombman_net.is_available() {
+    assert_true(menu_screen.val == MainRoot)
+    assert_eq(menu_error_message.val, NETPLAY_UNAVAILABLE_MESSAGE)
+    assert_true(netplay_mode.val == Off)
+    return
+  }
   assert_true(menu_screen.val == NetworkRoot)
 
   // Create room path
@@ -140,6 +146,11 @@ test "escape returns from network submenu hierarchy to main menu" {
   prepare_menu()
   menu_selection.val = NetworkBattle
   press_menu_key(@inputs.Enter)
+  if !@bombman_net.is_available() {
+    assert_true(menu_screen.val == MainRoot)
+    assert_eq(menu_error_message.val, NETPLAY_UNAVAILABLE_MESSAGE)
+    return
+  }
   assert_true(menu_screen.val == NetworkRoot)
   press_menu_key(@inputs.Enter)
   assert_true(menu_screen.val == NetworkHostSetup)
@@ -240,8 +251,14 @@ test "dual-player controls use WASD+G and IJKL+apostrophe" {
 test "local round startup clears active netplay runtime" {
   reset_test_input_state()
   begin_network_host_lobby(Coop, 39000, 0)
-  assert_true(netplay_mode.val == Host)
-  assert_true(netplay_session.val is Some(_))
+  if @bombman_net.is_available() {
+    assert_true(netplay_mode.val == Host)
+    assert_true(netplay_session.val is Some(_))
+  } else {
+    assert_true(netplay_mode.val == Off)
+    assert_true(netplay_session.val is None)
+    assert_eq(menu_error_message.val, NETPLAY_UNAVAILABLE_MESSAGE)
+  }
   start_local_round(Coop)
   assert_true(phase.val == Playing)
   assert_true(current_mode.val == Coop)

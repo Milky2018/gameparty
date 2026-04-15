@@ -19,5 +19,5 @@ import {
   "moonbitlang/core/env" @env,
   "moonbitlang/core/math" @cmath,
   "moonbitlang/core/random",
-  "tonyfettes/raylib" @raylib,
+  "Milky2018/gameparty/host" @host,
 }

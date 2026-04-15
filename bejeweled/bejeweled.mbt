@@ -1,9 +1,9 @@
 ///|
 fn maybe_enable_hidden_window() -> Unit {
-  if env_flag_enabled(DEBUG_CAPTURE_ENV) ||
-    env_flag_enabled(BEJEWELED_PROFILE_ENV) {
-    @raylib.set_config_flags(@raylib.FlagWindowHidden)
-  }
+  @host.prepare_run(
+    env_flag_enabled(DEBUG_CAPTURE_ENV) ||
+    env_flag_enabled(BEJEWELED_PROFILE_ENV),
+  )
 }
 
 ///|
@@ -18,7 +18,6 @@ fn runtime_fps() -> UInt {
 
 ///|
 pub fn run() -> Unit {
-  @raylib.set_trace_log_level(@raylib.LogError)
   maybe_enable_hidden_window()
   let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)

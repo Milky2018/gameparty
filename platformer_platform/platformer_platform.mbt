@@ -3,9 +3,7 @@ const HIDDEN_WINDOW_ENV : String = "PLATFORMER_HIDDEN_WINDOW"
 
 ///|
 fn maybe_enable_hidden_window() -> Unit {
-  if env_flag_enabled(HIDDEN_WINDOW_ENV) {
-    @raylib.set_config_flags(@raylib.FlagWindowHidden)
-  }
+  @host.prepare_run(env_flag_enabled(HIDDEN_WINDOW_ENV))
 }
 
 ///|
@@ -88,7 +86,6 @@ pub fn run(plugin : PlatformerPluginDef) -> Unit {
     None => ()
   }
   active_plugin.val = Some(plugin)
-  @raylib.set_trace_log_level(@raylib.LogError)
   maybe_enable_hidden_window()
   let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)

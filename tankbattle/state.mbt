@@ -232,11 +232,11 @@ priv struct LevelConfig {
 
 ///|
 priv struct ProceduralSounds {
-  shoot : @raylib.Sound
-  hit : @raylib.Sound
-  boom : @raylib.Sound
-  win : @raylib.Sound
-  lose : @raylib.Sound
+  shoot : @host.Sound
+  hit : @host.Sound
+  boom : @host.Sound
+  win : @host.Sound
+  lose : @host.Sound
 }
 
 ///|
@@ -713,12 +713,9 @@ fn load_tone_sound(
   freq : Double,
   duration_sec : Double,
   volume : Double,
-) -> @raylib.Sound {
+) -> @host.Sound {
   let wav = make_tone_wav_bytes(freq, duration_sec, volume)
-  let wave = @raylib.Wave::load_from_memory(".wav", wav, wav.length())
-  let sound = wave.load_sound()
-  wave.unload()
-  sound
+  @host.sound_from_wav_bytes(wav)
 }
 
 ///|
@@ -736,8 +733,8 @@ fn init_sound_bank_once() -> Unit {
 }
 
 ///|
-fn play_sound(sound : @raylib.Sound) -> Unit {
-  sound.play()
+fn play_sound(sound : @host.Sound) -> Unit {
+  @host.play_sound(sound)
 }
 
 ///|

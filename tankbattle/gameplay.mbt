@@ -102,7 +102,7 @@ fn activate_menu_option(option : MenuOption) -> Unit {
 
 ///|
 fn handle_global_input() -> Unit {
-  if @raylib.is_key_pressed(@raylib.KeyF3) {
+  if @host.is_key_pressed("F3") {
     debug_fps_enabled.val = !debug_fps_enabled.val
   }
   if @inputs.is_just_pressed(KeyR) && phase.val != MainMenu {
@@ -906,11 +906,12 @@ fn sync_round_over_visuals() -> Unit {
 fn sync_fps_overlay() -> Unit {
   if debug_fps_enabled.val {
     show_entity(fps_entity)
-    update_text_entity_if_changed(
-      fps_entity,
-      last_fps_text,
-      "FPS \{@raylib.get_fps()}",
-    )
+    let fps_text = if @time.frame_delta() <= 0.0 {
+      "0"
+    } else {
+      (1.0 / @time.frame_delta()).to_int().to_string()
+    }
+    update_text_entity_if_changed(fps_entity, last_fps_text, "FPS \{fps_text}")
   } else {
     hide_entity(fps_entity)
   }
@@ -1004,7 +1005,7 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
   if @time.elapsed() - debug_capture_started_at.val < capture_delay {
     return
   }
-  @raylib.take_screenshot(DEBUG_CAPTURE_PATH)
+  @host.take_screenshot(DEBUG_CAPTURE_PATH)
   println("[tankbattle][capture] path=\{DEBUG_CAPTURE_PATH}")
   debug_capture_taken.val = true
   profile_phase("capture", started_at)

@@ -1,0 +1,17 @@
+import {
+  "Milky2018/gameparty/angryrabbits" @game,
+}
+
+supported_targets = "native"
+
+options(
+  "is-main": true,
+  overrides: [
+    "Milky2018/gameparty_native/host",
+    "Milky2018/selene_raylib/platform_audio",
+    "Milky2018/selene_raylib/platform_window",
+    "Milky2018/selene_raylib/platform_asset_io",
+    "Milky2018/selene_raylib/platform_render",
+    "Milky2018/selene_raylib/platform_input",
+  ],
+)

@@ -624,7 +624,7 @@ fn reset_direction_input_state() -> Unit {
 fn reset_netplay_runtime() -> Unit {
   match netplay_link.val {
     Some(link) => {
-      ignore(link.close())
+      ignore(@bombman_net.close_link(link))
       netplay_link.val = None
     }
     None => ()
@@ -717,20 +717,10 @@ fn apply_remote_round_seed(seed : Int) -> Unit {
 
 ///|
 fn netplay_loopback_exchange(
-  host : @netplay.NetSession,
-  client : @netplay.NetSession,
-) -> (@netplay.NetSession, @netplay.NetSession) {
-  let (host_after_drain, host_messages) = host.drain_outgoing()
-  let mut next_client = client
-  for message in host_messages {
-    next_client = next_client.ingest_remote(message)
-  }
-  let (client_after_drain, client_messages) = next_client.drain_outgoing()
-  let mut next_host = host_after_drain
-  for message in client_messages {
-    next_host = next_host.ingest_remote(message)
-  }
-  (next_host, client_after_drain)
+  host : @bombman_net.Session,
+  client : @bombman_net.Session,
+) -> (@bombman_net.Session, @bombman_net.Session) {
+  @bombman_net.loopback_exchange(host, client)
 }
 
 ///|
@@ -753,6 +743,14 @@ fn parse_numeric_port(raw : String) -> Int? {
 
 ///|
 fn open_network_menu_root() -> Unit {
+  if !@bombman_net.is_available() {
+    stop_active_netplay()
+    menu_screen.val = MainRoot
+    network_root_selection.val = CreateRoom
+    lobby_status_label.val = ""
+    menu_error_message.val = NETPLAY_UNAVAILABLE_MESSAGE
+    return
+  }
   stop_active_netplay()
   menu_error_message.val = ""
   menu_screen.val = NetworkRoot
@@ -798,27 +796,25 @@ fn begin_network_host_lobby(
   port : Int,
   level_index : Int,
 ) -> Unit {
+  if !@bombman_net.is_available() {
+    stop_active_netplay()
+    menu_screen.val = MainRoot
+    menu_error_message.val = NETPLAY_UNAVAILABLE_MESSAGE
+    return
+  }
   stop_active_netplay()
   let normalized_level = clamp_int(level_index, 0, levels.length() - 1)
   current_level.val = normalized_level
   let round_seed = encode_round_seed_for_netplay(current_level.val, mode)
-  let config = @netplay.NetConfig::default()
-  let mut session = @netplay.NetSession::new_host(
-    local_peer_id="p1",
-    remote_peer_id="p2",
-    seed=round_seed,
-    config~,
-  )
-  session = session.begin_handshake()
-  session = session.set_local_ready()
+  let session = @bombman_net.new_host_session(round_seed)
   netplay_mode.val = Host
   netplay_port.val = port
   netplay_session.val = Some(session)
-  netplay_link.val = Some(@netplay.TcpLink::new_host(port))
+  netplay_link.val = Some(@bombman_net.new_host_link(port))
   netplay_round_seed_applied.val = round_seed
   reseed_drop_rng(round_seed.to_uint64())
   current_mode.val = mode
-  lobby_local_ip.val = @netplay.local_ipv4()
+  lobby_local_ip.val = @bombman_net.local_ipv4()
   lobby_mode_label.val = network_mode_short(mode)
   lobby_endpoint_label.val = "0.0.0.0:\{port}"
   lobby_status_label.val = "Waiting for another player..."
@@ -828,23 +824,20 @@ fn begin_network_host_lobby(
 
 ///|
 fn begin_network_join_lobby(host : String, port : Int) -> Unit {
+  if !@bombman_net.is_available() {
+    stop_active_netplay()
+    menu_screen.val = MainRoot
+    menu_error_message.val = NETPLAY_UNAVAILABLE_MESSAGE
+    return
+  }
   stop_active_netplay()
-  let config = @netplay.NetConfig::default()
-  let mut session = @netplay.NetSession::new_client(
-    local_peer_id="p2",
-    remote_peer_id="p1",
-    config~,
-  )
-  session = session.begin_handshake()
-  session = session.set_local_ready()
+  let session = @bombman_net.new_client_session()
   netplay_mode.val = Client
   netplay_remote_host.val = host
   netplay_remote_port.val = port
   netplay_session.val = Some(session)
-  netplay_link.val = Some(
-    @netplay.TcpLink::new_client(remote_host=host, remote_port=port),
-  )
-  lobby_local_ip.val = @netplay.local_ipv4()
+  netplay_link.val = Some(@bombman_net.new_client_link(host, port))
+  lobby_local_ip.val = @bombman_net.local_ipv4()
   lobby_mode_label.val = "SYNCING FROM HOST"
   lobby_endpoint_label.val = "\{host}:\{port}"
   lobby_status_label.val = "Connecting and syncing..."
@@ -1509,7 +1502,7 @@ fn status_text() -> String {
               Host => {
                 let connected = match netplay_link.val {
                   Some(link) =>
-                    if link.is_connected() {
+                    if @bombman_net.link_is_connected(link) {
                       "connected"
                     } else {
                       "waiting"
@@ -1518,7 +1511,7 @@ fn status_text() -> String {
                 }
                 let running = match netplay_session.val {
                   Some(session) =>
-                    if session.is_running() {
+                    if @bombman_net.session_is_running(session) {
                       "running"
                     } else {
                       "syncing"
@@ -1530,7 +1523,7 @@ fn status_text() -> String {
               Client => {
                 let connected = match netplay_link.val {
                   Some(link) =>
-                    if link.is_connected() {
+                    if @bombman_net.link_is_connected(link) {
                       "connected"
                     } else {
                       "waiting"
@@ -1539,7 +1532,7 @@ fn status_text() -> String {
                 }
                 let running = match netplay_session.val {
                   Some(session) =>
-                    if session.is_running() {
+                    if @bombman_net.session_is_running(session) {
                       "running"
                     } else {
                       "syncing"
@@ -2050,11 +2043,11 @@ pub fn capture_after_render_system(_world : @ecs.World) -> Unit {
     }
     if frames > 0 {
       println(
-        "[bombman][perf] raylib_fps=\{@raylib.get_fps()} avg_fps=\{average_fps} fps_frame_dt=\{fps_from_frame_dt} frames=\{frames} elapsed=\{elapsed}",
+        "[bombman][perf] avg_fps=\{average_fps} fps_frame_dt=\{fps_from_frame_dt} frames=\{frames} elapsed=\{elapsed}",
       )
     }
   }
-  @raylib.take_screenshot(CAPTURE_PATH)
+  @host.take_screenshot(CAPTURE_PATH)
   println("[bombman][capture] path=\{CAPTURE_PATH}")
   capture_taken.val = true
   @system.exit()

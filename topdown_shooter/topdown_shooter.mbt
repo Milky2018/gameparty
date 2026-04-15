@@ -8,7 +8,7 @@ pub fn run(plugin : TopDownShooterPluginDef) -> Unit {
     None => ()
   }
   setup_plugin(plugin)
-  @raylib.set_trace_log_level(@raylib.LogError)
+  @host.prepare_run(false)
   let app = @app.App::new()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)

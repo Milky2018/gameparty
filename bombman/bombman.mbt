@@ -1,6 +1,6 @@
 ///|
 pub fn run() -> Unit {
-  @raylib.set_trace_log_level(@raylib.LogError)
+  @host.prepare_run(false)
   let runtime_qa = env_flag_enabled(CAPTURE_ENV) ||
     env_flag_enabled(PROFILE_ENV)
   let target_fps = if runtime_qa { 66U } else { FPS }

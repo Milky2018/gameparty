@@ -1,5 +1,5 @@
 import {
-  "Milky2018/gameparty/netplay" @netplay,
+  "Milky2018/gameparty/bombman_net" @bombman_net,
   "Milky2018/selene/animation",
   "Milky2018/selene/app",
   "Milky2018/selene/asset",
@@ -18,7 +18,7 @@ import {
   "Milky2018/selene/transform",
   "Milky2018/selene/ui",
   "Milky2018/selene/visibility",
-  "tonyfettes/raylib" @raylib,
+  "Milky2018/gameparty/host" @host,
   "moonbitlang/core/math" @cmath,
   "moonbitlang/core/random" @random,
   "moonbitlang/core/string" @string,

@@ -23,16 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Install native build deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libx11-dev \
-            libxrandr-dev \
-            libxinerama-dev \
-            libxcursor-dev \
-            libxi-dev \
-            libgl1-mesa-dev
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - name: Setup MoonBit
         run: |
@@ -44,15 +38,22 @@ jobs:
           moon version --all
           moon update
 
-      - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@v14
-        with:
-          version: latest
-
       - name: Build all games for web
         run: |
-          scripts/build_web_all_games.sh
-          touch web/.nojekyll
+          scripts/build_web_all_games.sh --release
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Smoke test web gallery
+        run: |
+          python3 -m http.server 4173 --directory dist/web >/tmp/gameparty-web.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 2
+          node scripts/smoke_web_gallery.cjs
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -60,7 +61,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: dist/web
 
   deploy:
     needs: build

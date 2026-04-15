@@ -1,0 +1,9 @@
+import {
+  "tonyfettes/raylib" @raylib,
+}
+
+supported_targets = "native"
+
+options(
+  implement: "Milky2018/gameparty/host",
+)

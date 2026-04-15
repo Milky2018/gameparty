@@ -88,16 +88,9 @@ fn make_tone(
   freq_hz : Double,
   seconds : Double,
   volume : Double,
-) -> @raylib.Sound {
+) -> @host.Sound {
   let wav_bytes = synth_tone_wav_bytes(freq_hz, seconds, volume)
-  let wave = @raylib.Wave::load_from_memory(
-    ".wav",
-    wav_bytes,
-    wav_bytes.length(),
-  )
-  let sound = wave.load_sound()
-  wave.unload()
-  sound
+  @host.sound_from_wav_bytes(wav_bytes)
 }
 
 ///|
@@ -112,9 +105,9 @@ fn ensure_sounds_loaded() -> Unit {
 }
 
 ///|
-fn play_sound_ref(sound : Ref[@raylib.Sound?]) -> Unit {
+fn play_sound_ref(sound : Ref[@host.Sound?]) -> Unit {
   match sound.val {
-    Some(s) => s.play()
+    Some(s) => @host.play_sound(s)
     None => ()
   }
 }
