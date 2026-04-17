@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/gameparty/minesweeper"
+
+import {
+  "Milky2018/selene/ecs",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn input_system(@ecs.World) -> Unit
+
+pub fn render_system(@ecs.World) -> Unit
+
+pub fn run() -> Unit
+
+pub fn startup_system(@ecs.World) -> Unit
+
+pub fn update_system(@ecs.World) -> Unit
+
+// Errors
+
+// Types and methods
+type Cell derive(Eq, Hash, @debug.Debug)
+
+type CellVisibility derive(Eq, @debug.Debug)
+
+type Difficulty derive(Eq, Hash, @debug.Debug)
+
+type GamePhase derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

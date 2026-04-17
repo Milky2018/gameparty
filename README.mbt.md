@@ -15,6 +15,7 @@ This repository currently contains these playable prototypes and ports:
 - `celeste`: a Celeste-style 2D platformer built as a plugin on `platformer_platform`.
 - `plantvszombies`: a lane-defense prototype built with pure primitives and procedural audio.
 - `bejeweled`: a match-3 prototype built with pure primitives and procedural audio.
+- `minesweeper`: a classic desktop-first Minesweeper built with pure primitives and procedural audio.
 - `jackal`: a top-down run-and-gun prototype built with pure primitives and procedural audio.
 - `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
 - `netplay`: a standalone networking layer subpackage for host-authoritative input sync (library-only, no `cmd/*` entry).
@@ -40,6 +41,7 @@ This repository currently contains these playable prototypes and ports:
 - `celeste/`: Celeste plugin package and tests.
 - `plantvszombies/`: PlantVsZombies package and tests.
 - `bejeweled/`: Bejeweled package and tests.
+- `minesweeper/`: Minesweeper package and tests.
 - `jackal/`: Jackal package and tests.
 - `kofarena/`: KOFArena package and tests.
 - `netplay/`: shared networking-layer package for future multiplayer integration.
@@ -69,6 +71,7 @@ moon run --manifest-path apps-native/moon.mod.json --target native apps-native/s
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/celeste
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/plantvszombies
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/minesweeper
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/jackal
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/kofarena
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/topdown_rogue_proto
@@ -81,6 +84,7 @@ Build the web entry packages directly with the JS backend:
 ```bash
 # Build one game to dist/web/<game>.html
 scripts/build_web_game.sh bejeweled
+scripts/build_web_game.sh minesweeper
 
 # Build all apps-web games
 scripts/build_web_all_games.sh
@@ -118,6 +122,9 @@ Lobby shows both detected LAN IPv4 and `127.0.0.1` for local testing.
 moon check --target js bejeweled bombman mooncraft topdown_platform
 moon check --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
 moon check --manifest-path apps-web/moon.mod.json --target js apps-web/bejeweled
+moon check --target native minesweeper
+moon check --manifest-path apps-native/moon.mod.json --target native apps-native/minesweeper
+moon check --manifest-path apps-web/moon.mod.json --target js apps-web/minesweeper
 moon test
 ```
 
