@@ -16,6 +16,8 @@ pub fn humanoid_archetype(String, String, Double, Double, sprite_scale? : Double
 
 pub fn humanoid_running_sprites(String, scale? : Double, fps? : Double) -> @topdown_platform.DirectionalSprites
 
+pub fn interact_tile(String, String, prop_path? : String?, blocks? : Bool, prop_scale? : Double, prop_y_offset? : Double) -> @topdown_platform.TileOrSpawnRule
+
 pub fn map_def(Array[String], Map[Char, @topdown_platform.TileOrSpawnRule], tile_size? : Double, default_floor_path? : String) -> @topdown_platform.MapDef
 
 pub fn player_spawn_tile(String) -> @topdown_platform.TileOrSpawnRule

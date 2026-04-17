@@ -19,6 +19,8 @@ pub fn humanoid_archetype(String, String, @topdown_action.EnemyAiMode, Double, I
 
 pub fn humanoid_running_sprites(String, scale? : Double, fps? : Double) -> @topdown_platform.DirectionalSprites
 
+pub fn interact_tile(String, String, prop_path? : String?, blocks? : Bool, prop_scale? : Double, prop_y_offset? : Double) -> @topdown_platform.TileOrSpawnRule
+
 pub fn map_def(Array[String], Map[Char, @topdown_platform.TileOrSpawnRule], tile_size? : Double, default_floor_path? : String) -> @topdown_platform.MapDef
 
 pub fn melee_skill(String, Double, Int, Double) -> @topdown_action.SkillDef

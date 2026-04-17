@@ -14,6 +14,7 @@ pub(all) struct WorldMapLayout {
   world_height : Double
   player_spawn : @math.Vec2
   actor_spawns : Array[ActorSpawnPoint]
+  tagged_points : Array[TaggedPoint]
   blocking_rects : Array[@math.Rect]
   tiles : Array[WorldTileVisualPlan]
 }
@@ -127,6 +128,7 @@ pub fn build_world_map_layout(
   let world_height = rows.to_double() * tile_size
   let mut player_spawn = @math.Vec2(tile_size * 0.5, tile_size * 0.5)
   let actor_spawns : Array[ActorSpawnPoint] = []
+  let tagged_points : Array[TaggedPoint] = []
   let blocking_rects : Array[@math.Rect] = []
   let tiles : Array[WorldTileVisualPlan] = []
 
@@ -162,6 +164,13 @@ pub fn build_world_map_layout(
           actor_spawns.push({ position: center, tag: rule.actor_spawn_tag })
         _ => ()
       }
+      match rule.point_tag {
+        Some(tag) =>
+          if tag != "" {
+            tagged_points.push({ position: center, tag })
+          }
+        None => ()
+      }
     }
   }
 
@@ -173,9 +182,41 @@ pub fn build_world_map_layout(
     world_height,
     player_spawn,
     actor_spawns,
+    tagged_points,
     blocking_rects,
     tiles,
   }
+}
+
+///|
+pub fn camera_origin_for_focus(
+  focus : @math.Vec2,
+  viewport_width : Double,
+  viewport_height : Double,
+  world_width : Double,
+  world_height : Double,
+) -> @math.Vec2 {
+  let mut x = focus[X] - viewport_width * 0.5
+  let mut y = focus[Y] - viewport_height * 0.5
+  if world_width <= viewport_width {
+    x = (world_width - viewport_width) * 0.5
+  } else {
+    x = clamp_double(x, 0.0, world_width - viewport_width)
+  }
+  if world_height <= viewport_height {
+    y = (world_height - viewport_height) * 0.5
+  } else {
+    y = clamp_double(y, 0.0, world_height - viewport_height)
+  }
+  @math.Vec2(x, y)
+}
+
+///|
+pub fn world_to_screen(
+  world_position : @math.Vec2,
+  camera_origin : @math.Vec2,
+) -> @math.Vec2 {
+  world_position - camera_origin
 }
 
 ///|

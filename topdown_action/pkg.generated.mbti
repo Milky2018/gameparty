@@ -9,6 +9,26 @@ import {
 }
 
 // Values
+pub fn campaign_capture_after_render_system(@ecs.World) -> Unit
+
+pub fn campaign_combat_system(@ecs.World) -> Unit
+
+pub fn campaign_input_system(@ecs.World) -> Unit
+
+pub fn campaign_intent_system(@ecs.World) -> Unit
+
+pub fn campaign_movement_collision_system(@ecs.World) -> Unit
+
+pub fn campaign_render_sync_system(@ecs.World) -> Unit
+
+pub fn campaign_setup_plugin(TopDownCampaignPluginDef) -> Unit
+
+pub fn campaign_spawn_system(@ecs.World) -> Unit
+
+pub fn campaign_startup_system(@ecs.World) -> Unit
+
+pub fn campaign_state_transition_system(@ecs.World) -> Unit
+
 pub fn capture_after_render_system(@ecs.World) -> Unit
 
 pub fn combat_system(@ecs.World) -> Unit
@@ -23,6 +43,8 @@ pub fn render_sync_system(@ecs.World) -> Unit
 
 pub fn run(TopDownPluginDef) -> Unit
 
+pub fn run_campaign(TopDownCampaignPluginDef) -> Unit
+
 pub fn setup_plugin(TopDownPluginDef) -> Unit
 
 pub fn spawn_loot_system(@ecs.World) -> Unit
@@ -30,6 +52,8 @@ pub fn spawn_loot_system(@ecs.World) -> Unit
 pub fn startup_system(@ecs.World) -> Unit
 
 pub fn state_transition_system(@ecs.World) -> Unit
+
+pub fn validate_campaign_plugin(TopDownCampaignPluginDef) -> String?
 
 pub fn validate_plugin(TopDownPluginDef) -> String?
 
@@ -49,6 +73,79 @@ pub(all) struct ArchetypeDef {
   drop_table_id : String?
   primary_skill_id : String?
   secondary_skill_id : String?
+}
+
+pub(all) struct CampaignDef {
+  stages : Array[CampaignStageDef]
+  lives : Int
+  intro_seconds : Double
+  clear_seconds : Double
+}
+
+pub struct CampaignInputState {
+  mut move_intent : @math.Vec2
+  mut primary_requested : Bool
+  mut secondary_requested : Bool
+}
+
+pub(all) enum CampaignPhase {
+  MainMenu
+  StageIntro
+  Playing
+  StageClear
+  GameOver
+  CampaignClear
+} derive(Eq, @debug.Debug)
+
+pub struct CampaignRunState {
+  mut phase : CampaignPhase
+  mut stage_index : Int
+  mut lives : Int
+  mut score : Int
+  mut rescued_total : Int
+  mut rescued_delivered : Int
+  mut required_rescued : Int
+  mut stage_intro_ttl : Double
+  mut stage_clear_ttl : Double
+  mut status_message : String
+  mut spawn_cursor : CampaignSpawnCursor
+}
+
+pub struct CampaignSpawnCursor {
+  mut wave_index : Int
+  mut entry_index : Int
+  mut spawned_in_entry : Int
+  mut wait_timer : Double
+  mut wave_started : Bool
+  mut all_spawned : Bool
+}
+
+pub(all) struct CampaignStageDef {
+  id : Int
+  title : String
+  map : @topdown_platform.MapDef
+  waves : Array[WaveDef]
+  objectives : Array[ObjectiveDef]
+  required_rescued : Int
+}
+
+pub struct CampaignUiState {
+  mut title_text : String
+  mut hud_text : String
+  mut message_text : String
+}
+
+pub struct CampaignWorldState {
+  mut tile_size : Double
+  mut rows : Int
+  mut cols : Int
+  mut world_width : Double
+  mut world_height : Double
+  mut player_spawn : @math.Vec2
+  mut camera_origin : @math.Vec2
+  enemy_spawns : Array[@topdown_platform.ActorSpawnPoint]
+  tagged_points : Array[@topdown_platform.TaggedPoint]
+  blocking_rects : Array[@math.Rect]
 }
 
 pub struct CombatState {
@@ -78,9 +175,26 @@ pub(all) enum EnemyAiMode {
   Wander
 } derive(Eq, @debug.Debug)
 
+pub(all) struct EscortFollowerDef {
+  spacing_steps : Int
+  radius : Double
+  sprite_scale : Double
+}
+
 pub struct LootState {
   mut live_pickups : Int
 }
+
+pub(all) struct ObjectiveDef {
+  kind : ObjectiveKind
+  tag : String
+  rescue_count : Int
+}
+
+pub(all) enum ObjectiveKind {
+  RescueCamp
+  ExitZone
+} derive(Eq, @debug.Debug)
 
 pub(all) struct PluginRuntimeState {
   phase : RunPhase
@@ -147,6 +261,18 @@ pub struct SpawnCursor {
 
 pub struct SpawnState {
   mut cursor : SpawnCursor
+}
+
+pub(all) struct TopDownCampaignPluginDef {
+  meta : @topdown_platform.PluginMeta
+  archetypes : Array[ArchetypeDef]
+  skills : Array[SkillDef]
+  drops : Array[DropTableDef]
+  player_archetype_id : String
+  campaign : CampaignDef
+  follower : EscortFollowerDef
+  ui_theme : @topdown_platform.UiThemeDef
+  hooks : TopDownHooks?
 }
 
 pub(all) struct TopDownHooks {

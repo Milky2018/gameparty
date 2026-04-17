@@ -27,6 +27,7 @@ fn test_plugin() -> TopDownPluginDef {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: None,
+    point_tag: None,
   })
   legend.set('#', {
     kind: Wall,
@@ -38,6 +39,7 @@ fn test_plugin() -> TopDownPluginDef {
     ),
     blocks: true,
     actor_spawn_tag: None,
+    point_tag: None,
   })
   legend.set('P', {
     kind: PlayerSpawn,
@@ -47,6 +49,17 @@ fn test_plugin() -> TopDownPluginDef {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: None,
+    point_tag: None,
+  })
+  legend.set('X', {
+    kind: Interact,
+    floor_image: Some(
+      visual("assets/top-down-summer/Top-Down Simple Summer_Ground 04.png"),
+    ),
+    prop_image: None,
+    blocks: false,
+    actor_spawn_tag: None,
+    point_tag: Some("test_point"),
   })
   legend.set('A', {
     kind: ActorSpawn,
@@ -56,6 +69,7 @@ fn test_plugin() -> TopDownPluginDef {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: Some("lane_left"),
+    point_tag: None,
   })
   let sprites : DirectionalSprites = {
     up: strip("assets/assassin/Back - Running.png"),
@@ -70,7 +84,7 @@ fn test_plugin() -> TopDownPluginDef {
       default_floor_image: visual(
         "assets/top-down-summer/Top-Down Simple Summer_Ground 01.png",
       ),
-      rows: ["########", "#P....A#", "########"],
+      rows: ["########", "#P..X.A#", "########"],
       legend,
     },
     player_archetype_id: "player",
@@ -153,4 +167,24 @@ test "validate_plugin requires exactly one player spawn" {
     hooks: plugin.hooks,
   }
   assert_true(validate_plugin(broken) is Some(_))
+}
+
+///|
+test "build_world_map_layout collects tagged points" {
+  let layout = build_world_map_layout(test_plugin().map, 3.0)
+  assert_eq(layout.tagged_points.length(), 1)
+  assert_eq(layout.tagged_points[0].tag, "test_point")
+}
+
+///|
+test "camera origin clamps to map bounds" {
+  let camera = camera_origin_for_focus(
+    @math.Vec2(10.0, 10.0),
+    320.0,
+    240.0,
+    1024.0,
+    768.0,
+  )
+  assert_eq(camera[X], 0.0)
+  assert_eq(camera[Y], 0.0)
 }

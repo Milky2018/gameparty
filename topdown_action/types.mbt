@@ -116,3 +116,64 @@ pub(all) struct TopDownPluginDef {
   ui_theme : @topdown_platform.UiThemeDef
   hooks : TopDownHooks?
 }
+
+///|
+pub(all) enum CampaignPhase {
+  MainMenu
+  StageIntro
+  Playing
+  StageClear
+  GameOver
+  CampaignClear
+} derive(Eq, Debug)
+
+///|
+pub(all) enum ObjectiveKind {
+  RescueCamp
+  ExitZone
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ObjectiveDef {
+  kind : ObjectiveKind
+  tag : String
+  rescue_count : Int
+}
+
+///|
+pub(all) struct CampaignStageDef {
+  id : Int
+  title : String
+  map : @topdown_platform.MapDef
+  waves : Array[WaveDef]
+  objectives : Array[ObjectiveDef]
+  required_rescued : Int
+}
+
+///|
+pub(all) struct CampaignDef {
+  stages : Array[CampaignStageDef]
+  lives : Int
+  intro_seconds : Double
+  clear_seconds : Double
+}
+
+///|
+pub(all) struct EscortFollowerDef {
+  spacing_steps : Int
+  radius : Double
+  sprite_scale : Double
+}
+
+///|
+pub(all) struct TopDownCampaignPluginDef {
+  meta : @topdown_platform.PluginMeta
+  archetypes : Array[ArchetypeDef]
+  skills : Array[SkillDef]
+  drops : Array[DropTableDef]
+  player_archetype_id : String
+  campaign : CampaignDef
+  follower : EscortFollowerDef
+  ui_theme : @topdown_platform.UiThemeDef
+  hooks : TopDownHooks?
+}

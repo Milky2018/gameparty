@@ -24,6 +24,8 @@ pub fn apply_world_background(@entity.Entity, Double, Double, @render.Color) -> 
 
 pub fn build_world_map_layout(MapDef, Double) -> WorldMapLayout
 
+pub fn camera_origin_for_focus(@math.Vec2, Double, Double, Double, Double) -> @math.Vec2
+
 pub fn capture_after_render_system(@ecs.World) -> Unit
 
 pub fn clamp_double(Double, Double, Double) -> Double
@@ -67,6 +69,8 @@ pub fn validate_plugin(TopDownPluginDef) -> String?
 pub fn vec_length(@math.Vec2) -> Double
 
 pub fn vec_normalize(@math.Vec2) -> @math.Vec2
+
+pub fn world_to_screen(@math.Vec2, @math.Vec2) -> @math.Vec2
 
 // Errors
 
@@ -158,6 +162,11 @@ pub(all) struct SpriteAnimDef {
   scale : Double
 }
 
+pub(all) struct TaggedPoint {
+  position : @math.Vec2
+  tag : String
+}
+
 pub(all) enum TileKind {
   Floor
   Wall
@@ -172,6 +181,7 @@ pub(all) struct TileOrSpawnRule {
   prop_image : ImageVisualDef?
   blocks : Bool
   actor_spawn_tag : String?
+  point_tag : String?
 }
 
 pub(all) struct TopDownHooks {
@@ -210,6 +220,7 @@ pub(all) struct WorldMapLayout {
   world_height : Double
   player_spawn : @math.Vec2
   actor_spawns : Array[ActorSpawnPoint]
+  tagged_points : Array[TaggedPoint]
   blocking_rects : Array[@math.Rect]
   tiles : Array[WorldTileVisualPlan]
 }

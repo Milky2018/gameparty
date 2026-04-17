@@ -27,6 +27,7 @@ fn test_plugin() -> TopDownPluginDef {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: None,
+    point_tag: None,
   })
   legend.set('#', {
     kind: @topdown_platform.Wall,
@@ -38,6 +39,7 @@ fn test_plugin() -> TopDownPluginDef {
     ),
     blocks: true,
     actor_spawn_tag: None,
+    point_tag: None,
   })
   legend.set('P', {
     kind: @topdown_platform.PlayerSpawn,
@@ -47,6 +49,7 @@ fn test_plugin() -> TopDownPluginDef {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: None,
+    point_tag: None,
   })
   legend.set('A', {
     kind: @topdown_platform.ActorSpawn,
@@ -56,6 +59,7 @@ fn test_plugin() -> TopDownPluginDef {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: Some("villager_a"),
+    point_tag: None,
   })
   let sprites : @topdown_platform.DirectionalSprites = {
     up: strip("assets/assassin/Back - Running.png"),

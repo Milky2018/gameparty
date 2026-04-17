@@ -133,6 +133,13 @@ pub fn validate_plugin(plugin : TopDownPluginDef) -> String? {
               }
             None => ()
           }
+          match rule.point_tag {
+            Some(tag) =>
+              if tag == "" {
+                return Some("legend '\{code}' point_tag must not be empty")
+              }
+            None => ()
+          }
           match rule.kind {
             PlayerSpawn => player_spawns += 1
             ActorSpawn =>

@@ -45,6 +45,7 @@ pub fn floor_tile(floor_path : String) -> @topdown_platform.TileOrSpawnRule {
     prop_image: None,
     blocks: false,
     actor_spawn_tag: None,
+    point_tag: None,
   }
 }
 
@@ -63,6 +64,7 @@ pub fn wall_tile(
     ),
     blocks: true,
     actor_spawn_tag: None,
+    point_tag: None,
   }
 }
 
@@ -76,6 +78,7 @@ pub fn player_spawn_tile(
     prop_image: None,
     blocks: false,
     actor_spawn_tag: None,
+    point_tag: None,
   }
 }
 
@@ -90,6 +93,30 @@ pub fn actor_spawn_tile(
     prop_image: None,
     blocks: false,
     actor_spawn_tag: Some(spawn_tag),
+    point_tag: None,
+  }
+}
+
+///|
+pub fn interact_tile(
+  floor_path : String,
+  point_tag : String,
+  prop_path? : String? = None,
+  blocks? : Bool = false,
+  prop_scale? : Double = 1.0,
+  prop_y_offset? : Double = 0.0,
+) -> @topdown_platform.TileOrSpawnRule {
+  let prop_image = match prop_path {
+    Some(path) => Some(visual(path, scale=prop_scale, y_offset=prop_y_offset))
+    None => None
+  }
+  {
+    kind: @topdown_platform.Interact,
+    floor_image: Some(visual(floor_path)),
+    prop_image,
+    blocks,
+    actor_spawn_tag: None,
+    point_tag: Some(point_tag),
   }
 }
 

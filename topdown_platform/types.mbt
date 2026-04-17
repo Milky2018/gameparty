@@ -42,6 +42,7 @@ pub(all) struct TileOrSpawnRule {
   prop_image : ImageVisualDef?
   blocks : Bool
   actor_spawn_tag : String?
+  point_tag : String?
 }
 
 ///|
@@ -84,6 +85,12 @@ pub(all) struct ActorSpawnDef {
   archetype_id : String
   spawn_tag : String?
   facing : Facing
+}
+
+///|
+pub(all) struct TaggedPoint {
+  position : @math.Vec2
+  tag : String
 }
 
 ///|
