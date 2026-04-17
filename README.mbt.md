@@ -16,6 +16,7 @@ This repository currently contains these playable prototypes and ports:
 - `plantvszombies`: a lane-defense prototype built with pure primitives and procedural audio.
 - `bejeweled`: a match-3 prototype built with pure primitives and procedural audio.
 - `minesweeper`: a classic desktop-first Minesweeper built with pure primitives and procedural audio.
+- `breakout`: an Arkanoid-style brick-breaker prototype built with pure primitives and procedural audio.
 - `jackal`: a top-down run-and-gun prototype built with pure primitives and procedural audio.
 - `kofarena`: a 2D versus-fighter prototype built with pure primitives and procedural audio.
 - `netplay`: a standalone networking layer subpackage for host-authoritative input sync (library-only, no `cmd/*` entry).
@@ -42,6 +43,7 @@ This repository currently contains these playable prototypes and ports:
 - `plantvszombies/`: PlantVsZombies package and tests.
 - `bejeweled/`: Bejeweled package and tests.
 - `minesweeper/`: Minesweeper package and tests.
+- `breakout/`: Breakout package and tests.
 - `jackal/`: Jackal package and tests.
 - `kofarena/`: KOFArena package and tests.
 - `netplay/`: shared networking-layer package for future multiplayer integration.
@@ -72,6 +74,7 @@ moon run --manifest-path apps-native/moon.mod.json --target native apps-native/c
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/plantvszombies
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/minesweeper
+moon run --manifest-path apps-native/moon.mod.json --target native apps-native/breakout
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/jackal
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/kofarena
 moon run --manifest-path apps-native/moon.mod.json --target native apps-native/topdown_rogue_proto
@@ -85,12 +88,14 @@ Build the web entry packages directly with the JS backend:
 # Build one game to dist/web/<game>.html
 scripts/build_web_game.sh bejeweled
 scripts/build_web_game.sh minesweeper
+scripts/build_web_game.sh breakout
 
 # Build all apps-web games
 scripts/build_web_all_games.sh
 
 # Optional release build
 scripts/build_web_game.sh bejeweled --release
+scripts/build_web_game.sh breakout --release
 scripts/build_web_all_games.sh --release
 
 # Regenerate gallery page (auto-called by build_web_game.sh)
@@ -125,6 +130,9 @@ moon check --manifest-path apps-web/moon.mod.json --target js apps-web/bejeweled
 moon check --target native minesweeper
 moon check --manifest-path apps-native/moon.mod.json --target native apps-native/minesweeper
 moon check --manifest-path apps-web/moon.mod.json --target js apps-web/minesweeper
+moon check --target native breakout
+moon check --manifest-path apps-native/moon.mod.json --target native apps-native/breakout
+moon check --manifest-path apps-web/moon.mod.json --target js apps-web/breakout
 moon test
 ```
 
@@ -178,7 +186,7 @@ For native distribution, copy the `assets/` directory next to the executable (or
 
 ### New Primitive-Only Prototypes
 
-- `tankbattle`, `supermario`, `bejeweled`, and `kofarena` intentionally avoid external art assets.
+- `tankbattle`, `supermario`, `bejeweled`, `minesweeper`, `breakout`, and `kofarena` intentionally avoid external art assets.
 - `celeste` currently follows the same primitive-only visual style and focuses on movement feel.
 - Their runtime visuals are built from Selene/raylib primitive drawing and mesh/material paths.
 - Their runtime audio uses procedural synthesis (`Wave::load_sound` from generated sample buffers), not packaged music/sfx files.
