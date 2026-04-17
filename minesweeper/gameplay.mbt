@@ -7,27 +7,49 @@ fn point_in_rect(x : Double, y : Double, rect : ButtonRect) -> Bool {
 }
 
 ///|
+fn chrome_panel_rect(layout : BoardLayout) -> ButtonRect {
+  let width_raw = layout.width + 24.0
+  let width = if width_raw < 340.0 {
+    340.0
+  } else if width_raw > VIEWPORT_WIDTH - 80.0 {
+    VIEWPORT_WIDTH - 80.0
+  } else {
+    width_raw
+  }
+  { left: VIEWPORT_WIDTH * 0.5 - width * 0.5, top: 28.0, width, height: 58.0 }
+}
+
+///|
 fn difficulty_button_rect(slot : Int) -> ButtonRect {
-  let total_width = difficulties.length().to_double() * DIFFICULTY_BUTTON_WIDTH +
-    (difficulties.length() - 1).to_double() * DIFFICULTY_BUTTON_GAP
-  let left = VIEWPORT_WIDTH * 0.5 -
-    total_width * 0.5 +
-    slot.to_double() * (DIFFICULTY_BUTTON_WIDTH + DIFFICULTY_BUTTON_GAP)
+  let chrome = chrome_panel_rect(active_layout())
+  let button_width = match slot {
+    0 => 42.0
+    1 => 60.0
+    _ => 78.0
+  }
+  let total_width = 42.0 + 60.0 + 78.0 + DIFFICULTY_BUTTON_GAP * 2.0
+  let offset = match slot {
+    0 => 0.0
+    1 => 42.0 + DIFFICULTY_BUTTON_GAP
+    _ => 42.0 + 60.0 + DIFFICULTY_BUTTON_GAP * 2.0
+  }
+  let left = VIEWPORT_WIDTH * 0.5 - total_width * 0.5 + offset
   {
     left,
-    top: DIFFICULTY_BUTTON_TOP,
-    width: DIFFICULTY_BUTTON_WIDTH,
+    top: chrome.top + chrome.height + 8.0,
+    width: button_width,
     height: DIFFICULTY_BUTTON_HEIGHT,
   }
 }
 
 ///|
 fn face_button_rect() -> ButtonRect {
+  let chrome = chrome_panel_rect(active_layout())
   {
     left: VIEWPORT_WIDTH * 0.5 - FACE_BUTTON_SIZE * 0.5,
-    top: CONTROL_CENTER_Y - FACE_BUTTON_SIZE * 0.5,
+    top: chrome.top + (chrome.height - STATUS_PANEL_HEIGHT) * 0.5,
     width: FACE_BUTTON_SIZE,
-    height: FACE_BUTTON_SIZE,
+    height: STATUS_PANEL_HEIGHT,
   }
 }
 
@@ -216,30 +238,29 @@ fn format_counter(value : Int) -> String {
 
 ///|
 fn mine_counter_text() -> String {
-  "MINES\n\{format_counter(game_state.mine_count - game_state.flag_count)}"
+  format_counter(game_state.mine_count - game_state.flag_count)
 }
 
 ///|
 fn timer_text() -> String {
-  "TIME\n\{format_counter(@cmath.floor(game_state.seconds_elapsed).to_int())}"
+  format_counter(@cmath.floor(game_state.seconds_elapsed).to_int())
 }
 
 ///|
 fn face_text() -> String {
   match game_state.phase {
-    Ready => ":)"
-    Running => ":)"
-    Won => "B)"
-    Lost => ":("
+    Ready => "o"
+    Running => "o"
+    Won => "+"
+    Lost => "x"
   }
 }
 
 ///|
 fn overlay_text() -> String {
   match game_state.phase {
-    Won =>
-      "FIELD CLEARED\nTime \{format_counter(@cmath.floor(game_state.seconds_elapsed).to_int())}\nClick the face or press R / Enter / Space"
-    Lost => "BOOM\nClick the face or press R / Enter / Space"
+    Won => "CLEAR"
+    Lost => "BOOM"
     _ => ""
   }
 }
@@ -300,34 +321,28 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
     VIEWPORT_HEIGHT,
     0.0,
   )
+  let chrome = chrome_panel_rect(layout)
   panel_entity(
     header_entity,
-    color_rgba(55U, 63U, 73U, 0.98),
-    VIEWPORT_WIDTH * 0.5,
-    82.0,
-    VIEWPORT_WIDTH - 48.0,
-    118.0,
+    color_rgba(58U, 67U, 78U, 0.98),
+    chrome.left + chrome.width * 0.5,
+    chrome.top + chrome.height * 0.5,
+    chrome.width,
+    chrome.height,
     40.0,
   )
-  text_entity(
-    title_entity, "MOONBIT MINES", 86.0, 24.0, 46, "rgb(245,247,250)", 60.0,
-  )
-  text_entity(
-    footer_entity,
-    "Left click reveal   Right click flag   Click a number to chord   R / Enter / Space restart",
-    220.0,
-    VIEWPORT_HEIGHT - 42.0,
-    18,
-    "rgb(68,76,88)",
-    60.0,
-  )
-  let mine_center_x = 158.0
-  let timer_center_x = VIEWPORT_WIDTH - 158.0
+  set_entity_visible(title_entity, false)
+  set_entity_visible(footer_entity, false)
+  let mine_center_x = chrome.left + STATUS_PANEL_WIDTH * 0.5 + 12.0
+  let timer_center_x = chrome.left +
+    chrome.width -
+    STATUS_PANEL_WIDTH * 0.5 -
+    12.0
   panel_entity(
     mine_panel_entity,
     color_rgba(25U, 31U, 41U, 0.96),
     mine_center_x,
-    CONTROL_CENTER_Y,
+    chrome.top + chrome.height * 0.5,
     STATUS_PANEL_WIDTH,
     STATUS_PANEL_HEIGHT,
     70.0,
@@ -336,18 +351,18 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
     timer_panel_entity,
     color_rgba(25U, 31U, 41U, 0.96),
     timer_center_x,
-    CONTROL_CENTER_Y,
+    chrome.top + chrome.height * 0.5,
     STATUS_PANEL_WIDTH,
     STATUS_PANEL_HEIGHT,
     70.0,
   )
   let mine_label = mine_counter_text()
   if game_state.mine_text_cache != mine_label {
-    centered_text_entity(
+    centered_text_entity_nowrap(
       mine_text_entity,
       mine_label,
       mine_center_x,
-      CONTROL_CENTER_Y,
+      chrome.top + chrome.height * 0.5,
       STATUS_PANEL_WIDTH * 0.9,
       STATUS_PANEL_HEIGHT * 0.9,
       26,
@@ -360,11 +375,11 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
   }
   let timer_label = timer_text()
   if game_state.timer_text_cache != timer_label {
-    centered_text_entity(
+    centered_text_entity_nowrap(
       timer_text_entity,
       timer_label,
       timer_center_x,
-      CONTROL_CENTER_Y,
+      chrome.top + chrome.height * 0.5,
       STATUS_PANEL_WIDTH * 0.9,
       STATUS_PANEL_HEIGHT * 0.9,
       26,
@@ -380,13 +395,13 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
   let face_rect = face_button_rect()
   let face_hovered = point_in_rect(mouse[X], mouse[Y], face_rect)
   let face_color = match game_state.phase {
-    Won => color_rgba(246U, 190U, 64U, 1.0)
+    Won => color_rgba(62U, 176U, 115U, 1.0)
     Lost => color_rgba(220U, 92U, 74U, 1.0)
     _ =>
       if face_hovered {
-        color_rgba(245U, 203U, 89U, 1.0)
+        color_rgba(108U, 152U, 231U, 1.0)
       } else {
-        color_rgba(235U, 193U, 74U, 1.0)
+        color_rgba(82U, 131U, 217U, 1.0)
       }
   }
   panel_entity(
@@ -400,15 +415,15 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
   )
   let face_label = face_text()
   if game_state.face_text_cache != face_label {
-    centered_text_entity(
+    centered_text_entity_nowrap(
       face_text_entity,
       face_label,
       face_rect.left + face_rect.width * 0.5,
       face_rect.top + face_rect.height * 0.5,
       face_rect.width * 0.9,
       face_rect.height * 0.9,
-      38,
-      "rgb(36,36,36)",
+      24,
+      "rgb(255,255,255)",
       82.0,
     )
     game_state.face_text_cache = face_label
@@ -437,17 +452,7 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
       rect.height,
       70.0,
     )
-    centered_text_entity(
-      difficulty_text_entities[index],
-      difficulty_label(difficulty),
-      rect.left + rect.width * 0.5,
-      rect.top + rect.height * 0.5,
-      rect.width * 0.92,
-      rect.height * 0.92,
-      18,
-      "rgb(245,247,250)",
-      80.0,
-    )
+    set_entity_visible(difficulty_text_entities[index], false)
   }
 
   panel_entity(
@@ -455,26 +460,46 @@ fn sync_chrome(layout : BoardLayout) -> Unit {
     color_rgba(94U, 104U, 116U, 1.0),
     layout.left + layout.width * 0.5,
     layout.top + layout.height * 0.5,
-    layout.width + 18.0,
-    layout.height + 18.0,
+    layout.width + 12.0,
+    layout.height + 12.0,
     90.0,
   )
 }
 
 ///|
-fn sync_overlay() -> Unit {
+fn sync_overlay(layout : BoardLayout) -> Unit {
   if game_state.phase == Won || game_state.phase == Lost {
+    let raw_width = layout.width * 0.74
+    let overlay_width = if raw_width < 180.0 {
+      180.0
+    } else if raw_width > 260.0 {
+      260.0
+    } else {
+      raw_width
+    }
+    let overlay_height = 68.0
+    let overlay_center_x = layout.left + layout.width * 0.5
+    let overlay_center_y = layout.top + layout.height * 0.5
+    panel_entity(
+      overlay_panel_entity,
+      color_rgba(18U, 24U, 36U, 0.82),
+      overlay_center_x,
+      overlay_center_y,
+      overlay_width,
+      overlay_height,
+      300.0,
+    )
     set_entity_visible(overlay_panel_entity, true)
     let text = overlay_text()
     if game_state.overlay_text_cache != text {
-      centered_text_entity(
+      centered_text_entity_nowrap(
         overlay_text_entity,
         text,
-        VIEWPORT_WIDTH * 0.5,
-        VIEWPORT_HEIGHT * 0.5 - 8.0,
-        VIEWPORT_WIDTH * 0.56,
-        160.0,
-        34,
+        overlay_center_x,
+        overlay_center_y,
+        overlay_width - 24.0,
+        overlay_height - 12.0,
+        20,
         "rgb(255,255,255)",
         310.0,
       )
@@ -578,5 +603,5 @@ pub fn render_system(_world : @ecs.World) -> Unit {
     sync_board_visuals(layout)
   }
   sync_hover_frame(layout)
-  sync_overlay()
+  sync_overlay(layout)
 }

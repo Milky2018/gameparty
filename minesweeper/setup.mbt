@@ -1,18 +1,4 @@
 ///|
-let minesweeper_font_registered : Ref[Bool] = { val: false }
-
-///|
-fn register_minesweeper_font_once() -> Unit {
-  if minesweeper_font_registered.val {
-    return
-  }
-  ignore(
-    @asset.load_font(MINESWEEPER_FONT_PATH, family=MINESWEEPER_FONT_FAMILY),
-  )
-  minesweeper_font_registered.val = true
-}
-
-///|
 fn ensure_cell_entities_created() -> Unit {
   if !cell_background_entities.is_empty() {
     return
@@ -96,7 +82,6 @@ fn setup_overlay_entities() -> Unit {
 
 ///|
 pub fn startup_system(_world : @ecs.World) -> Unit {
-  register_minesweeper_font_once()
   ensure_cell_entities_created()
   setup_hover_frame()
   setup_overlay_entities()

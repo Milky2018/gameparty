@@ -26,7 +26,7 @@ fn text_entity(
   @ui.texts().set(entity, @ui.Text::new(content))
   @ui.text_fonts().set(
     entity,
-    @ui.TextFont::from_css("\{size_px}px \{MINESWEEPER_FONT_FAMILY}"),
+    @ui.TextFont::new(family="monospace", size=size_px.to_double()),
   )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color_css))
   @ui.text_layouts().set(
@@ -54,6 +54,20 @@ fn set_centered_text_block(
 }
 
 ///|
+fn set_centered_text_block_nowrap(
+  entity : @entity.Entity,
+  width : Double,
+  height : Double,
+) -> Unit {
+  @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
+  @text2d.text_bounds().set(entity, @text2d.TextBounds::new(width, height))
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::new(align=Center, baseline=Center, wrap=NoWrap),
+  )
+}
+
+///|
 fn centered_text_entity(
   entity : @entity.Entity,
   content : String,
@@ -67,6 +81,22 @@ fn centered_text_entity(
 ) -> Unit {
   text_entity(entity, content, center_x, center_y, size_px, color_css, z)
   set_centered_text_block(entity, width, height)
+}
+
+///|
+fn centered_text_entity_nowrap(
+  entity : @entity.Entity,
+  content : String,
+  center_x : Double,
+  center_y : Double,
+  width : Double,
+  height : Double,
+  size_px : Int,
+  color_css : String,
+  z : Double,
+) -> Unit {
+  text_entity(entity, content, center_x, center_y, size_px, color_css, z)
+  set_centered_text_block_nowrap(entity, width, height)
 }
 
 ///|

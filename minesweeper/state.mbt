@@ -17,10 +17,10 @@ const MAX_BOARD_COLS : Int = 30
 const MAX_CELL_COUNT : Int = MAX_BOARD_ROWS * MAX_BOARD_COLS
 
 ///|
-const BOARD_TOP : Double = 170.0
+const BOARD_TOP : Double = 122.0
 
 ///|
-const BOARD_BOTTOM_MARGIN : Double = 24.0
+const BOARD_BOTTOM_MARGIN : Double = 48.0
 
 ///|
 const BOARD_SIDE_MARGIN : Double = 36.0
@@ -29,40 +29,25 @@ const BOARD_SIDE_MARGIN : Double = 36.0
 const BOARD_GAP : Double = 4.0
 
 ///|
-const CONTROL_CENTER_Y : Double = 80.0
+const STATUS_PANEL_WIDTH : Double = 96.0
 
 ///|
-const STATUS_PANEL_WIDTH : Double = 178.0
+const STATUS_PANEL_HEIGHT : Double = 48.0
 
 ///|
-const STATUS_PANEL_HEIGHT : Double = 78.0
+const FACE_BUTTON_SIZE : Double = 66.0
 
 ///|
-const FACE_BUTTON_SIZE : Double = 74.0
+const DIFFICULTY_BUTTON_HEIGHT : Double = 16.0
 
 ///|
-const DIFFICULTY_BUTTON_TOP : Double = 126.0
-
-///|
-const DIFFICULTY_BUTTON_WIDTH : Double = 160.0
-
-///|
-const DIFFICULTY_BUTTON_HEIGHT : Double = 40.0
-
-///|
-const DIFFICULTY_BUTTON_GAP : Double = 12.0
+const DIFFICULTY_BUTTON_GAP : Double = 10.0
 
 ///|
 const HOVER_FRAME_THICKNESS : Double = 3.0
 
 ///|
 const HOVER_FRAME_Z : Double = 210.0
-
-///|
-const MINESWEEPER_FONT_FAMILY : String = "MGS1Codec"
-
-///|
-const MINESWEEPER_FONT_PATH : String = "assets/shared/fonts/mgs1codec.ttf"
 
 ///|
 enum Difficulty {
@@ -254,15 +239,6 @@ fn difficulty_spec(difficulty : Difficulty) -> DifficultySpec {
 }
 
 ///|
-fn difficulty_label(difficulty : Difficulty) -> String {
-  match difficulty {
-    Beginner => "BEGINNER"
-    Intermediate => "INTERMEDIATE"
-    Expert => "EXPERT"
-  }
-}
-
-///|
 fn total_cells() -> Int {
   game_state.rows * game_state.cols
 }
@@ -311,11 +287,11 @@ fn active_layout() -> BoardLayout {
   } else {
     height_fit
   }
-  let cell_size = @cmath.floor(cell_size_raw).max(24.0)
+  let cell_size = @cmath.floor(cell_size_raw).max(18.0)
   let width = cols * cell_size + BOARD_GAP * (cols - 1.0)
   let height = rows * cell_size + BOARD_GAP * (rows - 1.0)
   let left = (VIEWPORT_WIDTH - width) * 0.5
-  let top = BOARD_TOP + (max_height - height) * 0.5
+  let top = BOARD_TOP
   { left, top, width, height, cell_size }
 }
 
