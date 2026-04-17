@@ -10,7 +10,7 @@ This repository currently contains these playable prototypes and ports:
 - `bombman`: a Bomberman-style 2D prototype with single-player, co-op, and versus modes.
 - `mooncraft`: a Selene ECS rewrite of the Mooncraft prototype with chunk streaming and first-person block interaction.
 - `coinpusher3d`: a 3D roguelike coin-pusher run with chest upgrades and physics-driven scoring.
-- `tankbattle`: a 2D tank-battle prototype built with pure primitives and procedural audio.
+- `tankbattle`: a Battle City-style single-player tank campaign with sprite terrain, authored stages, and native/web parity.
 - `supermario`: a 2D side-scroller prototype built with pure primitives and procedural audio.
 - `celeste`: a Celeste-style 2D platformer built as a plugin on `platformer_platform`.
 - `plantvszombies`: a lane-defense prototype built with pure primitives and procedural audio.
@@ -186,7 +186,7 @@ For native distribution, copy the `assets/` directory next to the executable (or
 
 ### New Primitive-Only Prototypes
 
-- `tankbattle`, `supermario`, `bejeweled`, `minesweeper`, `breakout`, and `kofarena` intentionally avoid external art assets.
+- `supermario`, `bejeweled`, `minesweeper`, `breakout`, and `kofarena` intentionally avoid external art assets.
 - `celeste` currently follows the same primitive-only visual style and focuses on movement feel.
 - Their runtime visuals are built from Selene/raylib primitive drawing and mesh/material paths.
 - Their runtime audio uses procedural synthesis (`Wave::load_sound` from generated sample buffers), not packaged music/sfx files.

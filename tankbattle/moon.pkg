@@ -1,5 +1,6 @@
 import {
   "Milky2018/selene/app",
+  "Milky2018/selene/audio",
   "Milky2018/selene/ecs",
   "Milky2018/selene/asset",
   "Milky2018/selene/entity",
@@ -13,8 +14,5 @@ import {
   "Milky2018/selene/transform",
   "Milky2018/selene/ui",
   "Milky2018/selene/visibility",
-  "moonbitlang/core/bytes",
-  "moonbitlang/core/env" @env,
-  "moonbitlang/core/math" @cmath,
   "Milky2018/gameparty/host" @host,
 }
