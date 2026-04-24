@@ -347,7 +347,7 @@ fn sprites(
 
 ///|
 let plugin : @topdown_action.TopDownCampaignPluginDef = {
-  meta: { id: "jackal", name: "Jackal Campaign", version: "0.2.0" },
+  meta: { id: "jackal", name: "Jackal Campaign", version: "0.4.0" },
   archetypes: [
     {
       id: "player_jeep",

@@ -676,6 +676,215 @@ fn campaign_request_restart_campaign() -> Unit {
 }
 
 ///|
+fn campaign_sprite_audit_enabled() -> Bool {
+  env_flag_enabled(CAMPAIGN_SPRITE_AUDIT_ENV)
+}
+
+///|
+fn campaign_capture_requested() -> Bool {
+  env_flag_enabled(CAMPAIGN_CAPTURE_ENV) || campaign_sprite_audit_enabled()
+}
+
+///|
+fn campaign_sanitize_token(value : String) -> String {
+  value
+  .replace(old="/", new="_")
+  .replace(old="\\", new="_")
+  .replace(old=" ", new="_")
+  .replace(old=":", new="_")
+  .replace(old=".", new="_")
+}
+
+///|
+fn campaign_sprite_path_matches(
+  path : String,
+  tracked_paths : Array[String],
+) -> Bool {
+  for tracked in tracked_paths {
+    if path == tracked || path.contains(tracked) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn campaign_export_expected_anim_frames(
+  plugin_id : String,
+  archetype_id : String,
+  direction : String,
+  anim : @topdown_platform.SpriteAnimDef,
+) -> Int {
+  let mut exported = 0
+  let columns = if anim.columns <= 0 { 1 } else { anim.columns }
+  let frame_count = if anim.frame_count <= 0 { 1 } else { anim.frame_count }
+  let resolved_path = @topdown_platform.resolve_asset_path(
+    anim.image,
+    asset_path_prefixes,
+  )
+  for frame in 0..<frame_count {
+    let column = frame % columns
+    let row = frame / columns
+    let rect : @math.Rect = {
+      position: @math.Vec2(
+        column.to_double() * anim.frame_width,
+        row.to_double() * anim.frame_height,
+      ),
+      size: @math.Vec2(anim.frame_width, anim.frame_height),
+    }
+    let out_path = "\{CAMPAIGN_AUDIT_OUTPUT_DIR}/\{plugin_id}_expected_\{campaign_sanitize_token(archetype_id)}_\{direction}_f\{frame}.png"
+    let mut ok = @runtime_debug.export_texture_region_png(
+      resolved_path, rect, out_path,
+    )
+    if !ok && resolved_path != anim.image {
+      ok = @runtime_debug.export_texture_region_png(anim.image, rect, out_path)
+    }
+    if ok {
+      exported += 1
+    } else {
+      println(
+        "[topdown_action][campaign][audit] export_expected_failed archetype=\{archetype_id} direction=\{direction} frame=\{frame} image=\{resolved_path}",
+      )
+    }
+  }
+  exported
+}
+
+///|
+fn campaign_export_expected_regions() -> Int {
+  let plugin_id = campaign_sanitize_token(campaign_plugin().meta.id)
+  let mut exported = 0
+  for archetype in campaign_plugin().archetypes {
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
+      "up",
+      archetype.sprites.up,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
+      "down",
+      archetype.sprites.down,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
+      "left",
+      archetype.sprites.left,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
+      "right",
+      archetype.sprites.right,
+    )
+  }
+  exported
+}
+
+///|
+fn campaign_export_visible_regions() -> Int {
+  let tracked_paths : Array[String] = []
+  for archetype in campaign_plugin().archetypes {
+    let sprites = archetype.sprites
+    for
+      image in [
+        sprites.up.image,
+        sprites.down.image,
+        sprites.left.image,
+        sprites.right.image,
+      ] {
+      tracked_paths.push(image)
+      let resolved = @topdown_platform.resolve_asset_path(
+        image, asset_path_prefixes,
+      )
+      if resolved != image {
+        tracked_paths.push(resolved)
+      }
+    }
+  }
+  let entries = @runtime_debug.sprite_inspector_entries()
+  let visible_entries : Array[@runtime_debug.SpriteInspectorEntry] = []
+  for entry in entries {
+    match entry.image_path {
+      Some(path) =>
+        if campaign_sprite_path_matches(path, tracked_paths) {
+          visible_entries.push(entry)
+        }
+      None => ()
+    }
+  }
+  let plugin_id = campaign_sanitize_token(campaign_plugin().meta.id)
+  let exported = @runtime_debug.export_sprite_inspector_regions(
+    visible_entries,
+    CAMPAIGN_AUDIT_OUTPUT_DIR,
+    file_naming=fn(entry, index) {
+      let entity_name = match entry.entity_name {
+        Some(value) => campaign_sanitize_token(value)
+        None => "unnamed"
+      }
+      let image_name = match entry.image_path {
+        Some(value) => campaign_sanitize_token(value)
+        None => "no_image"
+      }
+      "\{plugin_id}_visible_entry_\{index}_e\{entry.entity_id}_\{entity_name}_\{image_name}.png"
+    },
+  )
+  let mut exported_manual = 0
+  if exported == 0 && visible_entries.length() > 0 {
+    for index, entry in visible_entries {
+      match (entry.image_path, entry.source_rect) {
+        (Some(image_path), Some(rect)) => {
+          let region : @math.Rect = {
+            position: @math.Vec2(rect.x, rect.y),
+            size: @math.Vec2(rect.width, rect.height),
+          }
+          let entity_name = match entry.entity_name {
+            Some(value) => campaign_sanitize_token(value)
+            None => "unnamed"
+          }
+          let out_path = "\{CAMPAIGN_AUDIT_OUTPUT_DIR}/\{plugin_id}_visible_manual_entry_\{index}_e\{entry.entity_id}_\{entity_name}.png"
+          let mut ok = @runtime_debug.export_texture_region_png(
+            image_path, region, out_path,
+          )
+          if !ok {
+            let resolved = @topdown_platform.resolve_asset_path(
+              image_path, asset_path_prefixes,
+            )
+            if resolved != image_path {
+              ok = @runtime_debug.export_texture_region_png(
+                resolved, region, out_path,
+              )
+            }
+          }
+          if ok {
+            exported_manual += 1
+          } else {
+            println(
+              "[topdown_action][campaign][audit] export_visible_failed entity=\{entry.entity_id} image=\{image_path} rect=\{rect.x},\{rect.y},\{rect.width},\{rect.height}",
+            )
+          }
+        }
+        _ => ()
+      }
+    }
+  }
+  println(
+    "[topdown_action][campaign][audit] sprite_entries=\{entries.length()} matched=\{visible_entries.length()} exported_visible=\{exported} exported_visible_manual=\{exported_manual}",
+  )
+  exported + exported_manual
+}
+
+///|
+fn campaign_capture_scene() -> Bool {
+  let plugin_id = campaign_sanitize_token(campaign_plugin().meta.id)
+  @runtime_debug.capture_frame_png_to_file(
+    "\{CAMPAIGN_AUDIT_OUTPUT_DIR}/\{plugin_id}_campaign_scene.png",
+  )
+}
+
+///|
 pub fn campaign_input_system(_world : @ecs.World) -> Unit {
   if @host.is_key_pressed("F3") {
     campaign_debug_overlay_enabled.val = !campaign_debug_overlay_enabled.val
@@ -687,6 +896,9 @@ pub fn campaign_input_system(_world : @ecs.World) -> Unit {
     }
     campaign_request_back_to_menu()
     return
+  }
+  if campaign_sprite_audit_enabled() && campaign_run_state.phase == MainMenu {
+    campaign_request_start_from_menu()
   }
   if campaign_run_state.phase == MainMenu {
     if @inputs.is_just_pressed(Enter) {
@@ -1027,14 +1239,26 @@ pub fn campaign_render_sync_system(_world : @ecs.World) -> Unit {
 
 ///|
 pub fn campaign_capture_after_render_system(_world : @ecs.World) -> Unit {
-  if !env_flag_enabled(CAMPAIGN_CAPTURE_ENV) || campaign_capture_done.val {
+  if !campaign_capture_requested() || campaign_capture_done.val {
     return
   }
   campaign_capture_timer.val += @time.delta()
   if campaign_capture_timer.val < CAMPAIGN_CAPTURE_DELAY_SECONDS {
     return
   }
-  @host.take_screenshot(CAMPAIGN_CAPTURE_PATH)
+  if campaign_sprite_audit_enabled() {
+    let expected = campaign_export_expected_regions()
+    let visible = campaign_export_visible_regions()
+    println(
+      "[topdown_action][campaign][audit] expected_exports=\{expected} visible_exports=\{visible}",
+    )
+  }
+  if !campaign_capture_scene() {
+    @host.take_screenshot(CAMPAIGN_CAPTURE_PATH)
+    println(
+      "[topdown_action][campaign][capture] path=\{CAMPAIGN_CAPTURE_PATH} (host fallback)",
+    )
+  }
   campaign_capture_done.val = true
   @system.exit()
 }

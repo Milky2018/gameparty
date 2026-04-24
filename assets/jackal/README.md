@@ -1,14 +1,32 @@
-# Jackal Sprite Sources
+# Jackal Runtime Assets
 
-Primary source:
+The canonical Jackal runtime assets are generated locally by:
 
-- https://www.spriters-resource.com/nes/jackaltopgunner/?source=genre
+```bash
+scripts/jackal_import_sprites.sh
+```
 
-Raw sheet files are kept in this directory with the original filenames from the site.
+This runs `tools/generate_jackal_assets.py` and writes every asset referenced by
+`jackal/plugin.mbt`. The generated style is original project-local pixel art and
+does not depend on downloaded sprite sheets.
+
+## Role Sheets
+
+Each actor has a single canonical role sheet under:
+
+- `assets/jackal/roles/jeep.png`
+- `assets/jackal/roles/soldier.png`
+- `assets/jackal/roles/turret.png`
+- `assets/jackal/roles/vehicle.png`
+- `assets/jackal/roles/fort.png`
+
+Each role sheet is a `128x128` transparent PNG: four direction rows (`up`,
+`right`, `down`, `left`) by four animation columns.
 
 ## Runtime strips
 
-The game runtime uses extracted directional strips under:
+The current `topdown_action` sprite model still consumes one horizontal strip
+per direction, so the generator also writes derived runtime strips under:
 
 - `assets/jackal/jeep/`
 - `assets/jackal/soldier/`
@@ -18,17 +36,11 @@ The game runtime uses extracted directional strips under:
 
 Each strip is generated as a `32x32`, `4-frame` horizontal atlas.
 
-## Regenerate
+## Terrain and Objectives
 
-From project root:
+The generated terrain/objective props live under:
 
-```bash
-scripts/jackal_import_sprites.sh
-```
+- `assets/jackal/terrain/`
+- `assets/jackal/objectives/`
 
-This runs:
-
-- `tools/import_jackal_sprites.py`
-
-which keys out border-connected background colors and writes the runtime strips.
-
+They are `64x64` PNGs aligned to the current `topdown_action` tile size.

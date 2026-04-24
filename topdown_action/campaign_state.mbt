@@ -11,6 +11,12 @@ const CAMPAIGN_CAPTURE_PATH : String = "topdown_action_campaign_capture.png"
 const CAMPAIGN_PROFILE_ENV : String = "TOPDOWN_ACTION_CAMPAIGN_PROFILE"
 
 ///|
+const CAMPAIGN_SPRITE_AUDIT_ENV : String = "TOPDOWN_ACTION_CAMPAIGN_SPRITE_AUDIT"
+
+///|
+const CAMPAIGN_AUDIT_OUTPUT_DIR : String = "/tmp"
+
+///|
 const CAMPAIGN_TILE_Z : Double = 5.0
 
 ///|
