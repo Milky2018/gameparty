@@ -43,4 +43,11 @@ The generated terrain/objective props live under:
 - `assets/jackal/terrain/`
 - `assets/jackal/objectives/`
 
-They are `64x64` PNGs aligned to the current `topdown_action` tile size.
+They are `64x64` PNGs aligned to the current `topdown_action` tile size. Terrain
+symbols used by Jackal stages are:
+
+- `.` grass floor
+- `,` dirt/sand floor
+- `=` bridge floor
+- `~` blocking water
+- `#` blocking wall/rock

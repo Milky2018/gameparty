@@ -25,6 +25,15 @@ TIRE: Color = (22, 25, 24, 255)
 TIRE_HI: Color = (55, 59, 56, 255)
 GLASS: Color = (186, 230, 230, 255)
 GLASS_DARK: Color = (81, 130, 130, 255)
+JACKAL_GREEN: Color = (86, 116, 36, 255)
+JACKAL_GREEN_HI: Color = (142, 169, 67, 255)
+JACKAL_GREEN_DARK: Color = (34, 52, 24, 255)
+FIELD_DARK: Color = (31, 62, 38, 255)
+FIELD_MID: Color = (43, 82, 45, 255)
+FIELD_HI: Color = (67, 110, 54, 255)
+DIRT_DARK: Color = (91, 69, 35, 255)
+DIRT_MID: Color = (130, 91, 42, 255)
+DIRT_HI: Color = (166, 124, 57, 255)
 
 
 def ensure_dirs() -> None:
@@ -103,20 +112,20 @@ def write_role_sheet(actor: str, frames_by_direction: Dict[str, List[Image.Image
 def draw_jeep_frame(step: int) -> Image.Image:
     img = new_frame()
     d = ImageDraw.Draw(img)
-    body = (87, 109, 38, 255)
-    body_hi = (142, 160, 57, 255)
-    body_shadow = (42, 51, 25, 255)
+    body = JACKAL_GREEN
+    body_hi = JACKAL_GREEN_HI
+    body_shadow = JACKAL_GREEN_DARK
     wheel_tick = step % 2
 
-    rect(d, (8, 8, 23, 26), OUTLINE)
-    rect(d, (10, 6, 21, 27), body)
-    rect(d, (11, 7, 20, 11), body_hi)
+    rect(d, (7, 7, 24, 27), OUTLINE)
+    rect(d, (9, 6, 22, 27), body)
+    rect(d, (10, 7, 21, 10), body_hi)
     rect(d, (11, 20, 20, 25), body_shadow)
-    rect(d, (9, 12, 22, 18), INK)
+    rect(d, (9, 12, 22, 18), (22, 33, 25, 255))
     rect(d, (10, 13, 15, 16), GLASS)
     rect(d, (17, 13, 21, 16), GLASS)
-    rect(d, (10, 17, 21, 19), (31, 33, 26, 255))
-    rect(d, (13, 8, 18, 9), (214, 212, 137, 255))
+    rect(d, (13, 2, 18, 8), OUTLINE)
+    rect(d, (14, 1, 17, 7), (170, 183, 76, 255))
     rect(d, (6, 10, 8, 18), TIRE)
     rect(d, (23, 10, 25, 18), TIRE)
     rect(d, (7, 21, 9, 27), TIRE)
@@ -132,23 +141,23 @@ def draw_jeep_frame(step: int) -> Image.Image:
 def draw_tank_frame(step: int) -> Image.Image:
     img = new_frame()
     d = ImageDraw.Draw(img)
-    body = (88, 111, 55, 255)
-    body_hi = (130, 153, 73, 255)
-    body_dark = (39, 51, 34, 255)
+    body = (81, 105, 43, 255)
+    body_hi = (137, 157, 66, 255)
+    body_dark = (31, 45, 28, 255)
     tread = step % 2
 
-    rect(d, (7, 5, 24, 27), OUTLINE)
-    rect(d, (9, 4, 22, 27), body)
-    rect(d, (10, 5, 21, 9), body_hi)
-    rect(d, (11, 15, 20, 24), body_dark)
-    rect(d, (8, 9, 10, 26), TIRE)
-    rect(d, (21, 9, 23, 26), TIRE)
+    rect(d, (6, 8, 25, 25), OUTLINE)
+    rect(d, (8, 7, 23, 25), body)
+    rect(d, (10, 8, 21, 11), body_hi)
+    rect(d, (11, 16, 20, 22), body_dark)
+    rect(d, (6, 10, 8, 24), TIRE)
+    rect(d, (23, 10, 25, 24), TIRE)
     for y in range(10 + tread, 25, 5):
         rect(d, (8, y, 9, y + 1), TIRE_HI)
         rect(d, (22, y, 23, y + 1), TIRE_HI)
-    rect(d, (12, 10, 19, 17), (67, 80, 43, 255))
-    rect(d, (14, 2, 17, 12), OUTLINE)
-    rect(d, (15, 1, 16, 11), (150, 161, 83, 255))
+    rect(d, (12, 11, 19, 17), (55, 72, 38, 255))
+    rect(d, (14, 1, 17, 12), OUTLINE)
+    rect(d, (15, 0, 16, 11), body_hi)
     rect(d, (13, 12, 18, 15), body_hi)
     return img
 
@@ -156,22 +165,21 @@ def draw_tank_frame(step: int) -> Image.Image:
 def draw_fort_frame(step: int) -> Image.Image:
     img = new_frame()
     d = ImageDraw.Draw(img)
-    stone = (102, 108, 93, 255)
-    stone_hi = (148, 153, 133, 255)
-    stone_dark = (52, 56, 52, 255)
+    stone = (78, 84, 70, 255)
+    stone_hi = (127, 132, 101, 255)
+    stone_dark = (36, 43, 36, 255)
     pulse = step % 2
 
-    rect(d, (5, 10, 26, 28), OUTLINE)
-    rect(d, (7, 12, 24, 27), stone)
-    rect(d, (8, 13, 23, 15), stone_hi)
-    rect(d, (8, 21, 23, 26), stone_dark)
-    rect(d, (10, 8, 21, 13), OUTLINE)
-    rect(d, (11, 9, 20, 13), stone_hi)
-    rect(d, (14, 2, 17, 13), OUTLINE)
-    rect(d, (15, 1, 16, 12), (170, 171, 146, 255))
-    rect(d, (9, 16, 12, 19), stone_dark)
-    rect(d, (19, 16, 22, 19), stone_dark)
-    rect(d, (13, 17, 18, 22), (32, 34, 34, 255))
+    rect(d, (4, 12, 27, 27), OUTLINE)
+    rect(d, (6, 14, 25, 26), stone)
+    rect(d, (8, 14, 23, 16), stone_hi)
+    rect(d, (8, 22, 23, 25), stone_dark)
+    rect(d, (10, 8, 21, 14), OUTLINE)
+    rect(d, (12, 9, 19, 13), stone_hi)
+    rect(d, (14, 2, 17, 12), OUTLINE)
+    rect(d, (15, 1, 16, 11), (160, 159, 112, 255))
+    rect(d, (9, 17, 13, 20), stone_dark)
+    rect(d, (18, 17, 22, 20), stone_dark)
     if pulse == 1:
         rect(d, (14, 1, 17, 2), (248, 188, 70, 255))
     return img
@@ -180,63 +188,63 @@ def draw_fort_frame(step: int) -> Image.Image:
 def draw_turret_frame(step: int) -> Image.Image:
     img = new_frame()
     d = ImageDraw.Draw(img)
-    metal = (89, 99, 91, 255)
-    metal_hi = (148, 154, 137, 255)
+    metal = (76, 87, 67, 255)
+    metal_hi = (128, 142, 91, 255)
     recoil = 1 if step == 1 else 0
 
-    rect(d, (10, 11, 21, 23), OUTLINE)
-    rect(d, (11, 12, 20, 22), metal)
-    rect(d, (13, 14, 18, 19), (45, 50, 48, 255))
-    rect(d, (14, 4 + recoil, 17, 14 + recoil), OUTLINE)
-    rect(d, (15, 2 + recoil, 16, 14 + recoil), metal_hi)
-    rect(d, (8, 22, 23, 25), OUTLINE)
-    rect(d, (9, 23, 22, 24), (62, 67, 61, 255))
+    rect(d, (9, 13, 22, 23), OUTLINE)
+    rect(d, (11, 14, 20, 22), metal)
+    rect(d, (13, 15, 18, 19), (39, 46, 39, 255))
+    rect(d, (14, 5 + recoil, 17, 15 + recoil), OUTLINE)
+    rect(d, (15, 3 + recoil, 16, 14 + recoil), metal_hi)
+    rect(d, (7, 23, 24, 25), OUTLINE)
+    rect(d, (9, 24, 22, 24), metal_hi)
     return img
 
 
 def draw_soldier_frame(direction: str, step: int) -> Image.Image:
     img = new_frame()
     d = ImageDraw.Draw(img)
-    uniform = (88, 108, 62, 255)
-    uniform_hi = (134, 151, 82, 255)
-    skin = (190, 131, 82, 255)
+    uniform = (74, 89, 48, 255)
+    uniform_hi = (121, 132, 63, 255)
+    skin = (177, 121, 71, 255)
     leg_phase = step % 2
     side = 1 if direction == "right" else -1 if direction == "left" else 0
 
-    head_x = 13 + side
-    rect(d, (head_x, 5, head_x + 5, 10), OUTLINE)
-    rect(d, (head_x + 1, 6, head_x + 4, 9), skin)
-    rect(d, (head_x - 1, 4, head_x + 6, 6), OUTLINE)
-    rect(d, (head_x, 3, head_x + 5, 5), uniform_hi)
-    rect(d, (11, 10, 20, 20), OUTLINE)
-    rect(d, (12, 11, 19, 19), uniform)
-    rect(d, (13, 12, 18, 14), uniform_hi)
+    head_x = 14 + side
+    rect(d, (head_x, 7, head_x + 4, 11), OUTLINE)
+    rect(d, (head_x + 1, 8, head_x + 3, 10), skin)
+    rect(d, (head_x - 1, 5, head_x + 5, 7), OUTLINE)
+    rect(d, (head_x, 4, head_x + 4, 6), uniform_hi)
+    rect(d, (12, 12, 20, 20), OUTLINE)
+    rect(d, (13, 13, 19, 19), uniform)
+    rect(d, (14, 14, 18, 15), uniform_hi)
     if direction == "left":
-        rect(d, (8, 12, 12, 17), uniform)
-        rect(d, (4, 13, 10, 14), (48, 51, 43, 255))
-        rect(d, (20, 12, 22, 17), uniform)
+        rect(d, (9, 13, 13, 17), uniform)
+        rect(d, (5, 14, 11, 15), (43, 46, 34, 255))
+        rect(d, (20, 13, 22, 17), uniform)
     elif direction == "right":
-        rect(d, (19, 12, 23, 17), uniform)
-        rect(d, (21, 13, 27, 14), (48, 51, 43, 255))
-        rect(d, (9, 12, 11, 17), uniform)
+        rect(d, (19, 13, 23, 17), uniform)
+        rect(d, (21, 14, 27, 15), (43, 46, 34, 255))
+        rect(d, (10, 13, 12, 17), uniform)
     elif direction == "up":
-        rect(d, (9, 12, 12, 17), uniform)
-        rect(d, (19, 12, 22, 17), uniform)
-        rect(d, (15, 0, 16, 5), (48, 51, 43, 255))
+        rect(d, (10, 13, 13, 17), uniform)
+        rect(d, (19, 13, 22, 17), uniform)
+        rect(d, (15, 1, 16, 7), (43, 46, 34, 255))
     else:
-        rect(d, (9, 12, 12, 17), uniform)
-        rect(d, (19, 12, 22, 17), uniform)
-        rect(d, (15, 17, 16, 24), (48, 51, 43, 255))
+        rect(d, (10, 13, 13, 17), uniform)
+        rect(d, (19, 13, 22, 17), uniform)
+        rect(d, (15, 18, 16, 24), (43, 46, 34, 255))
     if leg_phase == 0:
-        rect(d, (12, 20, 14, 26), uniform)
-        rect(d, (17, 20, 19, 25), uniform)
-        rect(d, (11, 26, 14, 27), OUTLINE)
-        rect(d, (17, 25, 20, 26), OUTLINE)
+        rect(d, (13, 20, 14, 25), uniform)
+        rect(d, (18, 20, 19, 24), uniform)
+        rect(d, (12, 25, 14, 26), OUTLINE)
+        rect(d, (18, 24, 20, 25), OUTLINE)
     else:
-        rect(d, (11, 20, 13, 25), uniform)
-        rect(d, (18, 20, 20, 26), uniform)
-        rect(d, (10, 25, 13, 26), OUTLINE)
-        rect(d, (18, 26, 21, 27), OUTLINE)
+        rect(d, (12, 20, 13, 24), uniform)
+        rect(d, (18, 20, 20, 25), uniform)
+        rect(d, (11, 24, 13, 25), OUTLINE)
+        rect(d, (18, 25, 21, 26), OUTLINE)
     return img
 
 
@@ -284,54 +292,107 @@ def make_floor(path: Path, seed: int, base: Color, accent: Color) -> None:
     print(f"[write] {path.relative_to(ROOT)}")
 
 
+def write_grass(path: Path) -> None:
+    img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), FIELD_MID)
+    d = ImageDraw.Draw(img)
+    for y in range(0, TILE_SIZE, 8):
+        for x in range(0, TILE_SIZE, 8):
+            variant = (x // 8 + y // 8) % 3
+            if variant == 0:
+                rect(d, (x + 2, y + 1, x + 2, y + 5), FIELD_HI)
+                rect(d, (x + 5, y + 3, x + 6, y + 3), FIELD_DARK)
+            elif variant == 1:
+                rect(d, (x + 1, y + 5, x + 4, y + 5), FIELD_DARK)
+                rect(d, (x + 6, y + 1, x + 6, y + 4), FIELD_HI)
+            else:
+                rect(d, (x + 3, y + 2, x + 5, y + 2), FIELD_DARK)
+                rect(d, (x + 1, y + 6, x + 1, y + 7), FIELD_HI)
+    img.save(path)
+    print(f"[write] {path.relative_to(ROOT)}")
+
+
+def write_dirt(path: Path) -> None:
+    img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), DIRT_MID)
+    d = ImageDraw.Draw(img)
+    for y in range(0, TILE_SIZE, 8):
+        for x in range(0, TILE_SIZE, 8):
+            rect(d, (x + 1, y + 6, x + 5, y + 6), DIRT_DARK)
+            rect(d, (x + 5, y + 2, x + 6, y + 4), DIRT_HI)
+            if (x + y) % 16 == 0:
+                rect(d, (x + 2, y + 2, x + 3, y + 2), (102, 75, 36, 255))
+    img.save(path)
+    print(f"[write] {path.relative_to(ROOT)}")
+
+
 def write_wall() -> None:
     img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), TRANSPARENT)
     d = ImageDraw.Draw(img)
-    rect(d, (5, 18, 58, 45), OUTLINE)
+    rect(d, (3, 21, 60, 43), OUTLINE)
     colors = [
-        (83, 82, 70, 255),
-        (106, 104, 87, 255),
-        (70, 72, 64, 255),
+        (92, 89, 67, 255),
+        (126, 116, 76, 255),
+        (65, 69, 55, 255),
     ]
-    for row, y in enumerate(range(20, 44, 8)):
+    for row, y in enumerate(range(23, 43, 7)):
         offset = 0 if row % 2 == 0 else 7
-        for x in range(7 - offset, 57, 14):
+        for x in range(5 - offset, 60, 14):
             fill = colors[(row + x // 14) % len(colors)]
-            rect(d, (x, y, min(57, x + 13), y + 7), fill)
-            rect(d, (x, y, min(57, x + 13), y + 1), (136, 133, 108, 255))
+            rect(d, (x, y, min(59, x + 13), y + 6), fill)
+            rect(d, (x, y, min(59, x + 13), y + 1), (158, 145, 91, 255))
     img.save(ASSET_DIR / "terrain" / "wall.png")
     print(f"[write] {(ASSET_DIR / 'terrain' / 'wall.png').relative_to(ROOT)}")
 
 
+def write_water() -> None:
+    img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), (17, 42, 54, 255))
+    d = ImageDraw.Draw(img)
+    for y in range(8, TILE_SIZE, 14):
+        rect(d, (4, y, 25, y + 1), (42, 93, 109, 255))
+        rect(d, (33, y + 5, 58, y + 6), (33, 77, 96, 255))
+    for x in range(8, TILE_SIZE, 18):
+        rect(d, (x, 21, x + 1, 25), (61, 119, 128, 255))
+        rect(d, (x + 7, 45, x + 8, 49), (36, 86, 105, 255))
+    out_path = ASSET_DIR / "terrain" / "water.png"
+    img.save(out_path)
+    print(f"[write] {out_path.relative_to(ROOT)}")
+
+
+def write_bridge() -> None:
+    img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), (60, 45, 31, 255))
+    d = ImageDraw.Draw(img)
+    rect(d, (0, 9, 63, 16), (37, 30, 23, 255))
+    rect(d, (0, 48, 63, 55), (37, 30, 23, 255))
+    for x in range(0, TILE_SIZE, 10):
+        rect(d, (x, 17, min(63, x + 7), 47), (104, 78, 45, 255))
+        rect(d, (x, 17, min(63, x + 7), 20), (154, 117, 63, 255))
+    rect(d, (0, 31, 63, 33), (47, 34, 23, 255))
+    out_path = ASSET_DIR / "terrain" / "bridge.png"
+    img.save(out_path)
+    print(f"[write] {out_path.relative_to(ROOT)}")
+
+
 def write_terrain() -> None:
-    make_floor(
-        ASSET_DIR / "terrain" / "floor.png",
-        17,
-        (26, 39, 33, 255),
-        (39, 58, 45, 255),
-    )
-    make_floor(
-        ASSET_DIR / "terrain" / "floor_alt.png",
-        23,
-        (31, 43, 38, 255),
-        (50, 66, 53, 255),
-    )
+    write_grass(ASSET_DIR / "terrain" / "floor.png")
+    write_dirt(ASSET_DIR / "terrain" / "floor_alt.png")
     write_wall()
+    write_water()
+    write_bridge()
 
 
 def write_camp(path: Path, tint: Color, flag: Color) -> None:
     img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), TRANSPARENT)
     d = ImageDraw.Draw(img)
-    rect(d, (9, 38, 55, 48), (58, 42, 27, 255))
-    rect(d, (12, 24, 52, 41), OUTLINE)
-    poly(d, [(10, 25), (32, 10), (54, 25)], OUTLINE)
-    poly(d, [(14, 25), (32, 13), (50, 25)], tint)
-    rect(d, (15, 26, 49, 40), (79, 58, 36, 255))
-    rect(d, (27, 29, 37, 40), (27, 24, 20, 255))
-    rect(d, (18, 29, 24, 35), (214, 193, 117, 255))
-    rect(d, (41, 29, 47, 35), (214, 193, 117, 255))
-    rect(d, (50, 11, 52, 31), (214, 204, 154, 255))
-    poly(d, [(52, 12), (61, 16), (52, 20)], flag)
+    rect(d, (11, 37, 53, 47), (55, 41, 24, 255))
+    rect(d, (13, 23, 51, 40), OUTLINE)
+    poly(d, [(11, 24), (32, 12), (53, 24)], OUTLINE)
+    poly(d, [(15, 24), (32, 15), (49, 24)], tint)
+    rect(d, (16, 25, 48, 39), (111, 76, 38, 255))
+    rect(d, (26, 29, 37, 39), (31, 27, 21, 255))
+    rect(d, (18, 29, 24, 34), (222, 196, 111, 255))
+    rect(d, (40, 29, 46, 34), (222, 196, 111, 255))
+    rect(d, (51, 10, 53, 31), (220, 209, 143, 255))
+    poly(d, [(53, 11), (61, 15), (53, 19)], flag)
+    rect(d, (20, 18, 44, 20), (177, 126, 54, 255))
     img.save(path)
     print(f"[write] {path.relative_to(ROOT)}")
 
