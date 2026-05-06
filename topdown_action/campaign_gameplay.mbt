@@ -220,9 +220,13 @@ fn campaign_spawn_followers(count : Int) -> Unit {
 fn campaign_player_forward(player : CampaignActorRuntime) -> @math.Vec2 {
   match player.facing {
     @topdown_platform.Up => @math.Vec2(0.0, -1.0)
+    @topdown_platform.UpRight => @math.Vec2(0.707, -0.707)
     @topdown_platform.Down => @math.Vec2(0.0, 1.0)
+    @topdown_platform.DownRight => @math.Vec2(0.707, 0.707)
     @topdown_platform.Left => @math.Vec2(-1.0, 0.0)
+    @topdown_platform.DownLeft => @math.Vec2(-0.707, 0.707)
     @topdown_platform.Right => @math.Vec2(1.0, 0.0)
+    @topdown_platform.UpLeft => @math.Vec2(-0.707, -0.707)
   }
 }
 
@@ -764,8 +768,20 @@ fn campaign_export_expected_regions() -> Int {
     exported += campaign_export_expected_anim_frames(
       plugin_id,
       archetype.id,
+      "up_right",
+      archetype.sprites.up_right,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
       "down",
       archetype.sprites.down,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
+      "down_right",
+      archetype.sprites.down_right,
     )
     exported += campaign_export_expected_anim_frames(
       plugin_id,
@@ -776,8 +792,20 @@ fn campaign_export_expected_regions() -> Int {
     exported += campaign_export_expected_anim_frames(
       plugin_id,
       archetype.id,
+      "down_left",
+      archetype.sprites.down_left,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
       "right",
       archetype.sprites.right,
+    )
+    exported += campaign_export_expected_anim_frames(
+      plugin_id,
+      archetype.id,
+      "up_left",
+      archetype.sprites.up_left,
     )
   }
   exported
@@ -791,9 +819,13 @@ fn campaign_export_visible_regions() -> Int {
     for
       image in [
         sprites.up.image,
+        sprites.up_right.image,
         sprites.down.image,
+        sprites.down_right.image,
         sprites.left.image,
+        sprites.down_left.image,
         sprites.right.image,
+        sprites.up_left.image,
       ] {
       tracked_paths.push(image)
       let resolved = @topdown_platform.resolve_asset_path(

@@ -228,16 +228,26 @@ pub fn facing_from_vector(vector : @math.Vec2, current : Facing) -> Facing {
   let ay = vector[Y].abs()
   if ax < 0.001 && ay < 0.001 {
     current
-  } else if ax >= ay {
+  } else if ax > ay * 2.25 {
     if vector[X] >= 0.0 {
       Right
     } else {
       Left
     }
-  } else if vector[Y] >= 0.0 {
-    Down
+  } else if ay > ax * 2.25 {
+    if vector[Y] >= 0.0 {
+      Down
+    } else {
+      Up
+    }
+  } else if vector[X] >= 0.0 && vector[Y] < 0.0 {
+    UpRight
+  } else if vector[X] >= 0.0 && vector[Y] >= 0.0 {
+    DownRight
+  } else if vector[X] < 0.0 && vector[Y] >= 0.0 {
+    DownLeft
   } else {
-    Up
+    UpLeft
   }
 }
 

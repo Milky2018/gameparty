@@ -74,6 +74,30 @@ def rotate(frame: Image.Image, direction: str) -> Image.Image:
     raise ValueError(f"unknown direction: {direction}")
 
 
+def direction_angle(direction: str) -> float:
+    angles = {
+        "up": 0.0,
+        "up_right": -45.0,
+        "right": -90.0,
+        "down_right": -135.0,
+        "down": 180.0,
+        "down_left": 135.0,
+        "left": 90.0,
+        "up_left": 45.0,
+    }
+    return angles[direction]
+
+
+def rotate_to_direction(frame: Image.Image, direction: str) -> Image.Image:
+    if direction == "up":
+        return frame
+    return frame.rotate(
+        direction_angle(direction),
+        resample=Image.Resampling.NEAREST,
+        center=(FRAME_SIZE / 2, FRAME_SIZE / 2),
+    )
+
+
 def write_strip(
     actor: str,
     direction: str,
@@ -81,9 +105,13 @@ def write_strip(
 ) -> None:
     names = {
         "up": "Back - Running.png",
+        "up_right": "UpRight - Running.png",
         "down": "Front - Running.png",
+        "down_right": "DownRight - Running.png",
         "left": "Left - Running.png",
+        "down_left": "DownLeft - Running.png",
         "right": "Right - Running.png",
+        "up_left": "UpLeft - Running.png",
     }
     strip = Image.new("RGBA", (FRAME_SIZE * STRIP_FRAMES, FRAME_SIZE), TRANSPARENT)
     for index, frame in enumerate(frames):
@@ -94,7 +122,16 @@ def write_strip(
 
 
 def write_role_sheet(actor: str, frames_by_direction: Dict[str, List[Image.Image]]) -> None:
-    row_order = ("up", "right", "down", "left")
+    row_order = (
+        "up",
+        "up_right",
+        "right",
+        "down_right",
+        "down",
+        "down_left",
+        "left",
+        "up_left",
+    )
     sheet = Image.new(
         "RGBA",
         (FRAME_SIZE * STRIP_FRAMES, FRAME_SIZE * len(row_order)),
@@ -209,7 +246,7 @@ def draw_soldier_frame(direction: str, step: int) -> Image.Image:
     uniform_hi = (121, 132, 63, 255)
     skin = (177, 121, 71, 255)
     leg_phase = step % 2
-    side = 1 if direction == "right" else -1 if direction == "left" else 0
+    side = 1 if "right" in direction else -1 if "left" in direction else 0
 
     head_x = 14 + side
     rect(d, (head_x, 7, head_x + 4, 11), OUTLINE)
@@ -219,11 +256,11 @@ def draw_soldier_frame(direction: str, step: int) -> Image.Image:
     rect(d, (12, 12, 20, 20), OUTLINE)
     rect(d, (13, 13, 19, 19), uniform)
     rect(d, (14, 14, 18, 15), uniform_hi)
-    if direction == "left":
+    if direction == "left" or direction == "up_left" or direction == "down_left":
         rect(d, (9, 13, 13, 17), uniform)
         rect(d, (5, 14, 11, 15), (43, 46, 34, 255))
         rect(d, (20, 13, 22, 17), uniform)
-    elif direction == "right":
+    elif direction == "right" or direction == "up_right" or direction == "down_right":
         rect(d, (19, 13, 23, 17), uniform)
         rect(d, (21, 14, 27, 15), (43, 46, 34, 255))
         rect(d, (10, 13, 12, 17), uniform)
@@ -252,7 +289,7 @@ def rotated_actor_frames(
     draw_up: Callable[[int], Image.Image],
     direction: str,
 ) -> List[Image.Image]:
-    return [rotate(draw_up(step), direction) for step in range(STRIP_FRAMES)]
+    return [rotate_to_direction(draw_up(step), direction) for step in range(STRIP_FRAMES)]
 
 
 def soldier_actor_frames(direction: str) -> List[Image.Image]:
@@ -269,7 +306,16 @@ def write_actor_strips() -> None:
     }
     for actor, build_frames in actors.items():
         frames_by_direction: Dict[str, List[Image.Image]] = {}
-        for direction in ("up", "right", "down", "left"):
+        for direction in (
+            "up",
+            "up_right",
+            "right",
+            "down_right",
+            "down",
+            "down_left",
+            "left",
+            "up_left",
+        ):
             frames_by_direction[direction] = build_frames(direction)
         write_role_sheet(actor, frames_by_direction)
         for direction, frames in frames_by_direction.items():
@@ -327,18 +373,19 @@ def write_dirt(path: Path) -> None:
 def write_wall() -> None:
     img = Image.new("RGBA", (TILE_SIZE, TILE_SIZE), TRANSPARENT)
     d = ImageDraw.Draw(img)
-    rect(d, (3, 21, 60, 43), OUTLINE)
+    rect(d, (2, 4, 61, 59), OUTLINE)
+    rect(d, (5, 7, 58, 56), (73, 75, 58, 255))
     colors = [
         (92, 89, 67, 255),
         (126, 116, 76, 255),
         (65, 69, 55, 255),
     ]
-    for row, y in enumerate(range(23, 43, 7)):
+    for row, y in enumerate(range(8, 56, 8)):
         offset = 0 if row % 2 == 0 else 7
-        for x in range(5 - offset, 60, 14):
+        for x in range(6 - offset, 59, 14):
             fill = colors[(row + x // 14) % len(colors)]
-            rect(d, (x, y, min(59, x + 13), y + 6), fill)
-            rect(d, (x, y, min(59, x + 13), y + 1), (158, 145, 91, 255))
+            rect(d, (x, y, min(57, x + 13), y + 7), fill)
+            rect(d, (x, y, min(57, x + 13), y + 1), (158, 145, 91, 255))
     img.save(ASSET_DIR / "terrain" / "wall.png")
     print(f"[write] {(ASSET_DIR / 'terrain' / 'wall.png').relative_to(ROOT)}")
 

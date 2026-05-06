@@ -58,7 +58,23 @@ fn validate_archetype(archetype : ArchetypeDef) -> String? {
     None => ()
   }
   match
+    validate_anim(
+      archetype.sprites.up_right,
+      "archetype '\{archetype.id}' up_right",
+    ) {
+    Some(error) => return Some(error)
+    None => ()
+  }
+  match
     validate_anim(archetype.sprites.down, "archetype '\{archetype.id}' down") {
+    Some(error) => return Some(error)
+    None => ()
+  }
+  match
+    validate_anim(
+      archetype.sprites.down_right,
+      "archetype '\{archetype.id}' down_right",
+    ) {
     Some(error) => return Some(error)
     None => ()
   }
@@ -67,7 +83,28 @@ fn validate_archetype(archetype : ArchetypeDef) -> String? {
     Some(error) => return Some(error)
     None => ()
   }
-  validate_anim(archetype.sprites.right, "archetype '\{archetype.id}' right")
+  match
+    validate_anim(
+      archetype.sprites.down_left,
+      "archetype '\{archetype.id}' down_left",
+    ) {
+    Some(error) => return Some(error)
+    None => ()
+  }
+  match
+    validate_anim(archetype.sprites.right, "archetype '\{archetype.id}' right") {
+    Some(error) => return Some(error)
+    None => ()
+  }
+  match
+    validate_anim(
+      archetype.sprites.up_left,
+      "archetype '\{archetype.id}' up_left",
+    ) {
+    Some(error) => return Some(error)
+    None => ()
+  }
+  None
 }
 
 ///|

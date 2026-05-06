@@ -63,9 +63,13 @@ fn test_plugin() -> TopDownPluginDef {
   })
   let sprites : @topdown_platform.DirectionalSprites = {
     up: strip("assets/assassin/Back - Running.png"),
+    up_right: strip("assets/assassin/UpRight - Running.png"),
     down: strip("assets/assassin/Front - Running.png"),
+    down_right: strip("assets/assassin/DownRight - Running.png"),
     left: strip("assets/assassin/Left - Running.png"),
+    down_left: strip("assets/assassin/DownLeft - Running.png"),
     right: strip("assets/assassin/Right - Running.png"),
+    up_left: strip("assets/assassin/UpLeft - Running.png"),
   }
   {
     meta: { id: "dialogue_test", name: "Dialogue Test", version: "0.1.0" },

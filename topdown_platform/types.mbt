@@ -16,9 +16,13 @@ pub(all) enum TileKind {
 ///|
 pub(all) enum Facing {
   Up
+  UpRight
   Down
+  DownRight
   Left
+  DownLeft
   Right
+  UpLeft
 } derive(Eq, Debug)
 
 ///|
@@ -67,9 +71,13 @@ pub(all) struct SpriteAnimDef {
 ///|
 pub(all) struct DirectionalSprites {
   up : SpriteAnimDef
+  up_right : SpriteAnimDef
   down : SpriteAnimDef
+  down_right : SpriteAnimDef
   left : SpriteAnimDef
+  down_left : SpriteAnimDef
   right : SpriteAnimDef
+  up_left : SpriteAnimDef
 }
 
 ///|

@@ -20,8 +20,9 @@ Each actor has a single canonical role sheet under:
 - `assets/jackal/roles/vehicle.png`
 - `assets/jackal/roles/fort.png`
 
-Each role sheet is a `128x128` transparent PNG: four direction rows (`up`,
-`right`, `down`, `left`) by four animation columns.
+Each role sheet is a `128x256` transparent PNG: eight direction rows (`up`,
+`up_right`, `right`, `down_right`, `down`, `down_left`, `left`, `up_left`) by
+four animation columns.
 
 ## Runtime strips
 

@@ -20,9 +20,13 @@ fn campaign_test_strip(path : String) -> @topdown_platform.SpriteAnimDef {
 fn campaign_test_sprites() -> @topdown_platform.DirectionalSprites {
   {
     up: campaign_test_strip("assets/assassin/Back - Running.png"),
+    up_right: campaign_test_strip("assets/assassin/UpRight - Running.png"),
     down: campaign_test_strip("assets/assassin/Front - Running.png"),
+    down_right: campaign_test_strip("assets/assassin/DownRight - Running.png"),
     left: campaign_test_strip("assets/assassin/Left - Running.png"),
+    down_left: campaign_test_strip("assets/assassin/DownLeft - Running.png"),
     right: campaign_test_strip("assets/assassin/Right - Running.png"),
+    up_left: campaign_test_strip("assets/assassin/UpLeft - Running.png"),
   }
 }
 

@@ -444,9 +444,13 @@ pub fn movement_collision_system(_world : @ecs.World) -> Unit {
 fn player_forward(player : ActorRuntime) -> @math.Vec2 {
   match player.facing {
     @topdown_platform.Up => @math.Vec2(0.0, -1.0)
+    @topdown_platform.UpRight => @math.Vec2(0.707, -0.707)
     @topdown_platform.Down => @math.Vec2(0.0, 1.0)
+    @topdown_platform.DownRight => @math.Vec2(0.707, 0.707)
     @topdown_platform.Left => @math.Vec2(-1.0, 0.0)
+    @topdown_platform.DownLeft => @math.Vec2(-0.707, 0.707)
     @topdown_platform.Right => @math.Vec2(1.0, 0.0)
+    @topdown_platform.UpLeft => @math.Vec2(-0.707, -0.707)
   }
 }
 

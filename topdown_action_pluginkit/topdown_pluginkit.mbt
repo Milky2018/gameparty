@@ -31,9 +31,17 @@ pub fn humanoid_running_sprites(
 ) -> @topdown_platform.DirectionalSprites {
   {
     up: sprite_strip("\{asset_dir}/Back - Running.png", scale~, fps~),
+    up_right: sprite_strip("\{asset_dir}/UpRight - Running.png", scale~, fps~),
     down: sprite_strip("\{asset_dir}/Front - Running.png", scale~, fps~),
+    down_right: sprite_strip(
+      "\{asset_dir}/DownRight - Running.png",
+      scale~,
+      fps~,
+    ),
     left: sprite_strip("\{asset_dir}/Left - Running.png", scale~, fps~),
+    down_left: sprite_strip("\{asset_dir}/DownLeft - Running.png", scale~, fps~),
     right: sprite_strip("\{asset_dir}/Right - Running.png", scale~, fps~),
+    up_left: sprite_strip("\{asset_dir}/UpLeft - Running.png", scale~, fps~),
   }
 }
 

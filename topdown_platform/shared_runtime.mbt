@@ -226,9 +226,13 @@ pub fn sprite_anim_for_facing(
 ) -> SpriteAnimDef {
   match facing {
     Up => sprites.up
+    UpRight => sprites.up_right
     Down => sprites.down
+    DownRight => sprites.down_right
     Left => sprites.left
+    DownLeft => sprites.down_left
     Right => sprites.right
+    UpLeft => sprites.up_left
   }
 }
 
