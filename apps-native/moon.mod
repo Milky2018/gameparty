@@ -4,8 +4,8 @@ version = "0.1.0"
 
 import {
   "Milky2018/gameparty@0.1.0",
-  "Milky2018/selene@0.34.0",
-  "Milky2018/selene_raylib@0.34.0",
+  "Milky2018/selene@0.34.1",
+  "Milky2018/selene_raylib@0.34.1",
   "tonyfettes/raylib@0.3.1",
 }
 
