@@ -19,7 +19,7 @@ fn campaign_sync_text(
   if cache.val == value {
     return
   }
-  @ui.texts().set(entity, @ui.Text::new(value))
+  @ui.texts().set(entity, @ui.Text::Text(value))
   cache.val = value
 }
 
@@ -154,7 +154,7 @@ fn campaign_sync_follower_visual(
 ///|
 fn campaign_spawn_enemy(archetype_id : String, position : @math.Vec2) -> Unit {
   let archetype = campaign_archetype_by_id(archetype_id)
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   campaign_dynamic_entities.push(entity)
   campaign_enemy_runtimes.push({
     entity,
@@ -179,7 +179,7 @@ fn campaign_spawn_projectile(
   direction : @math.Vec2,
   skill : SkillDef,
 ) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   campaign_dynamic_entities.push(entity)
   let velocity = direction.scalar_mul(skill.projectile_speed)
   let position = origin + direction.scalar_mul(24.0)
@@ -207,7 +207,7 @@ fn campaign_spawn_projectile(
 ///|
 fn campaign_spawn_followers(count : Int) -> Unit {
   for _ in 0..<count {
-    let entity = @entity.Entity::new()
+    let entity = @entity.Entity::Entity()
     campaign_dynamic_entities.push(entity)
     campaign_follower_runtimes.push({
       entity,

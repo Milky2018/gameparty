@@ -54,7 +54,7 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
       atlas_max = atlas_index
     }
     positions.push(
-      @math.Vec3::new(
+      @math.Vec3::Vec3(
         mesh.positions[pidx].to_double() - center_offset.x,
         mesh.positions[pidx + 1].to_double() - center_offset.y,
         mesh.positions[pidx + 2].to_double() - center_offset.z,
@@ -75,7 +75,7 @@ fn mesh_asset_from_mesh_data(mesh : @block.MeshData) -> @render3d.MeshAsset {
     }
     uvs.push(uv)
     normals.push(
-      @math.Vec3::new(
+      @math.Vec3::Vec3(
         mesh.normals[pidx].to_double(),
         mesh.normals[pidx + 1].to_double(),
         mesh.normals[pidx + 2].to_double(),

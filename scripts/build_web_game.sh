@@ -12,25 +12,25 @@ fi
 GAME="${1#apps-web/}"
 MODE="debug"
 MOON_ARGS=(
+  -C
+  apps-web
   run
-  --manifest-path
-  apps-web/moon.mod.json
   --target
   js
   --build-only
-  "apps-web/${GAME}"
+  "${GAME}"
 )
 if [[ "${2:-}" == "--release" ]]; then
   MODE="release"
   MOON_ARGS=(
+    -C
+    apps-web
     run
-    --manifest-path
-    apps-web/moon.mod.json
     --target
     js
     --build-only
     --release
-    "apps-web/${GAME}"
+    "${GAME}"
   )
 fi
 

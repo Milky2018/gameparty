@@ -58,25 +58,25 @@ fn ensure_runtime_storage() -> Unit {
   if bricks.is_empty() {
     for _ in 0..<MAX_BRICK_COUNT {
       bricks.push(default_brick_state())
-      brick_entities.push(@entity.Entity::new())
+      brick_entities.push(@entity.Entity::Entity())
     }
   }
   if balls.is_empty() {
     for _ in 0..<MAX_BALLS {
       balls.push(default_ball_state())
-      ball_entities.push(@entity.Entity::new())
+      ball_entities.push(@entity.Entity::Entity())
     }
   }
   if powerups.is_empty() {
     for _ in 0..<MAX_POWERUPS {
       powerups.push(default_powerup_state())
-      powerup_entities.push(@entity.Entity::new())
+      powerup_entities.push(@entity.Entity::Entity())
     }
   }
   if laser_shots.is_empty() {
     for _ in 0..<MAX_LASERS {
       laser_shots.push(default_laser_state())
-      laser_entities.push(@entity.Entity::new())
+      laser_entities.push(@entity.Entity::Entity())
     }
   }
 }

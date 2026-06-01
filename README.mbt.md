@@ -64,23 +64,23 @@ This repository currently contains these playable prototypes and ports:
 Run an individual game directly:
 
 ```bash
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/thetawave
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/pacman3d
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/angryrabbits
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/bombman
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/mooncraft
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/coinpusher3d
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/tankbattle
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/supermario
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/celeste
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/plantvszombies
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/minesweeper
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/breakout
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/snake
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/jackal
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/kofarena
-moon run --manifest-path apps-native/moon.mod.json --target native apps-native/topdown_rogue_proto
+moon -C apps-native run --target native thetawave
+moon -C apps-native run --target native pacman3d
+moon -C apps-native run --target native angryrabbits
+moon -C apps-native run --target native bombman
+moon -C apps-native run --target native mooncraft
+moon -C apps-native run --target native coinpusher3d
+moon -C apps-native run --target native tankbattle
+moon -C apps-native run --target native supermario
+moon -C apps-native run --target native celeste
+moon -C apps-native run --target native plantvszombies
+moon -C apps-native run --target native bejeweled
+moon -C apps-native run --target native minesweeper
+moon -C apps-native run --target native breakout
+moon -C apps-native run --target native snake
+moon -C apps-native run --target native jackal
+moon -C apps-native run --target native kofarena
+moon -C apps-native run --target native topdown_rogue_proto
 ```
 
 ## Web (MoonBit JS)
@@ -114,7 +114,7 @@ cd dist/web && python3 -m http.server 4173
 Notes:
 
 - Gallery and deploy artifacts now live under `dist/web`.
-- The web pipeline uses `moon run --manifest-path apps-web/moon.mod.json --target js --build-only ...`.
+- The web pipeline uses `moon -C apps-web run --target js --build-only ...`.
 - `bombman` keeps the multiplayer menu entry visible on web, but selecting it shows a “not supported on web yet” stub instead of loading native networking.
 
 `bombman` netplay is now fully menu-driven (no `BOMBMAN_NET_*` env vars):
@@ -130,17 +130,17 @@ Lobby shows both detected LAN IPv4 and `127.0.0.1` for local testing.
 
 ```bash
 moon check --target js bejeweled bombman mooncraft topdown_platform
-moon check --manifest-path apps-native/moon.mod.json --target native apps-native/bejeweled
-moon check --manifest-path apps-web/moon.mod.json --target js apps-web/bejeweled
+moon -C apps-native check --target native bejeweled
+moon -C apps-web check --target js bejeweled
 moon check --target native minesweeper
-moon check --manifest-path apps-native/moon.mod.json --target native apps-native/minesweeper
-moon check --manifest-path apps-web/moon.mod.json --target js apps-web/minesweeper
+moon -C apps-native check --target native minesweeper
+moon -C apps-web check --target js minesweeper
 moon check --target native breakout
-moon check --manifest-path apps-native/moon.mod.json --target native apps-native/breakout
-moon check --manifest-path apps-web/moon.mod.json --target js apps-web/breakout
+moon -C apps-native check --target native breakout
+moon -C apps-web check --target js breakout
 moon check --target native snake
-moon check --manifest-path apps-native/moon.mod.json --target native apps-native/snake
-moon check --manifest-path apps-web/moon.mod.json --target js apps-web/snake
+moon -C apps-native check --target native snake
+moon -C apps-web check --target js snake
 moon test
 ```
 

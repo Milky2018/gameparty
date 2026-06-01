@@ -303,19 +303,19 @@ let house_entities : Array[@entity.Entity] = []
 let plant_overlay_entities : Array[@entity.Entity] = []
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_entity : @entity.Entity = @entity.Entity::new()
+let hud_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hint_entity : @entity.Entity = @entity.Entity::new()
+let hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let result_entity : @entity.Entity = @entity.Entity::new()
+let result_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let fps_entity : @entity.Entity = @entity.Entity::new()
+let fps_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let sun_mesh_handle : Ref[@mesh2d.Mesh2dHandle?] = { val: None }

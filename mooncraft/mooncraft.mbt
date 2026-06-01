@@ -6,7 +6,7 @@ pub fn run() -> Unit {
   let viewport_width = if capture_mode { 560.0 } else { VIEWPORT_WIDTH }
   let viewport_height = if capture_mode { 315.0 } else { VIEWPORT_HEIGHT }
   let target_fps = if capture_mode { 66U } else { FPS }
-  let app = @app.App::new()
+  let app = @app.App::App()
     .with_viewport_width(viewport_width)
     .with_viewport_height(viewport_height)
     .with_zoom(1.0)

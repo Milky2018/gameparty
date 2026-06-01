@@ -72,15 +72,15 @@ test "half_dots_collected follows upstream threshold semantics" {
   dots.clear()
 
   dots.push({
-    entity: @entity.Entity::new(),
-    minimap_entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
+    minimap_entity: @entity.Entity::Entity(),
     x: 0.0,
     z: 0.0,
     collected: true,
   })
   dots.push({
-    entity: @entity.Entity::new(),
-    minimap_entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
+    minimap_entity: @entity.Entity::Entity(),
     x: 1.0,
     z: 0.0,
     collected: false,
@@ -111,7 +111,7 @@ test "minimap ghost markers stay hidden until half dots are collected" {
   dots.clear()
   ghosts.clear()
 
-  let ghost_marker = @entity.Entity::new()
+  let ghost_marker = @entity.Entity::Entity()
   setup_color_rect_entity(
     ghost_marker,
     @math.Vec2(2.0, 2.0),
@@ -120,11 +120,11 @@ test "minimap ghost markers stay hidden until half dots are collected" {
     1,
   )
   ghosts.push({
-    entity: @entity.Entity::new(),
-    light_entity: @entity.Entity::new(),
-    spot_ray_entity: @entity.Entity::new(),
-    left_eye_entity: @entity.Entity::new(),
-    right_eye_entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
+    light_entity: @entity.Entity::Entity(),
+    spot_ray_entity: @entity.Entity::Entity(),
+    left_eye_entity: @entity.Entity::Entity(),
+    right_eye_entity: @entity.Entity::Entity(),
     minimap_entity: ghost_marker,
     x: world_x_for_tile(2),
     z: world_z_for_tile(2),
@@ -133,15 +133,15 @@ test "minimap ghost markers stay hidden until half dots are collected" {
     ghost_type: Normal,
   })
   dots.push({
-    entity: @entity.Entity::new(),
-    minimap_entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
+    minimap_entity: @entity.Entity::Entity(),
     x: 0.0,
     z: 0.0,
     collected: false,
   })
   dots.push({
-    entity: @entity.Entity::new(),
-    minimap_entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
+    minimap_entity: @entity.Entity::Entity(),
     x: 1.0,
     z: 0.0,
     collected: false,

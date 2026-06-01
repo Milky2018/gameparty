@@ -37,7 +37,7 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 ///|
 fn ensure_entity_list(entities : Array[@entity.Entity], count : Int) -> Unit {
   while entities.length() < count {
-    entities.push(@entity.Entity::new())
+    entities.push(@entity.Entity::Entity())
   }
   for entity in entities {
     ensure_entity_alive(entity)
@@ -319,7 +319,7 @@ fn sprite_from_atlas(
 
 ///|
 fn physics_filter() -> @physics2d.CollisionFilter {
-  @physics2d.CollisionFilter::all(@physics2d.CollisionGroup::new())
+  @physics2d.CollisionFilter::all(@physics2d.collision_group())
 }
 
 ///|
@@ -803,7 +803,7 @@ fn refresh_aim_dots() -> Unit {
       @math.Vec2(0.0, GRAVITY * 0.5 * time * time)
     @mesh2d.mesh2ds().set(
       entity,
-      @mesh2d.Mesh2d::new(circle_mesh_handle(AIM_DOT_RADIUS)),
+      @mesh2d.Mesh2d::Mesh2d(circle_mesh_handle(AIM_DOT_RADIUS)),
     )
     @material2d.mesh_material2ds().set(
       entity,
@@ -830,11 +830,14 @@ fn set_text_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
-  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.texts().set(entity, @ui.Text::Text(text))
   @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
-  @ui.text_layouts().set(entity, @ui.TextLayout::new(align=Left, baseline=Top))
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @ui.text_layouts().set(
+    entity,
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top),
+  )
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
 }
@@ -1081,7 +1084,7 @@ fn sync_static_visuals() -> Unit {
 
   @mesh2d.mesh2ds().set(
     hill_entity,
-    @mesh2d.Mesh2d::new(circle_mesh_handle(hill.radius)),
+    @mesh2d.Mesh2d::Mesh2d(circle_mesh_handle(hill.radius)),
   )
   @material2d.mesh_material2ds().set(
     hill_entity,
@@ -1413,11 +1416,11 @@ fn reset_level() -> Unit {
 fn setup_scene_if_needed() -> Unit {
   if !scene_initialized.val {
     register_scene_entities()
-    @camera.cameras().set(camera_anchor_entity, @camera.Camera::new())
-    @camera.camera2ds().set(camera_anchor_entity, @camera.Camera2d::new())
+    @camera.cameras().set(camera_anchor_entity, @camera.Camera::Camera())
+    @camera.camera2ds().set(camera_anchor_entity, @camera.Camera2d::Camera2d())
     @camera.orthographic_projections().set(
       camera_anchor_entity,
-      @camera.OrthographicProjection::new(),
+      @camera.OrthographicProjection::OrthographicProjection(),
     )
     set_camera_anchor_position(@math.Vec2::zero())
     scene_initialized.val = true

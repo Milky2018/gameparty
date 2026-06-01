@@ -24,7 +24,7 @@ fn runtime_qa_enabled() -> Bool {
 pub fn run() -> Unit {
   @host.prepare_run(false)
   let target_fps = if runtime_qa_enabled() { 64U } else { FPS }
-  let app = @app.App::new()
+  let app = @app.App::App()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(1.0)

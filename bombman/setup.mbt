@@ -48,7 +48,7 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 fn ensure_tile_entities() -> Unit {
   let needed = GRID_WIDTH * GRID_HEIGHT
   while tile_entities.length() < needed {
-    tile_entities.push(@entity.Entity::new())
+    tile_entities.push(@entity.Entity::Entity())
   }
 }
 
@@ -156,9 +156,9 @@ fn ensure_bombman_animation_assets_once() -> Unit {
         out_tangent: None,
       })
     }
-    let clip = @animation.AnimationClip::new(anim_clip_name(clip_id))
+    let clip = @animation.AnimationClip::AnimationClip(anim_clip_name(clip_id))
     clip.add_curve_to_target(
-      @animation.AnimationTargetId::new("self"),
+      @animation.AnimationTargetId::from_names(["self"]),
       @animation.VariableCurve::scalar(
         @animation.texture_atlas_index_field(),
         keys,
@@ -201,17 +201,20 @@ fn ensure_entity_animation_binding(entity : @entity.Entity) -> Unit {
       @animation.animation_graph_handles().set(entity, graph_handle)
       @animation.animation_target_ids().set(
         entity,
-        @animation.AnimationTargetId::new("self"),
+        @animation.AnimationTargetId::from_names(["self"]),
       )
-      @animation.animated_bys().set(entity, @animation.AnimatedBy::new(entity))
+      @animation.animated_bys().set(
+        entity,
+        @animation.AnimatedBy::AnimatedBy(entity),
+      )
       ignore(
         @animation.animation_players().get_or_init(entity, fn() {
-          @animation.AnimationPlayer::new()
+          @animation.AnimationPlayer::AnimationPlayer()
         }),
       )
       ignore(
         @animation.animation_transitions().get_or_init(entity, fn() {
-          @animation.AnimationTransitions::new()
+          @animation.AnimationTransitions::AnimationTransitions()
         }),
       )
     }
@@ -343,7 +346,7 @@ fn set_text_entity(
   if style_changed {
     @ui.text_fonts().set(
       entity,
-      @ui.TextFont::new(
+      @ui.TextFont::TextFont(
         family=BOMBMAN_FONT_FAMILY,
         size=parse_font_size_px(font),
       ),
@@ -351,9 +354,9 @@ fn set_text_entity(
     @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
     @ui.text_layouts().set(
       entity,
-      @ui.TextLayout::new(align=Left, baseline=Top),
+      @ui.TextLayout::TextLayout(align=Left, baseline=Top),
     )
-    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
     @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
     text_style_cache.set(entity, style_key)
   }
@@ -362,7 +365,7 @@ fn set_text_entity(
     None => true
   }
   if content_changed {
-    @ui.texts().set(entity, @ui.Text::new(text))
+    @ui.texts().set(entity, @ui.Text::Text(text))
     text_content_cache.set(entity, text)
   }
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
@@ -387,7 +390,7 @@ fn set_text_entity_center(
   if style_changed {
     @ui.text_fonts().set(
       entity,
-      @ui.TextFont::new(
+      @ui.TextFont::TextFont(
         family=BOMBMAN_FONT_FAMILY,
         size=parse_font_size_px(font),
       ),
@@ -395,9 +398,9 @@ fn set_text_entity_center(
     @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
     @ui.text_layouts().set(
       entity,
-      @ui.TextLayout::new(align=Center, baseline=Top),
+      @ui.TextLayout::TextLayout(align=Center, baseline=Top),
     )
-    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
     @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.5)))
     text_style_cache.set(entity, style_key)
   }
@@ -406,7 +409,7 @@ fn set_text_entity_center(
     None => true
   }
   if content_changed {
-    @ui.texts().set(entity, @ui.Text::new(text))
+    @ui.texts().set(entity, @ui.Text::Text(text))
     text_content_cache.set(entity, text)
   }
   @transform.transforms().set(entity, entity_transform_2d(position, zindex))
@@ -500,7 +503,7 @@ fn set_animated_atlas_entity_top_left(
     None =>
       @sprite.Sprite::from_atlas_image(
         image,
-        @sprite.TextureAtlas::new(
+        @sprite.TextureAtlas::TextureAtlas(
           layout,
           index=anim_clip_first_tile_index(clip_id),
         ),
@@ -513,7 +516,7 @@ fn set_animated_atlas_entity_top_left(
     Some(texture_atlas) => Some({ ..texture_atlas, layout, })
     None =>
       Some(
-        @sprite.TextureAtlas::new(
+        @sprite.TextureAtlas::TextureAtlas(
           layout,
           index=anim_clip_first_tile_index(clip_id),
         ),
@@ -559,7 +562,10 @@ fn set_circle_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   show_entity(entity)
-  @mesh2d.mesh2ds().set(entity, @mesh2d.Mesh2d::new(circle_mesh_handle(radius)))
+  @mesh2d.mesh2ds().set(
+    entity,
+    @mesh2d.Mesh2d::Mesh2d(circle_mesh_handle(radius)),
+  )
   @material2d.mesh_material2ds().set(
     entity,
     @material2d.MeshMaterial2d::from_color_material(
@@ -1010,7 +1016,7 @@ fn load_level(level_index : Int, mode : GameMode) -> Unit {
             let direction = default_enemy_direction()
             let facing = Right
             enemies.push({
-              entity: @entity.Entity::new(),
+              entity: @entity.Entity::Entity(),
               cell_x: x,
               cell_y: y,
               center: cell_center(x, y),
@@ -1233,7 +1239,7 @@ fn spawn_soft_wall_break(x : Int, y : Int) -> Unit {
     return
   }
   soft_wall_breaks.push({
-    entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
     cell_x: x,
     cell_y: y,
     timer: SOFT_WALL_BREAK_DURATION,
@@ -1262,7 +1268,7 @@ fn spawn_flame(x : Int, y : Int, kind : FlameKind) -> Unit {
     }
     None =>
       flames.push({
-        entity: @entity.Entity::new(),
+        entity: @entity.Entity::Entity(),
         cell_x: x,
         cell_y: y,
         kind,
@@ -1280,8 +1286,8 @@ fn spawn_item(x : Int, y : Int, kind : ItemKind) -> Unit {
     return
   }
   items.push({
-    entity: @entity.Entity::new(),
-    label_entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
+    label_entity: @entity.Entity::Entity(),
     cell_x: x,
     cell_y: y,
     kind,
@@ -1376,7 +1382,7 @@ fn place_bomb_for_player(index : Int) -> Unit {
     return
   }
   bombs.push({
-    entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
     cell_x: bomb_x,
     cell_y: bomb_y,
     timer: BOMB_FUSE_TIME,

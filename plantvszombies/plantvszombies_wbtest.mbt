@@ -61,7 +61,7 @@ test "advance zombies declares a loss when the house is reached" {
     hp: 1,
     speed: 0.0,
     chew_timer: 0.0,
-    entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
     alive: true,
   })
   advance_zombies(0.0)

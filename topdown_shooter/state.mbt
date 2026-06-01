@@ -234,22 +234,22 @@ let capture_done : Ref[Bool] = { val: false }
 let capture_timer : Ref[Double] = { val: 0.0 }
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_entity : @entity.Entity = @entity.Entity::new()
+let hud_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let message_entity : @entity.Entity = @entity.Entity::new()
+let message_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let world_bg_entity : @entity.Entity = @entity.Entity::new()
+let world_bg_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let top_panel_entity : @entity.Entity = @entity.Entity::new()
+let top_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let bottom_panel_entity : @entity.Entity = @entity.Entity::new()
+let bottom_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let title_cache : Ref[String] = { val: "" }

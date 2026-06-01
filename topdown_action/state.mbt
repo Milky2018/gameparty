@@ -244,19 +244,19 @@ let dynamic_entities : Array[@entity.Entity] = []
 let image_cache : Map[String, @asset.ImageHandle] = Map::new()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_entity : @entity.Entity = @entity.Entity::new()
+let hud_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let message_entity : @entity.Entity = @entity.Entity::new()
+let message_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let attack_flash_entity : @entity.Entity = @entity.Entity::new()
+let attack_flash_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let world_bg_entity : @entity.Entity = @entity.Entity::new()
+let world_bg_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let topdown_font_registered : Ref[Bool] = { val: false }

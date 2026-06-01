@@ -86,7 +86,10 @@ fn set_circle_entity(
 ) -> Unit {
   ensure_entity_alive(entity)
   @sprite.sprites().remove(entity)
-  @mesh2d.mesh2ds().set(entity, @mesh2d.Mesh2d::new(circle_mesh_handle(radius)))
+  @mesh2d.mesh2ds().set(
+    entity,
+    @mesh2d.Mesh2d::Mesh2d(circle_mesh_handle(radius)),
+  )
   @material2d.mesh_material2ds().set(
     entity,
     @material2d.MeshMaterial2d::from_color_material(
@@ -318,7 +321,7 @@ fn spawn_projectile(
     } else {
       vec_normalize(rotate_vector(dir, angle))
     }
-    let entity = @entity.Entity::new()
+    let entity = @entity.Entity::Entity()
     dynamic_entities.push(entity)
     projectile_runtimes.push({
       entity,

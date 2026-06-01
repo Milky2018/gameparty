@@ -49,7 +49,7 @@ fn drag_distance(center : @math.Vec2) -> Double {
 }
 
 ///|
-let contact_event_reader : @event.EventReader[@physics2d.ContactEvent] = @event.EventReader::new()
+let contact_event_reader : @event.EventReader[@physics2d.ContactEvent] = @event.EventReader::EventReader()
 
 ///|
 fn circle_intersects_circle(

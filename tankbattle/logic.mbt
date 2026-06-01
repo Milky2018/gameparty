@@ -3,32 +3,32 @@ fn ensure_runtime_storage() -> Unit {
   if terrain_tiles.is_empty() {
     for _ in 0..<(STAGE_COLS * STAGE_ROWS) {
       terrain_tiles.push(Empty)
-      terrain_entities.push(@entity.Entity::new())
-      terrain_overlay_entities.push(@entity.Entity::new())
+      terrain_entities.push(@entity.Entity::Entity())
+      terrain_overlay_entities.push(@entity.Entity::Entity())
     }
   }
   if enemy_tanks.is_empty() {
     for _ in 0..<MAX_ACTIVE_ENEMIES {
       enemy_tanks.push(default_enemy_state())
-      enemy_entities.push(@entity.Entity::new())
-      enemy_effect_entities.push(@entity.Entity::new())
+      enemy_entities.push(@entity.Entity::Entity())
+      enemy_effect_entities.push(@entity.Entity::Entity())
     }
   }
   if projectiles.is_empty() {
     for _ in 0..<MAX_PROJECTILES {
       projectiles.push(default_projectile_state())
-      projectile_entities.push(@entity.Entity::new())
+      projectile_entities.push(@entity.Entity::Entity())
     }
   }
   if explosions.is_empty() {
     for _ in 0..<MAX_EXPLOSIONS {
       explosions.push(default_explosion_state())
-      explosion_entities.push(@entity.Entity::new())
+      explosion_entities.push(@entity.Entity::Entity())
     }
   }
   if queue_icon_entities.is_empty() {
     for _ in 0..<ENEMIES_PER_STAGE {
-      queue_icon_entities.push(@entity.Entity::new())
+      queue_icon_entities.push(@entity.Entity::Entity())
     }
   }
   if current_enemy_spawn_points.is_empty() {

@@ -143,7 +143,7 @@ enum GemKind {
 } derive(Eq, Hash, Debug)
 
 ///|
-pub impl Show for GemKind with output(self, logger) {
+pub impl Show for GemKind with fn output(self, logger) {
   let text = match self {
     Ruby => "Ruby"
     Emerald => "Emerald"
@@ -162,7 +162,7 @@ struct Cell {
 } derive(Eq, Hash, Debug)
 
 ///|
-pub impl Show for Cell with output(self, logger) {
+pub impl Show for Cell with fn output(self, logger) {
   logger.write_string("{row: \{self.row}, col: \{self.col}}")
 }
 
@@ -281,91 +281,91 @@ let game_state : GameState = {
 let rand : @random.Rand = @random.Rand::new()
 
 ///|
-let board_bg_entity : @entity.Entity = @entity.Entity::new()
+let board_bg_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_glow_outer_entity : @entity.Entity = @entity.Entity::new()
+let title_glow_outer_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_glow_inner_entity : @entity.Entity = @entity.Entity::new()
+let title_glow_inner_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let timer_panel_entity : @entity.Entity = @entity.Entity::new()
+let timer_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let timer_fx_entity : @entity.Entity = @entity.Entity::new()
+let timer_fx_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let timer_text_entity : @entity.Entity = @entity.Entity::new()
+let timer_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let score_panel_entity : @entity.Entity = @entity.Entity::new()
+let score_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let score_fx_entity : @entity.Entity = @entity.Entity::new()
+let score_fx_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let score_text_entity : @entity.Entity = @entity.Entity::new()
+let score_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let board_panel_entity : @entity.Entity = @entity.Entity::new()
+let board_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let flash_legend_panel_entity : @entity.Entity = @entity.Entity::new()
+let flash_legend_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let flash_legend_title_entity : @entity.Entity = @entity.Entity::new()
+let flash_legend_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let flash_legend_icon_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let flash_legend_aura_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let flash_legend_text_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
-let overlay_entity : @entity.Entity = @entity.Entity::new()
+let overlay_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let overlay_text_entity : @entity.Entity = @entity.Entity::new()
+let overlay_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let selected_frame_top_entity : @entity.Entity = @entity.Entity::new()
+let selected_frame_top_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let selected_frame_bottom_entity : @entity.Entity = @entity.Entity::new()
+let selected_frame_bottom_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let selected_frame_left_entity : @entity.Entity = @entity.Entity::new()
+let selected_frame_left_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let selected_frame_right_entity : @entity.Entity = @entity.Entity::new()
+let selected_frame_right_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let gem_entities : Array[@entity.Entity] = []

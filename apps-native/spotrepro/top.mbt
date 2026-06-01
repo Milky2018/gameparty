@@ -65,61 +65,61 @@ let stages : Array[Stage] = [
   {
     name: "north_noshadow",
     yaw: 0.0,
-    forward: @math.Vec3::new(0.0, 0.0, -1.0),
+    forward: @math.Vec3::Vec3(0.0, 0.0, -1.0),
     shadows: false,
   },
   {
     name: "south_noshadow",
     yaw: PI,
-    forward: @math.Vec3::new(0.0, 0.0, 1.0),
+    forward: @math.Vec3::Vec3(0.0, 0.0, 1.0),
     shadows: false,
   },
   {
     name: "west_noshadow",
     yaw: PI / 2.0,
-    forward: @math.Vec3::new(-1.0, 0.0, 0.0),
+    forward: @math.Vec3::Vec3(-1.0, 0.0, 0.0),
     shadows: false,
   },
   {
     name: "east_noshadow",
     yaw: -PI / 2.0,
-    forward: @math.Vec3::new(1.0, 0.0, 0.0),
+    forward: @math.Vec3::Vec3(1.0, 0.0, 0.0),
     shadows: false,
   },
   {
     name: "north_shadow",
     yaw: 0.0,
-    forward: @math.Vec3::new(0.0, 0.0, -1.0),
+    forward: @math.Vec3::Vec3(0.0, 0.0, -1.0),
     shadows: true,
   },
   {
     name: "south_shadow",
     yaw: PI,
-    forward: @math.Vec3::new(0.0, 0.0, 1.0),
+    forward: @math.Vec3::Vec3(0.0, 0.0, 1.0),
     shadows: true,
   },
   {
     name: "west_shadow",
     yaw: PI / 2.0,
-    forward: @math.Vec3::new(-1.0, 0.0, 0.0),
+    forward: @math.Vec3::Vec3(-1.0, 0.0, 0.0),
     shadows: true,
   },
   {
     name: "east_shadow",
     yaw: -PI / 2.0,
-    forward: @math.Vec3::new(1.0, 0.0, 0.0),
+    forward: @math.Vec3::Vec3(1.0, 0.0, 0.0),
     shadows: true,
   },
 ]
 
 ///|
-let camera_entity : @entity.Entity = @entity.Entity::new()
+let camera_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let light_entity : @entity.Entity = @entity.Entity::new()
+let light_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let label_entity : @entity.Entity = @entity.Entity::new()
+let label_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let floor_mesh : Ref[@render3d.MeshHandle?] = { val: None }
@@ -166,7 +166,7 @@ fn color_rgba(r : UInt, g : UInt, b : UInt, a : Double) -> @render.Color {
 ///|
 fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
-    translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
+    translation: @math.Vec3::Vec3(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   }
@@ -180,14 +180,14 @@ fn register_assets_once() -> Unit {
   floor_mesh.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(FLOOR_SIZE, FLOOR_THICKNESS, FLOOR_SIZE),
+        @math.Vec3::Vec3(FLOOR_SIZE, FLOOR_THICKNESS, FLOOR_SIZE),
       ),
     ),
   )
   pillar_mesh.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(PILLAR_SIZE, PILLAR_HEIGHT, PILLAR_SIZE),
+        @math.Vec3::Vec3(PILLAR_SIZE, PILLAR_HEIGHT, PILLAR_SIZE),
       ),
     ),
   )
@@ -225,7 +225,7 @@ fn spawn_mesh(
   material : @render3d.MaterialHandle,
   translation : @math.Vec3,
 ) -> @entity.Entity {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @transform.transforms().set(entity, {
     translation,
     rotation: @math.Quat::identity(),
@@ -255,22 +255,22 @@ fn setup_scene_geometry() -> Unit {
     spawn_mesh(
       floor,
       floor_mat,
-      @math.Vec3::new(0.0, -FLOOR_THICKNESS / 2.0, 0.0),
+      @math.Vec3::Vec3(0.0, -FLOOR_THICKNESS / 2.0, 0.0),
     ),
   )
 
   for
     position in [
-      @math.Vec3::new(-PILLAR_OFFSET, PILLAR_HEIGHT / 2.0, 0.0),
-      @math.Vec3::new(PILLAR_OFFSET, PILLAR_HEIGHT / 2.0, 0.0),
-      @math.Vec3::new(0.0, PILLAR_HEIGHT / 2.0, -PILLAR_OFFSET),
-      @math.Vec3::new(0.0, PILLAR_HEIGHT / 2.0, PILLAR_OFFSET),
+      @math.Vec3::Vec3(-PILLAR_OFFSET, PILLAR_HEIGHT / 2.0, 0.0),
+      @math.Vec3::Vec3(PILLAR_OFFSET, PILLAR_HEIGHT / 2.0, 0.0),
+      @math.Vec3::Vec3(0.0, PILLAR_HEIGHT / 2.0, -PILLAR_OFFSET),
+      @math.Vec3::Vec3(0.0, PILLAR_HEIGHT / 2.0, PILLAR_OFFSET),
     ] {
     ignore(spawn_mesh(pillar, pillar_mat, position))
   }
 
   ignore(
-    spawn_mesh(marker, marker_mat, @math.Vec3::new(0.0, LIGHT_HEIGHT, 0.0)),
+    spawn_mesh(marker, marker_mat, @math.Vec3::Vec3(0.0, LIGHT_HEIGHT, 0.0)),
   )
 }
 
@@ -297,13 +297,13 @@ fn load_selected_stage() -> Stage {
 fn update_stage_visuals() -> Unit {
   let stage = selected_stage.val.unwrap()
   @transform.transforms().set(light_entity, {
-    translation: @math.Vec3::new(
+    translation: @math.Vec3::Vec3(
       stage.forward.x * LIGHT_FORWARD_OFFSET,
       LIGHT_HEIGHT,
       stage.forward.z * LIGHT_FORWARD_OFFSET,
     ),
     rotation: @math.Quat::from_axis_angle(
-      @math.Vec3::new(0.0, 1.0, 0.0),
+      @math.Vec3::Vec3(0.0, 1.0, 0.0),
       stage.yaw,
     ),
     scale: @math.Vec3::one(),
@@ -311,7 +311,7 @@ fn update_stage_visuals() -> Unit {
   @render3d.point_lights3d().remove(light_entity)
   @render3d.spot_lights3d().set(light_entity, {
     ..@render3d.default_spot_light3d(),
-    direction: @math.Vec3::new(0.0, -LIGHT_DOWNWARD, -LIGHT_FORWARD).normalize(),
+    direction: @math.Vec3::Vec3(0.0, -LIGHT_DOWNWARD, -LIGHT_FORWARD).normalize(),
     color: color_rgba(48U, 96U, 255U, 1.0),
     intensity: 3.0,
     range: LIGHT_SPOT_RANGE,
@@ -319,14 +319,14 @@ fn update_stage_visuals() -> Unit {
     inner_angle: LIGHT_SPOT_INNER_ANGLE,
     outer_angle: LIGHT_SPOT_OUTER_ANGLE,
   })
-  @ui.texts().set(label_entity, @ui.Text::new("spot repro: \{stage.name}"))
+  @ui.texts().set(label_entity, @ui.Text::Text("spot repro: \{stage.name}"))
   @ui.text_fonts().set(label_entity, @ui.TextFont::from_css("20px Arial"))
   @ui.text_colors().set(label_entity, @ui.TextColor::from_css("white"))
   @ui.text_layouts().set(
     label_entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(label_entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(label_entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(
     label_entity,
     @sprite.Anchor(@math.Vec2(-0.5, 0.5)),
@@ -356,9 +356,9 @@ fn setup_camera() -> Unit {
     enabled: true,
   })
   @transform.transforms().set(camera_entity, {
-    translation: @math.Vec3::new(0.0, 18.0, 0.0),
+    translation: @math.Vec3::Vec3(0.0, 18.0, 0.0),
     rotation: @math.Quat::from_axis_angle(
-      @math.Vec3::new(1.0, 0.0, 0.0),
+      @math.Vec3::Vec3(1.0, 0.0, 0.0),
       -1.5707963267948966,
     ),
     scale: @math.Vec3::one(),
@@ -397,7 +397,7 @@ fn runtime_system(_world : @ecs.World) -> Unit {
 
 ///|
 pub fn run() -> Unit {
-  let app = @app.App::new()
+  let app = @app.App::App()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(1.0)

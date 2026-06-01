@@ -213,11 +213,11 @@ fn setup_static_text() -> Unit {
   )
   @text2d.text_bounds().set(
     overlay_text_entity,
-    @text2d.TextBounds::new(VIEWPORT_WIDTH * 0.8, VIEWPORT_HEIGHT * 0.5),
+    @text2d.TextBounds::TextBounds(VIEWPORT_WIDTH * 0.8, VIEWPORT_HEIGHT * 0.5),
   )
   @ui.text_layouts().set(
     overlay_text_entity,
-    @ui.TextLayout::new(align=Center, baseline=Center, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Center, baseline=Center, wrap=WordWrap),
   )
   panel_entity(
     overlay_entity,

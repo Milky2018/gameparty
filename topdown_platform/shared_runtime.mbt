@@ -58,7 +58,7 @@ pub fn apply_text_entity(
   size : Int,
   font_family : String,
 ) -> Unit {
-  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.texts().set(entity, @ui.Text::Text(text))
   @ui.text_fonts().set(
     entity,
     @ui.TextFont::from_css("\{size}px \{font_family}"),
@@ -66,9 +66,9 @@ pub fn apply_text_entity(
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color_css))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_xy(x, y, z))
   set_entity_visible(entity, true)

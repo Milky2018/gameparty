@@ -273,7 +273,7 @@ fn debug_status_text() -> String {
       let local_spot_direction = @render3d.spot_lights3d()
         .get(ghost.light_entity)
         .map(fn(light) { light.direction })
-        .unwrap_or(@math.Vec3::new(0.0, -GHOST_SPOT_LIGHT_DOWNWARD, -1.0))
+        .unwrap_or(@math.Vec3::Vec3(0.0, -GHOST_SPOT_LIGHT_DOWNWARD, -1.0))
       let world_spot_direction = light_transform.rotation
         .rotate_vec3(local_spot_direction)
         .normalize()
@@ -299,7 +299,7 @@ fn debug_help_text() -> String {
 fn sync_debug_light_state() -> Unit {
   @render3d.directional_lights3d().set(light_entity, {
     ..@render3d.default_directional_light3d(),
-    direction: @math.Vec3::new(-0.45, -1.0, -0.3),
+    direction: @math.Vec3::Vec3(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
     intensity: if debug_mode_allows_directional() {
       DIRECTIONAL_LIGHT_INTENSITY

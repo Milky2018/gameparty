@@ -18,7 +18,7 @@ fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 ///|
 fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
-    translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
+    translation: @math.Vec3::Vec3(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   }
@@ -34,14 +34,14 @@ fn set_text_entity(
   zindex? : Int = UI_ZINDEX,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.texts().set(entity, @ui.Text::Text(content))
   @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, zindex))
   set_entity_visibility(entity, true)
@@ -84,7 +84,7 @@ fn look_rotation(from : @math.Vec3, to : @math.Vec3) -> @math.Quat {
   @math.Quat::from_basis(
     right,
     up,
-    @math.Vec3::new(-forward.x, -forward.y, -forward.z),
+    @math.Vec3::Vec3(-forward.x, -forward.y, -forward.z),
   )
 }
 
@@ -100,11 +100,8 @@ fn assign_static_body(
     entity,
     @physics3d.Collider::cuboid(size.scalar_mul(0.5)),
   )
-  @physics3d.frictions().set(entity, @physics3d.Friction::new(friction))
-  @physics3d.restitutions().set(
-    entity,
-    @physics3d.Restitution::new(restitution),
-  )
+  @physics3d.frictions().set(entity, @physics3d.Friction(friction))
+  @physics3d.restitutions().set(entity, @physics3d.Restitution(restitution))
 }
 
 ///|
@@ -118,14 +115,14 @@ fn register_render_assets_once() -> Unit {
   table_mesh_handle.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(BOARD_WIDTH, BOARD_THICKNESS, BOARD_LENGTH),
+        @math.Vec3::Vec3(BOARD_WIDTH, BOARD_THICKNESS, BOARD_LENGTH),
       ),
     ),
   )
   pusher_mesh_handle.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(PUSHER_WIDTH, PUSHER_HEIGHT, PUSHER_DEPTH),
+        @math.Vec3::Vec3(PUSHER_WIDTH, PUSHER_HEIGHT, PUSHER_DEPTH),
       ),
     ),
   )
@@ -217,7 +214,7 @@ fn spawn_mesh_entity(
   cast_shadows? : Bool = false,
   receive_shadows? : Bool = true,
 ) -> @entity.Entity {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @transform.transforms().set(
     entity,
     world_transform(translation, rotation, scale),
@@ -275,7 +272,7 @@ fn setup_camera_and_lighting() -> Unit {
 
   @render3d.directional_lights3d().set(light_entity, {
     ..@render3d.default_directional_light3d(),
-    direction: @math.Vec3::new(-0.24, -1.0, -0.31),
+    direction: @math.Vec3::Vec3(-0.24, -1.0, -0.31),
     color: color_rgba(255U, 247U, 230U, 1.0),
     intensity: 0.7,
     shadows: false,
@@ -399,7 +396,7 @@ fn spawn_board_scene() -> Unit {
   @transform.transforms().set(
     table_entity,
     world_transform(
-      @math.Vec3::new(0.0, BOARD_CENTER_Y, 0.0),
+      @math.Vec3::Vec3(0.0, BOARD_CENTER_Y, 0.0),
       board_rotation,
       @math.Vec3::one(),
     ),
@@ -413,7 +410,7 @@ fn spawn_board_scene() -> Unit {
   })
   assign_static_body(
     table_entity,
-    @math.Vec3::new(BOARD_WIDTH, BOARD_THICKNESS, BOARD_LENGTH),
+    @math.Vec3::Vec3(BOARD_WIDTH, BOARD_THICKNESS, BOARD_LENGTH),
     0.9,
     0.08,
   )
@@ -422,8 +419,8 @@ fn spawn_board_scene() -> Unit {
   let cabinet_body = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     cabinet_material_handle.val.unwrap(),
-    @math.Vec3::new(0.0, BOARD_CENTER_Y - 1.25, 0.0),
-    scale=@math.Vec3::new(1.22, 4.2, 1.14),
+    @math.Vec3::Vec3(0.0, BOARD_CENTER_Y - 1.25, 0.0),
+    scale=@math.Vec3::Vec3(1.22, 4.2, 1.14),
     cast_shadows=true,
     receive_shadows=true,
   )
@@ -432,12 +429,12 @@ fn spawn_board_scene() -> Unit {
   let canopy = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     cabinet_material_handle.val.unwrap(),
-    @math.Vec3::new(
+    @math.Vec3::Vec3(
       0.0,
       board_surface_y(-board_half_length() + 0.2) + 2.3,
       -6.9,
     ),
-    scale=@math.Vec3::new(1.08, 0.55, 0.3),
+    scale=@math.Vec3::Vec3(1.08, 0.55, 0.3),
     cast_shadows=true,
     receive_shadows=true,
   )
@@ -448,9 +445,9 @@ fn spawn_board_scene() -> Unit {
   let left_rail = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     rail_material_handle.val.unwrap(),
-    @math.Vec3::new(-board_half_width() - RAIL_WIDTH * 0.45, rail_y, 0.0),
+    @math.Vec3::Vec3(-board_half_width() - RAIL_WIDTH * 0.45, rail_y, 0.0),
     rotation=board_rotation,
-    scale=@math.Vec3::new(
+    scale=@math.Vec3::Vec3(
       RAIL_WIDTH / BOARD_WIDTH,
       RAIL_HEIGHT / BOARD_THICKNESS,
       rail_depth / BOARD_LENGTH,
@@ -458,7 +455,7 @@ fn spawn_board_scene() -> Unit {
   )
   assign_static_body(
     left_rail,
-    @math.Vec3::new(RAIL_WIDTH, RAIL_HEIGHT, rail_depth),
+    @math.Vec3::Vec3(RAIL_WIDTH, RAIL_HEIGHT, rail_depth),
     0.8,
     0.08,
   )
@@ -467,9 +464,9 @@ fn spawn_board_scene() -> Unit {
   let right_rail = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     rail_material_handle.val.unwrap(),
-    @math.Vec3::new(board_half_width() + RAIL_WIDTH * 0.45, rail_y, 0.0),
+    @math.Vec3::Vec3(board_half_width() + RAIL_WIDTH * 0.45, rail_y, 0.0),
     rotation=board_rotation,
-    scale=@math.Vec3::new(
+    scale=@math.Vec3::Vec3(
       RAIL_WIDTH / BOARD_WIDTH,
       RAIL_HEIGHT / BOARD_THICKNESS,
       rail_depth / BOARD_LENGTH,
@@ -477,7 +474,7 @@ fn spawn_board_scene() -> Unit {
   )
   assign_static_body(
     right_rail,
-    @math.Vec3::new(RAIL_WIDTH, RAIL_HEIGHT, rail_depth),
+    @math.Vec3::Vec3(RAIL_WIDTH, RAIL_HEIGHT, rail_depth),
     0.8,
     0.08,
   )
@@ -488,9 +485,9 @@ fn spawn_board_scene() -> Unit {
   let left_glass = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     glass_material_handle.val.unwrap(),
-    @math.Vec3::new(-board_half_width() - RAIL_WIDTH * 0.1, glass_y, 0.3),
+    @math.Vec3::Vec3(-board_half_width() - RAIL_WIDTH * 0.1, glass_y, 0.3),
     rotation=board_rotation,
-    scale=@math.Vec3::new(
+    scale=@math.Vec3::Vec3(
       0.028,
       glass_height / BOARD_THICKNESS,
       rail_depth / BOARD_LENGTH,
@@ -503,9 +500,9 @@ fn spawn_board_scene() -> Unit {
   let right_glass = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     glass_material_handle.val.unwrap(),
-    @math.Vec3::new(board_half_width() + RAIL_WIDTH * 0.1, glass_y, 0.3),
+    @math.Vec3::Vec3(board_half_width() + RAIL_WIDTH * 0.1, glass_y, 0.3),
     rotation=board_rotation,
-    scale=@math.Vec3::new(
+    scale=@math.Vec3::Vec3(
       0.028,
       glass_height / BOARD_THICKNESS,
       rail_depth / BOARD_LENGTH,
@@ -518,14 +515,14 @@ fn spawn_board_scene() -> Unit {
   let back_stop = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     rail_material_handle.val.unwrap(),
-    @math.Vec3::new(
+    @math.Vec3::Vec3(
       0.0,
       board_surface_y(-board_half_length() + BACK_STOP_THICKNESS) +
       RAIL_HEIGHT * 0.5,
       -board_half_length() + BACK_STOP_THICKNESS,
     ),
     rotation=board_rotation,
-    scale=@math.Vec3::new(
+    scale=@math.Vec3::Vec3(
       1.0,
       RAIL_HEIGHT / BOARD_THICKNESS,
       BACK_STOP_THICKNESS / BOARD_LENGTH,
@@ -533,7 +530,7 @@ fn spawn_board_scene() -> Unit {
   )
   assign_static_body(
     back_stop,
-    @math.Vec3::new(BOARD_WIDTH, RAIL_HEIGHT, BACK_STOP_THICKNESS),
+    @math.Vec3::Vec3(BOARD_WIDTH, RAIL_HEIGHT, BACK_STOP_THICKNESS),
     0.85,
     0.08,
   )
@@ -542,13 +539,13 @@ fn spawn_board_scene() -> Unit {
   let front_trim = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     cabinet_material_handle.val.unwrap(),
-    @math.Vec3::new(
+    @math.Vec3::Vec3(
       0.0,
       board_surface_y(COLLECTOR_Z + 0.65) + 0.38,
       COLLECTOR_Z + 0.72,
     ),
     rotation=board_rotation,
-    scale=@math.Vec3::new(1.06, 0.36, 0.12),
+    scale=@math.Vec3::Vec3(1.06, 0.36, 0.12),
     cast_shadows=true,
     receive_shadows=true,
   )
@@ -557,13 +554,13 @@ fn spawn_board_scene() -> Unit {
   let tray_visual = spawn_mesh_entity(
     table_mesh_handle.val.unwrap(),
     cabinet_material_handle.val.unwrap(),
-    @math.Vec3::new(
+    @math.Vec3::Vec3(
       0.0,
       board_surface_y(COLLECTOR_Z + 1.1) - 0.78,
       COLLECTOR_Z + 1.42,
     ),
     rotation=board_rotation,
-    scale=@math.Vec3::new(1.06, 0.22, 0.52),
+    scale=@math.Vec3::Vec3(1.06, 0.22, 0.52),
     cast_shadows=true,
     receive_shadows=true,
   )
@@ -574,32 +571,32 @@ fn spawn_board_scene() -> Unit {
     let front_separator = spawn_mesh_entity(
       table_mesh_handle.val.unwrap(),
       rail_material_handle.val.unwrap(),
-      @math.Vec3::new(
+      @math.Vec3::Vec3(
         x,
         board_surface_y(COLLECTOR_Z + 0.72) - 0.16,
         COLLECTOR_Z + 1.02,
       ),
       rotation=board_rotation,
-      scale=@math.Vec3::new(0.028, 0.56, 0.2),
+      scale=@math.Vec3::Vec3(0.028, 0.56, 0.2),
       cast_shadows=true,
       receive_shadows=true,
     )
     static_entities.push(front_separator)
   }
 
-  let separator_size = @math.Vec3::new(0.32, 0.95, 1.4)
+  let separator_size = @math.Vec3::Vec3(0.32, 0.95, 1.4)
   for i in 0..<2 {
     let x = lane_min_x() + lane_width() * (i + 1).to_double()
     let separator = spawn_mesh_entity(
       bumper_mesh_handle.val.unwrap(),
       rail_material_handle.val.unwrap(),
-      @math.Vec3::new(
+      @math.Vec3::Vec3(
         x,
         board_surface_y(COLLECTOR_Z) + separator_size.y * 0.5,
         COLLECTOR_Z,
       ),
       rotation=board_rotation,
-      scale=@math.Vec3::new(
+      scale=@math.Vec3::Vec3(
         separator_size.x / bumper_size.x,
         separator_size.y / bumper_size.y,
         separator_size.z / bumper_size.z,
@@ -615,13 +612,13 @@ fn spawn_board_scene() -> Unit {
     let lane_entity = spawn_mesh_entity(
       bumper_mesh_handle.val.unwrap(),
       collector_material_handle.val.unwrap(),
-      @math.Vec3::new(
+      @math.Vec3::Vec3(
         center_x,
         board_surface_y(COLLECTOR_Z) - 0.12,
         COLLECTOR_Z + 0.25,
       ),
       rotation=board_rotation,
-      scale=@math.Vec3::new(
+      scale=@math.Vec3::Vec3(
         lane_width() * 0.85 / bumper_size.x,
         0.18 / bumper_size.y,
         0.8 / bumper_size.z,
@@ -638,7 +635,7 @@ fn spawn_board_scene() -> Unit {
     let bumper_entity = spawn_mesh_entity(
       bumper_mesh_handle.val.unwrap(),
       bumper_material_handle.val.unwrap(),
-      @math.Vec3::new(x, bumper_y, BUMPER_Z),
+      @math.Vec3::Vec3(x, bumper_y, BUMPER_Z),
       rotation=board_rotation,
       scale=@math.Vec3::one(),
     )
@@ -652,7 +649,7 @@ fn spawn_board_scene() -> Unit {
   @transform.transforms().set(
     pusher_entity,
     world_transform(
-      @math.Vec3::new(0.0, pusher_y, pusher_start_z),
+      @math.Vec3::Vec3(0.0, pusher_y, pusher_start_z),
       board_rotation,
       @math.Vec3::one(),
     ),
@@ -671,18 +668,15 @@ fn spawn_board_scene() -> Unit {
   @physics3d.colliders().set(
     pusher_entity,
     @physics3d.Collider::cuboid(
-      @math.Vec3::new(
+      @math.Vec3::Vec3(
         PUSHER_WIDTH * 0.5,
         PUSHER_HEIGHT * 0.5,
         PUSHER_DEPTH * 0.5,
       ),
     ),
   )
-  @physics3d.frictions().set(pusher_entity, @physics3d.Friction::new(0.9))
-  @physics3d.restitutions().set(
-    pusher_entity,
-    @physics3d.Restitution::new(0.08),
-  )
+  @physics3d.frictions().set(pusher_entity, @physics3d.Friction(0.9))
+  @physics3d.restitutions().set(pusher_entity, @physics3d.Restitution(0.08))
   static_entities.push(pusher_entity)
 }
 
@@ -693,7 +687,7 @@ fn reset_runtime_scene() -> Unit {
   let seed = rand.int()
   reset_run_state(seed)
   seed_board_coin_field()
-  @physics3d.set_gravity(@math.Vec3::new(0.0, -14.0, 4.0))
+  @physics3d.set_gravity(@math.Vec3::Vec3(0.0, -14.0, 4.0))
 }
 
 ///|

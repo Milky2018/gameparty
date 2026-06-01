@@ -4,7 +4,7 @@ fn ensure_segment_entities_created() -> Unit {
     return
   }
   for _ in 0..<TOTAL_CELLS {
-    segment_entities.push(@entity.Entity::new())
+    segment_entities.push(@entity.Entity::Entity())
   }
 }
 

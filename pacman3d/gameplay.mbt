@@ -506,14 +506,14 @@ fn set_hud_text(
     return
   }
   cache.val = content
-  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.texts().set(entity, @ui.Text::Text(content))
   @ui.text_fonts().set(entity, @ui.TextFont::from_css(font))
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, 200))
   set_entity_visibility(entity, true)

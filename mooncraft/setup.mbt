@@ -16,7 +16,7 @@ fn initialize_camera_and_lighting() -> Unit {
   ensure_entity_alive(camera_entity)
   ensure_entity_alive(light_entity)
   @transform.transforms().set(camera_entity, {
-    translation: @math.Vec3::new(0.0, 80.0, 0.0),
+    translation: @math.Vec3::Vec3(0.0, 80.0, 0.0),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
@@ -32,7 +32,7 @@ fn initialize_camera_and_lighting() -> Unit {
     },
   })
   @transform.transforms().set(light_entity, {
-    translation: @math.Vec3::new(0.0, 24.0, 0.0),
+    translation: @math.Vec3::Vec3(0.0, 24.0, 0.0),
     rotation: @math.Quat::from_axis_angle(@math.Vec3::x_axis(), -0.88) *
     @math.Quat::from_axis_angle(@math.Vec3::y_axis(), -0.55),
     scale: @math.Vec3::one(),
@@ -115,7 +115,7 @@ fn reset_runtime_world(world_type : @level.WorldType, seed : UInt64) -> Unit {
     world_type is @level.WorldType::Flat {
     // Keep capture-mode camera inside the single loaded chunk so terrain is
     // visible even with the reduced capture streaming radius.
-    @math.Vec3::new(
+    @math.Vec3::Vec3(
       CHUNK_WORLD_SIZE_X.to_double() * 0.5 + 0.5,
       spawned_position.y,
       CHUNK_WORLD_SIZE_Z.to_double() * 0.5 + 0.5,

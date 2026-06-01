@@ -93,19 +93,19 @@ let background3d_initialized : Ref[Bool] = { val: false }
 let background3d_active : Ref[Bool] = { val: false }
 
 ///|
-let background3d_camera_entity : @entity.Entity = @entity.Entity::new()
+let background3d_camera_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let background3d_quad_entity : @entity.Entity = @entity.Entity::new()
+let background3d_quad_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let background3d_planet_entity : @entity.Entity = @entity.Entity::new()
+let background3d_planet_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let background3d_star_entity : @entity.Entity = @entity.Entity::new()
+let background3d_star_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let background3d_star_light_entity : @entity.Entity = @entity.Entity::new()
+let background3d_star_light_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let background3d_quad_mesh : Ref[@render3d.MeshHandle?] = { val: None }
@@ -136,37 +136,37 @@ let background3d_planet_rotation_speed : Ref[Double] = {
 }
 
 ///|
-let character_left_portrait_ui : @entity.Entity = @entity.Entity::new()
+let character_left_portrait_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_right_portrait_ui : @entity.Entity = @entity.Entity::new()
+let character_right_portrait_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_name_ui : @entity.Entity = @entity.Entity::new()
+let character_name_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ability_slot1_ui : @entity.Entity = @entity.Entity::new()
+let character_ability_slot1_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ability_slot1_icon_ui : @entity.Entity = @entity.Entity::new()
+let character_ability_slot1_icon_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ability_slot1_text_ui : @entity.Entity = @entity.Entity::new()
+let character_ability_slot1_text_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ability_slot2_ui : @entity.Entity = @entity.Entity::new()
+let character_ability_slot2_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ability_slot2_icon_ui : @entity.Entity = @entity.Entity::new()
+let character_ability_slot2_icon_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ability_slot2_text_ui : @entity.Entity = @entity.Entity::new()
+let character_ability_slot2_text_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_join_prompt_ui : @entity.Entity = @entity.Entity::new()
+let character_join_prompt_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_ready_text_ui : @entity.Entity = @entity.Entity::new()
+let character_ready_text_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let character_stats_order : Array[CharacterStatType] = [
@@ -180,98 +180,98 @@ let character_stats_order : Array[CharacterStatType] = [
 
 ///|
 let character_stat_icon_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let character_stat_bg_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let character_stat_fill_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
-let character_p2_center_portrait_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_center_portrait_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_left_portrait_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_left_portrait_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_right_portrait_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_right_portrait_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_name_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_name_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ability_slot1_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ability_slot1_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ability_slot1_icon_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ability_slot1_icon_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ability_slot1_text_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ability_slot1_text_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ability_slot2_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ability_slot2_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ability_slot2_icon_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ability_slot2_icon_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ability_slot2_text_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ability_slot2_text_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_join_prompt_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_join_prompt_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let character_p2_ready_text_ui : @entity.Entity = @entity.Entity::new()
+let character_p2_ready_text_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let character_p2_stat_icon_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let character_p2_stat_bg_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let character_p2_stat_fill_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
@@ -279,14 +279,14 @@ const TUTORIAL_PHASE_DATA_LINE_COUNT : Int = 8
 
 ///|
 let tutorial_phase_data_line_uis : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
@@ -370,12 +370,12 @@ fn background3d_quad_mesh_asset() -> @render3d.MeshAsset {
   let half_w = BG3D_QUAD_WIDTH / 2.0
   let half_h = BG3D_QUAD_HEIGHT / 2.0
   let positions = [
-    @math.Vec3::new(-half_w, -half_h, 0.0),
-    @math.Vec3::new(half_w, -half_h, 0.0),
-    @math.Vec3::new(half_w, half_h, 0.0),
-    @math.Vec3::new(-half_w, -half_h, 0.0),
-    @math.Vec3::new(half_w, half_h, 0.0),
-    @math.Vec3::new(-half_w, half_h, 0.0),
+    @math.Vec3::Vec3(-half_w, -half_h, 0.0),
+    @math.Vec3::Vec3(half_w, -half_h, 0.0),
+    @math.Vec3::Vec3(half_w, half_h, 0.0),
+    @math.Vec3::Vec3(-half_w, -half_h, 0.0),
+    @math.Vec3::Vec3(half_w, half_h, 0.0),
+    @math.Vec3::Vec3(-half_w, half_h, 0.0),
   ]
   let uvs = [
     @math.Vec2(0.0, 1.0),
@@ -446,9 +446,9 @@ fn refresh_background3d_assets() -> Unit {
     receive_shadows: false,
   })
   @transform.transforms().set(background3d_quad_entity, {
-    translation: @math.Vec3::new(0.0, 0.0, BG3D_QUAD_Z),
+    translation: @math.Vec3::Vec3(0.0, 0.0, BG3D_QUAD_Z),
     rotation: @math.Quat::identity(),
-    scale: @math.Vec3::new(BG3D_QUAD_SCALE_X, BG3D_QUAD_SCALE_Y, 1.0),
+    scale: @math.Vec3::Vec3(BG3D_QUAD_SCALE_X, BG3D_QUAD_SCALE_Y, 1.0),
   })
 
   if BG3D_ENABLE_FALLBACK_BODIES {
@@ -460,9 +460,9 @@ fn refresh_background3d_assets() -> Unit {
       receive_shadows: false,
     })
     @transform.transforms().set(background3d_planet_entity, {
-      translation: @math.Vec3::new(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
+      translation: @math.Vec3::Vec3(BG3D_PLANET_X, BG3D_PLANET_Y, BG3D_PLANET_Z),
       rotation: @math.Quat::from_axis_angle(
-        @math.Vec3::new(0.0, 1.0, 0.0),
+        @math.Vec3::Vec3(0.0, 1.0, 0.0),
         random_range(0.0, @cmath.PI * 2.0),
       ),
       scale: @math.Vec3::one(),
@@ -473,7 +473,7 @@ fn refresh_background3d_assets() -> Unit {
 
   let star_x = random_range(BG3D_STAR_X_MIN, BG3D_STAR_X_MAX)
   let star_z = random_range(BG3D_STAR_Z_MIN, BG3D_STAR_Z_MAX)
-  let star_translation = @math.Vec3::new(star_x, 0.0, star_z)
+  let star_translation = @math.Vec3::Vec3(star_x, 0.0, star_z)
   if BG3D_ENABLE_FALLBACK_BODIES {
     @render3d.mesh3d_renderers().set(background3d_star_entity, {
       mesh: star_mesh,
@@ -546,7 +546,7 @@ fn ensure_background3d_initialized() -> Unit {
     @camera3d.Camera3DComponent::default(),
   )
   @transform.transforms().set(background3d_camera_entity, {
-    translation: @math.Vec3::new(0.0, 0.0, 60.0),
+    translation: @math.Vec3::Vec3(0.0, 0.0, 60.0),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   })
@@ -1199,14 +1199,14 @@ fn setup_text_entity(
   if !entity.is_alive() {
     entity.respawn()
   }
-  @ui.texts().set(entity, @ui.Text::new(text.content))
+  @ui.texts().set(entity, @ui.Text::Text(text.content))
   @ui.text_fonts().set(entity, @ui.TextFont::from_css(text.font))
   @ui.text_colors().set(entity, @ui.TextColor::from_css(text.color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=text.align, baseline=text.baseline),
+    @ui.TextLayout::TextLayout(align=text.align, baseline=text.baseline),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, text_anchor(text))
   set_entity_position(entity, position)
   set_entity_visibility(entity, true)
@@ -1229,7 +1229,7 @@ fn setup_picture_entity(
 fn setup_button_entity(entity : @entity.Entity, hit_size : @math.Vec2) -> Unit {
   let position = entity_position(entity).unwrap_or(@math.Vec2::zero())
   @ui.nodes().set(entity, @ui.Node::absolute(position, size=hit_size))
-  @ui.buttons().set(entity, @ui.Button::new())
+  @ui.buttons().set(entity, @ui.Button::Button())
   @ui.interactions().set(entity, @ui.None)
 }
 
@@ -1843,7 +1843,7 @@ fn spawn_enemy_visual_parts(
   let links = []
   for i in 0..<templates.length() {
     let template = templates[i]
-    let part_entity = @entity.Entity::new()
+    let part_entity = @entity.Entity::Entity()
     @sprite.sprites().set(part_entity, template.sprite)
     set_entity_position(part_entity, origin + template.offset)
     links.push({
@@ -1906,7 +1906,7 @@ fn despawn_enemy_visual_parts(enemy_entity : @entity.Entity) -> Unit {
 
 ///|
 fn spawn_enemy(kind : EnemyKind, spawn_pos : @math.Vec2) -> Unit {
-  let enemy_entity = @entity.Entity::new()
+  let enemy_entity = @entity.Entity::Entity()
   let archetype = enemy_archetype(kind)
   let hp_bonus = if kind is Missile ||
     kind is MoneyAsteroid ||
@@ -2056,7 +2056,7 @@ fn spawn_projectile(
   faction : BulletFaction,
   ttl : Double,
 ) -> Unit {
-  let bullet_entity = @entity.Entity::new()
+  let bullet_entity = @entity.Entity::Entity()
   @sprite.sprites().set(bullet_entity, projectile_sprite(kind, faction))
   set_entity_position(bullet_entity, start_pos)
   let radius = if kind is Blast { 5.0 } else { 4.0 }
@@ -2065,7 +2065,7 @@ fn spawn_projectile(
 
 ///|
 fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @sprite.sprites().set(entity, consumable_sprite(kind))
   set_entity_position(entity, position)
   consumables.set(entity, { kind, speed: 105.0 })
@@ -2073,7 +2073,7 @@ fn spawn_consumable(kind : ConsumableKind, position : @math.Vec2) -> Unit {
 
 ///|
 fn spawn_item(kind : ItemKind, position : @math.Vec2) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @sprite.sprites().set(entity, item_sprite(kind))
   set_entity_position(entity, position)
   items.set(entity, { kind, speed: 105.0 })

@@ -132,34 +132,34 @@ let run_state : RunState = {
 }
 
 ///|
-let background_entity : @entity.Entity = @entity.Entity::new()
+let background_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let board_frame_entity : @entity.Entity = @entity.Entity::new()
+let board_frame_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let board_entity : @entity.Entity = @entity.Entity::new()
+let board_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let overlay_panel_entity : @entity.Entity = @entity.Entity::new()
+let overlay_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let prompt_entity : @entity.Entity = @entity.Entity::new()
+let prompt_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_score_entity : @entity.Entity = @entity.Entity::new()
+let hud_score_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_length_entity : @entity.Entity = @entity.Entity::new()
+let hud_length_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_phase_entity : @entity.Entity = @entity.Entity::new()
+let hud_phase_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let food_entity : @entity.Entity = @entity.Entity::new()
+let food_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let segment_entities : Array[@entity.Entity] = []

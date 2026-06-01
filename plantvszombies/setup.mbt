@@ -22,9 +22,9 @@ fn world_transform(
   scale? : @math.Vec2 = @math.Vec2(1.0, 1.0),
 ) -> @transform.Transform {
   {
-    translation: @math.Vec3::new(center[X], center[Y], z),
+    translation: @math.Vec3::Vec3(center[X], center[Y], z),
     rotation: @math.Quat::identity(),
-    scale: @math.Vec3::new(scale[X], scale[Y], 1.0),
+    scale: @math.Vec3::Vec3(scale[X], scale[Y], 1.0),
   }
 }
 
@@ -58,14 +58,17 @@ fn set_text_entity(
   z? : Double = HUD_Z,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @ui.texts().set(entity, @ui.Text::new(text))
-  @ui.text_fonts().set(entity, @ui.TextFont::new(family="monospace", size~))
+  @ui.texts().set(entity, @ui.Text::Text(text))
+  @ui.text_fonts().set(
+    entity,
+    @ui.TextFont::TextFont(family="monospace", size~),
+  )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=NoWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=NoWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, world_transform(position, z))
   set_entity_visibility(entity, true)
@@ -120,9 +123,9 @@ fn spawn_circle_entity(
   color : @render.Color,
   z : Double,
 ) -> @entity.Entity {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @transform.transforms().set(entity, world_transform(center, z))
-  @mesh2d.mesh2ds().set(entity, @mesh2d.Mesh2d::new(circle_handle(radius)))
+  @mesh2d.mesh2ds().set(entity, @mesh2d.Mesh2d::Mesh2d(circle_handle(radius)))
   @material2d.mesh_material2ds().set(
     entity,
     @material2d.MeshMaterial2d::from_color_material(circle_material(color)),
@@ -174,7 +177,7 @@ fn clear_static_entities() -> Unit {
 ///|
 fn spawn_board_cell(x : Int, y : Int) -> Unit {
   let center = cell_center(x, y)
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   let color = if (x + y) % 2 == 0 {
     rgba(64U, 138U, 68U, 1.0)
   } else {
@@ -192,7 +195,7 @@ fn spawn_board_cell(x : Int, y : Int) -> Unit {
 
 ///|
 fn spawn_board_grid_line(center : @math.Vec2, size : @math.Vec2) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   set_rect_entity(
     entity,
     center,
@@ -205,7 +208,7 @@ fn spawn_board_grid_line(center : @math.Vec2, size : @math.Vec2) -> Unit {
 
 ///|
 fn spawn_house() -> Unit {
-  let body = @entity.Entity::new()
+  let body = @entity.Entity::Entity()
   set_rect_entity(
     body,
     @math.Vec2(HOUSE_X, BOARD_TOP + 72.0),
@@ -214,7 +217,7 @@ fn spawn_house() -> Unit {
     BOARD_Z + 2.0,
   )
   house_entities.push(body)
-  let roof = @entity.Entity::new()
+  let roof = @entity.Entity::Entity()
   set_rect_entity(
     roof,
     @math.Vec2(HOUSE_X - 8.0, BOARD_TOP + 20.0),
@@ -227,7 +230,7 @@ fn spawn_house() -> Unit {
 
 ///|
 fn spawn_overlay_bars() -> Unit {
-  let bar_left = @entity.Entity::new()
+  let bar_left = @entity.Entity::Entity()
   set_rect_entity(
     bar_left,
     @math.Vec2(BOARD_LEFT - 20.0, BOARD_TOP - 18.0),

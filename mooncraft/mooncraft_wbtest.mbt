@@ -188,7 +188,7 @@ test "spawn_player_position returns a supported non-overlapping position" {
 test "camera rotation forward matches look direction" {
   player_controller.val = { ..player_controller.val, yaw: 0.37, pitch: -0.41 }
   let look = look_direction()
-  let forward = camera_rotation().rotate_vec3(@math.Vec3::new(0.0, 0.0, -1.0))
+  let forward = camera_rotation().rotate_vec3(@math.Vec3::Vec3(0.0, 0.0, -1.0))
   inspect((look - forward).length() < 0.000001, content="true")
 }
 

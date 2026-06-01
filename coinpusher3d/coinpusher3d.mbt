@@ -4,7 +4,7 @@ pub fn run() -> Unit {
   let runtime_qa = env_flag_enabled(DEBUG_CAPTURE_ENV) ||
     env_flag_enabled(PROFILE_ENV)
   let target_fps = if runtime_qa { 66U } else { FPS }
-  let app = @app.App::new()
+  let app = @app.App::App()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(1.0)

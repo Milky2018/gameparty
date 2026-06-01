@@ -57,19 +57,22 @@ fn set_text_entity_center(
   z : Double,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.texts().set(entity, @ui.Text::Text(text))
   @ui.text_fonts().set(
     entity,
-    @ui.TextFont::new(family=FONT_FAMILY, size=size_px.to_double()),
+    @ui.TextFont::TextFont(family=FONT_FAMILY, size=size_px.to_double()),
   )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Center, baseline=Center, wrap=NoWrap),
+    @ui.TextLayout::TextLayout(align=Center, baseline=Center, wrap=NoWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
-  @text2d.text_bounds().set(entity, @text2d.TextBounds::new(width, height))
+  @text2d.text_bounds().set(
+    entity,
+    @text2d.TextBounds::TextBounds(width, height),
+  )
   @transform.transforms().set(entity, transform_xy(center[X], center[Y], z))
   set_entity_visible(entity, true)
 }
@@ -83,7 +86,7 @@ fn update_text_if_changed(
   if cache.val == text {
     return
   }
-  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.texts().set(entity, @ui.Text::Text(text))
   cache.val = text
 }
 

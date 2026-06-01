@@ -40,8 +40,8 @@ fn reset_logic_state_for_test() -> Unit {
 ///|
 fn place_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
   board_set(row, col, Some(kind))
-  let entity = @entity.Entity::new()
-  let aura_entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
+  let aura_entity = @entity.Entity::Entity()
   gem_entities.push(entity)
   gem_aura_entities.push(aura_entity)
   gem_lookup.set(Cell::{ row, col }, Gem::{
@@ -55,8 +55,8 @@ fn place_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
 ///|
 fn place_flash_gem_for_test(row : Int, col : Int, kind : GemKind) -> Unit {
   board_set(row, col, Some(kind))
-  let entity = @entity.Entity::new()
-  let aura_entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
+  let aura_entity = @entity.Entity::Entity()
   gem_entities.push(entity)
   gem_aura_entities.push(aura_entity)
   gem_lookup.set(Cell::{ row, col }, Gem::{

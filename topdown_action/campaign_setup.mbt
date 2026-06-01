@@ -100,7 +100,7 @@ fn campaign_spawn_world_tiles(
   layout : @topdown_platform.WorldMapLayout,
 ) -> Unit {
   for tile in layout.tiles {
-    let floor = @entity.Entity::new()
+    let floor = @entity.Entity::Entity()
     let floor_screen = campaign_world_to_screen(tile.center)
     @topdown_platform.apply_image_sprite_entity(
       floor,
@@ -114,7 +114,7 @@ fn campaign_spawn_world_tiles(
     let mut prop_entity : @entity.Entity? = None
     match tile.prop_image {
       Some(visual) => {
-        let prop = @entity.Entity::new()
+        let prop = @entity.Entity::Entity()
         @topdown_platform.apply_image_sprite_entity(
           prop,
           visual,
@@ -228,7 +228,7 @@ fn campaign_spawn_player() -> Unit {
   let archetype = campaign_archetype_by_id(
     campaign_plugin().player_archetype_id,
   )
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   campaign_dynamic_entities.push(entity)
   campaign_player_runtime.val = Some({
     entity,

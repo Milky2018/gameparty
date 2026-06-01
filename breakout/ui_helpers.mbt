@@ -25,19 +25,22 @@ fn centered_text_entity(
   color_css : String,
   z : Double,
 ) -> Unit {
-  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.texts().set(entity, @ui.Text::Text(content))
   @ui.text_fonts().set(
     entity,
-    @ui.TextFont::new(family="monospace", size=size_px.to_double()),
+    @ui.TextFont::TextFont(family="monospace", size=size_px.to_double()),
   )
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color_css))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Center, baseline=Center, wrap=NoWrap),
+    @ui.TextLayout::TextLayout(align=Center, baseline=Center, wrap=NoWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
-  @text2d.text_bounds().set(entity, @text2d.TextBounds::new(width, height))
+  @text2d.text_bounds().set(
+    entity,
+    @text2d.TextBounds::TextBounds(width, height),
+  )
   @transform.transforms().set(entity, transform_xy(center_x, center_y, z))
   set_entity_visible(entity, true)
 }

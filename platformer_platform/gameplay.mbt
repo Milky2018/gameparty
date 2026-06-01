@@ -52,7 +52,7 @@ fn spawn_capture_preview_entity(
   region : SpriteRegion?,
   size? : @math.Vec2 = vec2(36.0, 36.0),
 ) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   set_entity_name(entity, "capture_preview_\{name}")
   set_sprite_entity_with_image(
     entity,

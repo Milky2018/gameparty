@@ -348,7 +348,7 @@ test "destroyed soft walls can drop items with configured chance" {
     players[0] = { ..players[0], active_bombs: 1 }
     set_tile(3, 1, SoftWall)
     bombs.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       cell_x: 2,
       cell_y: 1,
       timer: 0.0,
@@ -490,7 +490,7 @@ test "enemy deaths can drop items with configured chance" {
     forced_drop_kinds.push(BombUp)
     let center = cell_center(5, 5)
     enemies.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       cell_x: 5,
       cell_y: 5,
       center,
@@ -669,7 +669,7 @@ test "enemy contact kills any overlapping active player outside versus" {
     players[0] = { ..players[0], center, alive: true }
     players[1] = { ..players[1], center: cell_center(1, 1), alive: true }
     enemies.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       cell_x: 5,
       cell_y: 5,
       center,
@@ -691,7 +691,7 @@ test "enemy contact kills any overlapping active player outside versus" {
     start_round(Versus)
     players[0] = { ..players[0], center, alive: true }
     enemies.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       cell_x: 5,
       cell_y: 5,
       center,

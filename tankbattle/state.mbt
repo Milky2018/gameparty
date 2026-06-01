@@ -529,10 +529,10 @@ let terrain_overlay_entities : Array[@entity.Entity] = []
 let queue_icon_entities : Array[@entity.Entity] = []
 
 ///|
-let player_entity : @entity.Entity = @entity.Entity::new()
+let player_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let player_effect_entity : @entity.Entity = @entity.Entity::new()
+let player_effect_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let enemy_entities : Array[@entity.Entity] = []
@@ -547,52 +547,52 @@ let projectile_entities : Array[@entity.Entity] = []
 let explosion_entities : Array[@entity.Entity] = []
 
 ///|
-let powerup_entity : @entity.Entity = @entity.Entity::new()
+let powerup_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let background_entity : @entity.Entity = @entity.Entity::new()
+let background_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let board_entity : @entity.Entity = @entity.Entity::new()
+let board_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_entity : @entity.Entity = @entity.Entity::new()
+let hud_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_image_entity : @entity.Entity = @entity.Entity::new()
+let title_image_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let game_over_image_entity : @entity.Entity = @entity.Entity::new()
+let game_over_image_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let menu_one_player_entity : @entity.Entity = @entity.Entity::new()
+let menu_one_player_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let menu_exit_entity : @entity.Entity = @entity.Entity::new()
+let menu_exit_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_lives_icon_entity : @entity.Entity = @entity.Entity::new()
+let hud_lives_icon_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_flag_entity : @entity.Entity = @entity.Entity::new()
+let hud_flag_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_lives_text_entity : @entity.Entity = @entity.Entity::new()
+let hud_lives_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_stage_text_entity : @entity.Entity = @entity.Entity::new()
+let hud_stage_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_status_text_entity : @entity.Entity = @entity.Entity::new()
+let hud_status_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let overlay_text_entity : @entity.Entity = @entity.Entity::new()
+let overlay_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let overlay_subtext_entity : @entity.Entity = @entity.Entity::new()
+let overlay_subtext_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let fps_text_entity : @entity.Entity = @entity.Entity::new()
+let fps_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let map_image_handle : Ref[@asset.ImageHandle?] = { val: None }

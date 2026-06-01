@@ -82,7 +82,7 @@ fn parse_world_map() -> Unit {
   }
 
   for tile in layout.tiles {
-    let floor = @entity.Entity::new()
+    let floor = @entity.Entity::Entity()
     apply_image_sprite_entity(
       floor,
       tile.floor_image,
@@ -95,7 +95,7 @@ fn parse_world_map() -> Unit {
     let mut prop_entity : @entity.Entity? = None
     match tile.prop_image {
       Some(visual) => {
-        let prop = @entity.Entity::new()
+        let prop = @entity.Entity::Entity()
         apply_image_sprite_entity(
           prop,
           visual,
@@ -185,7 +185,7 @@ fn reset_run_state() -> Unit {
 
 ///|
 fn spawn_player() -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   dynamic_entities.push(entity)
   player_runtime.val = Some({
     entity,
@@ -204,7 +204,7 @@ fn spawn_actor(
   position : @math.Vec2,
   facing : Facing,
 ) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   dynamic_entities.push(entity)
   actor_runtimes.push({
     entity,

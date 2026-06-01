@@ -321,7 +321,7 @@ let chunk_stream_queue : Ref[ChunkStreamQueue] = { val: empty_queue() }
 ///|
 let player_controller : Ref[PlayerController] = {
   val: {
-    position: @math.Vec3::new(0.5, 80.0, 0.5),
+    position: @math.Vec3::Vec3(0.5, 80.0, 0.5),
     velocity: @math.Vec3::zero(),
     yaw: 0.0,
     pitch: DEFAULT_PLAYER_PITCH,
@@ -386,65 +386,65 @@ let debug_marker_material_handle : Ref[@render3d.MaterialHandle?] = {
 let cube_mesh_handle : Ref[@render3d.MeshHandle?] = { val: None }
 
 ///|
-let camera_entity : @entity.Entity = @entity.Entity::new()
+let camera_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let light_entity : @entity.Entity = @entity.Entity::new()
+let light_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let selection_entity : @entity.Entity = @entity.Entity::new()
+let selection_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let preview_entity : @entity.Entity = @entity.Entity::new()
+let preview_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let debug_marker_entity : @entity.Entity = @entity.Entity::new()
+let debug_marker_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_title_entity : @entity.Entity = @entity.Entity::new()
+let hud_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_info_entity : @entity.Entity = @entity.Entity::new()
+let hud_info_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_hint_entity : @entity.Entity = @entity.Entity::new()
+let hud_hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let hotbar_slot_entities : Array[@entity.Entity] = Array::makei(HOTBAR_SIZE, fn(
   _,
 ) {
-  @entity.Entity::new()
+  @entity.Entity::Entity()
 })
 
 ///|
 let hotbar_icon_entities : Array[@entity.Entity] = Array::makei(HOTBAR_SIZE, fn(
   _,
 ) {
-  @entity.Entity::new()
+  @entity.Entity::Entity()
 })
 
 ///|
-let inventory_panel_entity : @entity.Entity = @entity.Entity::new()
+let inventory_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let inventory_title_entity : @entity.Entity = @entity.Entity::new()
+let inventory_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let inventory_hint_entity : @entity.Entity = @entity.Entity::new()
+let inventory_hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let inventory_cursor_entity : @entity.Entity = @entity.Entity::new()
+let inventory_cursor_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let inventory_slot_entities : Array[@entity.Entity] = Array::makei(
   INVENTORY_VISIBLE_SLOTS,
-  fn(_) { @entity.Entity::new() },
+  fn(_) { @entity.Entity::Entity() },
 )
 
 ///|
 let inventory_icon_entities : Array[@entity.Entity] = Array::makei(
   INVENTORY_VISIBLE_SLOTS,
-  fn(_) { @entity.Entity::new() },
+  fn(_) { @entity.Entity::Entity() },
 )
 
 ///|
@@ -585,7 +585,7 @@ fn chunk_world_origin(
   chunk_y : Int,
   chunk_z : Int,
 ) -> @math.Vec3 {
-  @math.Vec3::new(
+  @math.Vec3::Vec3(
     (chunk_x * CHUNK_WORLD_SIZE_X).to_double(),
     (chunk_y * CHUNK_WORLD_SIZE_Y).to_double(),
     (chunk_z * CHUNK_WORLD_SIZE_Z).to_double(),
@@ -594,7 +594,7 @@ fn chunk_world_origin(
 
 ///|
 fn chunk_mesh_center_offset() -> @math.Vec3 {
-  @math.Vec3::new(
+  @math.Vec3::Vec3(
     CHUNK_WORLD_SIZE_X.to_double() * 0.5,
     CHUNK_WORLD_SIZE_Y.to_double() * 0.5,
     CHUNK_WORLD_SIZE_Z.to_double() * 0.5,

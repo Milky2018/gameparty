@@ -9,7 +9,7 @@ pub fn run(plugin : TopDownShooterPluginDef) -> Unit {
   }
   setup_plugin(plugin)
   @host.prepare_run(false)
-  let app = @app.App::new()
+  let app = @app.App::App()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(1.0)

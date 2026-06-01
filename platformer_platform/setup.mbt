@@ -144,7 +144,7 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 
 ///|
 fn set_entity_name(entity : @entity.Entity, value : String) -> Unit {
-  @name.names().set(entity, @name.Name::new(value))
+  @name.names().set(entity, @name.Name::Name(value))
 }
 
 ///|
@@ -188,7 +188,7 @@ fn set_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 ///|
 fn transform_2d(center : @math.Vec2, z : Double) -> @transform.Transform {
   {
-    translation: @math.Vec3::new(center[X], center[Y], z),
+    translation: @math.Vec3::Vec3(center[X], center[Y], z),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   }
@@ -305,14 +305,14 @@ fn set_text_entity(
   color : @render.Color,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.texts().set(entity, @ui.Text::Text(content))
   @ui.text_fonts().set(entity, @ui.TextFont::from_css(font_size))
-  @ui.text_colors().set(entity, @ui.TextColor::new(color))
+  @ui.text_colors().set(entity, @ui.TextColor::TextColor(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(center, 1000.0))
   set_visibility(entity, true)
@@ -355,7 +355,7 @@ fn clear_fireballs() -> Unit {
 
 ///|
 fn spawn_background(level : LevelSpec) -> Unit {
-  let sky = @entity.Entity::new()
+  let sky = @entity.Entity::Entity()
   set_entity_name(sky, "level_sky")
   let mut has_custom_background = false
   match sprite_path_for_background() {
@@ -385,7 +385,7 @@ fn spawn_background(level : LevelSpec) -> Unit {
     return
   }
 
-  let near_hill = @entity.Entity::new()
+  let near_hill = @entity.Entity::Entity()
   set_entity_name(near_hill, "level_near_hill")
   set_sprite_entity(
     near_hill,
@@ -396,7 +396,7 @@ fn spawn_background(level : LevelSpec) -> Unit {
   )
   static_entities.push(near_hill)
 
-  let far_hill = @entity.Entity::new()
+  let far_hill = @entity.Entity::Entity()
   set_entity_name(far_hill, "level_far_hill")
   set_sprite_entity(
     far_hill,
@@ -418,7 +418,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
   dash_crystal_respawn_timers.clear()
   spawn_background(level)
   for index, block in level.blocks {
-    let entity = @entity.Entity::new()
+    let entity = @entity.Entity::Entity()
     set_entity_name(entity, "block_\{index}_\{tile_kind_name(block.kind)}")
     set_sprite_entity_with_image(
       entity,
@@ -431,7 +431,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
     static_entities.push(entity)
     block_entities.push(entity)
   }
-  let goal_pole = @entity.Entity::new()
+  let goal_pole = @entity.Entity::Entity()
   set_entity_name(goal_pole, "goal_pole")
   set_sprite_entity(
     goal_pole,
@@ -441,7 +441,7 @@ fn spawn_level_entities(level : LevelSpec) -> Unit {
     1.0,
   )
   static_entities.push(goal_pole)
-  let goal_flag = @entity.Entity::new()
+  let goal_flag = @entity.Entity::Entity()
   set_entity_name(goal_flag, "goal_flag")
   set_sprite_entity(
     goal_flag,
@@ -504,7 +504,7 @@ fn spawn_enemy(spawn : EnemySpawn) -> Unit {
   } else {
     ENEMY_MOVE_SPEED
   }
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   let enemy_index = enemy_entities_order.length()
   set_entity_name(entity, "enemy_\{enemy_index}_\{enemy_kind_name(spawn.kind)}")
   enemy_entities.set(entity, {
@@ -540,7 +540,7 @@ fn spawn_item(
   velocity? : @math.Vec2 = @math.Vec2::zero(),
   emerging? : Bool = false,
 ) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   let item_index = item_entities_order.length()
   set_entity_name(entity, "item_\{item_index}_\{item_kind_name(kind)}")
   item_entities.set(entity, {
@@ -563,7 +563,7 @@ fn spawn_item(
 
 ///|
 fn spawn_player_fireball(center : @math.Vec2, facing_right : Bool) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   let fireball_index = fireball_entities_order.length()
   set_entity_name(entity, "fireball_\{fireball_index}")
   fireball_entities.set(entity, {
@@ -704,12 +704,12 @@ fn startup_system(_world : @ecs.World) -> Unit {
   set_entity_name(camera_entity, "camera")
   @camera.cameras().set(
     camera_entity,
-    @camera.Camera::new(is_active=true, order=0),
+    @camera.Camera::Camera(is_active=true, order=0),
   )
-  @camera.camera2ds().set(camera_entity, @camera.Camera2d::new())
+  @camera.camera2ds().set(camera_entity, @camera.Camera2d::Camera2d())
   @camera.orthographic_projections().set(
     camera_entity,
-    @camera.OrthographicProjection::new(scale=1.0),
+    @camera.OrthographicProjection::OrthographicProjection(scale=1.0),
   )
   @transform.transforms().set(
     camera_entity,

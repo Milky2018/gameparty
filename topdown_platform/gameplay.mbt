@@ -19,7 +19,7 @@ fn sync_text(
   if cache.val == value {
     return
   }
-  @ui.texts().set(entity, @ui.Text::new(value))
+  @ui.texts().set(entity, @ui.Text::Text(value))
   cache.val = value
 }
 

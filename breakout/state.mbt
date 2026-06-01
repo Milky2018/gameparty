@@ -265,47 +265,47 @@ let powerups : Array[PowerUpState] = []
 let laser_shots : Array[LaserShotState] = []
 
 ///|
-let background_entity : @entity.Entity = @entity.Entity::new()
+let background_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_panel_entity : @entity.Entity = @entity.Entity::new()
+let hud_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let lives_panel_entity : @entity.Entity = @entity.Entity::new()
+let lives_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let lives_text_entity : @entity.Entity = @entity.Entity::new()
+let lives_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let reset_panel_entity : @entity.Entity = @entity.Entity::new()
+let reset_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let reset_text_entity : @entity.Entity = @entity.Entity::new()
+let reset_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let remaining_panel_entity : @entity.Entity = @entity.Entity::new()
+let remaining_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let remaining_text_entity : @entity.Entity = @entity.Entity::new()
+let remaining_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let indicator_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
-let board_frame_entity : @entity.Entity = @entity.Entity::new()
+let board_frame_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let paddle_entity : @entity.Entity = @entity.Entity::new()
+let paddle_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let overlay_panel_entity : @entity.Entity = @entity.Entity::new()
+let overlay_panel_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let overlay_text_entity : @entity.Entity = @entity.Entity::new()
+let overlay_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let brick_entities : Array[@entity.Entity] = []

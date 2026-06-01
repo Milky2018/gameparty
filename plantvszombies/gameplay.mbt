@@ -108,7 +108,7 @@ fn spawn_plant(kind : PlantKind, cell_x : Int, cell_y : Int) -> Bool {
 
   sun_points.val -= plant_cost(kind)
   let center = cell_center(cell_x, cell_y)
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   let size = match kind {
     Shooter => @math.Vec2(58.0, 58.0)
     Wall => @math.Vec2(64.0, 64.0)
@@ -181,7 +181,7 @@ fn spawn_sun_token(x : Double, y : Double) -> Unit {
 fn spawn_zombie(lane : Int, kind_index : Int) -> Unit {
   let row = clamp_int(lane, 0, GRID_ROWS - 1)
   let center = cell_center(GRID_COLS - 1, row)
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   set_rect_entity(
     entity,
     @math.Vec2(center[X] - 31.0, center[Y] - 31.0),
@@ -626,19 +626,19 @@ fn sync_sun_entities() -> Unit {
 fn sync_overlays() -> Unit {
   let hud_text = "Sun \{sun_points.val}  Wave \{clamp_int(wave_state.val.wave_index + 1, 1, WAVE_COUNT)}/\{WAVE_COUNT}  Plants \{alive_plant_count()}  Zombies \{alive_zombie_count()}"
   if hud_text_cache.val != hud_text {
-    @ui.texts().set(hud_entity, @ui.Text::new(hud_text))
+    @ui.texts().set(hud_entity, @ui.Text::Text(hud_text))
     hud_text_cache.val = hud_text
   }
 
   let hint_text = phase_hint_text()
   if hint_text_cache.val != hint_text {
-    @ui.texts().set(hint_entity, @ui.Text::new(hint_text))
+    @ui.texts().set(hint_entity, @ui.Text::Text(hint_text))
     hint_text_cache.val = hint_text
   }
 
   let result_text = result_banner_text()
   if result_text_cache.val != result_text {
-    @ui.texts().set(result_entity, @ui.Text::new(result_text))
+    @ui.texts().set(result_entity, @ui.Text::Text(result_text))
     result_text_cache.val = result_text
   }
   set_entity_visibility(result_entity, phase.val != Playing)
@@ -656,7 +656,7 @@ fn sync_overlays() -> Unit {
   if show_fps.val {
     let fps_text = "FPS \{(1.0 / clamp_double(@time.delta(), 0.0001, 1.0)).to_int()}"
     if fps_text_cache.val != fps_text {
-      @ui.texts().set(fps_entity, @ui.Text::new(fps_text))
+      @ui.texts().set(fps_entity, @ui.Text::Text(fps_text))
       fps_text_cache.val = fps_text
     }
     set_entity_visibility(fps_entity, true)

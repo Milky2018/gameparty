@@ -552,7 +552,7 @@ let items : Array[ItemState] = []
 let players : Array[PlayerState] = [
   {
     id: P1,
-    entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
     active: true,
     center: cell_center(1, 1),
     direction: None,
@@ -570,7 +570,7 @@ let players : Array[PlayerState] = [
   },
   {
     id: P2,
-    entity: @entity.Entity::new(),
+    entity: @entity.Entity::Entity(),
     active: false,
     center: cell_center(11, 9),
     direction: None,
@@ -664,28 +664,28 @@ let direction_input_state : Array[InputStamps] = [
 let tile_entities : Array[@entity.Entity] = []
 
 ///|
-let background_entity : @entity.Entity = @entity.Entity::new()
+let background_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let menu_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
-let hud_entity : @entity.Entity = @entity.Entity::new()
+let hud_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let status_entity : @entity.Entity = @entity.Entity::new()
+let status_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hint_entity : @entity.Entity = @entity.Entity::new()
+let hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let menu_error_message : Ref[String] = { val: "" }

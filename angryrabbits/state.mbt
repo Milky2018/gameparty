@@ -433,40 +433,40 @@ let blocks : Array[BlockState] = []
 let targets : Array[TargetState] = []
 
 ///|
-let background_entity : @entity.Entity = @entity.Entity::new()
+let background_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let ground_entity : @entity.Entity = @entity.Entity::new()
+let ground_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hill_entity : @entity.Entity = @entity.Entity::new()
+let hill_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let slingshot_left_entity : @entity.Entity = @entity.Entity::new()
+let slingshot_left_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let slingshot_right_entity : @entity.Entity = @entity.Entity::new()
+let slingshot_right_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let slingshot_base_entity : @entity.Entity = @entity.Entity::new()
+let slingshot_base_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let rabbit_eye_entity : @entity.Entity = @entity.Entity::new()
+let rabbit_eye_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let camera_anchor_entity : @entity.Entity = @entity.Entity::new()
+let camera_anchor_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hint_entity : @entity.Entity = @entity.Entity::new()
+let hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let status_entity : @entity.Entity = @entity.Entity::new()
+let status_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let score_entity : @entity.Entity = @entity.Entity::new()
+let score_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let aim_dot_entities : Array[@entity.Entity] = []
@@ -514,7 +514,7 @@ let camera_return_origin : Ref[@math.Vec2] = { val: @math.Vec2::zero() }
 const DEBUG_TRACE_FIXED_FRAMES : Int = 6
 
 ///|
-let debug_text_entity : @entity.Entity = @entity.Entity::new()
+let debug_text_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let debug_mouse_screen : Ref[@math.Vec2] = { val: @math.Vec2::zero() }

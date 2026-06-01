@@ -88,7 +88,7 @@ fn parse_world_map() -> Unit {
   world_state.player_spawn = layout.player_spawn
 
   for tile in layout.tiles {
-    let floor = @entity.Entity::new()
+    let floor = @entity.Entity::Entity()
     @topdown_platform.apply_image_sprite_entity(
       floor,
       tile.floor_image,
@@ -101,7 +101,7 @@ fn parse_world_map() -> Unit {
     let mut prop_entity : @entity.Entity? = None
     match tile.prop_image {
       Some(visual) => {
-        let prop = @entity.Entity::new()
+        let prop = @entity.Entity::Entity()
         @topdown_platform.apply_image_sprite_entity(
           prop,
           visual,
@@ -235,7 +235,7 @@ fn spawn_player() -> Unit {
     plugin(),
     plugin().progression.player_archetype_id,
   ).unwrap()
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   dynamic_entities.push(entity)
   player_runtime.val = Some({
     entity,

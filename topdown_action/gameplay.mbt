@@ -19,7 +19,7 @@ fn sync_text(
   if cache.val == value {
     return
   }
-  @ui.texts().set(entity, @ui.Text::new(value))
+  @ui.texts().set(entity, @ui.Text::Text(value))
   cache.val = value
 }
 
@@ -79,7 +79,7 @@ fn sync_actor_visual(actor : ActorRuntime, z : Double) -> ActorRuntime {
 fn spawn_enemy(archetype_id : String, position : @math.Vec2) -> Unit {
   match archetype_by_id(plugin(), archetype_id) {
     Some(archetype) => {
-      let entity = @entity.Entity::new()
+      let entity = @entity.Entity::Entity()
       dynamic_entities.push(entity)
       enemy_runtimes.push({
         entity,
@@ -101,7 +101,7 @@ fn spawn_enemy(archetype_id : String, position : @math.Vec2) -> Unit {
 
 ///|
 fn spawn_pickup(position : @math.Vec2, item : DropItemDef) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   dynamic_entities.push(entity)
   pickup_runtimes.push({
     entity,
@@ -179,7 +179,7 @@ fn spawn_projectile(
   direction : @math.Vec2,
   skill : SkillDef,
 ) -> Unit {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   dynamic_entities.push(entity)
   let vel = direction.scalar_mul(skill.projectile_speed)
   projectile_runtimes.push({

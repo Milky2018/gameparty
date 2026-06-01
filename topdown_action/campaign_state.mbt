@@ -238,19 +238,19 @@ let campaign_player_trail : Array[@math.Vec2] = []
 let campaign_image_cache : Map[String, @asset.ImageHandle] = Map::new()
 
 ///|
-let campaign_world_bg_entity : @entity.Entity = @entity.Entity::new()
+let campaign_world_bg_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let campaign_title_entity : @entity.Entity = @entity.Entity::new()
+let campaign_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let campaign_hud_entity : @entity.Entity = @entity.Entity::new()
+let campaign_hud_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let campaign_message_entity : @entity.Entity = @entity.Entity::new()
+let campaign_message_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let campaign_overlay_entity : @entity.Entity = @entity.Entity::new()
+let campaign_overlay_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let campaign_font_registered : Ref[Bool] = { val: false }

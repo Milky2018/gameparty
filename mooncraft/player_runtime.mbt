@@ -1,6 +1,6 @@
 ///|
 fn vec3(x : Double, y : Double, z : Double) -> @math.Vec3 {
-  @math.Vec3::new(x, y, z)
+  @math.Vec3::Vec3(x, y, z)
 }
 
 ///|
@@ -43,7 +43,7 @@ fn camera_rotation_for(yaw : Double, pitch : Double) -> @math.Quat {
   @math.Quat::from_basis(
     right,
     up,
-    @math.Vec3::new(-forward.x, -forward.y, -forward.z),
+    @math.Vec3::Vec3(-forward.x, -forward.y, -forward.z),
   )
 }
 

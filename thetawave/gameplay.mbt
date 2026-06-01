@@ -1945,7 +1945,7 @@ fn set_ui_visible(entity : @entity.Entity, visible : Bool) -> Unit {
 fn set_ui_button_enabled(entity : @entity.Entity, enabled : Bool) -> Unit {
   if @ui.buttons().get(entity) is Some(button) {
     ignore(button)
-    @ui.buttons().set(entity, @ui.Button::new(enabled~))
+    @ui.buttons().set(entity, @ui.Button::Button(enabled~))
   }
 }
 
@@ -1983,9 +1983,9 @@ fn sync_text_ui_sprite(entity : @entity.Entity, text : TextState) -> Unit {
     @ui.text_colors().set(entity, @ui.TextColor::from_css(text.color))
     @ui.text_layouts().set(
       entity,
-      @ui.TextLayout::new(align=text.align, baseline=text.baseline),
+      @ui.TextLayout::TextLayout(align=text.align, baseline=text.baseline),
     )
-    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
     @text2d.text_anchors().set(entity, text_anchor(text))
     text_style_cache.set(entity, style_key)
   }
@@ -1994,7 +1994,7 @@ fn sync_text_ui_sprite(entity : @entity.Entity, text : TextState) -> Unit {
     None => true
   }
   if content_changed {
-    @ui.texts().set(entity, @ui.Text::new(text.content))
+    @ui.texts().set(entity, @ui.Text::Text(text.content))
     text_content_cache.set(entity, text.content)
   }
 }

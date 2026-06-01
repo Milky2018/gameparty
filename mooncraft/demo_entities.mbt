@@ -87,7 +87,7 @@ fn demo_world_position(
   y_offset? : Double = 0.0,
 ) -> @math.Vec3 {
   guard world_session.val is Some(session) else {
-    return @math.Vec3::new(
+    return @math.Vec3::Vec3(
       wx.to_double() + 0.5,
       80.0 + y_offset,
       wz.to_double() + 0.5,
@@ -96,7 +96,7 @@ fn demo_world_position(
   let y = @level.surface_height(session.world, wx, wz).to_double() +
     1.0 +
     y_offset
-  @math.Vec3::new(wx.to_double() + 0.5, y, wz.to_double() + 0.5)
+  @math.Vec3::Vec3(wx.to_double() + 0.5, y, wz.to_double() + 0.5)
 }
 
 ///|
@@ -109,7 +109,7 @@ fn spawn_demo_scene(
   let instance = @scene3d.instantiate_scene_instance(handle, {
     translation,
     rotation: @math.Quat::identity(),
-    scale: @math.Vec3::new(scale, scale, scale),
+    scale: @math.Vec3::Vec3(scale, scale, scale),
   })
   demo_entity_state.val.roots.push(instance.root)
   play_demo_animation(instance.root, instance)

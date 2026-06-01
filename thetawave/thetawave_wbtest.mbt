@@ -888,7 +888,7 @@ test "boss phase data reads hp from enemy state map" {
   clear_enemies_for_test()
   game_state.stage_index = 7
 
-  let boss = @entity.Entity::new()
+  let boss = @entity.Entity::Entity()
   enemies.set(boss, make_enemy_for_test(Ferritharax, 777))
   assert_eq(current_phase_name(), "Boss: Ferritharax")
   assert_eq(current_phase_data(), "777/1200")
@@ -927,7 +927,7 @@ test "victory_system requires finished stages and no living enemies" {
   assert_true(game_state.phase is Victory)
 
   game_state.phase = Playing
-  let blocker = @entity.Entity::new()
+  let blocker = @entity.Entity::Entity()
   enemies.set(blocker, make_enemy_for_test(Pawn, 1))
   victory_system(@ecs.require_current_world())
   assert_true(game_state.phase is Playing)
@@ -1112,7 +1112,7 @@ test "character selection text clipping respects lane width constraints" {
 
 ///|
 test "menu button text center uses button rect and fallback anchor" {
-  let button = @entity.Entity::new()
+  let button = @entity.Entity::Entity()
   set_entity_position(button, @math.Vec2(100.0, 200.0))
   let center = text_center_for_menu_button(button)
   assert_eq(center[X], 100.0 + MENU_BUTTON_WIDTH / 2.0)
@@ -1121,7 +1121,7 @@ test "menu button text center uses button rect and fallback anchor" {
     200.0 + MENU_BUTTON_HEIGHT / 2.0 + MENU_BUTTON_TEXT_Y_TWEAK,
   )
 
-  let fallback = text_center_for_menu_button(@entity.Entity::new())
+  let fallback = text_center_for_menu_button(@entity.Entity::Entity())
   assert_eq(fallback[X], 240.0)
   assert_eq(fallback[Y], 193.0)
 }
@@ -1142,8 +1142,8 @@ test "main menu mouse click uses cursor hit test instead of stale interaction st
 
   set_entity_position(start_entity, @math.Vec2(160.0, 176.0))
   set_entity_position(exit_entity, @math.Vec2(160.0, 242.0))
-  @ui.buttons().set(start_entity, @ui.Button::new())
-  @ui.buttons().set(exit_entity, @ui.Button::new())
+  @ui.buttons().set(start_entity, @ui.Button::Button())
+  @ui.buttons().set(exit_entity, @ui.Button::Button())
   @ui.nodes().set(
     start_entity,
     @ui.Node::absolute(@math.Vec2::zero(), size=@math.Vec2(160.0, 22.0)),
@@ -1397,21 +1397,21 @@ test "sync_text_ui_sprites preserves explicit visibility flags" {
 
 ///|
 test "character slot visibility follows joined state for carousel portraits" {
-  let center_portrait = @entity.Entity::new()
-  let left_portrait = @entity.Entity::new()
-  let right_portrait = @entity.Entity::new()
-  let name_ui = @entity.Entity::new()
-  let ability_slot1_ui = @entity.Entity::new()
-  let ability_slot1_icon_ui = @entity.Entity::new()
-  let ability_slot1_text_ui = @entity.Entity::new()
-  let ability_slot2_ui = @entity.Entity::new()
-  let ability_slot2_icon_ui = @entity.Entity::new()
-  let ability_slot2_text_ui = @entity.Entity::new()
-  let join_prompt_ui = @entity.Entity::new()
-  let ready_text_ui = @entity.Entity::new()
-  let stat_icon_uis = [@entity.Entity::new(), @entity.Entity::new()]
-  let stat_bg_uis = [@entity.Entity::new(), @entity.Entity::new()]
-  let stat_fill_uis = [@entity.Entity::new(), @entity.Entity::new()]
+  let center_portrait = @entity.Entity::Entity()
+  let left_portrait = @entity.Entity::Entity()
+  let right_portrait = @entity.Entity::Entity()
+  let name_ui = @entity.Entity::Entity()
+  let ability_slot1_ui = @entity.Entity::Entity()
+  let ability_slot1_icon_ui = @entity.Entity::Entity()
+  let ability_slot1_text_ui = @entity.Entity::Entity()
+  let ability_slot2_ui = @entity.Entity::Entity()
+  let ability_slot2_icon_ui = @entity.Entity::Entity()
+  let ability_slot2_text_ui = @entity.Entity::Entity()
+  let join_prompt_ui = @entity.Entity::Entity()
+  let ready_text_ui = @entity.Entity::Entity()
+  let stat_icon_uis = [@entity.Entity::Entity(), @entity.Entity::Entity()]
+  let stat_bg_uis = [@entity.Entity::Entity(), @entity.Entity::Entity()]
+  let stat_fill_uis = [@entity.Entity::Entity(), @entity.Entity::Entity()]
 
   let all_entities = [
     center_portrait, left_portrait, right_portrait, name_ui, ability_slot1_ui, ability_slot1_icon_ui,

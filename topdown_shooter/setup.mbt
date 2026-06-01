@@ -237,19 +237,19 @@ fn ensure_text_entity(
   color : @render.Color,
   size : Int,
 ) -> Unit {
-  @ui.texts().set(entity, @ui.Text::new(text))
+  @ui.texts().set(entity, @ui.Text::Text(text))
   @ui.text_fonts().set(
     entity,
     @ui.TextFont::from_css(
       "\{size}px \{active_plugin_def().ui_theme.font_family}",
     ),
   )
-  @ui.text_colors().set(entity, @ui.TextColor::new(color))
+  @ui.text_colors().set(entity, @ui.TextColor::TextColor(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_xy(x, y, z))
   set_entity_visible(entity, true)
@@ -264,7 +264,7 @@ fn sync_text(
   if cache.val == value {
     return
   }
-  @ui.texts().set(entity, @ui.Text::new(value))
+  @ui.texts().set(entity, @ui.Text::Text(value))
   cache.val = value
 }
 
@@ -362,12 +362,12 @@ fn parse_map() -> Unit {
         world_state.tile_size - 1.0,
         world_state.tile_size - 1.0,
       )
-      let floor = @entity.Entity::new()
+      let floor = @entity.Entity::Entity()
       build_panel_entity(floor, rule.floor_color, tile_size, top_left, TILE_Z)
       let mut overlay_entity : @entity.Entity? = None
       match rule.overlay_color {
         Some(color) => {
-          let overlay = @entity.Entity::new()
+          let overlay = @entity.Entity::Entity()
           let inset = world_state.tile_size * 0.22
           build_panel_entity(
             overlay,
@@ -492,8 +492,8 @@ fn spawn_actor_runtime(
 ) -> ActorRuntime {
   let archetype = actor_by_id(active_plugin_def(), archetype_id).unwrap()
   let weapon = weapon_by_id(active_plugin_def(), weapon_id).unwrap()
-  let body_entity = @entity.Entity::new()
-  let barrel_entity = @entity.Entity::new()
+  let body_entity = @entity.Entity::Entity()
+  let barrel_entity = @entity.Entity::Entity()
   dynamic_entities.push(body_entity)
   dynamic_entities.push(barrel_entity)
   let runtime = {
@@ -554,7 +554,7 @@ fn first_player_spawn() -> @math.Vec2 {
 fn spawn_pickups() -> Unit {
   for marker in world_state.pickup_markers {
     let def = pickup_spawn_by_id(active_plugin_def(), marker.pickup_id).unwrap()
-    let entity = @entity.Entity::new()
+    let entity = @entity.Entity::Entity()
     dynamic_entities.push(entity)
     pickup_runtimes.push({
       entity,

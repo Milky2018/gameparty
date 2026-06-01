@@ -495,25 +495,25 @@ let fireball_entities : Map[@entity.Entity, FireballState] = Map::new()
 let fireball_entities_order : Array[@entity.Entity] = []
 
 ///|
-let player_entity : @entity.Entity = @entity.Entity::new()
+let player_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let camera_entity : @entity.Entity = @entity.Entity::new()
+let camera_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_title_entity : @entity.Entity = @entity.Entity::new()
+let hud_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_sub_entity : @entity.Entity = @entity.Entity::new()
+let hud_sub_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_hint_entity : @entity.Entity = @entity.Entity::new()
+let hud_hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_message_entity : @entity.Entity = @entity.Entity::new()
+let hud_message_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_overlay_entity : @entity.Entity = @entity.Entity::new()
+let hud_overlay_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let player_sprite_color : @render.Color = { r: 53U, g: 112U, b: 222U, a: 1.0 }
@@ -848,6 +848,6 @@ fn update_text_entity_if_changed(
 ) -> Unit {
   if cache.val != text {
     cache.val = text
-    @ui.texts().set(entity, @ui.Text::new(text))
+    @ui.texts().set(entity, @ui.Text::Text(text))
   }
 }

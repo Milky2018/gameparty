@@ -42,7 +42,7 @@ fn set_entity_visibility(entity : @entity.Entity, visible : Bool) -> Unit {
 ///|
 fn transform_2d(center : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
-    translation: @math.Vec3::new(center[X], center[Y], zindex.to_double()),
+    translation: @math.Vec3::Vec3(center[X], center[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   }
@@ -88,9 +88,9 @@ fn set_text_entity(
     @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
     @ui.text_layouts().set(
       entity,
-      @ui.TextLayout::new(align=Center, baseline=Center, wrap=NoWrap),
+      @ui.TextLayout::TextLayout(align=Center, baseline=Center, wrap=NoWrap),
     )
-    @text2d.text2ds().set(entity, @text2d.Text2d::new())
+    @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
     @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(0.0, 0.0)))
     text_style_cache.set(entity, style_key)
   }
@@ -99,7 +99,7 @@ fn set_text_entity(
     None => true
   }
   if content_changed {
-    @ui.texts().set(entity, @ui.Text::new(content))
+    @ui.texts().set(entity, @ui.Text::Text(content))
     text_content_cache.set(entity, content)
   }
   @transform.transforms().set(entity, transform_2d(center, zindex))

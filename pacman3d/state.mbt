@@ -305,31 +305,31 @@ let wall_entities : Array[@entity.Entity] = []
 let minimap_tile_entities : Array[@entity.Entity] = []
 
 ///|
-let minimap_player_entity : @entity.Entity = @entity.Entity::new()
+let minimap_player_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let camera_entity : @entity.Entity = @entity.Entity::new()
+let camera_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let light_entity : @entity.Entity = @entity.Entity::new()
+let light_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let player_light_entity : @entity.Entity = @entity.Entity::new()
+let player_light_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_title_ui : @entity.Entity = @entity.Entity::new()
+let hud_title_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_line1_ui : @entity.Entity = @entity.Entity::new()
+let hud_line1_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_line2_ui : @entity.Entity = @entity.Entity::new()
+let hud_line2_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_line3_ui : @entity.Entity = @entity.Entity::new()
+let hud_line3_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_debug_ui : @entity.Entity = @entity.Entity::new()
+let hud_debug_ui : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let hud_title_text_cache : Ref[String] = { val: "" }

@@ -54,7 +54,7 @@ fn ensure_entity_alive(entity : @entity.Entity) -> Unit {
 ///|
 fn transform_2d(position : @math.Vec2, zindex : Int) -> @transform.Transform {
   {
-    translation: @math.Vec3::new(position[X], position[Y], zindex.to_double()),
+    translation: @math.Vec3::Vec3(position[X], position[Y], zindex.to_double()),
     rotation: @math.Quat::identity(),
     scale: @math.Vec3::one(),
   }
@@ -73,7 +73,7 @@ fn setup_text_entity(
   color : String,
 ) -> Unit {
   ensure_entity_alive(entity)
-  @ui.texts().set(entity, @ui.Text::new(content))
+  @ui.texts().set(entity, @ui.Text::Text(content))
   @ui.text_fonts().set(
     entity,
     @ui.TextFont::from_css("18px \{PACMAN_UPSTREAM_FONT_FAMILY}"),
@@ -81,9 +81,9 @@ fn setup_text_entity(
   @ui.text_colors().set(entity, @ui.TextColor::from_css(color))
   @ui.text_layouts().set(
     entity,
-    @ui.TextLayout::new(align=Left, baseline=Top, wrap=WordWrap),
+    @ui.TextLayout::TextLayout(align=Left, baseline=Top, wrap=WordWrap),
   )
-  @text2d.text2ds().set(entity, @text2d.Text2d::new())
+  @text2d.text2ds().set(entity, @text2d.Text2d::Text2d())
   @text2d.text_anchors().set(entity, @sprite.Anchor(@math.Vec2(-0.5, 0.5)))
   @transform.transforms().set(entity, transform_2d(position, 200))
   set_entity_visibility(entity, true)
@@ -112,7 +112,7 @@ fn spawn_color_rect_entity(
   color : String,
   zindex : Int,
 ) -> @entity.Entity {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   setup_color_rect_entity(entity, size, position, color, zindex)
   entity
 }
@@ -125,21 +125,21 @@ fn register_render_assets_once() -> Unit {
   wall_mesh.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(TILE_WORLD_SIZE, WALL_HEIGHT, TILE_WORLD_SIZE),
+        @math.Vec3::Vec3(TILE_WORLD_SIZE, WALL_HEIGHT, TILE_WORLD_SIZE),
       ),
     ),
   )
   floor_mesh.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(TILE_WORLD_SIZE, FLOOR_THICKNESS, TILE_WORLD_SIZE),
+        @math.Vec3::Vec3(TILE_WORLD_SIZE, FLOOR_THICKNESS, TILE_WORLD_SIZE),
       ),
     ),
   )
   dot_mesh.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(DOT_RADIUS * 1.8, DOT_RADIUS * 1.8, DOT_RADIUS * 1.8),
+        @math.Vec3::Vec3(DOT_RADIUS * 1.8, DOT_RADIUS * 1.8, DOT_RADIUS * 1.8),
       ),
     ),
   )
@@ -158,7 +158,7 @@ fn register_render_assets_once() -> Unit {
   ghost_spot_ray_mesh.val = Some(
     @render3d.register_mesh_asset(
       @render3d.cube_mesh(
-        @math.Vec3::new(
+        @math.Vec3::Vec3(
           GHOST_SPOT_DEBUG_RAY_THICKNESS,
           GHOST_SPOT_DEBUG_RAY_THICKNESS,
           GHOST_SPOT_DEBUG_RAY_LENGTH,
@@ -493,7 +493,7 @@ fn spawn_mesh_entity(
   cast_shadows? : Bool = false,
   receive_shadows? : Bool = true,
 ) -> @entity.Entity {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @render3d.mesh3d_renderers().set(entity, {
     mesh,
     material,
@@ -611,20 +611,20 @@ fn ghost_rotation(direction : Direction) -> @math.Quat {
     Left => @cmath.PI / 2.0
     Right => -@cmath.PI / 2.0
   }
-  @math.Quat::from_axis_angle(@math.Vec3::new(0.0, 1.0, 0.0), yaw)
+  @math.Quat::from_axis_angle(@math.Vec3::Vec3(0.0, 1.0, 0.0), yaw)
 }
 
 ///|
 fn ghost_forward_vector_from_rotation(
   rotation : @math.Quat,
 ) -> (Double, Double) {
-  let forward = rotation.rotate_vec3(@math.Vec3::new(0.0, 0.0, -1.0))
+  let forward = rotation.rotate_vec3(@math.Vec3::Vec3(0.0, 0.0, -1.0))
   (forward.x, forward.z)
 }
 
 ///|
 fn ghost_local_spot_direction() -> @math.Vec3 {
-  @math.Vec3::new(0.0, -GHOST_SPOT_LIGHT_DOWNWARD, -1.0).normalize()
+  @math.Vec3::Vec3(0.0, -GHOST_SPOT_LIGHT_DOWNWARD, -1.0).normalize()
 }
 
 ///|
@@ -638,7 +638,7 @@ fn ghost_spot_forward_offset() -> Double {
 
 ///|
 fn quat_from_forward_direction(direction : @math.Vec3) -> @math.Quat {
-  let source = @math.Vec3::new(0.0, 0.0, -1.0)
+  let source = @math.Vec3::Vec3(0.0, 0.0, -1.0)
   let target = direction.normalize()
   if target.length_squared() <= 0.000000001 {
     return @math.Quat::identity()
@@ -656,7 +656,7 @@ fn quat_from_forward_direction(direction : @math.Vec3) -> @math.Quat {
   }
   if clamped_dot <= -0.999999 {
     return @math.Quat::from_axis_angle(
-      @math.Vec3::new(0.0, 1.0, 0.0),
+      @math.Vec3::Vec3(0.0, 1.0, 0.0),
       @cmath.PI,
     )
   }
@@ -705,21 +705,21 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let rotation = ghost_rotation(ghost.direction)
   let (forward_x, forward_z) = ghost_forward_vector_from_rotation(rotation)
   @transform.transforms().set(ghost.entity, {
-    translation: @math.Vec3::new(ghost.x, ghost_y, ghost.z),
+    translation: @math.Vec3::Vec3(ghost.x, ghost_y, ghost.z),
     rotation,
     scale: @math.Vec3::one(),
   })
 
   let side_x = -forward_z
   let side_z = forward_x
-  let eye_base = @math.Vec3::new(
+  let eye_base = @math.Vec3::Vec3(
     ghost.x + forward_x * GHOST_EYE_FORWARD_OFFSET,
     ghost_y + GHOST_EYE_HEIGHT_OFFSET,
     ghost.z + forward_z * GHOST_EYE_FORWARD_OFFSET,
   )
   let local_spot_direction = ghost_local_spot_direction()
   let spot_forward_offset = ghost_spot_forward_offset()
-  let light_translation = @math.Vec3::new(
+  let light_translation = @math.Vec3::Vec3(
     ghost.x + forward_x * spot_forward_offset,
     ghost_y + GHOST_SPOT_LIGHT_HEIGHT_OFFSET,
     ghost.z + forward_z * spot_forward_offset,
@@ -769,7 +769,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     scale: @math.Vec3::one(),
   })
   @transform.transforms().set(ghost.left_eye_entity, {
-    translation: @math.Vec3::new(
+    translation: @math.Vec3::Vec3(
       eye_base.x + side_x * GHOST_EYE_SIDE_OFFSET,
       eye_base.y,
       eye_base.z + side_z * GHOST_EYE_SIDE_OFFSET,
@@ -778,7 +778,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
     scale: @math.Vec3::one(),
   })
   @transform.transforms().set(ghost.right_eye_entity, {
-    translation: @math.Vec3::new(
+    translation: @math.Vec3::Vec3(
       eye_base.x - side_x * GHOST_EYE_SIDE_OFFSET,
       eye_base.y,
       eye_base.z - side_z * GHOST_EYE_SIDE_OFFSET,
@@ -848,14 +848,14 @@ fn sync_camera_transform() -> Unit {
   ensure_entity_alive(player_light_entity)
   let yaw = -(player_state.yaw + @cmath.PI / 2.0)
   @transform.transforms().set(camera_entity, {
-    translation: @math.Vec3::new(player_state.x, PLAYER_HEIGHT, player_state.z),
-    rotation: @math.Quat::from_axis_angle(@math.Vec3::new(0.0, 1.0, 0.0), yaw),
+    translation: @math.Vec3::Vec3(player_state.x, PLAYER_HEIGHT, player_state.z),
+    rotation: @math.Quat::from_axis_angle(@math.Vec3::Vec3(0.0, 1.0, 0.0), yaw),
     scale: @math.Vec3::one(),
   })
   let forward_x = @cmath.cos(player_state.yaw)
   let forward_z = @cmath.sin(player_state.yaw)
   @transform.transforms().set(player_light_entity, {
-    translation: @math.Vec3::new(
+    translation: @math.Vec3::Vec3(
       player_state.x + forward_x * 0.45,
       PLAYER_HEIGHT + 0.2,
       player_state.z + forward_z * 0.45,
@@ -906,14 +906,14 @@ fn reset_level_entities() -> Unit {
         let floor_entity = spawn_mesh_entity(
           floor_mesh.val.unwrap(),
           active_floor_material(),
-          @math.Vec3::new(world_x, MAP_FLOOR_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_FLOOR_Y, world_z),
         )
         floor_entities.push(floor_entity)
 
         let ceiling_entity = spawn_mesh_entity(
           floor_mesh.val.unwrap(),
           active_ceiling_material(),
-          @math.Vec3::new(world_x, MAP_CEILING_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_CEILING_Y, world_z),
         )
         ceiling_entities.push(ceiling_entity)
       }
@@ -922,7 +922,7 @@ fn reset_level_entities() -> Unit {
         let wall_entity = spawn_mesh_entity(
           wall_mesh.val.unwrap(),
           active_wall_material(),
-          @math.Vec3::new(world_x, WALL_HALF_HEIGHT_Y, world_z),
+          @math.Vec3::Vec3(world_x, WALL_HALF_HEIGHT_Y, world_z),
         )
         wall_entities.push(wall_entity)
       } else if tile == 2 {
@@ -934,7 +934,7 @@ fn reset_level_entities() -> Unit {
         let dot_entity = spawn_mesh_entity(
           dot_mesh.val.unwrap(),
           active_dot_material(),
-          @math.Vec3::new(world_x, MAP_DOT_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_DOT_Y, world_z),
         )
         if debug_mode_allows_dot_light() {
           @render3d.point_lights3d().set(dot_entity, {
@@ -964,25 +964,25 @@ fn reset_level_entities() -> Unit {
         let ghost_entity = spawn_mesh_entity(
           ghost_body_mesh.val.unwrap(),
           ghost_material_for_type(ghost_type),
-          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_GHOST_Y, world_z),
         )
-        let ghost_light_entity = @entity.Entity::new()
+        let ghost_light_entity = @entity.Entity::Entity()
         let ghost_spot_ray_entity = spawn_mesh_entity(
           ghost_spot_ray_mesh.val.unwrap(),
           ghost_spot_ray_material_for_type(ghost_type),
-          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_GHOST_Y, world_z),
           cast_shadows=false,
           receive_shadows=false,
         )
         let left_eye_entity = spawn_mesh_entity(
           ghost_eye_mesh.val.unwrap(),
           active_ghost_eye_material(),
-          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_GHOST_Y, world_z),
         )
         let right_eye_entity = spawn_mesh_entity(
           ghost_eye_mesh.val.unwrap(),
           active_ghost_eye_material(),
-          @math.Vec3::new(world_x, MAP_GHOST_Y, world_z),
+          @math.Vec3::Vec3(world_x, MAP_GHOST_Y, world_z),
         )
         let ghost_minimap_color = match ghost_type {
           Fast => "rgb(255,0,0)"
@@ -1071,7 +1071,7 @@ pub fn startup_system(_world : @ecs.World) -> Unit {
   })
   @render3d.directional_lights3d().set(light_entity, {
     ..@render3d.default_directional_light3d(),
-    direction: @math.Vec3::new(-0.45, -1.0, -0.3),
+    direction: @math.Vec3::Vec3(-0.45, -1.0, -0.3),
     color: color_rgba(255U, 250U, 245U, 1.0),
     intensity: DIRECTIONAL_LIGHT_INTENSITY,
     shadows: false,

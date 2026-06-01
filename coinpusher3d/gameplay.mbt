@@ -3,7 +3,7 @@ let best_score : Ref[Int] = { val: 0 }
 
 ///|
 fn normal_gravity() -> @math.Vec3 {
-  @math.Vec3::new(0.0, -14.0, 4.0)
+  @math.Vec3::Vec3(0.0, -14.0, 4.0)
 }
 
 ///|
@@ -242,9 +242,9 @@ fn coin_linear_damping(heavy : Bool) -> Double {
 ///|
 fn coin_spawn_velocity(heavy : Bool) -> @math.Vec3 {
   if heavy {
-    @math.Vec3::new(0.0, -1.1, 0.9)
+    @math.Vec3::Vec3(0.0, -1.1, 0.9)
   } else {
-    @math.Vec3::new(0.0, -1.0, 1.5)
+    @math.Vec3::Vec3(0.0, -1.0, 1.5)
   }
 }
 
@@ -256,11 +256,11 @@ fn spawn_coin_entity(
   velocity : @math.Vec3,
   heavy : Bool,
 ) -> @entity.Entity {
-  let entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
   @transform.transforms().set(
     entity,
     world_transform(
-      @math.Vec3::new(x, y, z),
+      @math.Vec3::Vec3(x, y, z),
       @math.Quat::identity(),
       @math.Vec3::one(),
     ),
@@ -280,9 +280,9 @@ fn spawn_coin_entity(
   )
   @physics3d.frictions().set(
     entity,
-    @physics3d.Friction::new(if heavy { 0.95 } else { 0.82 }),
+    @physics3d.Friction(if heavy { 0.95 } else { 0.82 }),
   )
-  @physics3d.restitutions().set(entity, @physics3d.Restitution::new(0.08))
+  @physics3d.restitutions().set(entity, @physics3d.Restitution(0.08))
   @physics3d.dampings().set(entity, {
     linear_damping: coin_linear_damping(heavy),
     angular_damping: 0.8,
@@ -325,7 +325,7 @@ pub fn seed_board_coin_field() -> Unit {
     let y = board_surface_y(z) + COIN_HEIGHT * 0.7 + rand.double() * 0.72
     let vx = (rand.double() - 0.5) * 0.3
     let vz = rand.double() * 0.2
-    ignore(spawn_coin_entity(x, y, z, @math.Vec3::new(vx, 0.0, vz), false))
+    ignore(spawn_coin_entity(x, y, z, @math.Vec3::Vec3(vx, 0.0, vz), false))
   }
 }
 
@@ -416,15 +416,15 @@ fn update_chest_visibility(visible : Bool) -> Unit {
 fn set_hud_texts(main : String, sub : String, hint : String) -> Unit {
   if hud_main_text_cache.val != main {
     hud_main_text_cache.val = main
-    @ui.texts().set(hud_main_entity, @ui.Text::new(main))
+    @ui.texts().set(hud_main_entity, @ui.Text::Text(main))
   }
   if hud_sub_text_cache.val != sub {
     hud_sub_text_cache.val = sub
-    @ui.texts().set(hud_sub_entity, @ui.Text::new(sub))
+    @ui.texts().set(hud_sub_entity, @ui.Text::Text(sub))
   }
   if hud_hint_text_cache.val != hint {
     hud_hint_text_cache.val = hint
-    @ui.texts().set(hud_hint_entity, @ui.Text::new(hint))
+    @ui.texts().set(hud_hint_entity, @ui.Text::Text(hint))
   }
 }
 
@@ -566,7 +566,7 @@ pub fn pusher_motion_system(_world : @ecs.World) -> Unit {
   let z = PUSHER_CENTER_Z + offset_z
   let x = clamp_double(offset_x, lane_min_x(), lane_max_x())
   let y = board_surface_y(z) + PUSHER_HEIGHT * 0.5
-  let translation = @math.Vec3::new(x, y, z)
+  let translation = @math.Vec3::Vec3(x, y, z)
   @physics3d.set_rigid_body_translation(pusher_entity, translation)
   @physics3d.set_rigid_body_rotation(pusher_entity, board_rotation())
   @transform.transforms().set(
@@ -582,7 +582,7 @@ fn spawn_split_coin(parent_pos : @math.Vec3, parent_heavy : Bool) -> Unit {
   }
   let side = if rand.boolean() { 1.0 } else { -1.0 }
   let offset_x = side * (COIN_RADIUS * 0.9)
-  let velocity = @math.Vec3::new(side * 1.2, -0.3, 1.35)
+  let velocity = @math.Vec3::Vec3(side * 1.2, -0.3, 1.35)
   ignore(
     spawn_coin_entity(
       clamp_double(parent_pos.x + offset_x, lane_min_x(), lane_max_x()),
@@ -653,7 +653,7 @@ pub fn magnet_system(_world : @ecs.World) -> Unit {
             Some(value) => value
             None => @math.Vec3::zero()
           }
-          let next_vel = @math.Vec3::new(
+          let next_vel = @math.Vec3::Vec3(
             current_vel.x + (target_x - pos.x) * MAGNET_LANE_PULL,
             current_vel.y * 0.96,
             current_vel.z + MAGNET_FORWARD_BOOST,
@@ -790,7 +790,7 @@ pub fn chest_ui_system(_world : @ecs.World) -> Unit {
   let chest_visible = run_state.phase == ChestPick && chest_state.pending
   update_chest_visibility(chest_visible)
   if chest_visible {
-    @ui.texts().set(chest_title_entity, @ui.Text::new("CHEST: PICK ONE"))
+    @ui.texts().set(chest_title_entity, @ui.Text::Text("CHEST: PICK ONE"))
     for i in 0..<chest_option_text_entities.length() {
       let text = if i < chest_state.options.length() {
         let id = chest_state.options[i]
@@ -798,7 +798,7 @@ pub fn chest_ui_system(_world : @ecs.World) -> Unit {
       } else {
         ""
       }
-      @ui.texts().set(chest_option_text_entities[i], @ui.Text::new(text))
+      @ui.texts().set(chest_option_text_entities[i], @ui.Text::Text(text))
     }
   }
 }
@@ -828,11 +828,11 @@ pub fn hud_system(_world : @ecs.World) -> Unit {
     let (title, body) = summaries_text()
     if summary_title_text_cache.val != title {
       summary_title_text_cache.val = title
-      @ui.texts().set(summary_title_entity, @ui.Text::new(title))
+      @ui.texts().set(summary_title_entity, @ui.Text::Text(title))
     }
     if summary_body_text_cache.val != body {
       summary_body_text_cache.val = body
-      @ui.texts().set(summary_body_entity, @ui.Text::new(body))
+      @ui.texts().set(summary_body_entity, @ui.Text::Text(body))
     }
   } else {
     update_summary_visibility(false)

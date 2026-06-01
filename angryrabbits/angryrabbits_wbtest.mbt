@@ -707,7 +707,7 @@ test "missing block color field still loads level" {
 ///|
 fn with_test_world(body : () -> Unit raise) -> Unit raise {
   let previous = @ecs.current_world()
-  let world = @ecs.World::new()
+  let world = @ecs.World::World()
   @ecs.set_current_world(world)
   body()
   match previous {
@@ -1063,7 +1063,7 @@ test "launch transition preserves velocity after synced ready body exists" {
       max_ccd_substeps=PHYSICS_MAX_CCD_SUBSTEPS,
     )
     rabbits.clear()
-    let entity = @entity.Entity::new()
+    let entity = @entity.Entity::Entity()
     ensure_entity_alive(entity)
     rabbits.push({
       entity,
@@ -2015,7 +2015,7 @@ test "moving block keeps shot active until world settles" {
     rabbit_visible.val = true
     rabbit_velocity.val = @math.Vec2::zero()
     blocks.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       center: @math.Vec2(280.0, 300.0),
       size: @math.Vec2(40.0, 40.0),
       velocity: @math.Vec2(STOP_SPEED + 20.0, 0.0),
@@ -2024,7 +2024,7 @@ test "moving block keeps shot active until world settles" {
       alive: true,
     })
     targets.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       center: @math.Vec2(420.0, 300.0),
       radius: 18.0,
       velocity: @math.Vec2::zero(),
@@ -2045,7 +2045,7 @@ test "out-of-bounds targets and blocks are cleaned up" {
     blocks.clear()
     targets.clear()
     blocks.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       center: @math.Vec2(-OUT_OF_BOUNDS_MARGIN - 40.0, 200.0),
       size: @math.Vec2(40.0, 40.0),
       velocity: @math.Vec2::zero(),
@@ -2054,7 +2054,7 @@ test "out-of-bounds targets and blocks are cleaned up" {
       alive: true,
     })
     targets.push({
-      entity: @entity.Entity::new(),
+      entity: @entity.Entity::Entity(),
       center: @math.Vec2(200.0, VIEWPORT_HEIGHT + OUT_OF_BOUNDS_MARGIN + 30.0),
       radius: 18.0,
       velocity: @math.Vec2::zero(),
@@ -2074,8 +2074,8 @@ test "rabbit contact event always destroys target" {
     rabbits.clear()
     targets.clear()
     blocks.clear()
-    let rabbit_entity = @entity.Entity::new()
-    let target_entity = @entity.Entity::new()
+    let rabbit_entity = @entity.Entity::Entity()
+    let target_entity = @entity.Entity::Entity()
     rabbits.push({
       entity: rabbit_entity,
       center: @math.Vec2(200.0, 200.0),
@@ -2109,8 +2109,8 @@ test "target takes upstream-style damage from moving block" {
   with_test_world(fn() raise {
     targets.clear()
     blocks.clear()
-    let block_entity = @entity.Entity::new()
-    let target_entity = @entity.Entity::new()
+    let block_entity = @entity.Entity::Entity()
+    let target_entity = @entity.Entity::Entity()
     blocks.push({
       entity: block_entity,
       center: @math.Vec2(320.0, 300.0),

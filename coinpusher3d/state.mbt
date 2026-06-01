@@ -74,10 +74,10 @@ const CAMERA_FAR : Double = 200.0
 const CAMERA_FOV_Y : Double = 48.0
 
 ///|
-let camera_position : @math.Vec3 = @math.Vec3::new(0.0, 8.2, 19.0)
+let camera_position : @math.Vec3 = @math.Vec3::Vec3(0.0, 8.2, 19.0)
 
 ///|
-let camera_target : @math.Vec3 = @math.Vec3::new(0.0, 1.2, 2.0)
+let camera_target : @math.Vec3 = @math.Vec3::Vec3(0.0, 1.2, 2.0)
 
 ///|
 const BOARD_WIDTH : Double = 12.0
@@ -152,7 +152,7 @@ const PUSHER_BASE_STROKE_LENGTH : Double = 1.35
 const PUSHER_BASE_LANE_JITTER : Double = 0.32
 
 ///|
-let bumper_size : @math.Vec3 = @math.Vec3::new(0.7, 0.7, 0.7)
+let bumper_size : @math.Vec3 = @math.Vec3::Vec3(0.7, 0.7, 0.7)
 
 ///|
 const BUMPER_Z : Double = 1.8
@@ -350,51 +350,51 @@ let chest_state : ChestState = {
 let rand : @random.Rand = @random.Rand::new()
 
 ///|
-let camera_entity : @entity.Entity = @entity.Entity::new()
+let camera_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let light_entity : @entity.Entity = @entity.Entity::new()
+let light_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let table_entity : @entity.Entity = @entity.Entity::new()
+let table_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let pusher_entity : @entity.Entity = @entity.Entity::new()
+let pusher_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_bg_entity : @entity.Entity = @entity.Entity::new()
+let hud_bg_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_main_entity : @entity.Entity = @entity.Entity::new()
+let hud_main_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_sub_entity : @entity.Entity = @entity.Entity::new()
+let hud_sub_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let hud_hint_entity : @entity.Entity = @entity.Entity::new()
+let hud_hint_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let chest_title_entity : @entity.Entity = @entity.Entity::new()
+let chest_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let chest_option_panel_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
 let chest_option_text_entities : Array[@entity.Entity] = [
-  @entity.Entity::new(),
-  @entity.Entity::new(),
-  @entity.Entity::new(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
+  @entity.Entity::Entity(),
 ]
 
 ///|
-let summary_title_entity : @entity.Entity = @entity.Entity::new()
+let summary_title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let summary_body_entity : @entity.Entity = @entity.Entity::new()
+let summary_body_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
 let hud_main_text_cache : Ref[String] = { val: "" }

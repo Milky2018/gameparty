@@ -111,8 +111,8 @@ fn set_gem_visual(
 
 ///|
 fn create_gem_entity(cell : Cell, kind : GemKind) -> Gem {
-  let entity = @entity.Entity::new()
-  let aura_entity = @entity.Entity::new()
+  let entity = @entity.Entity::Entity()
+  let aura_entity = @entity.Entity::Entity()
   let (center, z) = cell_center(cell)
   set_gem_visual(entity, aura_entity, kind, false, center, z, 1.0, 1.0)
   Gem::{ kind, flash: false, entity, aura_entity }
@@ -1012,12 +1012,12 @@ pub fn render_system(_world : @ecs.World) -> Unit {
   let started_at = @time.elapsed()
   let timer = timer_text()
   if game_state.timer_text_cache != timer {
-    @ui.texts().set(timer_text_entity, @ui.Text::new(timer))
+    @ui.texts().set(timer_text_entity, @ui.Text::Text(timer))
     game_state.timer_text_cache = timer
   }
   let score = score_text()
   if game_state.score_text_cache != score {
-    @ui.texts().set(score_text_entity, @ui.Text::new(score))
+    @ui.texts().set(score_text_entity, @ui.Text::Text(score))
     game_state.score_text_cache = score
   }
   set_entity_visible(timer_fx_entity, game_state.time_freeze_remaining > 0.0)
@@ -1028,7 +1028,7 @@ pub fn render_system(_world : @ecs.World) -> Unit {
     set_entity_visible(overlay_text_entity, true)
     let overlay = overlay_text()
     if game_state.overlay_text_cache != overlay {
-      @ui.texts().set(overlay_text_entity, @ui.Text::new(overlay))
+      @ui.texts().set(overlay_text_entity, @ui.Text::Text(overlay))
       game_state.overlay_text_cache = overlay
     }
   } else {

@@ -87,7 +87,7 @@ pub fn run(plugin : PlatformerPluginDef) -> Unit {
   }
   active_plugin.val = Some(plugin)
   maybe_enable_hidden_window()
-  let app = @app.App::new()
+  let app = @app.App::App()
     .with_viewport_width(VIEWPORT_WIDTH)
     .with_viewport_height(VIEWPORT_HEIGHT)
     .with_zoom(1.0)

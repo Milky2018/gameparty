@@ -264,7 +264,7 @@ fn update_chunk_layer(
       ensure_entity_alive(existing)
       existing
     }
-    None => @entity.Entity::new()
+    None => @entity.Entity::Entity()
   }
   @transform.transforms().set(entity, {
     translation: origin + chunk_mesh_center_offset(),

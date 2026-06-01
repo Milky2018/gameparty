@@ -153,7 +153,7 @@ priv enum GamePhase {
 } derive(Eq)
 
 ///|
-impl Show for GamePhase with output(self, logger) {
+impl Show for GamePhase with fn output(self, logger) {
   let text = match self {
     MainMenu => "MainMenu"
     Playing => "Playing"
@@ -170,7 +170,7 @@ priv enum RoundOutcome {
 }
 
 ///|
-impl Show for RoundOutcome with output(self, logger) {
+impl Show for RoundOutcome with fn output(self, logger) {
   let text = match self {
     P1Win => "P1Win"
     P2Win => "P2Win"
@@ -186,7 +186,7 @@ priv enum Facing {
 }
 
 ///|
-impl Show for Facing with output(self, logger) {
+impl Show for Facing with fn output(self, logger) {
   let text = match self {
     Left => "Left"
     Right => "Right"
@@ -206,7 +206,7 @@ priv enum Pose {
 }
 
 ///|
-impl Show for Pose with output(self, logger) {
+impl Show for Pose with fn output(self, logger) {
   let text = match self {
     Idle => "Idle"
     Run => "Run"
@@ -226,7 +226,7 @@ priv enum AttackKind {
 }
 
 ///|
-impl Show for AttackKind with output(self, logger) {
+impl Show for AttackKind with fn output(self, logger) {
   let text = match self {
     Light => "Light"
     Heavy => "Heavy"
@@ -241,7 +241,7 @@ priv enum PlayerId {
 } derive(Eq)
 
 ///|
-impl Show for PlayerId with output(self, logger) {
+impl Show for PlayerId with fn output(self, logger) {
   let text = match self {
     P1 => "P1"
     P2 => "P2"
@@ -256,7 +256,7 @@ priv enum InputMode {
 }
 
 ///|
-impl Show for InputMode with output(self, logger) {
+impl Show for InputMode with fn output(self, logger) {
   let text = match self {
     Human => "Human"
     AI => "AI"
@@ -273,7 +273,7 @@ priv struct Rect {
 }
 
 ///|
-impl Show for Rect with output(self, logger) {
+impl Show for Rect with fn output(self, logger) {
   logger.write_string(
     "{x: \{self.x}, y: \{self.y}, w: \{self.w}, h: \{self.h}}",
   )
@@ -317,7 +317,7 @@ priv struct FighterState {
 }
 
 ///|
-impl Show for FighterState with output(self, logger) {
+impl Show for FighterState with fn output(self, logger) {
   logger.write_string(
     "{id: \{self.id}, alive: \{self.alive}, x: \{self.x}, y: \{self.y}, vx: \{self.vx}, vy: \{self.vy}, facing: \{self.facing}, pose: \{self.pose}, on_ground: \{self.on_ground}, crouching: \{self.crouching}, health: \{self.health}, attack_kind: \{self.attack_kind}, attack_elapsed: \{self.attack_elapsed}, attack_cooldown: \{self.attack_cooldown}, attack_hit: \{self.attack_hit}, hitstun: \{self.hitstun}, invuln: \{self.invuln}, backstep_timer: \{self.backstep_timer}, ai_timer: \{self.ai_timer}, last_human_input: \{self.last_human_input}, input_mode: \{self.input_mode}}",
   )
@@ -335,7 +335,7 @@ priv struct GameState {
 }
 
 ///|
-impl Show for GameState with output(self, logger) {
+impl Show for GameState with fn output(self, logger) {
   logger.write_string(
     "{phase: \{self.phase}, round_time: \{self.round_time}, round_outcome: \{self.round_outcome}, debug_fps: \{self.debug_fps}, p2_human_enabled: \{self.p2_human_enabled}, menu_selected: \{self.menu_selected}, round_banner_timer: \{self.round_banner_timer}}",
   )
@@ -348,7 +348,7 @@ priv struct StageObject {
 }
 
 ///|
-impl Show for StageObject with output(self, logger) {
+impl Show for StageObject with fn output(self, logger) {
   logger.write_string("{kind: \{self.kind}, rect: \{self.rect}}")
 }
 
@@ -360,7 +360,7 @@ priv enum StageObjectKind {
 }
 
 ///|
-impl Show for StageObjectKind with output(self, logger) {
+impl Show for StageObjectKind with fn output(self, logger) {
   let text = match self {
     Ground => "Ground"
     Platform => "Platform"
@@ -483,64 +483,64 @@ let fps_text_enabled : Ref[Bool] = { val: false }
 let rng : @random.Rand = @random.Rand::new()
 
 ///|
-let title_entity : @entity.Entity = @entity.Entity::new()
+let title_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let menu_entity : @entity.Entity = @entity.Entity::new()
+let menu_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let timer_entity : @entity.Entity = @entity.Entity::new()
+let timer_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let info_entity : @entity.Entity = @entity.Entity::new()
+let info_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let debug_entity : @entity.Entity = @entity.Entity::new()
+let debug_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let banner_entity : @entity.Entity = @entity.Entity::new()
+let banner_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let p1_bar_back : @entity.Entity = @entity.Entity::new()
+let p1_bar_back : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let p1_bar_fill : @entity.Entity = @entity.Entity::new()
+let p1_bar_fill : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let p2_bar_back : @entity.Entity = @entity.Entity::new()
+let p2_bar_back : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let p2_bar_fill : @entity.Entity = @entity.Entity::new()
+let p2_bar_fill : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let stage_bg_entity : @entity.Entity = @entity.Entity::new()
+let stage_bg_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let floor_entity : @entity.Entity = @entity.Entity::new()
+let floor_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let platform_entity : @entity.Entity = @entity.Entity::new()
+let platform_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let left_pillar_entity : @entity.Entity = @entity.Entity::new()
+let left_pillar_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let right_pillar_entity : @entity.Entity = @entity.Entity::new()
+let right_pillar_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let left_fighter_entity : @entity.Entity = @entity.Entity::new()
+let left_fighter_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let right_fighter_entity : @entity.Entity = @entity.Entity::new()
+let right_fighter_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let left_attack_entity : @entity.Entity = @entity.Entity::new()
+let left_attack_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let right_attack_entity : @entity.Entity = @entity.Entity::new()
+let right_attack_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let left_crouch_entity : @entity.Entity = @entity.Entity::new()
+let left_crouch_entity : @entity.Entity = @entity.Entity::Entity()
 
 ///|
-let right_crouch_entity : @entity.Entity = @entity.Entity::new()
+let right_crouch_entity : @entity.Entity = @entity.Entity::Entity()
