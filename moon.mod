@@ -3,7 +3,7 @@ name = "Milky2018/gameparty"
 version = "0.1.0"
 
 import {
-  "Milky2018/selene@0.34.2",
+  "Milky2018/selene@0.34.3",
 }
 
 readme = "README.mbt.md"
