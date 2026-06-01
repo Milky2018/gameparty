@@ -4,7 +4,7 @@ version = "0.1.0"
 
 import {
   "Milky2018/gameparty@0.1.0",
-  "Milky2018/selene_webgpu@0.34.1",
+  "Milky2018/selene_webgpu@0.34.2",
 }
 
 readme = "../README.mbt.md"

@@ -689,6 +689,11 @@ fn sandbox_ghost_direction_for_spawn(spawn_index : Int) -> Direction {
 }
 
 ///|
+fn ghost_body_y(ghost_y : Double) -> Double {
+  ghost_y + GHOST_BODY_HEIGHT / 2.0
+}
+
+///|
 fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let bob_offset = if lighting_debug.bobbing_enabled {
     @cmath.sin(
@@ -705,7 +710,7 @@ fn sync_ghost_visuals(ghost : Ghost) -> Unit {
   let rotation = ghost_rotation(ghost.direction)
   let (forward_x, forward_z) = ghost_forward_vector_from_rotation(rotation)
   @transform.transforms().set(ghost.entity, {
-    translation: @math.Vec3::Vec3(ghost.x, ghost_y, ghost.z),
+    translation: @math.Vec3::Vec3(ghost.x, ghost_body_y(ghost_y), ghost.z),
     rotation,
     scale: @math.Vec3::one(),
   })
@@ -964,7 +969,7 @@ fn reset_level_entities() -> Unit {
         let ghost_entity = spawn_mesh_entity(
           ghost_body_mesh.val.unwrap(),
           ghost_material_for_type(ghost_type),
-          @math.Vec3::Vec3(world_x, MAP_GHOST_Y, world_z),
+          @math.Vec3::Vec3(world_x, ghost_body_y(MAP_GHOST_Y), world_z),
         )
         let ghost_light_entity = @entity.Entity::Entity()
         let ghost_spot_ray_entity = spawn_mesh_entity(
